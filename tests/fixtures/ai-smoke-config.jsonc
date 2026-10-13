@@ -1,0 +1,43 @@
+{
+  "storage": {
+    "databasePath": "$XDG_STATE_HOME/commanddeck/ai-smoke.db"
+  },
+  "indexing": {
+    "roots": [],
+    "indexDesktopApplications": false,
+    "indexOmarchyCommands": false,
+    "enableIncrementalIndexing": false,
+    "enableScheduledMaintenance": false
+  },
+  "privacy": {
+    "storeQueryHistory": false,
+    "storeUsageHistory": false,
+    "persistClipboard": false,
+    "neverIndex": []
+  },
+  "quicklinks": [],
+  "commands": [],
+  "ai": {
+    "enabled": true,
+    "providers": [
+      {
+        "id": "aot-ollama",
+        "displayName": "AOT Ollama",
+        "kind": "ollama",
+        "baseUrl": "http://127.0.0.1:__PORT__/ollama",
+        "model": "aot-ollama"
+      },
+      {
+        "id": "aot-openai",
+        "displayName": "AOT OpenAI",
+        "kind": "openai-chat-completions",
+        "baseUrl": "http://127.0.0.1:__PORT__/openai",
+        "model": "aot-openai",
+        "credential": {
+          "kind": "environment",
+          "name": "COMMANDDECK_AOT_AI_KEY"
+        }
+      }
+    ]
+  }
+}

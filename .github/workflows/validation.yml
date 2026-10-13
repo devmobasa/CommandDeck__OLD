@@ -1,0 +1,140 @@
+name: Validation
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: validation-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  linux-x64:
+    # Drafts wait until ready; main pushes and manual dispatch retain full coverage.
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
+        with:
+          # The independent SDK consumer builds with the exact .NET 10 SDK it pins.
+          dotnet-version: 10.0.400
+          global-json-file: global.json
+      - name: Install validation tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang zlib1g-dev shellcheck bubblewrap libwayland-server0 dbus-user-session
+      - name: Start a systemd user manager for extension sessions
+        # Extension children run as transient units of the user's manager
+        # (systemd-run --user), inside its delegated cgroup.
+        run: |
+          sudo loginctl enable-linger "$(id -un)"
+          XDG_RUNTIME_DIR=/run/user/$(id -u)
+          export XDG_RUNTIME_DIR
+          for _ in $(seq 100); do
+            [[ -S $XDG_RUNTIME_DIR/systemd/private ]] && break
+            sleep 0.1
+          done
+          # The manager may predate dbus-user-session; systemd-run --wait needs the user bus.
+          systemctl --user start dbus.socket
+          test -S "$XDG_RUNTIME_DIR/bus"
+          echo "XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR" >>"$GITHUB_ENV"
+      - name: Expose the extension runtime libraries at Arch's paths
+        # The sandbox's linux-glibc-invariant-v1 closure binds its loader and
+        # libraries from /usr/lib, where Arch installs them. Ubuntu keeps them
+        # in /usr/lib/x86_64-linux-gnu, so link the same files into /usr/lib.
+        run: |
+          for library in ld-linux-x86-64.so.2 libc.so.6 libm.so.6 libdl.so.2 libpthread.so.0 librt.so.1 \
+            libstdc++.so.6 libgcc_s.so.1 libz.so.1 libcrypto.so.3 libssl.so.3; do
+            [[ -e /usr/lib/$library ]] || sudo ln -s "/usr/lib/x86_64-linux-gnu/$library" "/usr/lib/$library"
+          done
+      - name: Allow Bubblewrap to create user namespaces
+        # The extension sandbox starts every child with bwrap. On this image
+        # AppArmor denies unprivileged user namespaces, and bwrap fails with
+        # "setting up uid map: Permission denied" until the restriction is off.
+        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+      - name: Run repository, extension isolation, and Native AOT checks once
+        run: dotnet scripts/validate.cs linux
+        env:
+          COMMANDDECK_QUALITY_LATENCY_MODE: observe
+      - name: Save structured validation results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: validation-linux-x64
+          if-no-files-found: warn
+          path: |
+            build/validation-profile.json
+            build/validation-report.md
+            build/backend-spec-results.json
+            build/quality-metrics.json
+            artifacts/extensions/sandbox-evidence.json
+            artifacts/extensions/sdk/evidence.json
+
+  qml:
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
+    # Quickshell and a current Qt 6 come from Arch, which Omarchy is built on.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    container:
+      image: archlinux:latest
+      # Arch's sway binary carries the cap_sys_nice file capability. Without
+      # SYS_NICE in the container's bounding set, executing it fails (EPERM).
+      options: --cap-add=SYS_NICE
+    defaults:
+      run:
+        shell: bash
+    env:
+      OMARCHY_PATH: /opt/omarchy
+      XDG_RUNTIME_DIR: /tmp/xdg-runtime
+      QT_QPA_PLATFORMTHEME: generic
+      QT_QUICK_CONTROLS_STYLE: Basic
+    steps:
+      - name: Install Quickshell, Qt 6 QML tools, and a headless compositor
+        run: pacman -Syu --noconfirm --needed git icu quickshell qt6-declarative sway
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+      - name: Fetch the Omarchy shell module that qmllint resolves
+        # qml/omarchy/ThemeTokens.qml imports qs.Commons from Omarchy's shell.
+        run: |
+          git clone --quiet --depth 1 --branch v4.0.4 --filter=blob:none --sparse \
+            https://github.com/basecamp/omarchy.git "$OMARCHY_PATH"
+          git -C "$OMARCHY_PATH" sparse-checkout set shell
+      - name: Start a headless Wayland compositor
+        # Component specs open the production launcher as a wlr-layer-shell
+        # surface. Sway provides that protocol headless; Weston does not.
+        run: |
+          install -d -m 0700 "$XDG_RUNTIME_DIR"
+          WLR_BACKENDS=headless WLR_RENDERER=pixman WLR_LIBINPUT_NO_DEVICES=1 \
+            nohup sway --config /dev/null >/tmp/sway.log 2>&1 &
+          for _ in $(seq 100); do
+            socket=$(find "$XDG_RUNTIME_DIR" -maxdepth 1 -type s -name 'wayland-*' -print -quit)
+            if [[ -n $socket ]]; then
+              echo "WAYLAND_DISPLAY=${socket##*/}" >>"$GITHUB_ENV"
+              exit 0
+            fi
+            sleep 0.1
+          done
+          cat /tmp/sway.log
+          exit 1
+      - name: Run QML lint, component, and event specs
+        run: dotnet scripts/validate.cs qml
+      - name: Show the compositor log
+        if: failure()
+        run: cat /tmp/sway.log
+      - name: Save structured validation results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: validation-qml
+          if-no-files-found: warn
+          path: build/validation-profile.json

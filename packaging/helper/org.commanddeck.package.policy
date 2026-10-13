@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE policyconfig PUBLIC
+ "-//freedesktop//DTD PolicyKit Policy Configuration 1.0//EN"
+ "http://www.freedesktop.org/software/polkit/policyconfig-1.dtd">
+<policyconfig>
+  <vendor>CommandDeck</vendor>
+  <vendor_url>https://github.com/commanddeck/commanddeck</vendor_url>
+
+  <action id="org.commanddeck.package.change">
+    <description>Change installed packages</description>
+    <message>CommandDeck wants to change installed packages.</message>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+  </action>
+
+  <action id="org.commanddeck.aur.build">
+    <description>Build a package from the AUR</description>
+    <message>CommandDeck wants to build a package from the AUR.</message>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>auth_admin</allow_active>
+    </defaults>
+  </action>
+
+  <action id="org.commanddeck.aur.install">
+    <description>Install a package built from the AUR</description>
+    <message>CommandDeck wants to install a package built from the AUR.</message>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>auth_admin</allow_active>
+    </defaults>
+  </action>
+</policyconfig>

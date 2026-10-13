@@ -1,0 +1,22 @@
+{
+  "manifestVersion": 1,
+  "id": "org.commanddeck.search-notebook",
+  "version": "0.1.0",
+  "name": "Search Notebook",
+  "description": "Save a local note and find it with explicit or opt-in launcher search",
+  "license": "MIT",
+  "protocol": { "major": 1, "minimumMinor": 0 },
+  "execution": { "profile": "restricted" },
+  "targets": { "linux-x64": { "entrypoint": "bin/linux-x64/SearchNotebook", "deployment": "native-aot", "runtimeProfile": "linux-glibc-invariant-v1" } },
+  "requiredFeatures": ["commands@1", "storage@1"],
+  "capabilities": {
+    "storage.read": { "reason": "Read the saved note when explicitly opened" },
+    "storage.write": { "reason": "Save the note and its read-only search projection" }
+  },
+  "commands": [
+    { "id": "note", "title": "Edit searchable note", "capabilities": ["storage.read", "storage.write"], "requiredFeatures": ["views.form@1", "views.detail@1", "storage@1"] }
+  ],
+  "searchProviders": [
+    { "id": "notes", "title": "Saved note", "commandId": "note", "cacheKey": "search-note", "suggestedPrefix": "notes" }
+  ]
+}

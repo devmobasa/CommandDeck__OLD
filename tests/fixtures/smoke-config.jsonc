@@ -1,0 +1,30 @@
+{
+  "storage": {
+    "databasePath": "$XDG_STATE_HOME/commanddeck/commanddeck.db"
+  },
+  "indexing": {
+    "roots": [],
+    "indexDesktopApplications": true,
+    "indexOmarchyCommands": true,
+    "enablePdfExtraction": false,
+    "enablePandocExtraction": false
+  },
+  "privacy": {
+    "storeQueryHistory": false,
+    "storeUsageHistory": false,
+    "persistClipboard": false,
+    "neverIndex": []
+  },
+  "quicklinks": [
+    {
+      "id": "aot-smoke",
+      "title": "AOT Smoke Quicklink",
+      "urlTemplate": "https://example.test/search?q={query}"
+    }
+  ],
+  "commands": [],
+  "ai": {
+    "enabled": false,
+    "providers": []
+  }
+}

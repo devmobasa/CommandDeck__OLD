@@ -1,0 +1,43 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net11.0</TargetFramework>
+    <AssemblyName>commanddeck</AssemblyName>
+    <RootNamespace>CommandDeck</RootNamespace>
+    <VersionPrefix>0.1.0</VersionPrefix>
+    <VersionSuffix>preview.1</VersionSuffix>
+
+    <PublishAot>true</PublishAot>
+    <SelfContained>true</SelfContained>
+    <PublishTrimmed>true</PublishTrimmed>
+    <TrimMode>full</TrimMode>
+    <OptimizationPreference>Speed</OptimizationPreference>
+    <IlcOptimizationPreference>Speed</IlcOptimizationPreference>
+    <StripSymbols>true</StripSymbols>
+    <StackTraceSupport>true</StackTraceSupport>
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <JsonSerializerIsReflectionEnabledByDefault>false</JsonSerializerIsReflectionEnabledByDefault>
+    <RuntimeIdentifiers>linux-x64;linux-arm64</RuntimeIdentifiers>
+  </PropertyGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="CommandDeck.Specs" />
+    <ProjectReference Include="../CommandDeck.Core/CommandDeck.Core.csproj" />
+    <ProjectReference Include="../CommandDeck.Infrastructure/CommandDeck.Infrastructure.csproj" />
+    <!-- The picker/ directory is the delivered picker inventory: installers copy it whole.
+         Every relative QML/JS import of these files must be listed here too. -->
+    <Content Include="../../qml/common/Picker.qml" Link="picker/shell.qml" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="../../qml/common/PickerView.qml" Link="picker/PickerView.qml" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="../../qml/common/Theme.qml" Link="picker/Theme.qml" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="../../qml/common/DeckButton.qml" Link="picker/DeckButton.qml" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="../../qml/common/KeyboardButton.qml" Link="picker/KeyboardButton.qml" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="../../qml/common/ListKeys.js" Link="picker/ListKeys.js" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="../../qml/common/TabFence.js" Link="picker/TabFence.js" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="../../qml/common/UiConstants.js" Link="picker/UiConstants.js" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="../../qml/common/ColorThemeFormat.js" Link="picker/ColorThemeFormat.js" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="../../schemas/commanddeck.schema.json"
+             Condition="Exists('../../schemas/commanddeck.schema.json')"
+             CopyToOutputDirectory="PreserveNewest"
+             CopyToPublishDirectory="PreserveNewest"
+             Link="commanddeck.schema.json" />
+  </ItemGroup>
+</Project>

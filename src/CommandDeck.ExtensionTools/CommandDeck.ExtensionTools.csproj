@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <!-- Specs and the legacy pack script call the managed author APIs, not this executable. -->
+    <ShouldBeValidatedAsExecutableReference>false</ShouldBeValidatedAsExecutableReference>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>14.0</LangVersion>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>commanddeck-ext</ToolCommandName>
+    <Version>0.1.0-preview.6</Version>
+    <Description>Experimental CommandDeck extension author commands and native form template.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="/" />
+    <ProjectReference Include="../CommandDeck.ExtensionProtocol/CommandDeck.ExtensionProtocol.csproj" />
+    <EmbeddedResource Include="../../samples/extensions/LocalDraft/Program.cs" LogicalName="Template.Program.cs" />
+    <EmbeddedResource Include="../../samples/extensions/LocalDraft/LocalDraft.csproj" LogicalName="Template.LocalDraft.csproj" />
+    <EmbeddedResource Include="../../samples/extensions/LocalDraft/commanddeck.extension.json" LogicalName="Template.commanddeck.extension.json" />
+  </ItemGroup>
+</Project>

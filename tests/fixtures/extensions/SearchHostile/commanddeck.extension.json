@@ -1,0 +1,8 @@
+{
+  "manifestVersion": 1, "id": "org.commanddeck.search-isolation-test", "version": "0.1.0",
+  "name": "Search isolation fixture", "description": "Private test fixture; do not install on the desktop", "license": "MIT",
+  "protocol": { "major": 1, "minimumMinor": 0 }, "execution": { "profile": "restricted" },
+  "targets": { "linux-x64": { "entrypoint": "bin/linux-x64/SearchHostile", "deployment": "native-aot", "runtimeProfile": "linux-glibc-invariant-v1" } },
+  "commands": [{ "id": "idle", "title": "Isolation sibling", "requiredFeatures": ["views.detail@1"] }],
+  "searchProviders": [{ "id": "probe", "title": "Isolation probes", "commandId": "idle", "cacheKey": "cache" }]
+}

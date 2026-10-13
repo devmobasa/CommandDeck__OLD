@@ -1,0 +1,244 @@
+import QtQuick
+import "Protocol.js" as Protocol
+import "." as CommandDeck
+
+// Request and model traffic of the integrated deck's search path: what a
+// Settings change, a completed search, and a refresh send and repaint.
+QtObject {
+  required property var host
+
+  property TextMetrics literalMetrics: TextMetrics { }
+
+  function result(id, title) {
+    return {
+      id: id, kind: Protocol.ResultKinds.File, title: title, subtitle: "/tmp/" + title,
+      sourceId: Protocol.SourceIds.Files, providerId: Protocol.ProviderIds.Catalog,
+      invocationReference: "reference-" + id, canCustomize: false, isFavorite: false,
+      aliases: [], metadata: {}, actions: [{ id: "open", title: "Open", kind: "open-path" }]
+    }
+  }
+
+  function deliver(deck, results) {
+    const requestId = deck.part_searchSession.activeRequestId
+    for (const value of results) {
+      deck.handleMessage({ type: Protocol.Messages.Result, requestId: requestId, result: value })
+    }
+    deck.handleMessage({ type: Protocol.Messages.Done, requestId: requestId })
+  }
+
+  function operationsSince(deck, start) {
+    return deck.sentRequests.slice(start).map(request => request.operation)
+  }
+
+  function lastRequest(deck, start, operation) {
+    return deck.sentRequests.slice(start).filter(request => request.operation === operation).slice(-1)[0]
+  }
+
+  function preferencesSnapshot(preferences) {
+    return { preferences: preferences, shortcuts: [], customizations: [] }
+  }
+
+  function run(context) {
+    const deck = host.part_integratedDeck
+    const wasOpened = deck.opened
+    deck.daemonAvailable = true
+    deck.reconciliationPending = false
+    if (!wasOpened) deck.open("{}")
+    deliver(deck, [result("file:before", "before.txt")])
+
+    verifySettingsToggleSearchesOnce(deck)
+    verifyEmptyStatesWaitForTheReply(deck)
+    verifyOnlyRunningSearchesAreCancelled(deck)
+    verifyLocalEditsKeepFreshReferences(deck)
+
+    if (!wasOpened) deck.close()
+  }
+
+  // A refresh that changes only invocation references leaves the model rows
+  // alone. Bookmarking or hiding a row rebuilds the list and must keep the
+  // other rows' fresh references, or invoking them would be refused.
+  function verifyLocalEditsKeepFreshReferences(deck) {
+    const kept = result("file:kept", "kept.txt")
+    const edited = Object.assign(result("file:edited", "edited.txt"), { canCustomize: true })
+    const hidden = Object.assign(result("file:hidden", "hidden.txt"), { canCustomize: true })
+    deck.queryText = "edits"
+    deck.requestSearch()
+    deliver(deck, [kept, edited, hidden])
+    deck.requestSearch()
+    deliver(deck, [kept, edited, hidden].map(
+      value => Object.assign({}, value, { invocationReference: "fresh-" + value.id })))
+
+    deck.applyCustomization({ stableId: edited.id, isFavorite: true, aliases: [] })
+    const editedResult = deck.navigationController.resultAt(deck.navigationController.indexOfResultId(edited.id))
+    const keptResult = deck.navigationController.resultAt(deck.navigationController.indexOfResultId(kept.id))
+    host.expect(editedResult.isFavorite && editedResult.invocationReference === "fresh-file:edited"
+        && keptResult.invocationReference === "fresh-file:kept",
+      "bookmarking a row keeps every row's refreshed invocation reference")
+
+    const hideStart = deck.sentRequests.length
+    deck.setHidden(hidden)
+    const hideRequest = lastRequest(deck, hideStart, Protocol.Operations.HiddenSet)
+    deck.handleMessage({ requestId: hideRequest.requestId, type: Protocol.Messages.CustomizationResult,
+      customization: { stableId: hidden.id, isHidden: true, isFavorite: false, aliases: [], message: "Hidden" } })
+    const remaining = deck.navigationController.resultAt(deck.navigationController.indexOfResultId(kept.id))
+    host.expect(deck.navigationController.indexOfResultId(hidden.id) < 0
+        && remaining.invocationReference === "fresh-file:kept",
+      "hiding a row keeps the remaining rows' refreshed invocation references")
+    deck.lastHidden = null
+  }
+
+  function containsResultRow(item) {
+    if (!item) return false
+    if (item.titleControl !== undefined && item.accessibilityName !== undefined) return true
+    for (let index = 0; index < item.children.length; index++) {
+      if (containsResultRow(item.children[index])) return true
+    }
+    return false
+  }
+
+  // Runs inside the production host journey while its surface is shown, just
+  // before the journey clicks the row and types. The daemon answers a refresh
+  // with the same rows under fresh invocation references.
+  function verifyProductionRefresh(list, shown) {
+    const deck = host.part_integratedDeck
+    const row = list.itemAtIndex(deck.selectedIndex)
+    host.expect(!containsResultRow(list.itemAtIndex(0)) && containsResultRow(row),
+      "a section header row builds no result row")
+
+    let repaints = 0
+    const countRepaint = () => repaints++
+    deck.part_rows.dataChanged.connect(countRepaint)
+    deck.requestSearch()
+    deliver(deck, [Object.assign({}, shown, { invocationReference: "refreshed-reference" })])
+    deck.part_rows.dataChanged.disconnect(countRepaint)
+    host.expect(repaints === 0 && list.itemAtIndex(deck.selectedIndex) === row
+        && deck.currentResult.invocationReference === "refreshed-reference",
+      "an unchanged refresh repaints no row and keeps the selected delegate with its fresh reference ("
+        + repaints + " rows rewritten)")
+  }
+
+  // The status line shows daemon messages verbatim, so markup in one must read
+  // as text instead of formatting it.
+  function verifyProductionStatusLine(list) {
+    const deck = host.part_integratedDeck
+    let content = list
+    while (content && content.part_statusLine === undefined) content = content.parent
+    const line = content ? content.part_statusLine : null
+    if (!line) {
+      host.expect(false, "the production status line is reachable")
+      return
+    }
+
+    const previous = deck.statusText
+    const message = "<b>Launch failed</b> &amp; <i>retry</i>"
+    deck.statusText = message
+    literalMetrics.font = line.font
+    literalMetrics.text = message
+    host.expect(line.text === message && Math.abs(line.implicitWidth - literalMetrics.advanceWidth) <= 2,
+      "a daemon message with markup shows literally in the status line ("
+        + Math.round(line.implicitWidth) + " of " + Math.round(literalMetrics.advanceWidth) + " px)")
+    deck.statusText = previous
+  }
+
+  function verifyOnlyRunningSearchesAreCancelled(deck) {
+    deck.queryText = "report"
+    deck.requestSearch()
+    const finished = deck.part_searchSession.activeRequestId
+    deliver(deck, [result("file:report", "report.txt")])
+
+    const nextStart = deck.sentRequests.length
+    deck.queryText = "reports"
+    deck.requestSearch()
+    host.expect(!deck.sentRequests.slice(nextStart).some(request => request.operation === Protocol.Operations.Cancel
+          && request.targetRequestId === finished)
+        && operationsSince(deck, nextStart).slice(-1)[0] === Protocol.Operations.Search,
+      "the next keystroke does not cancel a search that already finished")
+
+    const running = deck.part_searchSession.activeRequestId
+    const replaceStart = deck.sentRequests.length
+    deck.queryText = "reportsx"
+    deck.requestSearch()
+    const cancel = lastRequest(deck, replaceStart, Protocol.Operations.Cancel)
+    host.expect(cancel !== undefined && cancel.targetRequestId === running,
+      "a search still running is cancelled by its replacement")
+    deliver(deck, [])
+  }
+
+  // The guiding states describe a reply, so a search that has not answered
+  // yet, or an edit still in its debounce, shows neither.
+  function verifyEmptyStatesWaitForTheReply(deck) {
+    deck.close()
+    deck.open(JSON.stringify({ query: "no such thing" }))
+    host.expect(deck.part_searchSession.inFlight && !deck.part_searchSession.pending
+        && deck.navigationController.rowCount() === 0 && !deck.showNoResults,
+      "No matches stays hidden until the first search replies")
+    deliver(deck, [])
+    host.expect(deck.showNoResults, "No matches appears once the search replies with nothing")
+
+    deck.queryText = "no such things"
+    deck.part_searchSession.schedule()
+    host.expect(!deck.showNoResults, "an edit waiting for its debounced search does not claim No matches")
+    deck.requestSearch()
+    host.expect(!deck.part_searchSession.debounce.running,
+      "a search sent now replaces the one the edit scheduled")
+    deliver(deck, [])
+
+    deck.close()
+    deck.open("{}")
+    host.expect(deck.part_searchSession.inFlight && !deck.showEmptyState,
+      "the empty-query guide waits for the home search to reply")
+    deliver(deck, [])
+    host.expect(deck.showEmptyState, "the empty-query guide appears when home has nothing to show")
+  }
+
+  function verifySettingsToggleSearchesOnce(deck) {
+    const original = JSON.parse(JSON.stringify(deck.launcherPreferences))
+    const settingsStart = deck.sentRequests.length
+    deck.openSettings()
+    deck.handleMessage({
+      type: Protocol.Messages.PreferencesResult,
+      requestId: lastRequest(deck, settingsStart, Protocol.Operations.PreferencesGet).requestId,
+      preferences: preferencesSnapshot(original)
+    })
+
+    const toggled = Object.assign({}, original, { reduceMotion: !original.reduceMotion })
+    const toggleStart = deck.sentRequests.length
+    deck.updatePreferences(toggled)
+    const update = lastRequest(deck, toggleStart, Protocol.Operations.PreferencesUpdate)
+    deck.handleMessage({ type: Protocol.Messages.PreferencesResult, requestId: update.requestId,
+      preferences: preferencesSnapshot(toggled) })
+    const reload = lastRequest(deck, toggleStart, Protocol.Operations.PreferencesGet)
+    deck.handleMessage({ type: Protocol.Messages.PreferencesResult, requestId: reload.requestId,
+      preferences: preferencesSnapshot(toggled) })
+    const toggleOperations = operationsSince(deck, toggleStart).join(",")
+    host.expect(toggleOperations
+        === [Protocol.Operations.PreferencesUpdate, Protocol.Operations.PreferencesGet].join(","),
+      "a Settings toggle saves and reloads preferences without searching hidden results ("
+        + toggleOperations + ")")
+
+    const closeStart = deck.sentRequests.length
+    deck.closeSettings()
+    host.expect(operationsSince(deck, closeStart).filter(
+        operation => operation === Protocol.Operations.Search).length === 1,
+      "closing Settings searches the stale results once")
+    deliver(deck, [result("file:after", "after.txt")])
+    host.expect(deck.currentResult !== null && deck.currentResult.id === "file:after"
+        && deck.navigationController.rowCount() === 2,
+      "the list shown after closing Settings reflects the changed preferences")
+
+    deck.settingsOpen = true
+    deck.reconciliationPending = true
+    const reconcileStart = deck.sentRequests.length
+    deck.requestPreferencesSnapshot()
+    deck.handleMessage({ type: Protocol.Messages.PreferencesResult,
+      requestId: lastRequest(deck, reconcileStart, Protocol.Operations.PreferencesGet).requestId,
+      preferences: preferencesSnapshot(toggled) })
+    host.expect(operationsSince(deck, reconcileStart).indexOf(Protocol.Operations.Search) >= 0,
+      "reconciliation after a reconnect still searches while Settings is open")
+    deliver(deck, [result("file:after", "after.txt")])
+    host.expect(!deck.reconciliationPending, "that search completes reconciliation")
+
+    deck.settingsOpen = false
+    deck.part_personalization.resetPreferences(original)
+  }
+}

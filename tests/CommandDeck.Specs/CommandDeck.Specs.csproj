@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net11.0</TargetFramework>
+    <AssemblyName>CommandDeck.Specs</AssemblyName>
+    <RootNamespace>CommandDeck.Specs</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <SelfContained>true</SelfContained>
+    <RuntimeIdentifier>linux-x64</RuntimeIdentifier>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/CommandDeck.Extensions.Testing/CommandDeck.Extensions.Testing.csproj" />
+    <ProjectReference Include="../../src/CommandDeck.ExtensionTools/CommandDeck.ExtensionTools.csproj" />
+    <ProjectReference Include="../../src/CommandDeck.Extensions/CommandDeck.Extensions.csproj" />
+    <ProjectReference Include="../../src/CommandDeck.ExtensionProtocol/CommandDeck.ExtensionProtocol.csproj" />
+    <ProjectReference Include="../../src/CommandDeck.App/CommandDeck.App.csproj" />
+    <ProjectReference Include="../../src/CommandDeck.Core/CommandDeck.Core.csproj" />
+    <ProjectReference Include="../../src/CommandDeck.Infrastructure/CommandDeck.Infrastructure.csproj" />
+    <ProjectReference Include="../../src/CommandDeck.PackageHelper/CommandDeck.PackageHelper.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="../fixtures/ranking-corpus-v1.json"
+          Link="fixtures/ranking-corpus-v1.json"
+          CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

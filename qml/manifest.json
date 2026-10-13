@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "id": "local.commanddeck",
+  "name": "CommandDeck",
+  "version": "0.1.0",
+  "author": "CommandDeck contributors",
+  "license": "MIT",
+  "description": "Omarchy-first command palette backed by a .NET Native AOT daemon",
+  "kinds": [
+    "overlay"
+  ],
+  "activation": "on-demand",
+  "keepLoaded": true,
+  "entryPoints": {
+    "overlay": "omarchy/CommandDeck.qml"
+  }
+}

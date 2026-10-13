@@ -1,0 +1,23 @@
+{
+  "manifestVersion": 1,
+  "id": "org.commanddeck.connected-tools",
+  "version": "0.1.0",
+  "name": "Connected Tools",
+  "description": "Search selected notes and list or create tasks using host connection brokers",
+  "license": "MIT",
+  "protocol": { "major": 1, "minimumMinor": 0 },
+  "execution": { "profile": "restricted" },
+  "targets": { "linux-x64": { "entrypoint": "bin/linux-x64/ConnectedTools", "deployment": "native-aot", "runtimeProfile": "linux-glibc-invariant-v1" } },
+  "requiredFeatures": ["commands@1", "brokers@1"],
+  "capabilities": {
+    "files.read": { "reason": "Read notes only from the selected notes root" },
+    "http.request": { "reason": "List and create tasks through the configured tasks connection" },
+    "secrets.use": { "reason": "Let the host attach the tasks connection credential without revealing it" },
+    "storage.read": { "reason": "Recover a pending task request after reopening" },
+    "storage.write": { "reason": "Retain the pending request key to prevent duplicate writes" }
+  },
+  "commands": [
+    { "id": "notes", "title": "Search selected notes", "capabilities": ["files.read"], "requiredFeatures": ["views.list@1", "views.detail@1", "views.stack@1", "views.pagination@1"] },
+    { "id": "tasks", "title": "Connected tasks", "capabilities": ["http.request", "secrets.use", "storage.read", "storage.write"], "requiredFeatures": ["views.list@1", "views.form@1", "storage@1"] }
+  ]
+}

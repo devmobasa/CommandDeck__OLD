@@ -1,0 +1,22 @@
+{
+  "manifestVersion": 1,
+  "id": "org.commanddeck.quick-tools",
+  "version": "0.1.0",
+  "name": "Quick Tools",
+  "description": "Packaged images, explicit URL actions, and a one-shot UUID copy",
+  "license": "MIT",
+  "protocol": { "major": 1, "minimumMinor": 0 },
+  "execution": { "profile": "restricted" },
+  "targets": {
+    "linux-x64": { "entrypoint": "bin/linux-x64/QuickTools", "deployment": "native-aot", "runtimeProfile": "linux-glibc-invariant-v1" }
+  },
+  "requiredFeatures": ["commands@1"],
+  "capabilities": {
+    "clipboard.write": { "reason": "Copy a newly generated UUID when the command is activated" },
+    "desktop.open-url": { "reason": "Open the UUID specification when its action is activated" }
+  },
+  "commands": [
+    { "id": "reference", "title": "UUID reference", "description": "View the icon and open the specification", "capabilities": ["desktop.open-url"], "requiredFeatures": ["views.list@1", "views.detail@1", "views.stack@1", "assets.png@1", "actions.open-url@1"] },
+    { "id": "copy", "title": "Copy new UUID", "description": "Generate, copy, and finish without a persistent view", "mode": "no-view", "capabilities": ["clipboard.write"], "requiredFeatures": ["commands.no-view@1", "effects.copy-text@1"] }
+  ]
+}

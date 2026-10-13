@@ -1,0 +1,126 @@
+{
+  "$schema": "../schemas/commanddeck.schema.json",
+  // CommandDeck keeps usage ranking local and does not store raw queries by default.
+  "storage": {
+    "databasePath": "$XDG_STATE_HOME/commanddeck/commanddeck.db",
+    "busyTimeoutMilliseconds": 5000
+  },
+  "search": {
+    "defaultLimit": 50,
+    "maximumLimit": 200,
+    "providerTimeoutMilliseconds": 350,
+    "learnFromInvocations": true,
+    // auto: use qalc when it is on PATH; never: managed arithmetic only;
+    // always: try qalc even if PATH detection misses it; Doctor fails if it is missing.
+    "calculator": {
+      "useQalc": "auto"
+    }
+  },
+  "indexing": {
+    "roots": [
+      {
+        // Find filenames and paths throughout home, including Downloads and code.
+        // More specific roots below additionally search file contents.
+        "path": "~",
+        "includeHidden": true,
+        "includeContentInSearch": false,
+        "followSymbolicLinks": false,
+        // Generated outputs and repository ignores are filtered by default.
+        "excludeGeneratedDirectories": true,
+        "respectGitIgnore": true,
+        // Explicit exceptions, for example "my-app/dist/manual.pdf".
+        "includeGlobs": []
+      },
+      {
+        "path": "~/Documents",
+        "includeHidden": true,
+        "includeContentInSearch": true,
+        "followSymbolicLinks": false
+      },
+      {
+        "path": "~/.config/omarchy",
+        "includeHidden": true,
+        "includeContentInSearch": true,
+        "followSymbolicLinks": false
+      },
+      {
+        "path": "~/.config/hypr",
+        "includeHidden": true,
+        "includeContentInSearch": true,
+        "followSymbolicLinks": false
+      }
+    ],
+    "maximumTextFileBytes": 2097152,
+    "maximumDocumentFileBytes": 20971520,
+    "indexDesktopApplications": true,
+    "indexOmarchyCommands": true,
+    "enablePdfExtraction": false,
+    "enablePandocExtraction": false,
+    "extractorTimeoutMilliseconds": 8000,
+    "enableIncrementalIndexing": true,
+    "incrementalDebounceMilliseconds": 120,
+    "incrementalMaximumLatencyMilliseconds": 750,
+    "incrementalEventBatchLimit": 2048,
+    "enableScheduledMaintenance": true,
+    "maintenanceIntervalMinutes": 360
+  },
+  "privacy": {
+    "storeQueryHistory": false,
+    "storeUsageHistory": true,
+    "persistClipboard": false,
+    "neverIndex": [
+      "~/.ssh",
+      "~/.gnupg",
+      "~/.password-store",
+      "~/.local/share/keyrings",
+      "~/.local/share/kwalletd",
+      "**/.env",
+      "**/.env.*",
+      "**/*credentials*",
+      "**/*secret*",
+      "**/*.pem",
+      "**/*.key",
+      "**/*.p12",
+      "**/*.pfx",
+      "**/Cookies",
+      "**/Login Data"
+    ]
+  },
+  "ui": {
+    "preferredBinding": "ALT+SPACE",
+    "alsoBindSuperSpace": false,
+    "monitorPolicy": "focused",
+    "debounceMilliseconds": 45,
+    "width": 760,
+    "maximumVisibleRows": 9
+  },
+  "quicklinks": [
+    {
+      "id": "arch-wiki",
+      "title": "Search Arch Wiki",
+      "alias": "aw",
+      "urlTemplate": "https://wiki.archlinux.org/index.php?search={query}",
+      "icon": "archlinux"
+    },
+    {
+      "id": "github",
+      "title": "Search GitHub",
+      "alias": "gh",
+      "urlTemplate": "https://github.com/search?q={query}",
+      "icon": "github"
+    }
+  ],
+  "commands": [],
+  "ai": {
+    "enabled": false,
+    "providers": [
+      {
+        "id": "ollama",
+        "kind": "ollama",
+        "baseUrl": "http://127.0.0.1:11434",
+        "model": "qwen3:8b",
+        "enabled": true
+      }
+    ]
+  }
+}

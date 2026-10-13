@@ -1,0 +1,792 @@
+{
+  "version": 4,
+  "minimumTopOneAccuracy": 1.0,
+  "minimumMeanReciprocalRank": 1.0,
+  "cases": [
+    {
+      "query": "fire",
+      "expectedFirst": "Firefox",
+      "candidates": ["firefox-notes.md", "file-rewriter", "Firefox"]
+    },
+    {
+      "query": "friefox",
+      "expectedFirst": "Firefox",
+      "candidates": ["Chromium", "File Roller", "Firefox"]
+    },
+    {
+      "query": "vsc",
+      "expectedFirst": "Visual Studio Code",
+      "candidates": ["VLC media player", "service-control", "Visual Studio Code"]
+    },
+    {
+      "query": "csc",
+      "expectedFirst": "CommandSearchController",
+      "candidates": ["Cosmic", "Session Controller", "CommandSearchController"]
+    },
+    {
+      "query": "cafe",
+      "expectedFirst": "Café",
+      "candidates": ["Cafe Tools", "Caffeine", "Café"]
+    },
+    {
+      "query": "ff",
+      "expectedFirst": "File Finder",
+      "candidates": ["Firefox", "Folder", "File Finder"]
+    },
+    {
+      "query": "term",
+      "expectedFirst": "Terminal",
+      "candidates": ["long-term-notes.md", "telemetry", "Terminal"]
+    }
+  ],
+  "pipeline": {
+    "minimumTopOneAccuracy": 1.0,
+    "minimumMeanReciprocalRank": 1.0,
+    "items": [
+      {
+        "id": "app:firefox.desktop",
+        "kind": "application",
+        "title": "Firefox",
+        "subtitle": "Web Browser",
+        "sourceId": "applications"
+      },
+      {
+        "id": "app:vscode.desktop",
+        "kind": "application",
+        "title": "Visual Studio Code",
+        "subtitle": "Code Editing",
+        "sourceId": "applications"
+      },
+      {
+        "id": "app:cafe.desktop",
+        "kind": "application",
+        "title": "Café",
+        "subtitle": "Unicode fixture",
+        "sourceId": "applications"
+      },
+      {
+        "id": "app:chromium.desktop",
+        "kind": "application",
+        "title": "Chromium",
+        "subtitle": "Web Browser",
+        "sourceId": "applications"
+      },
+      {
+        "id": "file:quartz",
+        "kind": "file",
+        "title": "deployment-notes.md",
+        "path": "/home/spec/Projects/deployment-notes.md",
+        "body": "quartz deployment procedure",
+        "sourceId": "files"
+      },
+      {
+        "id": "configuration:mainmod",
+        "kind": "configuration",
+        "title": "Hyprland binding",
+        "path": "/home/spec/.config/hypr/hyprland.conf",
+        "configKeys": "mainMod RETURN exec ghostty",
+        "sourceId": "configuration"
+      }
+    ],
+    "cases": [
+      { "query": "firefox", "expectedFirst": "app:firefox.desktop" },
+      { "query": "friefox", "expectedFirst": "app:firefox.desktop" },
+      { "query": "vsc", "expectedFirst": "app:vscode.desktop" },
+      { "query": "cafe", "expectedFirst": "app:cafe.desktop" },
+      { "query": "file: quartz", "expectedFirst": "file:quartz" },
+      { "query": "cfg: mainMod", "expectedFirst": "configuration:mainmod" },
+      { "query": "zzzzunrelated", "expectedFirst": null }
+    ]
+  },
+  "learnedTopMatches": {
+    "items": [
+      {
+        "id": "app:signal.desktop",
+        "kind": "application",
+        "title": "Signal",
+        "sourceId": "applications"
+      },
+      {
+        "id": "omarchy:install.signal",
+        "kind": "omarchy",
+        "title": "Signal",
+        "subtitle": "Install command",
+        "sourceId": "omarchy-control"
+      },
+      {
+        "id": "app:orbit-alpha",
+        "kind": "application",
+        "title": "Orbit Alpha",
+        "sourceId": "applications"
+      },
+      {
+        "id": "app:orbit-omega",
+        "kind": "application",
+        "title": "Orbit Omega",
+        "sourceId": "applications"
+      }
+    ],
+    "usage": [
+      {
+        "id": "app:signal.desktop",
+        "count": 2
+      },
+      {
+        "id": "app:orbit-alpha",
+        "count": 2
+      },
+      {
+        "id": "app:orbit-omega",
+        "count": 10
+      }
+    ],
+    "cases": [
+      {
+        "query": "sig",
+        "coldFirst": "omarchy:install.signal",
+        "learnedFirst": "app:signal.desktop",
+        "learnedSection": "top-match"
+      },
+      {
+        "query": "signal",
+        "coldFirst": "app:signal.desktop",
+        "learnedFirst": "app:signal.desktop",
+        "learnedSection": "top-match"
+      },
+      {
+        "query": "orb",
+        "coldFirst": "app:orbit-alpha",
+        "learnedFirst": "app:orbit-omega",
+        "learnedSection": "top-match"
+      },
+      {
+        "query": "app: sig",
+        "coldFirst": "app:signal.desktop",
+        "learnedFirst": "app:signal.desktop",
+        "learnedSection": "top-match"
+      }
+    ]
+  },
+  "relevanceCases": {
+    "visibleWindow": 9,
+    "minimumTopOneAccuracy": 1.0,
+    "minimumMeanReciprocalRank": 1.0,
+    "minimumVisibleRecall": 1.0,
+    "items": [
+      {
+        "id": "app:firefox.desktop",
+        "kind": "application",
+        "title": "Firefox",
+        "subtitle": "Web Browser",
+        "sourceId": "applications"
+      },
+      {
+        "id": "app:chromium.desktop",
+        "kind": "application",
+        "title": "Chromium",
+        "subtitle": "Web Browser",
+        "sourceId": "applications"
+      },
+      {
+        "id": "app:code.desktop",
+        "kind": "application",
+        "title": "Visual Studio Code",
+        "subtitle": "Code Editing",
+        "sourceId": "applications"
+      },
+      {
+        "id": "app:code-microsoft.desktop",
+        "kind": "application",
+        "title": "Microsoft Visual Studio Code",
+        "subtitle": "Vendor-prefixed editor",
+        "sourceId": "applications"
+      },
+      {
+        "id": "app:native-tools.desktop",
+        "kind": "application",
+        "title": "x86 Native Tools Command Prompt for VS",
+        "subtitle": "Acronym collision",
+        "sourceId": "applications"
+      },
+      {
+        "id": "app:vlc.desktop",
+        "kind": "application",
+        "title": "VLC media player",
+        "subtitle": "Media player",
+        "sourceId": "applications"
+      },
+      {
+        "id": "app:cafe.desktop",
+        "kind": "application",
+        "title": "Café",
+        "subtitle": "Unicode fixture",
+        "sourceId": "applications"
+      },
+      {
+        "id": "app:caffeine.desktop",
+        "kind": "application",
+        "title": "Caffeine",
+        "subtitle": "Diacritic neighbor",
+        "sourceId": "applications"
+      },
+      {
+        "id": "app:file-roller.desktop",
+        "kind": "application",
+        "title": "File Roller",
+        "subtitle": "Archive manager",
+        "sourceId": "applications"
+      },
+      {
+        "id": "app:ghostty.desktop",
+        "kind": "application",
+        "title": "Ghostty",
+        "subtitle": "Terminal",
+        "sourceId": "applications"
+      },
+      {
+        "id": "app:terminal.desktop",
+        "kind": "application",
+        "title": "Terminal",
+        "subtitle": "System terminal",
+        "sourceId": "applications"
+      },
+      {
+        "id": "app:signal.desktop",
+        "kind": "application",
+        "title": "Signal",
+        "subtitle": "Messenger",
+        "sourceId": "applications"
+      },
+      {
+        "id": "omarchy:install.signal",
+        "kind": "omarchy",
+        "title": "Signal",
+        "subtitle": "Install command",
+        "sourceId": "omarchy-control"
+      },
+      {
+        "id": "file:firefox-notes",
+        "kind": "file",
+        "title": "firefox-notes.md",
+        "path": "/home/spec/Notes/firefox-notes.md",
+        "body": "notes about the firefox package",
+        "sourceId": "files"
+      },
+      {
+        "id": "file:deployment",
+        "kind": "file",
+        "title": "deployment-notes.md",
+        "path": "/home/spec/Projects/deployment-notes.md",
+        "body": "quartz deployment procedure",
+        "sourceId": "files"
+      },
+      {
+        "id": "file:swap",
+        "kind": "file",
+        "title": "swap.md",
+        "path": "/home/spec/Notes/swap.md",
+        "body": "Raise virtual memory when builds exhaust RAM.",
+        "sourceId": "files"
+      },
+      {
+        "id": "file:vm-notes",
+        "kind": "file",
+        "title": "Virtual Machine Notes",
+        "path": "/home/spec/Notes/vm-notes.md",
+        "body": "memory leak checklist for the lab VM",
+        "sourceId": "files"
+      },
+      {
+        "id": "file:long-term",
+        "kind": "file",
+        "title": "long-term-notes.md",
+        "path": "/home/spec/Notes/long-term-notes.md",
+        "body": "roadmap notes",
+        "sourceId": "files"
+      },
+      {
+        "id": "file:main-menu",
+        "kind": "file",
+        "title": "main-menu.md",
+        "path": "/home/spec/Notes/main-menu.md",
+        "body": "menu sketch",
+        "sourceId": "files"
+      },
+      {
+        "id": "file:xylophone",
+        "kind": "file",
+        "title": "lab-notes.md",
+        "path": "/home/spec/Notes/lab-notes.md",
+        "body": "xylophone-procedure is the fixture token",
+        "sourceId": "files"
+      },
+      {
+        "id": "configuration:mainmod",
+        "kind": "configuration",
+        "title": "Hyprland binding",
+        "path": "/home/spec/.config/hypr/hyprland.conf",
+        "configKeys": "mainMod RETURN exec ghostty",
+        "sourceId": "configuration"
+      },
+      {
+        "id": "configuration:gaps",
+        "kind": "configuration",
+        "title": "Quickshell gaps",
+        "path": "/home/spec/.config/quickshell/settings.json",
+        "configKeys": "general.gaps_out = 10",
+        "sourceId": "configuration"
+      },
+      {
+        "id": "configuration:limits",
+        "kind": "configuration",
+        "title": "Lab limits",
+        "path": "/home/spec/.config/lab/limits.conf",
+        "configKeys": "virtual_monitor = HDMI-A-1\nmemory_limit = 8192",
+        "sourceId": "configuration"
+      },
+      {
+        "id": "quicklink:github",
+        "kind": "quicklink",
+        "title": "GitHub",
+        "subtitle": "https://github.com/example/commanddeck",
+        "sourceId": "commands-quicklinks"
+      },
+      {
+        "id": "quicklink:docs",
+        "kind": "quicklink",
+        "title": "CommandDeck documentation",
+        "subtitle": "https://example.invalid/commanddeck",
+        "sourceId": "commands-quicklinks"
+      },
+      {
+        "id": "command:screenshot",
+        "kind": "custom-command",
+        "title": "Take Screenshot",
+        "subtitle": "Capture the focused screen",
+        "sourceId": "commands-quicklinks"
+      }
+    ],
+    "aliases": [
+      {
+        "id": "app:firefox.desktop",
+        "alias": "ff"
+      }
+    ],
+    "usage": [
+      {
+        "id": "app:signal.desktop",
+        "count": 2
+      }
+    ],
+    "cases": [
+      {
+        "id": "exact-firefox",
+        "critical": true,
+        "rationale": "An exact application title leads its notes file.",
+        "steps": [
+          {
+            "query": "firefox",
+            "acceptable": ["app:firefox.desktop"],
+            "required": ["app:firefox.desktop"]
+          }
+        ]
+      },
+      {
+        "id": "typo-firefox",
+        "critical": true,
+        "rationale": "A one-character transposition still reaches Firefox.",
+        "steps": [
+          {
+            "query": "friefox",
+            "acceptable": ["app:firefox.desktop"],
+            "required": ["app:firefox.desktop"]
+          }
+        ]
+      },
+      {
+        "id": "diacritic-cafe",
+        "critical": true,
+        "rationale": "Folded cafe matches Café rather than disappearing.",
+        "steps": [
+          {
+            "query": "cafe",
+            "acceptable": ["app:cafe.desktop"],
+            "required": ["app:cafe.desktop"]
+          }
+        ]
+      },
+      {
+        "id": "acronym-vsc",
+        "rationale": "Initials vsc reach Visual Studio Code ahead of VLC.",
+        "steps": [
+          {
+            "query": "vsc",
+            "acceptable": ["app:code.desktop", "app:code-microsoft.desktop"],
+            "required": ["app:code.desktop"]
+          }
+        ]
+      },
+      {
+        "id": "word-prefix-terminal",
+        "rationale": "term is a word prefix of Terminal, which stays visible beside long-term notes.",
+        "steps": [
+          {
+            "query": "term",
+            "acceptable": ["app:terminal.desktop"],
+            "required": ["app:terminal.desktop"]
+          }
+        ]
+      },
+      {
+        "id": "prefix-fire",
+        "rationale": "The fire prefix keeps Firefox visible beside its notes file.",
+        "steps": [
+          {
+            "query": "fire",
+            "acceptable": ["app:firefox.desktop"],
+            "required": ["app:firefox.desktop"]
+          }
+        ]
+      },
+      {
+        "id": "filter-file-quartz",
+        "critical": true,
+        "rationale": "file: limits a content token to the notes file.",
+        "steps": [
+          {
+            "query": "file: quartz",
+            "acceptable": ["file:deployment"],
+            "required": ["file:deployment"],
+            "forbidden": ["app:firefox.desktop"]
+          }
+        ]
+      },
+      {
+        "id": "filter-cfg-mainmod",
+        "critical": true,
+        "rationale": "cfg: finds the Hyprland binding key.",
+        "steps": [
+          {
+            "query": "cfg: mainMod",
+            "acceptable": ["configuration:mainmod"],
+            "required": ["configuration:mainmod"],
+            "forbidden": ["app:firefox.desktop"]
+          }
+        ]
+      },
+      {
+        "id": "filter-app-firefox",
+        "rationale": "app: drops the notes file that shares the Firefox name.",
+        "steps": [
+          {
+            "query": "app: firefox",
+            "acceptable": ["app:firefox.desktop"],
+            "required": ["app:firefox.desktop"],
+            "forbidden": ["file:firefox-notes"]
+          }
+        ]
+      },
+      {
+        "id": "filter-union-firefox",
+        "rationale": "Positive app and file filters union, so both Firefox rows stay visible.",
+        "steps": [
+          {
+            "query": "app: file: firefox",
+            "acceptable": ["app:firefox.desktop", "file:firefox-notes"],
+            "required": ["app:firefox.desktop", "file:firefox-notes"]
+          }
+        ]
+      },
+      {
+        "id": "exclude-files",
+        "critical": true,
+        "rationale": "A negative file filter removes the notes row without hiding the application.",
+        "steps": [
+          {
+            "query": "firefox -file:",
+            "acceptable": ["app:firefox.desktop"],
+            "required": ["app:firefox.desktop"],
+            "forbidden": ["file:firefox-notes"]
+          }
+        ]
+      },
+      {
+        "id": "field-content-quartz",
+        "rationale": "content: matches the deployment procedure and not an unrelated application.",
+        "steps": [
+          {
+            "query": "content:quartz",
+            "acceptable": ["file:deployment"],
+            "required": ["file:deployment"],
+            "forbidden": ["app:firefox.desktop"]
+          }
+        ]
+      },
+      {
+        "id": "field-title-firefox",
+        "rationale": "title:Firefox reaches the application title.",
+        "steps": [
+          {
+            "query": "title:Firefox",
+            "acceptable": ["app:firefox.desktop"],
+            "required": ["app:firefox.desktop"]
+          }
+        ]
+      },
+      {
+        "id": "field-path-deployment",
+        "rationale": "path: matches the deployment notes path.",
+        "steps": [
+          {
+            "query": "path:deployment-notes",
+            "acceptable": ["file:deployment"],
+            "required": ["file:deployment"]
+          }
+        ]
+      },
+      {
+        "id": "field-config-gaps",
+        "rationale": "config: finds the gaps setting key.",
+        "steps": [
+          {
+            "query": "config:gaps_out",
+            "acceptable": ["configuration:gaps"],
+            "required": ["configuration:gaps"]
+          }
+        ]
+      },
+      {
+        "id": "empty-unrelated",
+        "critical": true,
+        "rationale": "A token absent from the catalog returns no rows.",
+        "steps": [
+          {
+            "query": "zzzzunrelated",
+            "expectEmpty": true
+          }
+        ]
+      },
+      {
+        "id": "ceiling-xylophone",
+        "rationale": "A unique body token returns one row rather than a padded list.",
+        "steps": [
+          {
+            "query": "xylophone",
+            "acceptable": ["file:xylophone"],
+            "required": ["file:xylophone"],
+            "maximumCount": 1
+          }
+        ]
+      },
+      {
+        "id": "precision-chromium",
+        "rationale": "Chromium must not pull Firefox or Café into the visible window.",
+        "steps": [
+          {
+            "query": "chromium",
+            "acceptable": ["app:chromium.desktop"],
+            "required": ["app:chromium.desktop"],
+            "forbidden": ["app:firefox.desktop", "app:cafe.desktop"]
+          }
+        ]
+      },
+      {
+        "id": "quicklink-github",
+        "rationale": "The GitHub quicklink is reachable by its title.",
+        "steps": [
+          {
+            "query": "github",
+            "acceptable": ["quicklink:github"],
+            "required": ["quicklink:github"]
+          }
+        ]
+      },
+      {
+        "id": "quicklink-filter",
+        "rationale": "link: keeps the quicklink and excludes applications.",
+        "steps": [
+          {
+            "query": "link: github",
+            "acceptable": ["quicklink:github"],
+            "required": ["quicklink:github"],
+            "forbidden": ["app:firefox.desktop"]
+          }
+        ]
+      },
+      {
+        "id": "command-screenshot",
+        "rationale": "The screenshot command is reachable by its title.",
+        "steps": [
+          {
+            "query": "screenshot",
+            "acceptable": ["command:screenshot"],
+            "required": ["command:screenshot"]
+          }
+        ]
+      },
+      {
+        "id": "command-filter",
+        "rationale": "cmd: keeps the custom command and excludes applications.",
+        "steps": [
+          {
+            "query": "cmd: screenshot",
+            "acceptable": ["command:screenshot"],
+            "required": ["command:screenshot"],
+            "forbidden": ["app:firefox.desktop"]
+          }
+        ]
+      },
+      {
+        "id": "alias-firefox",
+        "critical": true,
+        "rationale": "The saved ff alias resolves to Firefox in Top Matches.",
+        "steps": [
+          {
+            "query": "ff",
+            "acceptable": ["app:firefox.desktop"],
+            "required": ["app:firefox.desktop"],
+            "section": "top-match"
+          }
+        ]
+      },
+      {
+        "id": "learned-signal",
+        "dependsOn": "usage",
+        "rationale": "Two recent Signal launches promote the application into Top Matches.",
+        "steps": [
+          {
+            "query": "sig",
+            "acceptable": ["app:signal.desktop"],
+            "required": ["app:signal.desktop"],
+            "section": "top-match"
+          }
+        ]
+      },
+      {
+        "id": "quoted-virtual-memory",
+        "critical": true,
+        "rationale": "A quoted phrase stays contiguous, so scattered virtual and memory rows stay out.",
+        "steps": [
+          {
+            "query": "\"virtual memory\"",
+            "acceptable": ["file:swap"],
+            "required": ["file:swap"],
+            "forbidden": ["file:vm-notes", "configuration:limits"]
+          }
+        ]
+      },
+      {
+        "id": "unquoted-virtual-memory",
+        "rationale": "Unquoted virtual memory uses AND. The phrase note must stay visible; adjacency is not required to win.",
+        "steps": [
+          {
+            "query": "virtual memory",
+            "acceptable": ["file:swap", "file:vm-notes", "configuration:limits"],
+            "required": ["file:swap"]
+          }
+        ]
+      },
+      {
+        "id": "exact-ghostty",
+        "rationale": "An exact terminal name stays on the application.",
+        "steps": [
+          {
+            "query": "ghostty",
+            "acceptable": ["app:ghostty.desktop"],
+            "required": ["app:ghostty.desktop"]
+          }
+        ]
+      },
+      {
+        "id": "exact-signal",
+        "rationale": "The Signal application stays visible beside the install command of the same name.",
+        "steps": [
+          {
+            "query": "signal",
+            "acceptable": ["app:signal.desktop"],
+            "required": ["app:signal.desktop"]
+          }
+        ]
+      },
+      {
+        "id": "multiword-visual-studio",
+        "rationale": "The two-word title keeps Visual Studio Code visible.",
+        "steps": [
+          {
+            "query": "visual studio",
+            "acceptable": ["app:code.desktop", "app:code-microsoft.desktop"],
+            "required": ["app:code.desktop"]
+          }
+        ]
+      },
+      {
+        "id": "type-firefox",
+        "rationale": "Firefox stays visible across fir, fire, and firefox.",
+        "steps": [
+          {
+            "query": "fir",
+            "required": ["app:firefox.desktop"]
+          },
+          {
+            "query": "fire",
+            "required": ["app:firefox.desktop"]
+          },
+          {
+            "query": "firefox",
+            "acceptable": ["app:firefox.desktop"],
+            "required": ["app:firefox.desktop"]
+          }
+        ]
+      },
+      {
+        "id": "type-vscode",
+        "rationale": "Visual Studio Code stays visible from vsc through vsco and vscod.",
+        "steps": [
+          {
+            "query": "vsc",
+            "required": ["app:code.desktop"]
+          },
+          {
+            "query": "vsco",
+            "required": ["app:code.desktop"]
+          },
+          {
+            "query": "vscod",
+            "required": ["app:code.desktop"]
+          }
+        ]
+      },
+      {
+        "id": "type-mainmod",
+        "rationale": "The Hyprland binding stays visible while mainMod is typed.",
+        "steps": [
+          {
+            "query": "mainM",
+            "required": ["configuration:mainmod"]
+          },
+          {
+            "query": "mainMod",
+            "acceptable": ["configuration:mainmod"],
+            "required": ["configuration:mainmod"]
+          }
+        ]
+      },
+      {
+        "id": "type-file-becomes-firefox",
+        "rationale": "Continuing from file into firefox changes the target, so File Roller must not remain required.",
+        "steps": [
+          {
+            "query": "file",
+            "required": ["app:file-roller.desktop"]
+          },
+          {
+            "query": "firefox",
+            "acceptable": ["app:firefox.desktop"],
+            "required": ["app:firefox.desktop"],
+            "forbidden": ["app:file-roller.desktop"]
+          }
+        ]
+      }
+    ]
+  }
+}

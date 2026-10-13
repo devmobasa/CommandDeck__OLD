@@ -1,0 +1,15 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/CommandDeck.Extensions.Testing/CommandDeck.Extensions.Testing.csproj" />
+    <Project Path="src/CommandDeck.ExtensionTools/CommandDeck.ExtensionTools.csproj" />
+    <Project Path="src/CommandDeck.Extensions/CommandDeck.Extensions.csproj" />
+    <Project Path="src/CommandDeck.ExtensionProtocol/CommandDeck.ExtensionProtocol.csproj" />
+    <Project Path="src/CommandDeck.Core/CommandDeck.Core.csproj" />
+    <Project Path="src/CommandDeck.Infrastructure/CommandDeck.Infrastructure.csproj" />
+    <Project Path="src/CommandDeck.App/CommandDeck.App.csproj" />
+    <Project Path="src/CommandDeck.PackageHelper/CommandDeck.PackageHelper.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/CommandDeck.Specs/CommandDeck.Specs.csproj" />
+  </Folder>
+</Solution>

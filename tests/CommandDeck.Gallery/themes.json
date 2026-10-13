@@ -1,0 +1,46 @@
+{
+  "tokyo-night": {
+    "name": "Tokyo Night",
+    "mode": "dark",
+    "background": "#1a1b26",
+    "foreground": "#a9b1d6",
+    "accent": "#7aa2f7",
+    "red": "#f7768e",
+    "backdrop": "#0e0e14",
+    "caption": "#565f89",
+    "icons": "Yaru-magenta"
+  },
+  "everforest": {
+    "name": "Everforest",
+    "mode": "dark",
+    "background": "#2d353b",
+    "foreground": "#d3c6aa",
+    "accent": "#7fbbb3",
+    "red": "#e67e80",
+    "backdrop": "#181d20",
+    "caption": "#4f585e",
+    "icons": "Yaru-sage"
+  },
+  "gruvbox": {
+    "name": "Gruvbox",
+    "mode": "dark",
+    "background": "#282828",
+    "foreground": "#d4be98",
+    "accent": "#7daea3",
+    "red": "#ea6962",
+    "backdrop": "#161616",
+    "caption": "#7c6f64",
+    "icons": "Yaru-olive"
+  },
+  "rose-pine": {
+    "name": "Rosé Pine",
+    "mode": "light",
+    "background": "#faf4ed",
+    "foreground": "#575279",
+    "accent": "#56949f",
+    "red": "#b4637a",
+    "backdrop": "#e1dbd5",
+    "caption": "#9893a5",
+    "icons": "Yaru-blue"
+  }
+}

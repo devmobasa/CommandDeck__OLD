@@ -1,0 +1,34 @@
+[Unit]
+Description=CommandDeck privileged package helper
+Documentation=https://github.com/devmobasa/commanddeck
+
+[Service]
+Type=dbus
+BusName=org.commanddeck.Package1
+ExecStart=/usr/lib/commanddeck/commanddeck-package-helper
+User=root
+Restart=no
+# A commit outlives a disconnect; never kill Pacman mid-transaction.
+TimeoutStopSec=1800
+UMask=0077
+
+# Hardening. ProtectSystem=strict is deliberately absent because Pacman must
+# write to the system it manages.
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+LockPersonality=yes
+RestrictSUIDSGID=yes
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+SystemCallArchitectures=native
+
+# NoNewPrivileges is intentionally left at its default. Pacman hooks may need
+# to gain privileges, and the disposable-Arch proof owns that decision.
+
+# The set below is the starting point from plan section 11.2. The
+# disposable-Arch real-install proof must measure the capabilities Pacman and
+# its hooks actually use and tighten this list to that measured set.
+CapabilityBoundingSet=CAP_CHOWN CAP_DAC_OVERRIDE CAP_DAC_READ_SEARCH CAP_FOWNER CAP_FSETID CAP_SETUID CAP_SETGID CAP_SYS_CHROOT CAP_MKNOD CAP_SETFCAP CAP_KILL

@@ -1,0 +1,24 @@
+{
+  "manifestVersion": 1,
+  "id": "org.commanddeck.local-draft",
+  "version": "0.1.0",
+  "name": "Local Draft",
+  "description": "Edit a draft using native fields and retain it in host-owned local storage",
+  "license": "MIT",
+  "protocol": { "major": 1, "minimumMinor": 0 },
+  "execution": { "profile": "restricted" },
+  "targets": {
+    "linux-x64": { "entrypoint": "bin/linux-x64/LocalDraft", "deployment": "native-aot", "runtimeProfile": "linux-glibc-invariant-v1" }
+  },
+  "requiredFeatures": ["commands@1"],
+  "capabilities": {
+    "storage.read": { "reason": "Load the draft saved by this installation" },
+    "storage.write": { "reason": "Save the draft when Save draft is activated" }
+  },
+  "preferences": [
+    { "id": "defaultTitle", "title": "Default draft title", "type": "text", "required": true, "maximumLength": 120, "default": "My draft" }
+  ],
+  "commands": [
+    { "id": "edit", "title": "Edit local draft", "capabilities": ["storage.read", "storage.write"], "requiredFeatures": ["views.form@1", "settings@1", "storage@1"] }
+  ]
+}

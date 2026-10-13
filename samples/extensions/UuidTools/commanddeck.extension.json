@@ -1,0 +1,22 @@
+{
+  "manifestVersion": 1,
+  "id": "org.commanddeck.uuid-tools",
+  "version": "0.1.1",
+  "name": "UUID Tools",
+  "description": "Generate and copy UUIDs locally",
+  "license": "MIT",
+  "protocol": { "major": 1, "minimumMinor": 0 },
+  "execution": { "profile": "restricted" },
+  "targets": {
+    "linux-x64": {
+      "entrypoint": "bin/linux-x64/UuidTools",
+      "deployment": "native-aot",
+      "runtimeProfile": "linux-glibc-invariant-v1"
+    }
+  },
+  "requiredFeatures": ["commands@1", "views.list@1", "views.detail@1", "views.stack@1", "views.pagination@1", "actions.copy-text@1"],
+  "capabilities": { "clipboard.write": { "reason": "Copy the UUID selected by the user" } },
+  "commands": [
+    { "id": "uuids", "title": "Generate UUIDs", "description": "Browse 24 random identifiers with details and paging", "capabilities": ["clipboard.write"] }
+  ]
+}

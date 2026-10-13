@@ -1,0 +1,699 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.commanddeck/schemas/commanddeck.schema.json",
+  "title": "CommandDeck configuration",
+  "description": "JSONC configuration for the CommandDeck daemon. Comments and trailing commas are allowed. The runtime ignores unknown properties; this schema flags them so editors can catch typos.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "clipboardHistory": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "maximumEntries": {
+          "type": "integer"
+        },
+        "retentionHours": {
+          "type": "integer"
+        }
+      }
+    },
+    "scriptDirectories": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "snippets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "text"
+        ]
+      }
+    },
+    "projects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "editor": {
+            "type": "string"
+          },
+          "editorArguments": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "title",
+          "path"
+        ]
+      }
+    },
+    "storage": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "databasePath": {
+          "type": "string"
+        },
+        "busyTimeoutMilliseconds": {
+          "type": "integer"
+        }
+      }
+    },
+    "search": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "defaultLimit": {
+          "type": "integer"
+        },
+        "maximumLimit": {
+          "type": "integer"
+        },
+        "providerTimeoutMilliseconds": {
+          "type": "integer"
+        },
+        "learnFromInvocations": {
+          "type": "boolean"
+        },
+        "calculator": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "useQalc": {
+              "type": "string",
+              "enum": [
+                "auto",
+                "never",
+                "always"
+              ]
+            }
+          }
+        },
+        "ranking": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "titleWeight": {
+              "type": "number"
+            },
+            "pathWeight": {
+              "type": "number"
+            },
+            "metadataWeight": {
+              "type": "number"
+            },
+            "contentWeight": {
+              "type": "number"
+            },
+            "configWeight": {
+              "type": "number"
+            },
+            "sourceWeights": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "number"
+              }
+            },
+            "maximumResultsPerSource": {
+              "type": "integer"
+            },
+            "firstPageSize": {
+              "type": "integer"
+            },
+            "minimumSourcesOnFirstPage": {
+              "type": "integer"
+            },
+            "topMatches": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "enabled": {
+                  "type": "boolean"
+                }
+              }
+            },
+            "adaptive": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "enabled": {
+                  "type": "boolean"
+                },
+                "retentionDays": {
+                  "type": "integer"
+                },
+                "maximumEvents": {
+                  "type": "integer"
+                }
+              }
+            },
+            "timeAware": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "enabled": {
+                  "type": "boolean"
+                },
+                "applicationMultiplier": {
+                  "type": "number"
+                },
+                "fileMultiplier": {
+                  "type": "number"
+                },
+                "workspaceMultiplier": {
+                  "type": "number"
+                },
+                "actionMultiplier": {
+                  "type": "number"
+                }
+              }
+            },
+            "context": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "enabled": {
+                  "type": "boolean"
+                },
+                "activeApplicationBoost": {
+                  "type": "number"
+                },
+                "activeWorkspaceBoost": {
+                  "type": "number"
+                },
+                "currentDirectoryBoost": {
+                  "type": "number"
+                },
+                "selectedProjectBoost": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        },
+        "webEngines": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "urlTemplate": {
+                "type": "string"
+              },
+              "alias": {
+                "type": "string"
+              },
+              "includeInGlobal": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "urlTemplate",
+              "alias"
+            ]
+          }
+        }
+      }
+    },
+    "indexing": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "roots": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "path": {
+                "type": "string"
+              },
+              "includeHidden": {
+                "type": "boolean"
+              },
+              "includeFileNameInSearch": {
+                "type": "boolean"
+              },
+              "includeMetadataInSearch": {
+                "type": "boolean"
+              },
+              "includeContentInSearch": {
+                "type": "boolean"
+              },
+              "followSymbolicLinks": {
+                "type": "boolean"
+              },
+              "excludeGeneratedDirectories": {
+                "type": "boolean"
+              },
+              "respectGitIgnore": {
+                "type": "boolean"
+              },
+              "includeGlobs": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "excludeGlobs": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "fileTypePolicies": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "pattern": {
+                      "type": "string"
+                    },
+                    "includeFileNameInSearch": {
+                      "type": [
+                        "boolean",
+                        "null"
+                      ]
+                    },
+                    "includeMetadataInSearch": {
+                      "type": [
+                        "boolean",
+                        "null"
+                      ]
+                    },
+                    "includeContentInSearch": {
+                      "type": [
+                        "boolean",
+                        "null"
+                      ]
+                    },
+                    "maximumFileBytes": {
+                      "type": [
+                        "integer",
+                        "null"
+                      ]
+                    },
+                    "maximumExtractedBytes": {
+                      "type": [
+                        "integer",
+                        "null"
+                      ]
+                    },
+                    "extractorTimeoutMilliseconds": {
+                      "type": [
+                        "integer",
+                        "null"
+                      ]
+                    },
+                    "extractorMemoryLimitBytes": {
+                      "type": [
+                        "integer",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "pattern"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "path"
+            ]
+          }
+        },
+        "maximumTextFileBytes": {
+          "type": "integer"
+        },
+        "maximumDocumentFileBytes": {
+          "type": "integer"
+        },
+        "maximumExtractedBytes": {
+          "type": "integer"
+        },
+        "indexDesktopApplications": {
+          "type": "boolean"
+        },
+        "indexOmarchyCommands": {
+          "type": "boolean"
+        },
+        "enablePdfExtraction": {
+          "type": "boolean"
+        },
+        "enablePandocExtraction": {
+          "type": "boolean"
+        },
+        "extractorTimeoutMilliseconds": {
+          "type": "integer"
+        },
+        "extractorMemoryLimitBytes": {
+          "type": "integer"
+        },
+        "extractorStandardErrorBytes": {
+          "type": "integer"
+        },
+        "maximumConcurrentExtractors": {
+          "type": "integer"
+        },
+        "enableIncrementalIndexing": {
+          "type": "boolean"
+        },
+        "incrementalDebounceMilliseconds": {
+          "type": "integer"
+        },
+        "incrementalMaximumLatencyMilliseconds": {
+          "type": "integer"
+        },
+        "incrementalEventBatchLimit": {
+          "type": "integer"
+        },
+        "enableScheduledMaintenance": {
+          "type": "boolean"
+        },
+        "maintenanceIntervalMinutes": {
+          "type": "integer"
+        }
+      }
+    },
+    "privacy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "storeQueryHistory": {
+          "type": "boolean"
+        },
+        "queryHistoryRetentionDays": {
+          "type": "integer"
+        },
+        "maximumQueryHistoryEntries": {
+          "type": "integer"
+        },
+        "storeUsageHistory": {
+          "type": "boolean"
+        },
+        "persistClipboard": {
+          "type": "boolean"
+        },
+        "neverIndex": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ui": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "preferredBinding": {
+          "type": "string"
+        },
+        "alsoBindSuperSpace": {
+          "type": "boolean"
+        },
+        "monitorPolicy": {
+          "type": "string"
+        },
+        "debounceMilliseconds": {
+          "type": "integer"
+        },
+        "width": {
+          "type": "integer"
+        },
+        "maximumVisibleRows": {
+          "type": "integer"
+        }
+      }
+    },
+    "quicklinks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "urlTemplate": {
+            "type": "string"
+          },
+          "alias": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "icon": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "urlTemplate"
+        ]
+      }
+    },
+    "commands": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "arguments": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "keywords": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "workingDirectory": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "requiresConfirmation": {
+            "type": "boolean"
+          },
+          "icon": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "title"
+        ]
+      }
+    },
+    "ai": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "providers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "displayName": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "kind": {
+                "type": "string"
+              },
+              "baseUrl": {
+                "type": "string"
+              },
+              "model": {
+                "type": "string"
+              },
+              "credential": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "kind": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                }
+              },
+              "allowRemoteEndpoint": {
+                "type": "boolean"
+              },
+              "enabled": {
+                "type": "boolean"
+              },
+              "contextLimit": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "kind",
+              "baseUrl",
+              "model"
+            ]
+          }
+        }
+      }
+    },
+    "agent": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "codexBinaryPath": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "claudeBinaryPath": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "cursorBinaryPath": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "grokBinaryPath": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "bubblewrapPath": {
+          "type": "string"
+        },
+        "systemdRunPath": {
+          "type": "string"
+        },
+        "runtimeDirectory": {
+          "type": "string"
+        },
+        "stateDirectory": {
+          "type": "string"
+        },
+        "minimumCodexMajorVersion": {
+          "type": "integer"
+        },
+        "minimumCodexMinorVersion": {
+          "type": "integer"
+        },
+        "minimumCodexPatchVersion": {
+          "type": "integer"
+        },
+        "maximumCodexMajorVersion": {
+          "type": "integer"
+        },
+        "maximumCodexMinorVersion": {
+          "type": "integer"
+        },
+        "maximumCodexPatchVersion": {
+          "type": "integer"
+        },
+        "apiKeyCredential": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "type": "string"
+            },
+            "name": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        "autoApproveReadOnlyCommands": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

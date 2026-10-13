@@ -1,0 +1,5 @@
+[D-BUS Service]
+Name=org.commanddeck.Package1
+Exec=/usr/lib/commanddeck/commanddeck-package-helper
+User=root
+SystemdService=commanddeck-package-helper.service
