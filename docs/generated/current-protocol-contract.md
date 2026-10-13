@@ -292,6 +292,13 @@ Generated from Core protocol constants and registries. Run `scripts/generate-pro
 - `Type`
 - `Version`
 
+## Query expression fields
+
+- `Clauses`
+- `ExcludeFilterIds`
+- `IncludeFilterIds`
+- `LiteralQuery`
+
 ## Ranking explanation fields
 
 - `Contributions`

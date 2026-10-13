@@ -9,7 +9,7 @@ public static partial class QueryParser
         IReadOnlyDictionary<string, string>? aliases = null,
         ContributionRegistrySnapshot? registry = null )
     {
-        var original = raw?.Trim( ) ?? string.Empty;
+        var original = OriginalText( raw, typedExpression );
         var text = original;
         string? provider = null;
         var calculator = false;
@@ -23,6 +23,7 @@ public static partial class QueryParser
             calculator = true;
             provider = "calculator";
             text = text[1..].TrimStart( );
+            expression = WithLiteralQuery( expression, original );
         }
         else if ( text.StartsWith( '>' ) )
         {
@@ -44,6 +45,7 @@ public static partial class QueryParser
             aiMode = true;
             text = text[6..].TrimStart( );
             expression.Clauses.Clear( );
+            expression = WithLiteralQuery( expression, original );
             literalTerms = text.Length == 0 ? [] : [text];
         }
         else if ( TryParseLiteralPayload( text, expression, aliases, registry, out var payload ) )
@@ -160,6 +162,7 @@ public static partial class QueryParser
         }
         return Validate( new QueryExpression
         {
+            LiteralQuery = seed.LiteralQuery,
             IncludeFilterIds = includes,
             ExcludeFilterIds = excludes,
             Clauses = clauses
@@ -211,6 +214,7 @@ public static partial class QueryParser
         }
         return Validate( new QueryExpression
         {
+            LiteralQuery = expression.LiteralQuery,
             IncludeFilterIds = [.. expression.IncludeFilterIds],
             ExcludeFilterIds = [.. expression.ExcludeFilterIds],
             Clauses = expression.Clauses.Select( static clause => new QueryClause
@@ -225,6 +229,10 @@ public static partial class QueryParser
     private static QueryExpression Validate( QueryExpression expression )
     {
         ArgumentNullException.ThrowIfNull( expression );
+        if ( expression.LiteralQuery?.Length > ProtocolLimits.MaximumQueryCharacters )
+        {
+            throw new InvalidOperationException( "Literal queries exceed the query text limit." );
+        }
         if ( expression.IncludeFilterIds is null || expression.ExcludeFilterIds is null ||
             expression.Clauses is null )
         {
@@ -261,6 +269,7 @@ public static partial class QueryParser
         }
         return new QueryExpression
         {
+            LiteralQuery = expression.LiteralQuery,
             IncludeFilterIds = [.. expression.IncludeFilterIds],
             ExcludeFilterIds = [.. expression.ExcludeFilterIds],
             Clauses = clauses

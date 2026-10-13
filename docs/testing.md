@@ -213,11 +213,16 @@ The production-host journey waits for request, row, and focus readiness with
 bounded deadlines. Its delayed-search and delayed-result fixtures exercise
 asynchronous replacement without changing production timings.
 
+Saved-search shortcut journeys use one monitor and wait for the Qt window to
+be active as well as the expected editor to have focus, including after reopen.
+The CI compositor holds a virtual keyboard open without typing so its headless
+seat can activate the window; QtTest supplies the key events.
+
 The headless component gate has two layers: Quickshell instantiates the real
 `CommandDeck` surfaces with protocol I/O disabled, and Qt Quick Test delivers
 keyboard and pointer events to the same search, action, alias, source-toggle,
-and confirmation components used by the panel. Compositor focus and screenshots
-are not automated; they belong to installed desktop acceptance.
+and confirmation components used by the panel. Installed desktop focus and
+screenshots belong to desktop acceptance.
 
 ## Native AOT
 

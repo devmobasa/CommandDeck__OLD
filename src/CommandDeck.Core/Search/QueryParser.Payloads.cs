@@ -2,6 +2,9 @@ namespace CommandDeck;
 
 public static partial class QueryParser
 {
+    private static string OriginalText( string? raw, QueryExpression? expression ) =>
+        (string.IsNullOrWhiteSpace( raw ) ? expression?.LiteralQuery : raw)?.Trim( ) ?? string.Empty;
+
     // Prompts and invocation argv are payloads, not search clauses. Decide at
     // their leading boundary before interpreting '-' or field/filter prefixes.
     private static bool TryParseLiteralPayload(
@@ -12,6 +15,11 @@ public static partial class QueryParser
         out LiteralPayload payload )
     {
         payload = null!;
+        if ( original.Length == 0 )
+        {
+            return false;
+        }
+
         var text = original;
         List<string> includes = [.. seed.IncludeFilterIds];
         if ( !TryReadPayloadPrefix( ref text, includes, aliases, registry ) )
@@ -50,12 +58,21 @@ public static partial class QueryParser
 
         var expression = Validate( new QueryExpression
         {
+            LiteralQuery = original,
             IncludeFilterIds = includes,
             ExcludeFilterIds = [.. seed.ExcludeFilterIds]
         } );
         payload = new LiteralPayload( text, terms, expression, ai );
         return true;
     }
+
+    private static QueryExpression WithLiteralQuery( QueryExpression expression, string original ) => new( )
+    {
+        LiteralQuery = original,
+        IncludeFilterIds = expression.IncludeFilterIds,
+        ExcludeFilterIds = expression.ExcludeFilterIds,
+        Clauses = expression.Clauses
+    };
 
     private static bool TryReadPayloadPrefix(
         ref string text,

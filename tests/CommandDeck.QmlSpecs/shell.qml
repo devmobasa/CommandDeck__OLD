@@ -445,7 +445,8 @@ ShellRoot {
     visible: false
     testMode: true
     desktopIntegration: CommandDeck.DesktopIntegration {
-      screens: Quickshell.screens
+      screens: Quickshell.screens.length > 0 ? [Quickshell.screens[0]] : []
+      focusedMonitor: screens.length > 0 ? screens[0] : null
       capabilities: CommandDeck.DesktopCapabilities {
         windows: true
         windowPreviews: true

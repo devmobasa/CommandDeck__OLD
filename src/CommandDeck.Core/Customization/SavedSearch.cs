@@ -44,7 +44,8 @@ public static partial class SavedSearchValidator
 
     public static QueryExpression ValidateExpression( QueryExpression expression, ContributionRegistrySnapshot? registry = null )
     {
-        var query = QueryParser.Parse( string.Empty, expression, registry: registry );
+        var validated = QueryParser.ValidateShape( expression );
+        var query = QueryParser.Parse( validated.LiteralQuery, validated, registry: registry );
         if ( ClipboardPrivacy.ReferencesHistory( query ) )
         {
             throw new InvalidOperationException( "Clipboard queries cannot be saved." );

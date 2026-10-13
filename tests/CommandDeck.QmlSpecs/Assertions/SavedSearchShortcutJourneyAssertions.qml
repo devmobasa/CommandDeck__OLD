@@ -8,6 +8,16 @@ QtObject {
   property var previousSearches: null
   property string launcherDraft: ""
 
+  function windowActive() {
+    const window = deck.testSearchInput ? deck.testSearchInput.Window.window : null
+    return window !== null && window.active
+  }
+
+  function activateWindow() {
+    const window = deck.testSearchInput ? deck.testSearchInput.Window.window : null
+    if (window !== null) window.requestActivate()
+  }
+
   function composer() {
     return deck.testAgentSurface
       ? host.part_hostEvents.findChild(deck.testAgentSurface, "agentComposer") : null
@@ -40,6 +50,7 @@ QtObject {
         action: () => {
           deck.closeAgentSurface()
           deck.part_agentController.resetConversation()
+          activateWindow()
           previousSearches = deck.savedSearches
           const expression = {includeFilterIds: ["files"], excludeFilterIds: [],
             clauses: [{field: null, text: "Shortcut target", excluded: false}]}
@@ -50,7 +61,7 @@ QtObject {
         }
       },
       {
-        ready: () => deck.testSearchInput.activeFocus,
+        ready: () => windowActive() && deck.testSearchInput.activeFocus,
         message: "saved searches begin on the focused launcher",
         action: () => {
           key(Qt.ControlModifier | Qt.AltModifier)
@@ -64,7 +75,8 @@ QtObject {
         }
       },
       {
-        ready: () => deck.testSettingsPanel !== null && deck.testSettingsPanel.searchControl.activeFocus,
+        ready: () => windowActive() && deck.testSettingsPanel !== null
+          && deck.testSettingsPanel.searchControl.activeFocus,
         message: "Settings owns its search input before a saved-search chord",
         action: () => {
           const input = deck.testSettingsPanel.searchControl
@@ -79,7 +91,7 @@ QtObject {
         }
       },
       {
-        ready: () => composer() !== null && composer().activeFocus,
+        ready: () => windowActive() && composer() !== null && composer().activeFocus,
         message: "the assistant composer owns input before a saved-search chord",
         action: () => {
           key(Qt.ControlModifier | Qt.AltModifier)
@@ -100,7 +112,7 @@ QtObject {
         }
       },
       {
-        ready: () => formEditor() !== null && formEditor().activeFocus,
+        ready: () => windowActive() && formEditor() !== null && formEditor().activeFocus,
         message: "the extension form owns input before a saved-search chord",
         action: () => {
           key(Qt.ControlModifier | Qt.AltModifier)
@@ -113,7 +125,7 @@ QtObject {
         }
       },
       {
-        ready: () => deck.testSearchInput.activeFocus,
+        ready: () => windowActive() && deck.testSearchInput.activeFocus,
         message: "closing the extension restores the launcher before the persisted Super chord",
         action: () => {
           key(Qt.MetaModifier)
@@ -122,10 +134,11 @@ QtObject {
           host.expect(deck.testSearchInput.activeFocus, "saved-search activation keeps search focused")
           deck.close()
           deck.open("{}")
+          activateWindow()
         }
       },
       {
-        ready: () => deck.testSearchInput.activeFocus,
+        ready: () => windowActive() && deck.testSearchInput.activeFocus,
         message: "reopening the launcher restores search for saved shortcuts",
         action: () => {
           key(Qt.MetaModifier)

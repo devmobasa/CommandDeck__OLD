@@ -30,6 +30,9 @@ public static partial class Program
                 Equal( 2, saved.Expression.Clauses.Count );
                 True( saved.ShowOnHome );
 
+                await VerifySavedAssistantPromptAsync( catalog );
+                await VerifySavedLiteralQueriesAsync( catalog );
+
                 ShortcutInventory inventory = new( )
                 {
                     Available = true,
@@ -75,6 +78,79 @@ public static partial class Program
         finally
         {
             DeleteDatabase( database );
+        }
+    }
+
+    private static async Task VerifySavedAssistantPromptAsync( SqliteCatalog catalog )
+    {
+        const string prompt = "Is -1 negative? Keep  two spaces and \"quotes\".";
+        var searches = await catalog.SaveSavedSearchAsync( new SavedSearch
+        {
+            Id = string.Empty,
+            Name = "Assistant prompt",
+            Expression = new QueryExpression
+            {
+                IncludeFilterIds = ["ai"],
+                Clauses = [new QueryClause { Text = prompt }]
+            }
+        }, CancellationToken.None );
+        var saved = searches.Single( value => value.Name == "Assistant prompt" );
+
+        Equal( prompt, saved.Expression.Clauses.SingleOrDefault( )?.Text );
+
+        await using SqliteCatalog reopened = new( new StorageOptions { DatabasePath = catalog.DatabasePath } );
+        await reopened.InitializeAsync( CancellationToken.None );
+        var persisted = (await reopened.GetSavedSearchesAsync( CancellationToken.None ))
+            .Single( value => value.Id == saved.Id );
+        var updated = (await reopened.SaveSavedSearchAsync( new SavedSearch
+        {
+            Id = persisted.Id,
+            Name = "Renamed assistant prompt",
+            Expression = persisted.Expression
+        }, CancellationToken.None )).Single( value => value.Id == saved.Id );
+
+        Equal( prompt, updated.Expression.Clauses.SingleOrDefault( )?.Text );
+
+        await reopened.DeleteSavedSearchAsync( saved.Id, CancellationToken.None );
+    }
+
+    private static async Task VerifySavedLiteralQueriesAsync( SqliteCatalog catalog )
+    {
+        var prompt = "Is -1 negative? Keep  two spaces and \"quotes\". " + new string( 'x', 600 );
+        foreach ( var original in new[] { prompt, "claude: " + prompt, "= -1" } )
+        {
+            var searches = await catalog.SaveSavedSearchAsync( new SavedSearch
+            {
+                Id = string.Empty,
+                Name = "Literal query",
+                Expression = new QueryExpression
+                {
+                    LiteralQuery = original,
+                    IncludeFilterIds = original == prompt ? ["ai"] : []
+                }
+            }, CancellationToken.None );
+            var saved = searches.Single( value => value.Name == "Literal query" );
+
+            await using SqliteCatalog reopened = new( new StorageOptions { DatabasePath = catalog.DatabasePath } );
+            await reopened.InitializeAsync( CancellationToken.None );
+            var persisted = (await reopened.GetSavedSearchesAsync( CancellationToken.None ))
+                .Single( value => value.Id == saved.Id );
+            var updated = (await reopened.SaveSavedSearchAsync( new SavedSearch
+            {
+                Id = persisted.Id,
+                Name = "Renamed literal query",
+                Expression = persisted.Expression
+            }, CancellationToken.None )).Single( value => value.Id == saved.Id );
+
+            Equal( original, updated.Expression.LiteralQuery );
+            var replay = QueryParser.Parse( null, updated.Expression );
+            Equal( original, replay.Original );
+            Equal( original == "= -1" ? "-1" : prompt, replay.Text );
+            Equal( original.StartsWith( "claude:", StringComparison.Ordinal ) ? AgentBackendIds.ClaudeCode : null,
+                replay.ExplicitBackendId );
+            Equal( original == "= -1", replay.IsCalculator );
+
+            await reopened.DeleteSavedSearchAsync( saved.Id, CancellationToken.None );
         }
     }
 

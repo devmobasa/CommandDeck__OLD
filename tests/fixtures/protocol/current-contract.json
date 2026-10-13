@@ -286,6 +286,12 @@
     "Type",
     "Version"
   ],
+  "queryExpressionFields": [
+    "Clauses",
+    "ExcludeFilterIds",
+    "IncludeFilterIds",
+    "LiteralQuery"
+  ],
   "rankingFields": [
     "Contributions",
     "FinalScore",

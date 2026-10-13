@@ -98,6 +98,7 @@ public static partial class Program
             messageTypes = messageTypes.Select( static value => value.Value ).ToArray( ),
             requestFields,
             responseFields,
+            queryExpressionFields = ReadProperties( typeof( QueryExpression ) ),
             rankingFields = ReadProperties( typeof( RankingExplanation ) ),
             placementFields = ReadProperties( typeof( RankingPlacement ) ),
             filters,
@@ -115,6 +116,7 @@ public static partial class Program
         AppendValues( markdown, "Message types", messageTypes.Select( static value => value.Value ) );
         AppendValues( markdown, "Request fields", requestFields );
         AppendValues( markdown, "Response fields", responseFields );
+        AppendValues( markdown, "Query expression fields", ReadProperties( typeof( QueryExpression ) ) );
         AppendValues( markdown, "Ranking explanation fields", ReadProperties( typeof( RankingExplanation ) ) );
         AppendValues( markdown, "Ranking placement fields", ReadProperties( typeof( RankingPlacement ) ) );
         markdown.AppendLine( "## Search filters" );

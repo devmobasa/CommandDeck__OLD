@@ -112,6 +112,12 @@ For app invocations, arguments after a path, URL, or launch flag stay literal;
 `app: firefox https://example.test --private-window` keeps both arguments.
 Ordinary search queries continue to support exclusions and field clauses.
 
+Saved queries keep literal input in the optional `expression.literalQuery` field,
+including spacing, quotes, negative values, and an explicit assistant backend
+prefix. It has the same 4,096-character limit as the request query. Existing
+saved expressions with only typed clauses remain supported. Saving or renaming
+a query preserves its expression; clipboard and HEY privacy checks still apply.
+
 | Prefix | Meaning |
 |---|---|
 | `app:` | applications |

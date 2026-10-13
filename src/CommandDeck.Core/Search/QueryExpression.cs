@@ -15,6 +15,8 @@ public static class QueryFieldIds
 
 public sealed class QueryExpression
 {
+    // Literal input includes its routing prefix and is bounded like request.Query.
+    public string? LiteralQuery { get; init; }
     public List<string> IncludeFilterIds { get; init; } = [];
     public List<string> ExcludeFilterIds { get; init; } = [];
     public List<QueryClause> Clauses { get; init; } = [];

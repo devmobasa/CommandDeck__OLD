@@ -21,9 +21,11 @@ function parse(text, filters, literalPayloads = true) {
     if (token.length >= 2 && token[0] === "\"" && token[token.length - 1] === "\"") token = token.substring(1, token.length - 1)
     if (token.length > 0) clauses.push({field: field, text: token, excluded: excluded})
   }
-  return {
+  const expression = {
     includeFilterIds: (filters || []).filter(value => !value.excluded).map(value => value.id),
     excludeFilterIds: (filters || []).filter(value => value.excluded).map(value => value.id),
     clauses: clauses
   }
+  if (literal) expression.literalQuery = text
+  return expression
 }

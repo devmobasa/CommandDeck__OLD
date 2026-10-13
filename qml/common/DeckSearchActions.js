@@ -105,7 +105,13 @@ function applySavedSearch(root, search) {
 }
 
 function savedSearchText(root, expression) {
+  if (expression && typeof expression.literalQuery === "string") return expression.literalQuery
   const clauses = expression && expression.clauses ? expression.clauses : []
+  const includes = expression && expression.includeFilterIds ? expression.includeFilterIds : []
+  if (includes.length === 1 && includes[0] === "ai"
+      && clauses.every(value => !value.field && !value.excluded)) {
+    return clauses.map(value => String(value.text || "")).join(" ")
+  }
   return clauses.map(value => {
     const escaped = String(value.text || "").replace(/\\/g, "\\\\").replace(/\"/g, "\\\"")
     const token = (value.field ? value.field + ":" : "") + "\"" + escaped + "\""

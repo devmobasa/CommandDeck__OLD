@@ -67,6 +67,20 @@ public static partial class Program
         {
             Clauses = null!
         } ) );
+        Throws<InvalidOperationException>( ( ) => ProtocolRequestValidator.Validate( new ProtocolRequest
+        {
+            RequestId = 1,
+            Operation = ProtocolOperations.Search,
+            Expression = new QueryExpression
+            {
+                LiteralQuery = new string( 'x', ProtocolLimits.MaximumQueryCharacters + 1 )
+            }
+        } ) );
+        foreach ( var privateQuery in new[] { "clip: secret", "hey: secret" } )
+        {
+            Throws<InvalidOperationException>( ( ) => SavedSearchValidator.ValidateExpression(
+                new QueryExpression { LiteralQuery = privateQuery } ) );
+        }
     }
 
     private static async Task QueryAlgebraEvaluatesAcrossProvidersAsync( )

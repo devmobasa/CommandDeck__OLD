@@ -98,7 +98,7 @@ jobs:
       QT_QUICK_CONTROLS_STYLE: Basic
     steps:
       - name: Install Quickshell, Qt 6 QML tools, and a headless compositor
-        run: pacman -Syu --noconfirm --needed git icu quickshell qt6-declarative sway
+        run: pacman -Syu --noconfirm --needed git icu quickshell qt6-declarative sway wtype
       - uses: actions/checkout@v7
       - uses: actions/setup-dotnet@v6
         with:
@@ -112,6 +112,8 @@ jobs:
       - name: Start a headless Wayland compositor
         # Component specs open the production launcher as a wlr-layer-shell
         # surface. Sway provides that protocol headless; Weston does not.
+        # A virtual keyboard gives the headless seat keyboard focus. It holds
+        # the device open without sending keys; QtTest delivers the test events.
         run: |
           install -d -m 0700 "$XDG_RUNTIME_DIR"
           WLR_BACKENDS=headless WLR_RENDERER=pixman WLR_LIBINPUT_NO_DEVICES=1 \
@@ -120,6 +122,7 @@ jobs:
             socket=$(find "$XDG_RUNTIME_DIR" -maxdepth 1 -type s -name 'wayland-*' -print -quit)
             if [[ -n $socket ]]; then
               echo "WAYLAND_DISPLAY=${socket##*/}" >>"$GITHUB_ENV"
+              WAYLAND_DISPLAY=${socket##*/} nohup wtype -s 600000 >/tmp/qml-keyboard.log 2>&1 &
               exit 0
             fi
             sleep 0.1
@@ -130,7 +133,9 @@ jobs:
         run: dotnet scripts/validate.cs qml
       - name: Show the compositor log
         if: failure()
-        run: cat /tmp/sway.log
+        run: |
+          cat /tmp/sway.log
+          if [[ -f /tmp/qml-keyboard.log ]]; then cat /tmp/qml-keyboard.log; fi
       - name: Save structured validation results
         if: always()
         uses: actions/upload-artifact@v7
