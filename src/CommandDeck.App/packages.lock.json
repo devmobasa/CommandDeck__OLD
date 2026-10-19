@@ -4,20 +4,20 @@
     "net11.0": {
       "Microsoft.DotNet.ILCompiler": {
         "type": "Direct",
-        "requested": "[11.0.0-rc.1.26425.128, )",
-        "resolved": "11.0.0-rc.1.26425.128",
-        "contentHash": "q57ZvrTIRKI4s12hLMA3LN4Gh48CuiGMKGL0Pmz7YnGLIvkQVMX8T+DtI6VdqYaCnGTstiw1LdE2PRsd13WdNg=="
+        "requested": "[11.0.0-rc.2.26504.105, )",
+        "resolved": "11.0.0-rc.2.26504.105",
+        "contentHash": "6yeR3nENReUAbLaOEeX3krUEYCr3ufnbXRnYS3IvM2piBTwKcaA3pzhI2D8XZhj514zX+lU0P/8M04ZrFwTT7w=="
       },
       "Microsoft.NET.ILLink.Tasks": {
         "type": "Direct",
-        "requested": "[11.0.0-rc.1.26425.128, )",
-        "resolved": "11.0.0-rc.1.26425.128",
-        "contentHash": "oMgihfjNcxZpR9B/O5Ke8Qmr8CJcpdzG4PnVYtA6Ja4g41NELxLRuiqqh5ys7w+ourEBNng2IIZnrlMJXfncmQ=="
+        "requested": "[11.0.0-rc.2.26504.105, )",
+        "resolved": "11.0.0-rc.2.26504.105",
+        "contentHash": "Mkb6kHfPr4/txc4n/41yUiEBT44Haup2qnyecIO1ADo2QB4YxleZHsOvgYJT6roL1SNuFSpbeNpoe70BJ953Uw=="
       },
       "Microsoft.Data.Sqlite.Core": {
         "type": "Transitive",
-        "resolved": "11.0.0-rc.1.26425.128",
-        "contentHash": "PtB6tpWSM3lt91xvCCb5pNoxlaLEXPY4n8DipzIeHyD21LQletLzfKi0bGT9rIFVJtxbJMwtD78ljLd6PTlK7Q==",
+        "resolved": "11.0.0-rc.2.26504.105",
+        "contentHash": "1QCO8UCqwSbdNbNkf5B1RIDf7crc67HrnizWRM+4kr9nF+KjKdum8H+mnfekz6VoYlTzDsvbqRQkUz8hZho4MQ==",
         "dependencies": {
           "SQLitePCLRaw.core": "3.0.5"
         }
@@ -69,7 +69,7 @@
           "AngleSharp": "[1.8.1, )",
           "CommandDeck.Core": "[1.0.0, )",
           "CommandDeck.ExtensionProtocol": "[0.1.0-preview.6, )",
-          "Microsoft.Data.Sqlite": "[11.0.0-rc.1.26425.128, )",
+          "Microsoft.Data.Sqlite": "[11.0.0-rc.2.26504.105, )",
           "Tmds.DBus.Protocol": "[0.95.1, )"
         }
       },
@@ -81,11 +81,11 @@
       },
       "Microsoft.Data.Sqlite": {
         "type": "CentralTransitive",
-        "requested": "[11.0.0-rc.1.26425.128, )",
-        "resolved": "11.0.0-rc.1.26425.128",
-        "contentHash": "Z/dTdDx3rCfOA1G2E2efYOtbHPTcucpLkVXn7N9N50P3LtTv4dFi5Sdj6X0B1VqyszSgF59OozIGyEBTTTVSaw==",
+        "requested": "[11.0.0-rc.2.26504.105, )",
+        "resolved": "11.0.0-rc.2.26504.105",
+        "contentHash": "HTMsR2yafphuj6o0EdYPEsB2CBBSz/ixCew7/LblqmT31q1HiG5qKYy8s2XDM5YM7lmtNOhe7lNPiffcMe8j7A==",
         "dependencies": {
-          "Microsoft.Data.Sqlite.Core": "[11.0.0-rc.1.26425.128, 12.0.0-a)",
+          "Microsoft.Data.Sqlite.Core": "[11.0.0-rc.2.26504.105, 12.0.0-a)",
           "SQLitePCLRaw.bundle_e_sqlite3": "3.0.5",
           "SQLitePCLRaw.core": "3.0.5"
         }
@@ -100,17 +100,17 @@
     "net11.0/linux-arm64": {
       "Microsoft.DotNet.ILCompiler": {
         "type": "Direct",
-        "requested": "[11.0.0-rc.1.26425.128, )",
-        "resolved": "11.0.0-rc.1.26425.128",
-        "contentHash": "q57ZvrTIRKI4s12hLMA3LN4Gh48CuiGMKGL0Pmz7YnGLIvkQVMX8T+DtI6VdqYaCnGTstiw1LdE2PRsd13WdNg==",
+        "requested": "[11.0.0-rc.2.26504.105, )",
+        "resolved": "11.0.0-rc.2.26504.105",
+        "contentHash": "6yeR3nENReUAbLaOEeX3krUEYCr3ufnbXRnYS3IvM2piBTwKcaA3pzhI2D8XZhj514zX+lU0P/8M04ZrFwTT7w==",
         "dependencies": {
-          "runtime.linux-arm64.Microsoft.DotNet.ILCompiler": "11.0.0-rc.1.26425.128"
+          "runtime.linux-arm64.Microsoft.DotNet.ILCompiler": "11.0.0-rc.2.26504.105"
         }
       },
       "runtime.linux-arm64.Microsoft.DotNet.ILCompiler": {
         "type": "Transitive",
-        "resolved": "11.0.0-rc.1.26425.128",
-        "contentHash": "pF009g+454ntFGfwZyLHub3Ou/EKUfk+xNE0oIzFmDSFSIuOXNm/t+mElrZTsIq4GGm/OeuMYW2qz339GEs2Kg=="
+        "resolved": "11.0.0-rc.2.26504.105",
+        "contentHash": "braCVXKml8LS0WAdYrO2iKw5cpPACisBtOIYOUuhP5ErCzAOBCFNi+3czDH98U8QuyMKl7hGqfLBmbJjKEkJ2g=="
       },
       "SQLite": {
         "type": "Transitive",
@@ -121,17 +121,17 @@
     "net11.0/linux-x64": {
       "Microsoft.DotNet.ILCompiler": {
         "type": "Direct",
-        "requested": "[11.0.0-rc.1.26425.128, )",
-        "resolved": "11.0.0-rc.1.26425.128",
-        "contentHash": "q57ZvrTIRKI4s12hLMA3LN4Gh48CuiGMKGL0Pmz7YnGLIvkQVMX8T+DtI6VdqYaCnGTstiw1LdE2PRsd13WdNg==",
+        "requested": "[11.0.0-rc.2.26504.105, )",
+        "resolved": "11.0.0-rc.2.26504.105",
+        "contentHash": "6yeR3nENReUAbLaOEeX3krUEYCr3ufnbXRnYS3IvM2piBTwKcaA3pzhI2D8XZhj514zX+lU0P/8M04ZrFwTT7w==",
         "dependencies": {
-          "runtime.linux-x64.Microsoft.DotNet.ILCompiler": "11.0.0-rc.1.26425.128"
+          "runtime.linux-x64.Microsoft.DotNet.ILCompiler": "11.0.0-rc.2.26504.105"
         }
       },
       "runtime.linux-x64.Microsoft.DotNet.ILCompiler": {
         "type": "Transitive",
-        "resolved": "11.0.0-rc.1.26425.128",
-        "contentHash": "/mqTFMUrzKDQe0o542yw7OhwqjZFqJliVrvcpatiSFrem6NVmjsna38tYSDVX4rhjKFEOtgbJLWoo8Itoj2S1Q=="
+        "resolved": "11.0.0-rc.2.26504.105",
+        "contentHash": "YDzqUCYjkf2XzSukeMlOa0X3cdiRZAau0vN4axKSLYpaL1IyvDtafqaeFmkA3FPJIiso+RkjwUG/GG4g2bKUVw=="
       },
       "SQLite": {
         "type": "Transitive",

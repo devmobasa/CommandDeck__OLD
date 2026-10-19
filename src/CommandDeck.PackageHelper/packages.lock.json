@@ -4,15 +4,15 @@
     "net11.0": {
       "Microsoft.DotNet.ILCompiler": {
         "type": "Direct",
-        "requested": "[11.0.0-rc.1.26425.128, )",
-        "resolved": "11.0.0-rc.1.26425.128",
-        "contentHash": "q57ZvrTIRKI4s12hLMA3LN4Gh48CuiGMKGL0Pmz7YnGLIvkQVMX8T+DtI6VdqYaCnGTstiw1LdE2PRsd13WdNg=="
+        "requested": "[11.0.0-rc.2.26504.105, )",
+        "resolved": "11.0.0-rc.2.26504.105",
+        "contentHash": "6yeR3nENReUAbLaOEeX3krUEYCr3ufnbXRnYS3IvM2piBTwKcaA3pzhI2D8XZhj514zX+lU0P/8M04ZrFwTT7w=="
       },
       "Microsoft.NET.ILLink.Tasks": {
         "type": "Direct",
-        "requested": "[11.0.0-rc.1.26425.128, )",
-        "resolved": "11.0.0-rc.1.26425.128",
-        "contentHash": "oMgihfjNcxZpR9B/O5Ke8Qmr8CJcpdzG4PnVYtA6Ja4g41NELxLRuiqqh5ys7w+ourEBNng2IIZnrlMJXfncmQ=="
+        "requested": "[11.0.0-rc.2.26504.105, )",
+        "resolved": "11.0.0-rc.2.26504.105",
+        "contentHash": "Mkb6kHfPr4/txc4n/41yUiEBT44Haup2qnyecIO1ADo2QB4YxleZHsOvgYJT6roL1SNuFSpbeNpoe70BJ953Uw=="
       },
       "Tmds.DBus.Protocol": {
         "type": "Direct",
@@ -27,33 +27,33 @@
     "net11.0/linux-arm64": {
       "Microsoft.DotNet.ILCompiler": {
         "type": "Direct",
-        "requested": "[11.0.0-rc.1.26425.128, )",
-        "resolved": "11.0.0-rc.1.26425.128",
-        "contentHash": "q57ZvrTIRKI4s12hLMA3LN4Gh48CuiGMKGL0Pmz7YnGLIvkQVMX8T+DtI6VdqYaCnGTstiw1LdE2PRsd13WdNg==",
+        "requested": "[11.0.0-rc.2.26504.105, )",
+        "resolved": "11.0.0-rc.2.26504.105",
+        "contentHash": "6yeR3nENReUAbLaOEeX3krUEYCr3ufnbXRnYS3IvM2piBTwKcaA3pzhI2D8XZhj514zX+lU0P/8M04ZrFwTT7w==",
         "dependencies": {
-          "runtime.linux-arm64.Microsoft.DotNet.ILCompiler": "11.0.0-rc.1.26425.128"
+          "runtime.linux-arm64.Microsoft.DotNet.ILCompiler": "11.0.0-rc.2.26504.105"
         }
       },
       "runtime.linux-arm64.Microsoft.DotNet.ILCompiler": {
         "type": "Transitive",
-        "resolved": "11.0.0-rc.1.26425.128",
-        "contentHash": "pF009g+454ntFGfwZyLHub3Ou/EKUfk+xNE0oIzFmDSFSIuOXNm/t+mElrZTsIq4GGm/OeuMYW2qz339GEs2Kg=="
+        "resolved": "11.0.0-rc.2.26504.105",
+        "contentHash": "braCVXKml8LS0WAdYrO2iKw5cpPACisBtOIYOUuhP5ErCzAOBCFNi+3czDH98U8QuyMKl7hGqfLBmbJjKEkJ2g=="
       }
     },
     "net11.0/linux-x64": {
       "Microsoft.DotNet.ILCompiler": {
         "type": "Direct",
-        "requested": "[11.0.0-rc.1.26425.128, )",
-        "resolved": "11.0.0-rc.1.26425.128",
-        "contentHash": "q57ZvrTIRKI4s12hLMA3LN4Gh48CuiGMKGL0Pmz7YnGLIvkQVMX8T+DtI6VdqYaCnGTstiw1LdE2PRsd13WdNg==",
+        "requested": "[11.0.0-rc.2.26504.105, )",
+        "resolved": "11.0.0-rc.2.26504.105",
+        "contentHash": "6yeR3nENReUAbLaOEeX3krUEYCr3ufnbXRnYS3IvM2piBTwKcaA3pzhI2D8XZhj514zX+lU0P/8M04ZrFwTT7w==",
         "dependencies": {
-          "runtime.linux-x64.Microsoft.DotNet.ILCompiler": "11.0.0-rc.1.26425.128"
+          "runtime.linux-x64.Microsoft.DotNet.ILCompiler": "11.0.0-rc.2.26504.105"
         }
       },
       "runtime.linux-x64.Microsoft.DotNet.ILCompiler": {
         "type": "Transitive",
-        "resolved": "11.0.0-rc.1.26425.128",
-        "contentHash": "/mqTFMUrzKDQe0o542yw7OhwqjZFqJliVrvcpatiSFrem6NVmjsna38tYSDVX4rhjKFEOtgbJLWoo8Itoj2S1Q=="
+        "resolved": "11.0.0-rc.2.26504.105",
+        "contentHash": "YDzqUCYjkf2XzSukeMlOa0X3cdiRZAau0vN4axKSLYpaL1IyvDtafqaeFmkA3FPJIiso+RkjwUG/GG4g2bKUVw=="
       }
     }
   }
