@@ -137,7 +137,25 @@ function dismiss(root) {
   }
 }
 
+// A search the user closed, kept for a reopen within keepSearchSeconds. Folder
+// and Herdr views, private sources, and a search an action just ran from are
+// not kept.
+function keptSearch(root) {
+  const forget = root.forgetSearchOnClose
+  root.forgetSearchOnClose = false
+  const filters = root.activeFilters || []
+  if (forget || root.keepSearchSeconds <= 0 || root.browseDirectory.length > 0
+      || root.part_navigation.herdrWorkspaceId.length > 0
+      || (root.queryText.length === 0 && filters.length === 0)
+      || filters.some(value => value.id === Protocol.SourceIds.Clipboard || value.id === Protocol.SourceIds.Hey)) {
+    return null
+  }
+  return { query: root.queryText, filters: filters.slice(),
+    selectedId: root.currentResult && root.currentResult.id ? root.currentResult.id : "", closedAt: Date.now() }
+}
+
 function close(root) {
+  root.lastSearch = keptSearch(root)
   root.extensionManagementOpen = false
   root.part_extensionController.close()
   if (root.fileSelection.length > 0 || root.activeFileSelectionRequestId > 0) root.clearFileSelection()
@@ -184,10 +202,16 @@ function open(root, payloadJson) {
     : ""
   root.openWorkspaceMruIds = root.workspaceMruIds.slice()
   root.part_navigation.clearHerdrBrowse()
-  root.queryText = payload.query || ""
+  const kept = root.lastSearch
+  root.lastSearch = null
+  const restore = kept !== null && !payload.query && !payload.filterId
+    && Date.now() - kept.closedAt <= root.keepSearchSeconds * 1000
+  root.queryText = restore ? kept.query : payload.query || ""
   root.currentDirectoryContext = payload.currentDirectory || ""
   root.selectedProjectContext = payload.selectedProject || ""
-  root.activeFilters = payload.filterId ? [{ id: payload.filterId, label: payload.filterLabel || "", excluded: false }] : []
+  root.activeFilters = restore ? kept.filters
+    : payload.filterId ? [{ id: payload.filterId, label: payload.filterLabel || "", excluded: false }] : []
+  if (restore) root.part_navigation.restoreSelectionId = kept.selectedId
   root.opened = true
   root.clearModalState()
   root.part_invocationController.clear()
@@ -236,6 +260,18 @@ function clearModalState(root) {
   // and the transcript, so closing the palette must be resumable.
   root.agentOpen = false
   root.agentChallenge = null
+}
+
+// Shift+Escape: an empty search on Home, leaving any filter, folder or Herdr view.
+function backToRoot(root) {
+  root.browseDirectory = ""
+  root.browseOffset = 0
+  root.part_navigation.clearHerdrBrowse()
+  root.activeFilters = []
+  root.queryText = ""
+  root.queryInputRequested("")
+  root.requestSearch()
+  root.focusRevision++
 }
 
 function toggle(root, payload) {

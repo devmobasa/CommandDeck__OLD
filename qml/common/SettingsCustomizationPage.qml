@@ -11,6 +11,9 @@ ScrollView {
   readonly property alias part_layoutCard: layoutCard
   readonly property alias part_compactLayoutCheck: compactLayoutCheck
   readonly property alias part_previewPaneCheck: previewPaneCheck
+  readonly property alias part_closingCard: closingCard
+  readonly property alias part_escapeClearsCheck: escapeClearsCheck
+  readonly property alias part_keepSearchChoice: keepSearchChoice
   readonly property alias part_colorsCard: colorsCard
   readonly property alias part_transparencyCard: transparencyCard
   readonly property alias part_panelTransparencyCheck: panelTransparencyCheck
@@ -92,6 +95,52 @@ ScrollView {
         Accessible.name: "Preview pane"
         Accessible.description: "Show result details and file previews beside the results"
         onClicked: customizationScroll.host.previewPaneSelected(checked)
+      }
+    }
+
+    SettingsCard {
+      id: closingCard
+      searchQuery: customizationScroll.host.part_settingsSearch.text
+      searchTerms: "customization escape close reopen keep last search home root timeout"
+      theme: customizationScroll.host.theme
+      title: "Closing and reopening"
+      description: "What Escape does and how a reopened launcher starts. Shift+Escape always returns to Home."
+
+      SettingsToggle {
+        id: escapeClearsCheck
+        theme: customizationScroll.host.theme
+        Layout.fillWidth: true
+        text: "Escape clears the search first"
+        help: "Off closes the launcher at once. On clears a typed search or filter first; the next Escape closes."
+        checked: customizationScroll.host.escapeClearsSearch
+        Accessible.name: "Escape clears the search first"
+        Accessible.description: "Clear a non-empty search before closing"
+        onClicked: customizationScroll.host.launcherBehaviorSelected(checked, customizationScroll.host.keepSearchSeconds)
+      }
+
+      SettingsRow {
+        theme: customizationScroll.host.theme
+        label: "Keep the last search"
+        help: "Reopen on the search you closed, with its selection. A search an action ran from is not kept."
+        divider: false
+
+        SettingsChoice {
+          id: keepSearchChoice
+          theme: customizationScroll.host.theme
+          Layout.fillWidth: true
+          options: customizationScroll.host.keepSearchOptions
+          Accessible.name: "Keep the last search"
+          Accessible.description: "How long a closed search is kept for reopening"
+          Component.onCompleted: currentIndex = customizationScroll.host.keepSearchIndex(customizationScroll.host.keepSearchSeconds)
+          Connections {
+            target: customizationScroll.host
+            function onKeepSearchSecondsChanged() {
+              keepSearchChoice.currentIndex = customizationScroll.host.keepSearchIndex(customizationScroll.host.keepSearchSeconds)
+            }
+          }
+          onActivated: index => customizationScroll.host.launcherBehaviorSelected(
+            customizationScroll.host.escapeClearsSearch, customizationScroll.host.keepSearchOptions[index].id)
+        }
       }
     }
 

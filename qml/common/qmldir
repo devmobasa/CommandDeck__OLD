@@ -85,6 +85,7 @@ IndexInspector 1.0 IndexInspector.qml
 InvocationController 1.0 InvocationController.qml
 KeyCap 1.0 KeyCap.qml
 KeyboardButton 1.0 KeyboardButton.qml
+LauncherBehaviorStore 1.0 LauncherBehaviorStore.qml
 LauncherLifecycleController 1.0 LauncherLifecycleController.qml
 LauncherProtocolController 1.0 LauncherProtocolController.qml
 LayoutStore 1.0 LayoutStore.qml

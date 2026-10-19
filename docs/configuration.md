@@ -30,7 +30,7 @@ with `scripts/generate-reference-docs.sh`.
 The runtime never rewrites an existing JSONC file. `config init` refuses to
 overwrite unless you pass `--force`. Launcher personalization (bookmarks,
 aliases, source visibility, reduced motion, display-size, transparency, layout,
-and color presets) lives outside JSONC: SQLite for daemon-owned preferences, and small
+closing behavior, and color presets) lives outside JSONC: SQLite for daemon-owned preferences, and small
 QML state files under `$XDG_STATE_HOME/commanddeck/` for overlay-only choices.
 There is no `config migrate` command yet; option renames will need one.
 

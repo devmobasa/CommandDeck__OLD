@@ -191,6 +191,32 @@ EventPathFixture {
       fixture.part_searchField.inputControl.text = ""
     }
 
+    // With Escape set to clear first, Escape empties a typed search or filter
+    // and keeps the launcher open; the next Escape closes it. Shift+Escape
+    // always asks for Home.
+    function test_escape_can_clear_the_search_before_closing() {
+      fixture.part_controller.escapeClearsQuery = true
+      fixture.part_controller.activeFilters = [{ id: "files", excluded: false }]
+      fixture.part_searchField.inputControl.forceActiveFocus()
+      typeText("notes")
+      const dismissed = fixture.part_controller.dismissCalls
+      keyClick(Qt.Key_Escape)
+      compare(fixture.part_controller.queryText, "")
+      compare(fixture.part_searchField.inputControl.text, "")
+      compare(fixture.part_controller.activeFilters.length, 0)
+      compare(fixture.part_controller.dismissCalls, dismissed, "the first Escape clears")
+      verify(fixture.part_searchField.inputControl.activeFocus)
+      keyClick(Qt.Key_Escape)
+      compare(fixture.part_controller.dismissCalls, dismissed + 1, "Escape on an empty search closes")
+
+      typeText("x")
+      keyClick(Qt.Key_Escape, Qt.ShiftModifier)
+      compare(fixture.part_controller.rootCalls, 1)
+      compare(fixture.part_controller.dismissCalls, dismissed + 1, "Shift+Escape never closes")
+      fixture.part_controller.escapeClearsQuery = false
+      fixture.part_searchField.inputControl.text = ""
+    }
+
     // Ctrl+U deletes from the start of the query to the caret, leaving the
     // rest and any filter chip, and the field keeps focus for typing.
     function test_control_u_deletes_the_query_before_the_caret() {

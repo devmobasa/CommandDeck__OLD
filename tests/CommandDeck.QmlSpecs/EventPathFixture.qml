@@ -112,6 +112,8 @@ Item {
     onHelpRequested: helpCalls++
     onPrimaryRequested: { primaryCalls++; invokedId = selectedResult() ? selectedResult().id : "" }
     onDismissRequested: dismissCalls++
+    property int rootCalls: 0
+    onRootRequested: rootCalls++
   }
 
   CommandDeck.CommandDeckSearchField {

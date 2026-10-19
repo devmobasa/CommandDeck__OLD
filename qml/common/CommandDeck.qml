@@ -35,6 +35,7 @@ CommandDeckState {
   readonly property alias part_transparencyStore: displayPreferences.transparencyStore
   readonly property alias part_displayScaleStore: displayPreferences.displayScaleStore
   readonly property alias part_layoutStore: displayPreferences.layoutStore
+  readonly property alias part_behaviorStore: displayPreferences.behaviorStore
   readonly property alias part_colorThemeStore: displayPreferences.colorThemeStore
   readonly property alias part_navigation: navigation
   readonly property alias part_filterCatalog: filterCatalog
@@ -102,6 +103,8 @@ CommandDeckState {
   function applyCompactLayout(enabled) { return DeckDisplayActions.applyCompactLayout(root, enabled) }
   function applyPreviewPane(visible) { return DeckDisplayActions.applyPreviewPane(root, visible) }
   function togglePreviewPane() { return DeckDisplayActions.togglePreviewPane(root) }
+  function applyLauncherBehavior(escapeClears, keepSeconds) { return part_behaviorStore.set(escapeClears, keepSeconds) }
+  function backToRoot() { return DeckSearchActions.backToRoot(root) }
 
   function applyPanelTransparency(enabled, percent) { return DeckDisplayActions.applyPanelTransparency(root, enabled, percent) }
 
@@ -527,6 +530,8 @@ CommandDeckState {
     onHelpRequested: root.toggleHelp()
     // Esc from the search field: an open inline answer closes first.
     onDismissRequested: root.escapeFromSearch()
+    onRootRequested: root.backToRoot()
+    escapeClearsQuery: root.escapeClearsSearch
     onPrimaryRequested: root.invokeSelectedPrimary()
     onSelectionIdentityChanged: result => root.requestPreview(result)
   }
@@ -547,7 +552,10 @@ CommandDeckState {
     nextRequestId: () => ++root.requestSequence
     onRequest: value => root.part_protocol.send(value)
     onReturned: { if (root.opened) root.requestSearch() }
-    onExternalActionCompleted: root.dismiss()
+    onExternalActionCompleted: {
+      root.forgetSearchOnClose = true
+      root.dismiss()
+    }
   }
   ExtensionManagementController {
     id: extensionManagementController

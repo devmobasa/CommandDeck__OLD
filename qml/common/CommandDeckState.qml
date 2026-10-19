@@ -93,6 +93,13 @@ Item {
   property bool compactLayout: false
   // The details and file preview pane beside the results (QML-only).
   property bool previewPaneVisible: true
+  // Closing and reopening (QML-only): Escape may clear the search first, and a
+  // search the user closed is kept this long. lastSearch holds it meanwhile; an
+  // action that ran and closed the launcher sets forgetSearchOnClose instead.
+  property bool escapeClearsSearch: false
+  property int keepSearchSeconds: 0
+  property var lastSearch: null
+  property bool forgetSearchOnClose: false
   property bool aiFeaturesEnabled: true
   readonly property string aiSaveDirectory: {
     const home = Quickshell.env("HOME")

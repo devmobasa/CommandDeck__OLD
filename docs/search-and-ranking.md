@@ -342,6 +342,12 @@ ID even when its section changes. Navigation while waiting remains effective; a 
 query or disappearing selection chooses the first result. Action menus retain
 their opening result identity, and stale query responses cannot replace results.
 Space in the search input continues to type text.
+Escape closes the launcher. In Settings > Customization, Escape can clear a typed
+search or filter first, and a search you close can be kept for 30 seconds to
+10 minutes so reopening shows it with its selection. A search an action ran
+from, a private-source search, and an explicit open query are never restored.
+Shift+Escape returns to an empty search on Home from any filter or folder.
+
 Moving the pointer over a result selects it without taking focus from search.
 A row that appears or scrolls under a resting pointer, including when the
 launcher opens, does not take the selection from the keyboard.

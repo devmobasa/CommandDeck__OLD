@@ -86,6 +86,23 @@ QtObject {
     host.expect(layout.parse("").preview && !layout.parse("preview=off").preview
         && layout.parse("preview=maybe").preview,
       "the layout file shows the preview pane unless it is off")
+    const behavior = host.part_integratedDeck.part_behaviorStore
+    const parsed = behavior.parse("escape=clear\nkeep=120\n")
+    host.expect(parsed.escapeClears && parsed.keepSeconds === 120
+        && !behavior.parse("").escapeClears && behavior.parse("").keepSeconds === 0
+        && behavior.parse("keep=45").keepSeconds === 0 && !behavior.parse("escape=maybe").escapeClears,
+      "the behaviour file reads only the offered choices, else closes at once and keeps nothing")
+    host.part_settings.escapeClearsSearch = false
+    host.part_settings.keepSearchSeconds = 30
+    host.part_settings.behaviorChosen = null
+    host.part_settings.escapeClearsControl.click()
+    host.expect(host.part_settings.behaviorChosen !== null && host.part_settings.behaviorChosen.escapeClears === true
+        && host.part_settings.behaviorChosen.keepSeconds === 30,
+      "the Escape toggle emits its choice with the kept-search time")
+    host.part_settings.keepSearchControl.activated(3)
+    host.expect(host.part_settings.behaviorChosen.keepSeconds === 600,
+      "choosing how long to keep the last search emits it")
+    host.part_settings.keepSearchSeconds = 0
     host.part_settings.previewPaneVisible = true
     host.part_settings.previewPaneControl.click()
     host.expect(host.part_settings.previewPaneChosen === false,

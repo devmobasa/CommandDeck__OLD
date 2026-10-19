@@ -25,6 +25,8 @@ TestCase {
     fixture.part_searchField.zoomRequests = []
     fixture.part_searchField.previewToggles = 0
     fixture.part_controller.recalledText = ""
+    fixture.part_controller.escapeClearsQuery = false
+    fixture.part_controller.rootCalls = 0
     fixture.part_footerActions.availableWidth = 100000
     fixture.part_footerActions.directActions = []
     fixture.part_footerActions.compact = false

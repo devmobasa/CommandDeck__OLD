@@ -24,11 +24,15 @@ QtObject {
   // The query text the last recall produced; Up keeps stepping back through
   // history while the query still reads exactly this.
   property string recalledText: ""
+  // Escape clears a non-empty search before it closes the launcher.
+  property bool escapeClearsQuery: false
 
   signal searchRequested()
   signal settingsRequested()
   signal helpRequested()
   signal dismissRequested()
+  // Shift+Escape: back to an empty search on Home from any filter or view.
+  signal rootRequested()
   signal primaryRequested()
   signal selectionIdentityChanged(var result)
 
@@ -79,6 +83,14 @@ QtObject {
   }
 
   function dismiss() {
+    if (escapeClearsQuery && herdrWorkspaceId.length === 0
+        && (queryText.length > 0 || activeFilters.length > 0)) {
+      activeFilters = []
+      queryText = ""
+      searchRequested()
+      focusRevision++
+      return
+    }
     if (herdrWorkspaceId.length > 0) {
       if (queryText.length > 0) {
         queryText = ""

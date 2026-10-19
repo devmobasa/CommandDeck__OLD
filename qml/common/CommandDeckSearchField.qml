@@ -327,6 +327,9 @@ Rectangle {
                    && root.controller.selectedResult()) {
           root.actionsRequested()
           event.accepted = true
+        } else if (event.key === Qt.Key_Escape && shift) {
+          root.controller.rootRequested()
+          event.accepted = true
         } else if (event.key === Qt.Key_Escape) {
           root.controller.dismiss()
           event.accepted = true

@@ -71,7 +71,8 @@ Rectangle {
         { keys: ["Ctrl+I"], text: "Show or hide the preview pane" },
         { keys: clipboardShortcut ? [root.chordLabel(clipboardShortcut)] : [], text: clipboardShortcut ? "Clipboard History" : "Clipboard History shortcut disabled" },
         { keys: ["F1", "Ctrl+/"], text: "This sheet" },
-        { keys: ["Esc"], text: "Close CommandDeck" }
+        { keys: ["Esc"], text: "Close CommandDeck (or clear the search first, in Settings)" },
+        { keys: ["Shift+Esc"], text: "Back to an empty search on Home" }
       ]
     }
   ]

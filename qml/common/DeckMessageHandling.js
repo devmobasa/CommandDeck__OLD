@@ -226,6 +226,7 @@ function handleMessage(root, message) {
     } else if (transition.refresh) {
       root.requestSearch()
     } else if (transition.dismiss) {
+      root.forgetSearchOnClose = true
       root.dismiss()
     }
     return

@@ -81,6 +81,10 @@ SettingsPanel {
   onCompactLayoutSelected: enabled => settingsPanel.host.host.applyCompactLayout(enabled)
   previewPaneVisible: settingsPanel.host.host.previewPaneVisible
   onPreviewPaneSelected: visible => settingsPanel.host.host.applyPreviewPane(visible)
+  escapeClearsSearch: settingsPanel.host.host.escapeClearsSearch
+  keepSearchSeconds: settingsPanel.host.host.keepSearchSeconds
+  onLauncherBehaviorSelected: (escapeClears, keepSeconds) =>
+    settingsPanel.host.host.applyLauncherBehavior(escapeClears, keepSeconds)
   panelTransparencyEnabled: settingsPanel.host.host.panelTransparencyEnabled
   panelTransparencyPercent: settingsPanel.host.host.panelTransparencyPercent
   onPanelTransparencyChanged: (enabled, percent) =>

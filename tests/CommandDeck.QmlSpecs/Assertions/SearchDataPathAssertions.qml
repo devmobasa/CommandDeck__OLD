@@ -52,8 +52,73 @@ QtObject {
     verifyLocalEditsKeepFreshReferences(deck)
     verifyUpRecallsRecentQueries(deck)
     verifyHiddenPreviewPaneLoadsNothing(deck)
+    verifyClosedSearchIsKeptForReopen(deck)
 
     if (!wasOpened) deck.close()
+  }
+
+  // With a kept-search time, closing keeps the search and reopening soon
+  // shows it with its selection. A search an action ran from, an expired or
+  // private one, and an explicit open query are not restored. Shift+Escape
+  // returns to an empty Home search from any filter or folder.
+  function verifyClosedSearchIsKeptForReopen(deck) {
+    const rows = () => [result("file:k1", "k1.txt"), result("file:k2", "k2.txt")]
+    const searchFor = query => {
+      deck.queryText = query
+      deck.requestSearch()
+      deliver(deck, rows())
+    }
+    deck.applyLauncherBehavior(false, 30)
+    searchFor("kept")
+    deck.selectedIndex = deck.navigationController.indexOfResultId("file:k2")
+    deck.close()
+    host.expect(!deck.opened && deck.lastSearch !== null && deck.lastSearch.query === "kept",
+      "closing keeps the search the user closed")
+    const start = deck.sentRequests.length
+    deck.open("{}")
+    const search = lastRequest(deck, start, Protocol.Operations.Search)
+    host.expect(deck.queryText === "kept" && search !== undefined && search.query === "kept",
+      "reopening soon shows and searches the kept query")
+    deliver(deck, rows())
+    host.expect(deck.currentResult !== null && deck.currentResult.id === "file:k2",
+      "the reopened search selects the result that was selected")
+
+    deck.forgetSearchOnClose = true
+    deck.close()
+    deck.open("{}")
+    host.expect(deck.queryText === "", "a search an action ran from is not kept")
+    deliver(deck, [])
+
+    searchFor("stale")
+    deck.close()
+    deck.lastSearch.closedAt -= 31000
+    deck.open("{}")
+    host.expect(deck.queryText === "", "a kept search expires after its time")
+    deliver(deck, [])
+
+    searchFor("kept")
+    deck.close()
+    deck.open(JSON.stringify({ query: "explicit" }))
+    host.expect(deck.queryText === "explicit", "an explicit open query wins over the kept search")
+    deliver(deck, [])
+
+    deck.activeFilters = [{ id: Protocol.SourceIds.Hey, excluded: false }]
+    deck.queryText = "invoice"
+    deck.close()
+    host.expect(deck.lastSearch === null, "a private source search is never kept")
+    deck.open("{}")
+    deliver(deck, [])
+
+    deck.activeFilters = [{ id: Protocol.SourceIds.Files, excluded: false }]
+    deck.queryText = "x"
+    deck.browseDirectory = "/tmp"
+    const rootStart = deck.sentRequests.length
+    deck.backToRoot()
+    host.expect(deck.queryText === "" && deck.activeFilters.length === 0 && deck.browseDirectory === ""
+        && lastRequest(deck, rootStart, Protocol.Operations.Search) !== undefined,
+      "Shift+Escape returns to an empty Home search")
+    deliver(deck, [])
+    deck.applyLauncherBehavior(false, 0)
   }
 
   // A hidden preview pane requests no file preview as the selection moves;
