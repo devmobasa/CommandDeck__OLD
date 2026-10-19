@@ -155,9 +155,17 @@ Rectangle {
   readonly property string actionHintText: root.actionCount > 1
     ? root.actionCount + " actions"
     : ""
+  // Omarchy menu state from the daemon: a ✓ for a checked row, and a dimmed
+  // row whose guard failed. Both are presentation only; actions stay as they are.
+  readonly property bool omarchyChecked: !!root.result && !!root.result.metadata
+    && root.result.metadata[Protocol.ResultMetadataKeys.OmarchyChecked] === "true"
+  readonly property bool omarchyUnavailable: !!root.result && !!root.result.metadata
+    && root.result.metadata[Protocol.ResultMetadataKeys.OmarchyUnavailable] === "true"
   readonly property string accessibilityName:
     (root.ordinal > 0 ? root.ordinal + ", " : "")
       + root.titleText
+      + (root.omarchyChecked ? ", checked" : "")
+      + (root.omarchyUnavailable ? ", unavailable here" : "")
       + (root.statusBadgeText ? ", " + root.statusBadgeText : "")
       + (root.subtitleText ? ", " + root.subtitleText : "")
       + (root.hasKindCue ? ", " + root.kindCue : "")
@@ -180,10 +188,12 @@ Rectangle {
   Accessible.selected: root.selected
 
   RowLayout {
+    id: content
     anchors.fill: parent
     anchors.leftMargin: root.theme.rowPaddingX
     anchors.rightMargin: root.theme.rowPaddingX
     spacing: root.theme.iconGap
+    opacity: root.omarchyUnavailable && !root.selected ? 0.5 : 1
 
     ResultIcon {
       theme: root.theme
@@ -342,6 +352,17 @@ Rectangle {
     }
 
     Text {
+      id: checkedMark
+      visible: root.omarchyChecked
+      text: "✓"
+      textFormat: Text.PlainText
+      color: root.theme.accent
+      font.family: root.theme.fontFamily
+      font.pixelSize: root.theme.fontBody
+      font.weight: Font.DemiBold
+    }
+
+    Text {
       visible: !!root.result && root.result.isFavorite === true
       text: "★"
       color: root.theme.accent
@@ -352,6 +373,8 @@ Rectangle {
 
   readonly property alias toolTipControl: rowToolTip
   readonly property alias ordinalBadgeControl: ordinalBadge
+  readonly property alias checkedMarkControl: checkedMark
+  readonly property real contentOpacity: content.opacity
   ThemedToolTip {
     id: rowToolTip
     theme: root.theme

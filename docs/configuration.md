@@ -106,6 +106,7 @@ object. Detailed guidance remains in the hand-written sections that follow.
 | `search.maximumLimit` | `integer` | `200` |
 | `search.providerTimeoutMilliseconds` | `integer` | `350` |
 | `search.learnFromInvocations` | `boolean` | `true` |
+| `search.omarchyMenuState` | `boolean` | `true` |
 | `search.calculator` | `CalculatorOptions` | object |
 | `search.calculator.useQalc` | `string` | `auto` |
 | `search.ranking` | `RankingOptions` | object |

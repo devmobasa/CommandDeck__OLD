@@ -94,6 +94,28 @@ QtObject {
 
     verifyTitleHighlighting()
     verifyCompactLayout()
+    verifyOmarchyState()
+  }
+
+  // An Omarchy row the daemon marks checked shows ✓, and one whose guard
+  // failed is dimmed unless selected. A refresh that only changes that state
+  // still repaints the row.
+  function verifyOmarchyState() {
+    const omarchy = (id, metadata) => Object.assign(result(id, id, "Omarchy", "eight"), {
+      kind: Protocol.ResultKinds.Omarchy, metadata: metadata })
+    show([omarchy("dark", { omarchyChecked: "true" }), omarchy("stale", { omarchyUnavailable: "true" })], true)
+    listNavigation.selectedIndex = 1
+    const dark = loaded(1)
+    const stale = loaded(2)
+    host.expect(dark.checkedMarkControl.visible && dark.accessibilityName.indexOf(", checked") >= 0
+        && !stale.checkedMarkControl.visible && stale.accessibilityName.indexOf("unavailable here") >= 0,
+      "a checked Omarchy row shows a check mark and both states are announced")
+    host.expect(stale.contentOpacity === 0.5 && dark.contentOpacity === 1,
+      "an unavailable Omarchy row is dimmed")
+    listNavigation.selectedIndex = 2
+    host.expect(stale.contentOpacity === 1, "a selected unavailable row is shown in full")
+    show([omarchy("dark", {}), omarchy("stale", { omarchyUnavailable: "true" })], false)
+    host.expect(!loaded(1).checkedMarkControl.visible, "a refresh that clears the check repaints the row")
   }
 
   // The compact layout puts every row on one line and shows its Ctrl+number

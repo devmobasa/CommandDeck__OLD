@@ -127,6 +127,8 @@ public static partial class Program
         await RunAsync( "snippet input defaults reach preview and copy", SnippetInputDefaultsReachPreviewAndCopyAsync );
         await RunAsync( "snippet clipboard history offsets are private and need consent", SnippetClipboardHistoryOffsetsArePrivateAndNeedConsentAsync );
         await RunAsync( "project checkouts have distinct paths and usable actions", ProjectCheckoutsAsync );
+        await RunAsync( "omarchy menu state marks rows from one bounded batch", OmarchyMenuStateMarksRowsFromOneBatchAsync );
+        Run( "omarchy menu state isolates each condition in the batch", OmarchyMenuStateScriptIsolatesEachCondition );
         await RunAsync(
             "systemd provider discovers services and timers without reading logs",
             SystemdProviderDiscoversUnitsAsync );

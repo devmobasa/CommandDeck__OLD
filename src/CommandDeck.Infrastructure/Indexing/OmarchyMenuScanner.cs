@@ -78,7 +78,9 @@ public static class OmarchyMenuScanner
                     ("source", entry.SourcePath),
                     ("menuId", id),
                     ("menuRoot", menuRoot),
-                    ("sourceGroup", SourceIds.OmarchyControl) ),
+                    ("sourceGroup", SourceIds.OmarchyControl),
+                    (OmarchyMenuState.WhenKey, entry.When),
+                    (OmarchyMenuState.CheckedKey, entry.Checked) ),
                 ProviderId = ProviderIds.Omarchy,
                 SourceId = SourceIds.OmarchyControl
             } );

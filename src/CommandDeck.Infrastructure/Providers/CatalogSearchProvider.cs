@@ -4,13 +4,16 @@ public sealed class CatalogSearchProvider : ICommandProvider
 {
     private readonly ICatalogQueryStore _catalog;
     private readonly ILauncherSearchPreferences? _preferences;
+    private readonly OmarchyMenuState? _omarchyState;
 
     public CatalogSearchProvider(
         ICatalogQueryStore catalog,
-        ILauncherSearchPreferences? preferences = null )
+        ILauncherSearchPreferences? preferences = null,
+        OmarchyMenuState? omarchyState = null )
     {
         _catalog = catalog;
         _preferences = preferences;
+        _omarchyState = omarchyState;
     }
 
     public string Id => ProviderIds.Catalog;
@@ -53,9 +56,12 @@ public sealed class CatalogSearchProvider : ICommandProvider
                         .ConfigureAwait( false )
                     : await _catalog.SearchAsync( query, request.Limit, cancellationToken )
                         .ConfigureAwait( false );
-            return alias is null
+            IReadOnlyList<SearchResult> found = alias is null
                 ? results
                 : [alias, .. results.Where( result => result.Id != alias.Id )];
+            return _omarchyState is null
+                ? found
+                : await _omarchyState.ApplyAsync( found, cancellationToken ).ConfigureAwait( false );
         }
 
         var applicationQuery = QueryParser.Parse( $"app: {invocation.ApplicationQuery}" );

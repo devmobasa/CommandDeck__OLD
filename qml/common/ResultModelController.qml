@@ -132,6 +132,10 @@ QtObject {
       && previous.icon === next.icon && previous.isFavorite === next.isFavorite
       && previousSection.title === nextSection.title
       && previousMetadata.herdrAgentStatus === nextMetadata.herdrAgentStatus
+      && previousMetadata[Protocol.ResultMetadataKeys.OmarchyChecked]
+        === nextMetadata[Protocol.ResultMetadataKeys.OmarchyChecked]
+      && previousMetadata[Protocol.ResultMetadataKeys.OmarchyUnavailable]
+        === nextMetadata[Protocol.ResultMetadataKeys.OmarchyUnavailable]
       && sameList(previous.aliases, next.aliases, (left, right) => left === right)
       && sameList(previous.matchedRanges, next.matchedRanges,
         (left, right) => left.start === right.start && left.length === right.length)

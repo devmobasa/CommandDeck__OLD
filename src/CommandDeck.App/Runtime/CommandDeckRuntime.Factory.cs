@@ -76,6 +76,12 @@ public sealed partial class CommandDeckRuntime
                 resources.Own( extensionSearch );
                 HerdrClient herdr = new( );
                 HeyClient hey = new( );
+                OmarchyMenuState? omarchyState = options.Search.OmarchyMenuState ? new( ) : null;
+                if ( omarchyState is not null )
+                {
+                    resources.OwnDisposable( omarchyState );
+                }
+
                 List<ICommandProvider> providers =
                 [
                     new CalculatorProvider(
@@ -83,7 +89,7 @@ public sealed partial class CommandDeckRuntime
                 available: null,
                 options: options.Search.Calculator),
             new ApplicationSearchProvider(catalog),
-            new CatalogSearchProvider(catalog, catalog.LauncherPreferences),
+            new CatalogSearchProvider(catalog, catalog.LauncherPreferences, omarchyState),
             new ExtensionCommandProvider(extensions, catalog.LauncherPreferences),
             extensionSearch,
             new HyprlandProvider(catalog),

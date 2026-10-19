@@ -481,7 +481,9 @@ var UndoActions = Object.freeze({
 var ResultMetadataKeys = Object.freeze({
   CatalogResultId: "catalogResultId",
   CompletionText: "completionText",
-  ExactAlias: "exactAlias"
+  ExactAlias: "exactAlias",
+  OmarchyChecked: "omarchyChecked",
+  OmarchyUnavailable: "omarchyUnavailable"
 });
 
 var ShortcutStatuses = Object.freeze({

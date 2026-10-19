@@ -52,6 +52,9 @@ public sealed class SearchOptions
     public int MaximumLimit { get; init; } = 200;
     public int ProviderTimeoutMilliseconds { get; init; } = 350;
     public bool LearnFromInvocations { get; init; } = true;
+    // Run the `when` and `checked` conditions of Omarchy menu rows a search
+    // shows, to dim rows whose guard fails and mark checked ones.
+    public bool OmarchyMenuState { get; init; } = true;
     public CalculatorOptions Calculator { get; init; } = new( );
     public RankingOptions Ranking { get; init; } = new( );
 
