@@ -19,6 +19,7 @@ Item {
   property int originalDebounce: 0
 
   SavedSearchShortcutJourneyAssertions { id: savedShortcuts; host: journey.host }
+  HoverSelectionJourneyAssertions { id: hoverSelection; host: journey.host }
 
   Timer {
     id: stepTimer
@@ -400,7 +401,7 @@ Item {
         }
       }
     ]
-    steps = steps.concat(savedShortcuts.steps())
+    steps = steps.concat(savedShortcuts.steps()).concat(hoverSelection.steps())
     stepIndex = 0
     deadline = Date.now() + 2000
     stepTimer.start()

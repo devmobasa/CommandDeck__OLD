@@ -16,8 +16,15 @@ ColumnLayout {
   readonly property alias part_footerActions: footerActions
   readonly property alias part_detailPane: detailPane
   readonly property alias part_statusLine: statusLine
+  readonly property alias part_pointerGate: resultPointerGate
 
   id: launcherContent
+
+  PointerMoveGate { id: resultPointerGate }
+  Connections {
+    target: launcherContent.host
+    function onVisibleChanged() { resultPointerGate.reset() }
+  }
   visible: !launcherContent.host.host.part_extensionController.opened && !launcherContent.host.host.part_clipboardController.opened
   anchors.fill: parent
   anchors.margins: launcherContent.host.host.part_appTheme.panelPadding
@@ -107,6 +114,8 @@ ColumnLayout {
           launcherContent.host.host.selectedIndex = listRow.index
           launcherContent.host.openActionPanel()
         }
+        pointerGate: resultPointerGate
+        onHoverSelected: launcherContent.host.host.selectedIndex = listRow.index
       }
     }
 

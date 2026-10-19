@@ -33,6 +33,8 @@ Rectangle {
   property int actionCount: 0
   signal activated()
   signal actionsRequested()
+  // The pointer's window position on every hover update over the row.
+  signal pointerMoved(real x, real y)
 
   readonly property string titleText: root.result && root.result.title
     ? root.result.title
@@ -359,5 +361,9 @@ Rectangle {
     hoverEnabled: true
     onClicked: root.activated()
     onPressAndHold: root.actionsRequested()
+    onPositionChanged: mouse => {
+      const point = rowMouse.mapToItem(null, mouse.x, mouse.y)
+      root.pointerMoved(point.x, point.y)
+    }
   }
 }

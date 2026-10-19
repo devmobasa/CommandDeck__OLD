@@ -342,6 +342,9 @@ ID even when its section changes. Navigation while waiting remains effective; a 
 query or disappearing selection chooses the first result. Action menus retain
 their opening result identity, and stale query responses cannot replace results.
 Space in the search input continues to type text.
+Moving the pointer over a result selects it without taking focus from search.
+A row that appears or scrolls under a resting pointer, including when the
+launcher opens, does not take the selection from the keyboard.
 
 With query history on (`privacy.storeQueryHistory`), Up from the first row of an
 empty search recalls the most recent query and searches it; Up again on the

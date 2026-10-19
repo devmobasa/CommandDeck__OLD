@@ -19,8 +19,13 @@ Loader {
   // row so the "N actions" affordance appears there.
   property int actionCount: 0
 
+  // Set by the list: a hover over a row selects it only after a real pointer
+  // move, never because the row moved under a resting pointer.
+  property PointerMoveGate pointerGate: null
+
   signal activated()
   signal actionsRequested()
+  signal hoverSelected()
 
   sourceComponent: root.isHeader ? headerComponent : resultComponent
 
@@ -45,6 +50,9 @@ Loader {
       actionCount: root.actionCount
       onActivated: root.activated()
       onActionsRequested: root.actionsRequested()
+      onPointerMoved: (x, y) => {
+        if (root.pointerGate && root.pointerGate.moved(x, y)) root.hoverSelected()
+      }
     }
   }
 }
