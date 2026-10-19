@@ -81,6 +81,14 @@ public interface IUsageSignalStore
         IReadOnlyList<string> stableIds, CancellationToken cancellationToken );
 }
 
+public interface ILearnedQueryStore
+{
+    // Stable IDs accepted after a search matching this query since the given
+    // time, with the best match for each; empty while query history is off.
+    ValueTask<IReadOnlyDictionary<string, LearnedQuery>> GetLearnedQueriesAsync(
+        string query, long sinceUnixMilliseconds, CancellationToken cancellationToken );
+}
+
 public interface IQueryHistoryStore
 {
     ValueTask<QueryHistorySnapshot> GetQueryHistoryAsync( int limit, CancellationToken cancellationToken );

@@ -105,8 +105,11 @@ public sealed partial class SearchCoordinator
             .Where( result => purpose == SearchPurpose.Interactive || !PrivateSources.IsPrivate( result ) )
             .Where( result => IsAllowedResult( result, parsed, plan.EnabledSources, request.HerdrWorkspaceId ) )
             .Where( result => !hidden.Contains( UsageId( result ) ) ).ToArray( );
-        var liveUsage =
-            await ReadSearchUsageAsync( candidates, parsed, IsFolderBrowsing( request, parsed ), cancellationToken ).ConfigureAwait( false );
+        var learnedQueries = UseTopMatches( request, parsed )
+            ? await ReadLearnedQueriesAsync( effectiveRequest, purpose, now, cancellationToken ).ConfigureAwait( false )
+            : new Dictionary<string, LearnedQuery>( StringComparer.Ordinal );
+        var liveUsage = await ReadSearchUsageAsync( candidates, parsed, IsFolderBrowsing( request, parsed ),
+            learnedQueries, cancellationToken ).ConfigureAwait( false );
         Dictionary<string, SearchResult> deduplicated = new( StringComparer.Ordinal );
         foreach ( var rawResult in candidates )
         {
@@ -130,7 +133,7 @@ public sealed partial class SearchCoordinator
         var trailing = collapsed.Where( ResultPlacements.IsTrailing ).Take( ResultPlacements.MaximumTrailing ).ToArray( );
         var ordinary = collapsed.Where( static result => !ResultPlacements.IsTrailing( result ) ).ToArray( );
         var results = UseTopMatches( request, parsed )
-            ? AssembleTopMatches( ordinary, parsed, preferences, limit, liveUsage, now )
+            ? AssembleTopMatches( ordinary, parsed, preferences, limit, liveUsage, learnedQueries, now )
             : AssembleSections( ordinary, parsed, preferences, limit );
         return new SearchOutcome( OfferRankingReset( [.. results, .. trailing], purpose ), collection.IncompleteProviderCount );
     }

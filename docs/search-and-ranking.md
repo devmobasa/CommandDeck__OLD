@@ -185,6 +185,18 @@ tiers are:
 2. **Exact:** case-insensitive exact trimmed title or path basename.
 3. **Learned:** a strong title/basename match with at least two accepted uses and
    last use no more than 21 days ago, inclusive.
+   With query history on (`privacy.storeQueryHistory`), a result is also learned
+   for a query the user typed before accepting it: the same query after one
+   accepted use, or a longer learned query that this one begins (two or more
+   characters) after two. Typing `ff` and accepting Firefox makes `ff` promote
+   Firefox, though `ff` is no word prefix of its title. The query must have been
+   searched within 21 days, and the result's last use must fall within them too.
+
+Learned queries come from the opt-in query history table, apply only to interactive
+searches, and still need a retrieved candidate: they reorder results, they do not
+add any. The placement reason names the kind of match, never the query. Because
+they also need recent usage, a ranking reset or a per-result Reset Ranking ends
+them as well.
 
 Learned eligibility requires at least two positive text elements after matcher
 normalization. Every positive unqualified clause must be a whole-title or
