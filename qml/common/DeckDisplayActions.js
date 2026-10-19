@@ -92,7 +92,8 @@ function invokeShortcut(root, id) {
 function shortcutActions(root, result) {
   if (!result) return []
   const listed = (result.actions || []).filter(value => value.hidden !== true)
-  const later = listed.slice(1)
+  // Reset Ranking keeps its own chord and is never a second or third action.
+  const later = listed.slice(1).filter(value => value.kind !== Protocol.ActionKinds.ResetRanking)
   const secondary = later.find(value => value.id === Ui.SearchShortcut.Reveal) || later[0]
   const tertiary = later.find(value => value !== secondary)
   const shortcuts = []
@@ -103,6 +104,9 @@ function shortcutActions(root, result) {
   const copy = listed.find(value => value.id === Ui.SearchShortcut.CopyPath)
     || listed.find(value => value.kind === Protocol.ActionKinds.CopyText)
   if (copy) shortcuts.push({ id: copy.id, title: copy.title, keyLabel: "Ctrl+Shift+C", slot: Ui.ShortcutSlot.Copy })
+  const reset = listed.find(value => value.kind === Protocol.ActionKinds.ResetRanking)
+  if (reset) shortcuts.push({ id: reset.id, title: reset.title, keyLabel: "Alt+Shift+R",
+    slot: Ui.ShortcutSlot.ResetRanking })
   if (!result.canCustomize) return shortcuts
 
   const aliased = result.aliases && result.aliases.length > 0

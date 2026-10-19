@@ -116,6 +116,8 @@ public static class ActionKinds
     public const string HeyReadThread = "hey-read-thread";
     public const string HeyTriage = "hey-triage";
     public const string ProcessSignal = "process-signal";
+    // Handled by the invocation workflow: forgets one result's accepted uses.
+    public const string ResetRanking = "reset-ranking";
     // Handled by the launcher: replaces the query (and its filter chip) and searches.
     public const string ApplyQuery = "apply-query";
 }

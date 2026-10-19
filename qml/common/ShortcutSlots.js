@@ -19,6 +19,7 @@ function slotForKey(key, modifiers) {
   if (control && key === Qt.Key_D) return Ui.ShortcutSlot.Favorite
   if (altShift && key === Qt.Key_A) return Ui.ShortcutSlot.Alias
   if (altShift && key === Qt.Key_D) return Ui.ShortcutSlot.Hide
+  if (altShift && key === Qt.Key_R) return Ui.ShortcutSlot.ResetRanking
   return ""
 }
 

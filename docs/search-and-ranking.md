@@ -245,7 +245,10 @@ removes aggregates whose last use is too old.
 
 Turning learning off does not delete history. `commanddeck ranking reset --yes`
 clears usage and invocation events; promotion disappears on the next search
-without a daemon restart. Query history has its own reset operation.
+without a daemon restart. A result ranked by accepted use also offers **Reset Ranking**
+(Alt+Shift+R) in its actions: it forgets that result's usage and invocation
+events under its canonical ID only, records no use itself, and searches again.
+Assistant tools are never offered it. Query history has its own reset operation.
 
 ## Home and keyboard behavior
 

@@ -15,7 +15,8 @@ internal sealed class LauncherOwnedActionHandler : ILinuxActionHandler
         [ActionKinds.ExtensionOpen] = "Extension commands must use the protocol 'extension.open' operation so their view can be rendered.",
         [ActionKinds.AiPrompt] = "AI actions must use the protocol 'ai' operation so the response can be rendered.",
         [ActionKinds.AgentPrompt] = "Assistant actions must use the protocol 'agent' operations so the conversation can be rendered.",
-        [ActionKinds.AgentOpen] = "Assistant actions must use the protocol 'agent' operations so the conversation can be rendered."
+        [ActionKinds.AgentOpen] = "Assistant actions must use the protocol 'agent' operations so the conversation can be rendered.",
+        [ActionKinds.ResetRanking] = "Ranking resets run in the daemon's invocation workflow."
     };
 
     public IReadOnlyList<string> Kinds { get; } = [.. Refusals.Keys];

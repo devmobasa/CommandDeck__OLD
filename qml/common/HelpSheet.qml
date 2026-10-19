@@ -52,6 +52,7 @@ Rectangle {
         { keys: ["Ctrl+D"], text: "Toggle bookmark for a customizable result" },
         { keys: ["Alt+Shift+A"], text: "Set or edit the result's alias" },
         { keys: ["Alt+Shift+D"], text: "Don't show this result" },
+        { keys: ["Alt+Shift+R"], text: "Reset the result's ranking" },
         { keys: ["←", "Esc"], text: "Close the action panel" }
       ]
     },

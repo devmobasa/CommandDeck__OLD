@@ -99,6 +99,8 @@ public interface IUsageHistoryStore : IUsageSignalStore, IQueryHistoryStore
         int limit,
         CancellationToken cancellationToken );
     ValueTask ResetRankingLearningAsync( CancellationToken cancellationToken );
+    // Forgets one stable ID's accepted uses; false when it had none.
+    ValueTask<bool> ResetRankingForAsync( string stableId, CancellationToken cancellationToken );
 }
 
 public interface ISearchCatalog :

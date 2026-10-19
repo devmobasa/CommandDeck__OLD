@@ -361,6 +361,27 @@ internal sealed class SqliteUsageHistoryStore(
         await transaction.CommitAsync( cancellationToken ).ConfigureAwait( false );
     }
 
+    public async ValueTask<bool> ResetRankingForAsync( string stableId, CancellationToken cancellationToken )
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace( stableId );
+
+        await initialize( cancellationToken ).ConfigureAwait( false );
+        await using var connection = await open( cancellationToken ).ConfigureAwait( false );
+        await using var transaction =
+            ( SqliteTransaction ) await connection.BeginTransactionAsync( cancellationToken )
+                .ConfigureAwait( false );
+        await using var command = connection.CreateCommand( );
+        command.Transaction = transaction;
+        command.CommandText = """
+            DELETE FROM invocation_events WHERE stable_id = $stable_id;
+            DELETE FROM usage WHERE stable_id = $stable_id;
+            """;
+        command.Parameters.AddWithValue( "$stable_id", stableId );
+        var removed = await command.ExecuteNonQueryAsync( cancellationToken ).ConfigureAwait( false );
+        await transaction.CommitAsync( cancellationToken ).ConfigureAwait( false );
+        return removed > 0;
+    }
+
     private async ValueTask PurgeExpiredLearningAsync(
         SqliteConnection connection,
         SqliteTransaction transaction,

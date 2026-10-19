@@ -130,7 +130,7 @@ function invokeAction(root, result, action, confirmed, inputValues, fromUndo) {
 
   const refreshAfterAction = (action.kind === Protocol.ActionKinds.ClipboardHistory && action.id !== Ui.OutputAction.Copy)
     || action.kind === Protocol.ActionKinds.HerdrCreateTab || action.kind === Protocol.ActionKinds.HerdrRenameTab
-    || action.kind === Protocol.ActionKinds.HeyTriage
+    || action.kind === Protocol.ActionKinds.HeyTriage || action.kind === Protocol.ActionKinds.ResetRanking
     || (action.kind === Protocol.ActionKinds.SystemdUnit
       && [Protocol.SystemdUnitActionIds.Start, Protocol.SystemdUnitActionIds.Stop,
         Protocol.SystemdUnitActionIds.Restart].indexOf(action.id) >= 0)

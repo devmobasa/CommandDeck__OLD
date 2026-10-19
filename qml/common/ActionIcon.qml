@@ -20,6 +20,7 @@ Text {
       case Ui.ResultAction.AliasEdit: return "#"
       case Ui.ResultAction.HideResult: return "⊘"
       case Ui.ResultAction.RankingExplanation: return "?"
+      case Protocol.ActionKinds.ResetRanking: return "↺"
       case Protocol.ActionKinds.OpenPath:
       case Protocol.ActionKinds.OpenUrl:
       case Protocol.ActionKinds.LaunchDesktop:

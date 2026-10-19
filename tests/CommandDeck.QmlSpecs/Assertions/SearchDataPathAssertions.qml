@@ -54,8 +54,29 @@ QtObject {
     verifyHiddenPreviewPaneLoadsNothing(deck)
     verifyClosedSearchIsKeptForReopen(deck)
     verifyCopyMessageOutlivesTheLauncher(deck)
+    verifyResetRankingRefreshesInPlace(deck)
 
     if (!wasOpened) deck.close()
+  }
+
+  // Reset Ranking keeps the launcher open and searches again so the result
+  // re-ranks without its history.
+  function verifyResetRankingRefreshesInPlace(deck) {
+    const reset = { id: "reset-ranking", title: "Reset Ranking", kind: Protocol.ActionKinds.ResetRanking }
+    deck.queryText = "rank"
+    deck.requestSearch()
+    deliver(deck, [Object.assign(result("file:ranked", "ranked.txt"), {
+      actions: [{ id: "open", title: "Open", kind: "open-path" }, reset] })])
+    const start = deck.sentRequests.length
+    deck.invokeAction(deck.currentResult, reset, false)
+    const invoke = lastRequest(deck, start, Protocol.Operations.Invoke)
+    deck.handleMessage({ type: Protocol.Messages.ActionResult, requestId: invoke.requestId,
+      actionResult: { succeeded: true, message: "Ranking reset for ranked.txt." } })
+    host.expect(invoke.actionId === "reset-ranking" && deck.opened && deck.hudText === ""
+        && deck.statusText === "Ranking reset for ranked.txt."
+        && operationsSince(deck, start).filter(operation => operation === Protocol.Operations.Search).length === 1,
+      "Reset Ranking keeps the launcher open and searches again")
+    deliver(deck, [])
   }
 
   // A copy that closes the launcher leaves its message for a moment; reopening

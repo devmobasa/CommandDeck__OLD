@@ -172,6 +172,27 @@ EventPathFixture {
         ["secondary:copy:Ctrl+↵"])
       compare(slots({ actions: [{ id: "open" }] }), [])
       compare(slots(null), [])
+      compare(slots({ actions: [{ id: "open" }, { id: "reset-ranking", kind: "reset-ranking" }] }), [],
+        "Reset Ranking is never the second or third action")
+    }
+
+    // Reset Ranking keeps Alt+Shift+R on every result that offers it, from the
+    // list and from the action menu.
+    function test_reset_ranking_has_its_own_chord() {
+      const target = { id: "app:signal", title: "Signal", actions: [{ id: "launch", title: "Launch", kind: "launch-desktop" },
+        { id: "reset-ranking", title: "Reset Ranking", kind: "reset-ranking" }] }
+      const shortcuts = DeckDisplayActions.shortcutActions(null, target)
+      compare(shortcuts.map(value => value.slot + ":" + value.id), ["reset-ranking:reset-ranking"])
+      fixture.part_searchField.directActions = shortcuts
+      fixture.part_searchField.inputControl.forceActiveFocus()
+      keyClick(Qt.Key_R, Qt.AltModifier | Qt.ShiftModifier)
+      compare(fixture.part_searchField.shortcutId, "reset-ranking")
+      fixture.part_actionPanel.shortcuts = shortcuts
+      fixture.part_actionPanel.openFor(target)
+      compare(fixture.part_actionPanel.shortcutLabel(fixture.part_actionPanel.filteredActions[1], 1), "Alt+Shift+R")
+      tryVerify(function() { return fixture.part_actionPanel.filterControl.activeFocus })
+      keyClick(Qt.Key_R, Qt.AltModifier | Qt.ShiftModifier)
+      compare(fixture.part_actionPanel.chosen, "reset-ranking")
     }
 
     // Copy, bookmark, alias and hide keep one chord on every result. The same

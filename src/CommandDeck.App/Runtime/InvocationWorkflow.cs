@@ -117,6 +117,12 @@ internal sealed class InvocationWorkflow(
                 "Set `confirmed: true` only after showing a confirmation dialog." );
         }
 
+        if ( action.Kind == ActionKinds.ResetRanking )
+        {
+            return await ResetRankingAsync( cached.Result, resultId, allowPrivateResults, cancellationToken )
+                .ConfigureAwait( false );
+        }
+
         action = ActionInputValues.Bind( action, inputValues );
         var outcome = await actions.ExecuteAsync(
             cached.Result,
@@ -159,6 +165,26 @@ internal sealed class InvocationWorkflow(
         }
 
         return outcome;
+    }
+
+    // Forgets the result's accepted uses under its canonical usage ID and records
+    // nothing itself. Only the launcher offers it; assistant tools cannot.
+    private async ValueTask<ActionExecutionResult> ResetRankingAsync(
+        SearchResult result,
+        string resultId,
+        bool launcher,
+        CancellationToken cancellationToken )
+    {
+        if ( !launcher )
+        {
+            return ActionExecutionResult.Failure( "Ranking resets are only available in the launcher." );
+        }
+
+        var usageId = result.Metadata.GetValueOrDefault( ResultMetadataKeys.CatalogResultId, resultId );
+        var removed = await usageHistory.ResetRankingForAsync( usageId, cancellationToken ).ConfigureAwait( false );
+        return ActionExecutionResult.Success( removed
+            ? $"Ranking reset for {result.Title}."
+            : $"{result.Title} has no ranking history." );
     }
 
     private static bool ShouldRecordUsage( CommandAction action ) =>

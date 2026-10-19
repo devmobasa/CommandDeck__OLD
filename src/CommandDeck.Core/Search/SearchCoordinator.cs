@@ -74,7 +74,7 @@ public sealed partial class SearchCoordinator
             var home = await BuildHomeAsync( effectiveRequest, preferences, limit, cancellationToken )
                 .ConfigureAwait( false );
             return new SearchOutcome(
-                home.Results.Where( static result => !PrivateSources.IsPrivate( result ) ).ToArray( ),
+                OfferRankingReset( home.Results.Where( static result => !PrivateSources.IsPrivate( result ) ), purpose ),
                 home.IncompleteProviderCount );
         }
 
@@ -132,7 +132,7 @@ public sealed partial class SearchCoordinator
         var results = UseTopMatches( request, parsed )
             ? AssembleTopMatches( ordinary, parsed, preferences, limit, liveUsage, now )
             : AssembleSections( ordinary, parsed, preferences, limit );
-        return new SearchOutcome( [.. results, .. trailing], collection.IncompleteProviderCount );
+        return new SearchOutcome( OfferRankingReset( [.. results, .. trailing], purpose ), collection.IncompleteProviderCount );
     }
 
     // Duplicate stable IDs arrive from the application-only and full catalog paths. A

@@ -266,6 +266,7 @@ var ActionKinds = Object.freeze({
   OpenPath: "open-path",
   OpenUrl: "open-url",
   ProcessSignal: "process-signal",
+  ResetRanking: "reset-ranking",
   RevealPath: "reveal-path",
   RunArgv: "run-argv",
   RunScript: "run-script",
