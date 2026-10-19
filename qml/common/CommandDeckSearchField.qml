@@ -61,6 +61,12 @@ Rectangle {
     }
     return false
   }
+  function handleSectionJump(key, modifiers) {
+    if ((modifiers & ~Qt.KeypadModifier) !== Qt.ControlModifier) return false
+    if (key !== Qt.Key_Up && key !== Qt.Key_Down) return false
+    controller.jumpSection(key === Qt.Key_Down ? 1 : -1)
+    return true
+  }
   function setInputText(value) {
     searchInput.text = value || ""
     searchInput.cursorPosition = searchInput.length
@@ -261,6 +267,12 @@ Rectangle {
           event.accepted = true
         } else if (event.modifiers === Qt.ControlModifier && event.key >= Qt.Key_1 && event.key <= Qt.Key_9) {
           root.controller.invokeOrdinal(event.key - Qt.Key_0)
+          event.accepted = true
+        } else if (root.handleSectionJump(event.key, event.modifiers)) {
+          event.accepted = true
+        } else if (event.modifiers === Qt.ControlModifier && event.key === Qt.Key_U) {
+          // Readline's Ctrl+U: delete from the start of the query to the caret.
+          searchInput.remove(0, searchInput.cursorPosition)
           event.accepted = true
         } else if (control && event.key === Qt.Key_Z && root.undoAvailable) {
           root.undoRequested()

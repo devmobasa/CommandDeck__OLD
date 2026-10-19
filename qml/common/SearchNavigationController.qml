@@ -234,6 +234,10 @@ QtObject {
     selectedIndex = resultModel.moveSelection(selectedIndex, delta)
   }
 
+  function jumpSection(direction) {
+    selectedIndex = resultModel.sectionJump(selectedIndex, direction)
+  }
+
   function invokeOrdinal(number) {
     const index = resultModel.indexOfOrdinal(number)
     if (index < 0) return

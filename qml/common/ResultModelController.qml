@@ -192,6 +192,32 @@ QtObject {
     return entryAt(index)
   }
 
+  // The first result of the next section, or for a backward jump the first
+  // result of the current section, then of the one before it. A jump past
+  // either end stays on the current row.
+  function sectionJump(index, direction) {
+    if (rows.count === 0) return index
+    let start = index
+    while (start > 0 && !entryAt(start - 1).isHeader) start--
+
+    let header = -1
+    if (direction > 0) {
+      for (let candidate = index + 1; candidate < rows.count && header < 0; candidate++) {
+        if (entryAt(candidate).isHeader) header = candidate
+      }
+    } else if (start !== index) {
+      return start
+    } else {
+      for (let candidate = start - 2; candidate >= 0 && header < 0; candidate--) {
+        if (entryAt(candidate).isHeader) header = candidate
+      }
+    }
+
+    if (header < 0) return index
+    const next = moveSelection(header, 1)
+    return next !== header && !entryAt(next).isHeader ? next : index
+  }
+
   function moveSelection(index, delta) {
     if (rows.count === 0) return index
     const step = delta > 0 ? 1 : -1

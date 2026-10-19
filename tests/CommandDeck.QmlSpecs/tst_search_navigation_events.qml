@@ -108,6 +108,62 @@ EventPathFixture {
       compare(fixture.part_controller.dismissCalls, previousDismissals + 1)
     }
 
+    // Ctrl+Down reaches the first result of the next section; Ctrl+Up returns
+    // to the start of the current section, then of the previous one. Neither
+    // moves past the ends, and plain arrows still move one row.
+    function test_control_arrows_jump_between_sections() {
+      const row = (id, section) => ({ id: id, kind: "application", title: id,
+        section: { id: section, title: section }, actions: [] })
+      fixture.part_controller.replaceResults([row("a1", "first"), row("a2", "first"), row("b1", "second"),
+        row("b2", "second"), row("b3", "second"), row("c1", "third")], true)
+      fixture.part_searchField.inputControl.forceActiveFocus()
+      compare(fixture.part_controller.selectedResult().id, "a1")
+
+      keyClick(Qt.Key_Down, Qt.ControlModifier)
+      compare(fixture.part_controller.selectedResult().id, "b1")
+      keyClick(Qt.Key_Down)
+      keyClick(Qt.Key_Down)
+      compare(fixture.part_controller.selectedResult().id, "b3")
+      keyClick(Qt.Key_Down, Qt.ControlModifier)
+      compare(fixture.part_controller.selectedResult().id, "c1")
+      keyClick(Qt.Key_Down, Qt.ControlModifier)
+      compare(fixture.part_controller.selectedResult().id, "c1", "the last section stays put")
+
+      keyClick(Qt.Key_Up)
+      compare(fixture.part_controller.selectedResult().id, "b3")
+      keyClick(Qt.Key_Up, Qt.ControlModifier)
+      compare(fixture.part_controller.selectedResult().id, "b1", "start of the current section first")
+      keyClick(Qt.Key_Up, Qt.ControlModifier)
+      compare(fixture.part_controller.selectedResult().id, "a1")
+      keyClick(Qt.Key_Up, Qt.ControlModifier)
+      compare(fixture.part_controller.selectedResult().id, "a1", "the first section stays put")
+      verify(fixture.part_searchField.inputControl.activeFocus)
+      compare(fixture.part_controller.primaryCalls, 0)
+    }
+
+    // Ctrl+U deletes from the start of the query to the caret, leaving the
+    // rest and any filter chip, and the field keeps focus for typing.
+    function test_control_u_deletes_the_query_before_the_caret() {
+      fixture.part_controller.activeFilters = [{ id: "files", excluded: false }]
+      fixture.part_searchField.inputControl.forceActiveFocus()
+      typeText("old notes")
+      compare(fixture.part_controller.queryText, "old notes")
+      for (let step = 0; step < 5; step++) keyClick(Qt.Key_Left)
+      keyClick(Qt.Key_U, Qt.ControlModifier)
+      compare(fixture.part_searchField.inputControl.text, "notes")
+      compare(fixture.part_controller.queryText, "notes")
+      compare(fixture.part_searchField.inputControl.cursorPosition, 0)
+
+      keyClick(Qt.Key_End)
+      keyClick(Qt.Key_U, Qt.ControlModifier)
+      compare(fixture.part_controller.queryText, "")
+      compare(fixture.part_controller.activeFilters.length, 1, "the filter chip stays")
+      typeText("new")
+      compare(fixture.part_controller.queryText, "new")
+      fixture.part_searchField.inputControl.text = ""
+      fixture.part_controller.activeFilters = []
+    }
+
     // A HEY refinement row names the whole query Tab produces; typing goes on
     // from there. Ordinary rows still complete to their title.
     function test_a_row_can_name_what_tab_completes() {

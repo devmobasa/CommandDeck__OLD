@@ -41,7 +41,10 @@ public static partial class Program
                 Throws<InvalidOperationException>( ( ) =>
                     SavedSearchValidator.EnsureShortcutAvailable(
                         "ctrl+n", string.Empty, searches, inventory ) );
-                foreach ( var reserved in new[] { "ctrl+home", "ctrl+end", "ctrl+enter", "ctrl+1", "ctrl+9" } )
+                foreach ( var reserved in new[]
+                {
+                    "ctrl+home", "ctrl+end", "ctrl+enter", "ctrl+1", "ctrl+9", "ctrl+u", "ctrl+up", "ctrl+down"
+                } )
                 {
                     Throws<InvalidOperationException>( ( ) =>
                         SavedSearchValidator.EnsureShortcutAvailable(

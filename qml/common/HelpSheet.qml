@@ -28,7 +28,8 @@ Rectangle {
         { keys: ["↑", "↓"], text: "Move selection" },
         { keys: ["Ctrl+P", "Ctrl+N"], text: "Move selection" },
         { keys: ["PgUp", "PgDn"], text: "Move by eight" },
-        { keys: ["Ctrl+Home", "Ctrl+End"], text: "First or last result" }
+        { keys: ["Ctrl+Home", "Ctrl+End"], text: "First or last result" },
+        { keys: ["Ctrl+↑", "Ctrl+↓"], text: "Previous or next section" }
       ]
     },
     {
@@ -53,7 +54,8 @@ Rectangle {
     {
       title: "Filters",
       items: [
-        { keys: ["⌫"], text: "Remove the filter on an empty query" }
+        { keys: ["⌫"], text: "Remove the filter on an empty query" },
+        { keys: ["Ctrl+U"], text: "Delete the query before the caret" }
       ]
     },
     {
