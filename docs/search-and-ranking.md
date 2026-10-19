@@ -131,6 +131,7 @@ a query preserves its expression; clipboard and HEY privacy checks still apply.
 | `htab:` / `htabs:` / `herdr-tab:` | Herdr tabs only |
 | `hattention:` / `herdr-attention:` | Herdr tabs whose agent status is blocked |
 | `ctl:` / `control:` / `controls:` | built-in desktop controls; they also match plain search |
+| `kill:` / `proc:` / `process:` / `processes:` | the user's own processes; plain search offers only a row that opens this list |
 | `=` | calculator |
 | `>` | command-oriented providers |
 | `@provider` | explicit provider ID |

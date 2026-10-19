@@ -35,6 +35,14 @@ use literal vectors, not arbitrary renderer-supplied shell text. Result/session
 identity and confirmation are checked at admission; a displayed label is not
 authority. Command/script definitions remain trusted user configuration.
 
+Process signals (`kill:`) are limited to processes whose real, effective, and
+saved user IDs are the user's own, and never reach CommandDeck itself. Each
+signal needs a confirmation that names the PID and process. The daemon pins the
+process with a pidfd and checks its start time and owner again before it sends
+SIGTERM or SIGKILL, so a reused PID is not signalled. Assistant tools see the same
+confirmation requirement. A confirmed signal can still lose that process's
+unsaved work.
+
 Extensions are disabled by default and execute in separate restricted processes.
 Package features negotiate compatibility; permission declarations and grants
 control effects. Files, HTTP, credentials, clipboard, and URL actions are brokered

@@ -17,7 +17,9 @@ public sealed class LinuxActionExecutor : IActionExecutor
         BoundedProcessRunner? systemdRunner = null,
         ExternalProcessRunner? hyprlandRunner = null,
         BoundedProcessRunner? snippetClipboardRunner = null,
-        HeyClient? hey = null )
+        HeyClient? hey = null,
+        LinuxProcessTable? processTable = null,
+        ProcessPinner? processPinner = null )
     {
         EditorLauncher editor = new( preferences );
         ILinuxActionHandler[] handlers =
@@ -28,6 +30,7 @@ public sealed class LinuxActionExecutor : IActionExecutor
             new HyprlandActionHandler( hyprlandRunner ),
             new HerdrActionHandler( herdr, herdrWindowActivator ),
             new HeyActionHandler( preferences, hey ),
+            new ProcessActionHandler( processTable ?? new LinuxProcessTable( ), processPinner ?? LinuxProcessSignals.Pin ),
             new LauncherOwnedActionHandler( )
         ];
 

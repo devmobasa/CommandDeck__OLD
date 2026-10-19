@@ -344,6 +344,7 @@ Generated from Core protocol constants and registries. Run `scripts/generate-pro
 | `web-search` | `web:` | — |
 | `emoji` | `emoji:` | `e:` |
 | `desktop-controls` | `ctl:` | `control:`, `controls:` |
+| `processes` | `kill:` | `proc:`, `process:`, `processes:` |
 
 ## Configurable sources
 
@@ -366,3 +367,4 @@ Generated from Core protocol constants and registries. Run `scripts/generate-pro
 - `web-search` — Web Search
 - `emoji` — Emoji
 - `desktop-controls` — Desktop controls
+- `processes` — Processes

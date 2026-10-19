@@ -567,6 +567,19 @@
       "providerId": "desktop-controls",
       "sourceId": "desktop-controls",
       "kind": null
+    },
+    {
+      "id": "processes",
+      "label": "Processes",
+      "token": "kill:",
+      "aliases": [
+        "proc:",
+        "process:",
+        "processes:"
+      ],
+      "providerId": "processes",
+      "sourceId": "processes",
+      "kind": "process"
     }
   ],
   "sources": [
@@ -682,6 +695,12 @@
       "id": "desktop-controls",
       "label": "Desktop controls",
       "icon": "preferences-desktop",
+      "homeAvailable": true
+    },
+    {
+      "id": "processes",
+      "label": "Processes",
+      "icon": "utilities-system-monitor",
       "homeAvailable": true
     }
   ]

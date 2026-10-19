@@ -169,6 +169,7 @@ interaction. Settings controls which sources appear in Search and Home.
 | `web: wayland layer shell` | Web search |
 | `emoji: rocket` | Emoji |
 | `ctl: volume` | Desktop controls: volume, media, Wi-Fi, Bluetooth, color picker, window placement |
+| `kill: firefox` | Your own processes, to terminate or force kill after confirmation |
 | `hey: invoice` | Optional HEY mail search |
 | `codex:` / `claude:` / `cursor:` / `grok:` | A specific assistant backend |
 
@@ -178,8 +179,8 @@ launcher to browse every prefix with an example.
 </details>
 
 The [launcher guide](docs/launcher-workflows.md) covers projects, snippets,
-script commands, clipboard history, folder browsing, desktop controls, and piped
-selection. The
+script commands, clipboard history, folder browsing, desktop controls, process
+signals, and piped selection. The
 [search reference](docs/search-and-ranking.md) explains filters and ranking.
 
 ## Privacy and AI

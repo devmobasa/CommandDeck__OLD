@@ -177,5 +177,14 @@ public static partial class Program
         await RunAsync(
             "color picker starts hyprpicker after the launcher closes and reports a missing tool",
             ColorPickerStartsAfterTheLauncherAndReportsAMissingToolAsync );
+        await RunAsync(
+            "process list shows only the user's own live processes",
+            ProcessListShowsOnlyTheUsersOwnLiveProcessesAsync );
+        await RunAsync(
+            "process signals require confirmation and recheck PID start time and owner",
+            ProcessSignalsRequireConfirmationAndRecheckIdentityAsync );
+        await RunAsync(
+            "process terminate reaches only the verified child through a pidfd",
+            ProcessTerminateReachesARealChildThroughAPidfdAsync );
     }
 }

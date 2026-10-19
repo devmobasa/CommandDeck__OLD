@@ -23,6 +23,7 @@ public static class ResultKinds
     public const string ExtensionCommand = "extension-command";
     public const string Tab = "tab";
     public const string Mail = "mail";
+    public const string Process = "process";
 }
 
 public static class SourceIds
@@ -49,6 +50,7 @@ public static class SourceIds
     public const string Herdr = "herdr";
     public const string Hey = "hey";
     public const string DesktopControls = "desktop-controls";
+    public const string Processes = "processes";
 
     public static readonly IReadOnlySet<string> All = new HashSet<string>( StringComparer.Ordinal )
     {
@@ -73,7 +75,8 @@ public static class SourceIds
         Emoji,
         Herdr,
         Hey,
-        DesktopControls
+        DesktopControls,
+        Processes
     };
 }
 
@@ -112,6 +115,7 @@ public static class ActionKinds
     public const string HeyOpenPage = "hey-open-page";
     public const string HeyReadThread = "hey-read-thread";
     public const string HeyTriage = "hey-triage";
+    public const string ProcessSignal = "process-signal";
     // Handled by the launcher: replaces the query (and its filter chip) and searches.
     public const string ApplyQuery = "apply-query";
 }

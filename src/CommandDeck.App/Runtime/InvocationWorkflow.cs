@@ -163,5 +163,6 @@ internal sealed class InvocationWorkflow(
 
     private static bool ShouldRecordUsage( CommandAction action ) =>
         action.Kind is not ActionKinds.ClipboardHistory and not ActionKinds.CopyText and not ActionKinds.SnippetCopy and not ActionKinds.SnippetPreview
-            and not ActionKinds.HerdrCreateTab and not ActionKinds.HerdrRenameTab and not ActionKinds.BrowseHerdrTabs;
+            and not ActionKinds.HerdrCreateTab and not ActionKinds.HerdrRenameTab and not ActionKinds.BrowseHerdrTabs
+            and not ActionKinds.ProcessSignal;
 }

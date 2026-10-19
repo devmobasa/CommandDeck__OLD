@@ -47,7 +47,8 @@ public sealed class LauncherPreferences
             new() { SourceId = SourceIds.Emoji, EnabledInSearch = true, EnabledOnHome = false, Position = 12 },
             // Search only means hey: works; HEY never joins universal search or Home.
             new() { SourceId = SourceIds.Hey, EnabledInSearch = true, EnabledOnHome = false, Position = 18 },
-            new() { SourceId = SourceIds.DesktopControls, EnabledInSearch = true, EnabledOnHome = false, Position = 19 }
+            new() { SourceId = SourceIds.DesktopControls, EnabledInSearch = true, EnabledOnHome = false, Position = 19 },
+            new() { SourceId = SourceIds.Processes, EnabledInSearch = true, EnabledOnHome = false, Position = 20 }
         ]
     };
 }
@@ -183,7 +184,8 @@ public static class LauncherSourceRegistry
         new() { Id = SourceIds.Timezone, Label = "Timezone", Icon = "preferences-system-time" },
         new() { Id = SourceIds.WebSearch, Label = "Web Search", Icon = "internet-web-browser" },
         new() { Id = SourceIds.Emoji, Label = "Emoji", Icon = "face-smile" },
-        new() { Id = SourceIds.DesktopControls, Label = "Desktop controls", Icon = "preferences-desktop" }
+        new() { Id = SourceIds.DesktopControls, Label = "Desktop controls", Icon = "preferences-desktop" },
+        new() { Id = SourceIds.Processes, Label = "Processes", Icon = "utilities-system-monitor" }
     ];
 
     public static IReadOnlyList<SourceDescriptor> Configurable => ConfigurableDescriptors;

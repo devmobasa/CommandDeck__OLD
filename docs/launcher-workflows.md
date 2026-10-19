@@ -274,6 +274,33 @@ Every dispatch must answer `ok`. A Lua warning stops the sequence and is shown
 as a failure, even when `hyprctl` exits with status zero. Without `hyprctl`, a
 focused window, or a second monitor, the affected rows are not shown.
 
+## Kill process
+
+Type `kill:` (also `proc:` or `process:`) to list your own processes, largest
+resident memory first, with PID, memory, and CPU time. Add a name or an exact PID
+to filter: `kill: firefox` or `kill: 4242`. In plain search, `kill`, `force
+quit`, or `kill firefox` offers one **Kill Process** row that opens this list;
+ordinary typing never reads `/proc`.
+
+The list shows at most 100 rows from at most 8,192 process entries. It contains
+only processes whose real, effective, and saved user IDs are all yours, so other
+users' processes and setuid programs such as `sudo` are left out. Kernel threads,
+zombies, and the CommandDeck daemon are also left out, and so is an installed
+daemon's bridge, because it runs the same executable. Names are read from `/proc/<pid>/stat`
+with control characters replaced; full command lines are not read.
+
+The action menu offers **Terminate PID …** (SIGTERM, the primary action),
+**Force kill PID …** (SIGKILL), and **Copy PID**. Both signals ask for
+confirmation that names the PID and the process, for example
+`Terminate PID 4242 “firefox”?`. Each row carries the PID, its start time from
+field 22 of `/proc/<pid>/stat`, and your user ID. On confirmation, CommandDeck
+pins the process that holds the PID with a pidfd, then reads `/proc` again. The
+start time must match, and the process must still be yours, live, and not
+CommandDeck. Only then is the signal sent through the pidfd. A PID that was
+reused after the search fails the check, so nothing is signalled; search again.
+A signal is not recorded in usage history. On success the launcher closes like
+other actions.
+
 ## Verification
 
 `dotnet tests/workflows-smoke.cs /path/to/commanddeck` runs all six workflows
