@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import "ActionMeaning.js" as ActionMeaning
 import "ListKeys.js" as ListKeys
+import "ShortcutSlots.js" as ShortcutSlots
 import "UiConstants.js" as Ui
 import QtQuick.Layouts
 
@@ -12,6 +13,9 @@ Rectangle {
   property var result: null
   property int selectedIndex: 0
   property var filteredActions: []
+  // The direct shortcut entries for this result; their chords run the same
+  // action here as from the result list, and the rows show them.
+  property var shortcuts: []
   property alias filterText: actionFilter.text
   readonly property alias filterControl: actionFilter
   readonly property int visibleActionCount: filteredActions.length
@@ -161,6 +165,30 @@ Rectangle {
     if (filteredActions.length > 0) actionChosen(filteredActions[selectedIndex])
   }
 
+  function shortcutLabel(action, index) {
+    return ShortcutSlots.labelFor(root.shortcuts, action.id) || "Ctrl+" + (index + 1)
+  }
+
+  // A direct shortcut chord chooses its action, even while the filter hides it.
+  function handleShortcutKey(event) {
+    const entry = ShortcutSlots.entryForSlot(root.shortcuts,
+      ShortcutSlots.slotForKey(event.key, event.modifiers))
+    const action = entry ? allActions().find(value => value.id === entry.id) : null
+    if (!action) return false
+    event.accepted = true
+    actionChosen(action)
+    return true
+  }
+
+  // Rows group as the primary action, the result's other actions, then the
+  // launcher's own; a divider marks each change of group.
+  function startsGroup(index) {
+    const action = filteredActions[index]
+    const previous = index > 0 ? filteredActions[index - 1] : null
+    if (action.common === true) return previous === null || previous.common !== true
+    return index === 1 && actionFilter.text.length === 0
+  }
+
   function invokeOrdinal(number) {
     const index = number - 1
     if (index >= 0 && index < filteredActions.length) {
@@ -220,6 +248,7 @@ Rectangle {
 
       Keys.onPressed: event => {
         if (root.handleListKey(event, true)) return
+        if (root.handleShortcutKey(event)) return
 
         if (event.modifiers === Qt.ControlModifier && event.key >= Qt.Key_1 && event.key <= Qt.Key_9) {
           root.invokeOrdinal(event.key - Qt.Key_0)
@@ -278,7 +307,7 @@ Rectangle {
               ? root.theme.selectedBackground
               : "transparent"
             Accessible.role: Accessible.ListItem
-            Accessible.name: modelData.title + ", shortcut Ctrl+" + (index + 1)
+            Accessible.name: modelData.title + ", shortcut " + root.shortcutLabel(modelData, index)
             Accessible.description: root.accessibilityDescription(modelData)
             Accessible.selected: index === root.selectedIndex
             activeFocusOnTab: true
@@ -288,6 +317,7 @@ Rectangle {
                 root.restoreActionFocus()
                 return
               }
+              if (root.handleShortcutKey(event)) return
 
               if (event.modifiers === Qt.ControlModifier && event.key >= Qt.Key_1 && event.key <= Qt.Key_9) {
                 root.invokeOrdinal(event.key - Qt.Key_0)
@@ -303,9 +333,7 @@ Rectangle {
             }
 
             Rectangle {
-              visible: actionDelegate.modelData.common === true
-                && (actionDelegate.index === 0
-                  || root.filteredActions[actionDelegate.index - 1].common !== true)
+              visible: root.startsGroup(actionDelegate.index)
               width: parent.width
               height: 1
               anchors.top: parent.top
@@ -317,6 +345,15 @@ Rectangle {
               anchors.fill: parent
               anchors.leftMargin: 10
               anchors.rightMargin: 10
+              spacing: Math.round(10 * root.theme.scale)
+
+              ActionIcon {
+                Layout.preferredWidth: Math.round(16 * root.theme.scale)
+                theme: root.theme
+                action: actionDelegate.modelData
+                bookmarked: root.result !== null && root.result.isFavorite === true
+                color: actionDelegate.modelData.isDestructive ? root.theme.urgent : root.theme.textMuted
+              }
 
               Text {
                 Layout.fillWidth: true
@@ -332,7 +369,7 @@ Rectangle {
 
               KeyCap {
                 theme: root.theme
-                label: "Ctrl+" + (actionDelegate.index + 1)
+                label: root.shortcutLabel(actionDelegate.modelData, actionDelegate.index)
               }
             }
 

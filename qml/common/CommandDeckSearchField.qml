@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 import QtQuick
 import "ListKeys.js" as ListKeys
+import "ShortcutSlots.js" as ShortcutSlots
 import "UiConstants.js" as Ui
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -44,23 +45,19 @@ Rectangle {
   signal undoRequested()
   property var directActions: []
 
-  function requestShortcut(slot) {
-    const action = directActions.find(value => value.slot === slot)
-    if (!action) return false
-    shortcutRequested(action.id)
-    return true
-  }
   // Ctrl+Enter and Ctrl+Shift+Enter open the action menu when the row has no
-  // second or third action to run.
+  // second or third action to run; other chords stay with the text field.
   function handleActionShortcut(key, modifiers) {
-    const enter = key === Qt.Key_Return || key === Qt.Key_Enter
+    const slot = ShortcutSlots.slotForKey(key, modifiers)
+    const action = ShortcutSlots.entryForSlot(directActions, slot)
+    if (action) {
+      shortcutRequested(action.id)
+      return true
+    }
+
     const control = (modifiers & ~Qt.KeypadModifier) === Qt.ControlModifier
-    const controlShift = (modifiers & ~Qt.KeypadModifier) === (Qt.ControlModifier | Qt.ShiftModifier)
-    if (control && enter && requestShortcut(Ui.ShortcutSlot.Secondary)) return true
-    if (controlShift && enter && requestShortcut(Ui.ShortcutSlot.Tertiary)) return true
-    if (controlShift && key === Qt.Key_C) return requestShortcut(Ui.ShortcutSlot.Copy)
-    if (control && key === Qt.Key_D) return requestShortcut(Ui.ShortcutSlot.Favorite)
-    if ((control && key === Qt.Key_K) || ((control || controlShift) && enter)) {
+    if ((control && key === Qt.Key_K)
+        || slot === Ui.ShortcutSlot.Secondary || slot === Ui.ShortcutSlot.Tertiary) {
       actionsRequested()
       return true
     }

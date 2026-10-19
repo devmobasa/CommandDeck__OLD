@@ -1,5 +1,6 @@
 import QtQuick
 import "Protocol.js" as Protocol
+import "UiConstants.js" as Ui
 import Quickshell
 import "." as CommandDeck
 
@@ -41,11 +42,13 @@ QtObject {
     host.expect(rowIds(deck).indexOf("file:notes") >= 0 && rowIds(deck).indexOf("app:brave.desktop") >= 0,
       "hidden-items stage starts with both rows visible")
 
+    // Alt+Shift+D on the selected row is "Don't show this".
+    deck.part_navigation.selectedIndex = deck.part_navigation.indexOfResultId("file:notes")
     const beforeHide = deck.sentRequests.length
-    deck.setHidden(notes)
+    deck.invokeShortcut(Ui.ResultAction.Hide)
     const hideRequest = deck.sentRequests.slice(beforeHide).find(request => request.operation === Protocol.Operations.HiddenSet)
     host.expect(hideRequest !== undefined && hideRequest.resultId === "file:notes" && hideRequest.enabled === true,
-      "don't show this sends hidden.set for the daemon-cached result id")
+      "the hide chord sends hidden.set for the daemon-cached result id")
     deck.handleMessage({
       requestId: hideRequest.requestId, type: Protocol.Messages.CustomizationResult,
       customization: { stableId: "file:notes", isHidden: true, isFavorite: false, aliases: [], message: "Hidden notes.txt" }

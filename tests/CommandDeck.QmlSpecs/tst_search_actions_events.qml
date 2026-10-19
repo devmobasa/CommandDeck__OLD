@@ -174,6 +174,51 @@ EventPathFixture {
       compare(slots(null), [])
     }
 
+    // Copy, bookmark, alias and hide keep one chord on every result. The same
+    // chords run from the result list and from the action menu, whose rows
+    // show them, even while the menu's filter hides the row.
+    function test_fixed_shortcuts_mean_the_same_from_the_list_and_the_menu() {
+      const target = { id: "config:gaps", title: "general.gaps_out", canCustomize: true, aliases: [],
+        actions: [{ id: "edit", title: "Edit at Key", kind: "edit-at-line" },
+          { id: "copy-value", title: "Copy Value", kind: "copy-text" },
+          { id: "copy-key", title: "Copy Key", kind: "copy-text" },
+          { id: "reveal-file", title: "Reveal", kind: "reveal-path" }] }
+      const shortcuts = DeckDisplayActions.shortcutActions(null, target)
+      compare(shortcuts.map(value => value.slot + ":" + value.id).join(","),
+        "secondary:copy-value,tertiary:copy-key,copy:copy-value,favorite:favorite,alias:alias,hide:hide")
+
+      fixture.part_searchField.directActions = shortcuts
+      fixture.part_searchField.inputControl.forceActiveFocus()
+      keyClick(Qt.Key_C, Qt.ControlModifier | Qt.ShiftModifier)
+      compare(fixture.part_searchField.shortcutId, "copy-value")
+      keyClick(Qt.Key_A, Qt.AltModifier | Qt.ShiftModifier)
+      compare(fixture.part_searchField.shortcutId, "alias")
+      keyClick(Qt.Key_D, Qt.AltModifier | Qt.ShiftModifier)
+      compare(fixture.part_searchField.shortcutId, "hide")
+      compare(fixture.part_searchField.inputControl.text, "", "no chord types into the query")
+
+      fixture.part_actionPanel.shortcuts = shortcuts
+      fixture.part_actionPanel.openFor(target)
+      tryVerify(function() { return fixture.part_actionPanel.filterControl.activeFocus })
+      const labels = fixture.part_actionPanel.filteredActions.map((action, index) =>
+        action.id + "=" + fixture.part_actionPanel.shortcutLabel(action, index))
+      compare(labels.join(","), "edit=Ctrl+1,copy-value=Ctrl+Shift+C,copy-key=Ctrl+Shift+↵,"
+        + "reveal-file=Ctrl+4,favorite=Ctrl+D,alias=Alt+Shift+A,hide=Alt+Shift+D")
+      verify(fixture.part_actionPanel.startsGroup(1), "the primary action stands apart")
+      verify(!fixture.part_actionPanel.startsGroup(2))
+      verify(fixture.part_actionPanel.startsGroup(4), "the launcher's own actions start a group")
+
+      typeText("zzz")
+      compare(fixture.part_actionPanel.visibleActionCount, 0)
+      keyClick(Qt.Key_D, Qt.AltModifier | Qt.ShiftModifier)
+      compare(fixture.part_actionPanel.chosen, "hide")
+      keyClick(Qt.Key_Return, Qt.ControlModifier)
+      compare(fixture.part_actionPanel.chosen, "copy-value")
+      fixture.part_actionPanel.chosen = ""
+      keyClick(Qt.Key_X, Qt.AltModifier | Qt.ShiftModifier)
+      compare(fixture.part_actionPanel.chosen, "", "other chords choose nothing")
+    }
+
     function test_footer_direct_actions_click_tab_and_forward_shortcuts() {
       const actions = [
         { id: "reveal", title: "Reveal", keyLabel: "Ctrl+↵", slot: Ui.ShortcutSlot.Secondary },

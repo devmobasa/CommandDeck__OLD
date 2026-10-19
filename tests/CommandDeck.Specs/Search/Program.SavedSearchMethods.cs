@@ -44,7 +44,7 @@ public static partial class Program
                 foreach ( var reserved in new[]
                 {
                     "ctrl+home", "ctrl+end", "ctrl+enter", "shift+ctrl+enter", "ctrl+1", "ctrl+9", "ctrl+u",
-                    "ctrl+up", "ctrl+down"
+                    "ctrl+up", "ctrl+down", "ctrl+k", "ctrl+d", "ctrl+shift+c", "alt+shift+a", "shift+alt+d"
                 } )
                 {
                     Throws<InvalidOperationException>( ( ) =>

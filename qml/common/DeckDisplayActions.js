@@ -29,13 +29,25 @@ function invokeShortcut(root, id) {
     if (!root.personalizationBusy) root.setFavorite(result, !result.isFavorite)
     return
   }
+  if (id === Ui.ResultAction.Alias) {
+    root.aliasTarget = result
+    root.aliasDialogError = ""
+    root.aliasDialogOpen = true
+    return
+  }
+  if (id === Ui.ResultAction.Hide) {
+    root.setHidden(result)
+    return
+  }
   const action = result.actions.find(value => value.id === id)
   if (action) root.invokeAction(result, action, false)
 }
 
 // Enter runs the first listed action. Ctrl+Enter runs Reveal where a row
 // offers it and otherwise the second action; Ctrl+Shift+Enter runs the next
-// one after those two. Each entry names its key slot.
+// one after those two. The other slots keep one chord for the same meaning on
+// every result: Ctrl+Shift+C copies the path, or else the first Copy action.
+// Each entry names its key slot.
 function shortcutActions(root, result) {
   if (!result) return []
   const listed = (result.actions || []).filter(value => value.hidden !== true)
@@ -47,10 +59,17 @@ function shortcutActions(root, result) {
     slot: Ui.ShortcutSlot.Secondary })
   if (tertiary) shortcuts.push({ id: tertiary.id, title: tertiary.title, keyLabel: "Ctrl+Shift+↵",
     slot: Ui.ShortcutSlot.Tertiary })
-  const copyPath = listed.find(value => value.id === Ui.SearchShortcut.CopyPath)
-  if (copyPath) shortcuts.push({ id: copyPath.id, title: copyPath.title, keyLabel: "Ctrl+Shift+C",
-    slot: Ui.ShortcutSlot.Copy })
-  if (result.canCustomize) shortcuts.push({ id: Ui.SearchShortcut.Favorite,
-    title: result.isFavorite ? "Unbookmark" : "Bookmark", keyLabel: "Ctrl+D", slot: Ui.ShortcutSlot.Favorite })
+  const copy = listed.find(value => value.id === Ui.SearchShortcut.CopyPath)
+    || listed.find(value => value.kind === Protocol.ActionKinds.CopyText)
+  if (copy) shortcuts.push({ id: copy.id, title: copy.title, keyLabel: "Ctrl+Shift+C", slot: Ui.ShortcutSlot.Copy })
+  if (!result.canCustomize) return shortcuts
+
+  const aliased = result.aliases && result.aliases.length > 0
+  shortcuts.push({ id: Ui.SearchShortcut.Favorite, title: result.isFavorite ? "Unbookmark" : "Bookmark",
+    keyLabel: "Ctrl+D", slot: Ui.ShortcutSlot.Favorite })
+  shortcuts.push({ id: Ui.ResultAction.Alias, title: aliased ? "Edit Alias" : "Set Alias",
+    keyLabel: "Alt+Shift+A", slot: Ui.ShortcutSlot.Alias })
+  shortcuts.push({ id: Ui.ResultAction.Hide, title: "Don't show this", keyLabel: "Alt+Shift+D",
+    slot: Ui.ShortcutSlot.Hide })
   return shortcuts
 }

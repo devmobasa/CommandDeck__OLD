@@ -267,6 +267,7 @@ PanelWindow {
     ActionPanel {
       id: actionPanel
       theme: launcherWindow.host.part_appTheme
+      shortcuts: launcherWindow.host.shortcutActions(actionPanel.result)
       width: Math.min(Math.round(360 * launcherWindow.host.part_appTheme.scale), palettePanel.width * 0.45)
       // Size to the action list's natural height, capped to fit inside the
       // palette (the panel clips and scrolls beyond that), so a result with

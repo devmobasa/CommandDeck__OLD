@@ -1,4 +1,5 @@
 module CommandDeck.Common
+ActionIcon 1.0 ActionIcon.qml
 ActionInputDialog 1.0 ActionInputDialog.qml
 ActionMatcher 1.0 ActionMatcher.qml
 ActionPanel 1.0 ActionPanel.qml

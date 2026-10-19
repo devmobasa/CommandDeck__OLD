@@ -47,8 +47,10 @@ Rectangle {
         { keys: ["Ctrl+K"], text: "Open actions" },
         { keys: ["Ctrl+↵"], text: "Run the second action, or Reveal for files" },
         { keys: ["Ctrl+Shift+↵"], text: "Run the third action" },
-        { keys: ["Ctrl+Shift+C"], text: "Copy selected file path" },
+        { keys: ["Ctrl+Shift+C"], text: "Copy the file path, or the result's first Copy action" },
         { keys: ["Ctrl+D"], text: "Toggle bookmark for a customizable result" },
+        { keys: ["Alt+Shift+A"], text: "Set or edit the result's alias" },
+        { keys: ["Alt+Shift+D"], text: "Don't show this result" },
         { keys: ["←", "Esc"], text: "Close the action panel" }
       ]
     },

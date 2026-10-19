@@ -35,6 +35,7 @@ TestCase {
     fixture.part_aliasDialog.saved = ""
     fixture.part_aliasDialog.localError = ""
     fixture.part_actionPanel.result = null
+    fixture.part_actionPanel.shortcuts = []
     fixture.part_actionPanel.chosen = ""
     fixture.part_actionPanel.dismissals = 0
     fixture.part_aiPreflightSurface.acceptCount = 0
