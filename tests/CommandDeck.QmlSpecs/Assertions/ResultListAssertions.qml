@@ -9,6 +9,8 @@ QtObject {
   id: spec
   required property var host
   property int repaints: 0
+  property bool compactLayout: false
+  property bool controlHeld: false
 
   property ListModel rowsFixture: ListModel {
     id: listRows
@@ -34,6 +36,8 @@ QtObject {
       width: resultList.width
       theme: spec.host.part_theme
       selected: !listRow.isHeader && listRow.index === listNavigation.selectedIndex
+      compactLayout: spec.compactLayout
+      controlHeld: spec.controlHeld
     }
   }
 
@@ -89,6 +93,25 @@ QtObject {
       "a header row that becomes a result shows the result again")
 
     verifyTitleHighlighting()
+    verifyCompactLayout()
+  }
+
+  // The compact layout puts every row on one line and shows its Ctrl+number
+  // badge only while Ctrl is held; the default layout always shows it.
+  function verifyCompactLayout() {
+    show([result("file:a", "a.txt", "Files", "seven")], true)
+    const row = loaded(1)
+    const twoLines = row.implicitHeight
+    host.expect(!row.compact && row.ordinalBadgeControl.visible,
+      "a file row takes two lines and shows its badge in the default layout")
+    compactLayout = true
+    host.expect(row.compact && !row.ordinalBadgeControl.visible && row.implicitHeight < twoLines,
+      "the compact layout puts a file row on one line and hides its badge ("
+        + twoLines + " to " + row.implicitHeight + ")")
+    controlHeld = true
+    host.expect(row.ordinalBadgeControl.visible, "holding Ctrl shows the badge in the compact layout")
+    compactLayout = false
+    controlHeld = false
   }
 
   // Marks each highlighted run with brackets, whatever the accent colour.

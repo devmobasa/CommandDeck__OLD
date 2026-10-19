@@ -192,6 +192,7 @@ SettingsPanelState {
   readonly property alias preferredEditorControl: root.part_preferredEditorChoice
   readonly property alias displaySizeControl: root.part_displaySizeChoice
   readonly property alias panelTransparencyControl: root.part_panelTransparencyCheck
+  readonly property alias compactLayoutControl: root.part_compactLayoutCheck
   readonly property alias homeFolderOnlyControl: root.part_homeFolderOnlyCheck
   readonly property alias panelTransparencyAmountControl: root.part_panelTransparencySlider
   readonly property alias graphicalEditorExecutableControl: root.part_graphicalEditorExecutable

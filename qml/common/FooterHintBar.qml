@@ -10,6 +10,8 @@ RowLayout {
   property string primaryActionTitle: ""
   property int actionCount: 0
   property bool actionsEnabled: true
+  // The compact layout keeps only the primary action, Actions and Help.
+  property bool compact: false
   signal prefixesRequested(var invoker)
   signal helpRequested(var invoker)
   readonly property alias prefixesControl: prefixesButton
@@ -109,7 +111,7 @@ RowLayout {
     id: firstShortcut
     theme: root.theme
     enabled: root.actionsEnabled
-    visible: root.directActions.length > 0 && root.availableWidth >= primaryButton.implicitWidth
+    visible: !root.compact && root.directActions.length > 0 && root.availableWidth >= primaryButton.implicitWidth
       + firstShortcut.implicitWidth + actionsButton.implicitWidth + root.spacing * 3 + root.discoveryWidth
     text: root.directActions.length > 0 ? root.directActions[0].title : ""
     keyLabel: root.directActions.length > 0 ? root.directActions[0].keyLabel : ""
@@ -156,6 +158,7 @@ RowLayout {
     text: root.availableWidth >= Math.round(460 * root.theme.scale) ? "Browse prefixes" : "Prefixes"
     keyLabel: "?"
     keyDescription: "Type ? in an empty search to browse prefixes"
+    visible: !root.compact
     Accessible.name: "Browse prefixes"
     KeyNavigation.backtab: actionsButton.visible && actionsButton.enabled ? actionsButton
       : secondShortcut.visible && secondShortcut.enabled ? secondShortcut

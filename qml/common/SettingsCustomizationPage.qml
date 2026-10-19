@@ -8,6 +8,8 @@ ScrollView {
   required property var host
   readonly property alias part_displayCard: displayCard
   readonly property alias part_displaySizeChoice: displaySizeChoice
+  readonly property alias part_layoutCard: layoutCard
+  readonly property alias part_compactLayoutCheck: compactLayoutCheck
   readonly property alias part_colorsCard: colorsCard
   readonly property alias part_transparencyCard: transparencyCard
   readonly property alias part_panelTransparencyCheck: panelTransparencyCheck
@@ -56,6 +58,27 @@ ScrollView {
           onActivated: index => customizationScroll.host.displaySizeSelected(
             customizationScroll.host.displaySizeOptions[index].id)
         }
+      }
+    }
+
+    SettingsCard {
+      id: layoutCard
+      searchQuery: customizationScroll.host.part_settingsSearch.text
+      searchTerms: "customization layout compact dense rows one line badges footer shortcuts"
+      theme: customizationScroll.host.theme
+      title: "Layout"
+      description: "How much each result row and the footer show. Applies immediately."
+
+      SettingsToggle {
+        id: compactLayoutCheck
+        theme: customizationScroll.host.theme
+        Layout.fillWidth: true
+        text: "Compact layout"
+        help: "One line per result. Ctrl+number badges appear while Ctrl is held, and the footer keeps the primary action, Actions and Help."
+        checked: customizationScroll.host.compactLayout
+        Accessible.name: "Compact layout"
+        Accessible.description: "Show one line per result and fewer hints"
+        onClicked: customizationScroll.host.compactLayoutSelected(checked)
       }
     }
 

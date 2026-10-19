@@ -24,6 +24,8 @@ Rectangle {
     }
   }
   property bool surfaceVisible: false
+  // True while Ctrl is down in the field, for badges that show only then.
+  readonly property bool controlHeld: searchInput.controlDown && searchInput.activeFocus
   property bool loading: false
   property Item additionalTabStop: null
   property Item precedingTabStop: additionalTabStop
@@ -254,7 +256,14 @@ Rectangle {
         if (root.surfaceVisible) root.searchEdited()
       }
 
+      property bool controlDown: false
+      onActiveFocusChanged: if (!activeFocus) controlDown = false
+      Keys.onReleased: event => {
+        if (event.key === Qt.Key_Control) controlDown = false
+      }
+
       Keys.onPressed: event => {
+        if (event.key === Qt.Key_Control) controlDown = true
         const recall = event.key === Qt.Key_Up && (event.modifiers & ~Qt.KeypadModifier) === Qt.NoModifier
           ? root.controller.recallWanted()
           : ""

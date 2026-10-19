@@ -27,6 +27,10 @@ Rectangle {
   required property var theme
   required property bool selected
   property int ordinal: 0
+  // The compact layout: every row on one line, and the Ctrl+number badge only
+  // while Ctrl is held.
+  property bool compactLayout: false
+  property bool controlHeld: false
   // B5 - the launcher's computed action count for this result. It is only wired
   // for the highlighted row (0 elsewhere), so the affordance is naturally
   // absent from unselected rows.
@@ -51,7 +55,8 @@ Rectangle {
     ? String(root.result.kind)
     : ""
 
-  readonly property bool compact: root.kind === Protocol.ResultKinds.Application || root.kind === Protocol.ResultKinds.CustomCommand
+  readonly property bool compact: root.compactLayout
+    || root.kind === Protocol.ResultKinds.Application || root.kind === Protocol.ResultKinds.CustomCommand
   readonly property string herdrStatus: sourceId === Protocol.SourceIds.Herdr && result.metadata
     ? String(result.metadata.herdrAgentStatus || "") : ""
   readonly property string statusBadgeText: herdrStatus === "blocked" ? "Needs attention"
@@ -330,7 +335,8 @@ Rectangle {
 
     // Rows one through nine advertise their Ctrl shortcut.
     KeyCap {
-      visible: root.ordinal > 0
+      id: ordinalBadge
+      visible: root.ordinal > 0 && (!root.compactLayout || root.controlHeld)
       theme: root.theme
       label: "Ctrl+" + root.ordinal
     }
@@ -345,6 +351,7 @@ Rectangle {
   }
 
   readonly property alias toolTipControl: rowToolTip
+  readonly property alias ordinalBadgeControl: ordinalBadge
   ThemedToolTip {
     id: rowToolTip
     theme: root.theme

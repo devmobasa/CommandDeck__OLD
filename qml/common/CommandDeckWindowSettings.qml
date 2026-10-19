@@ -77,6 +77,8 @@ SettingsPanel {
   snapshotMutationBusy: settingsPanel.host.host.part_personalization.preferenceInFlight || settingsPanel.host.host.part_personalization.busy
   displaySizePreset: settingsPanel.host.host.displaySizePreset
   onDisplaySizeSelected: preset => settingsPanel.host.host.applyDisplaySizePreset(preset)
+  compactLayout: settingsPanel.host.host.compactLayout
+  onCompactLayoutSelected: enabled => settingsPanel.host.host.applyCompactLayout(enabled)
   panelTransparencyEnabled: settingsPanel.host.host.panelTransparencyEnabled
   panelTransparencyPercent: settingsPanel.host.host.panelTransparencyPercent
   onPanelTransparencyChanged: (enabled, percent) =>

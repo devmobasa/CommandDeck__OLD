@@ -6,6 +6,10 @@ function applyPanelTransparency(root, enabled, percent) {
   root.part_transparencyStore.set(enabled, percent)
 }
 
+function applyCompactLayout(root, enabled) {
+  root.part_layoutStore.setCompact(enabled)
+}
+
 function applyDisplaySizePreset(root, preset) {
   root.part_displayScaleStore.setPreset(preset)
 }

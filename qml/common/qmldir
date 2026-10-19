@@ -87,6 +87,7 @@ KeyCap 1.0 KeyCap.qml
 KeyboardButton 1.0 KeyboardButton.qml
 LauncherLifecycleController 1.0 LauncherLifecycleController.qml
 LauncherProtocolController 1.0 LauncherProtocolController.qml
+LayoutStore 1.0 LayoutStore.qml
 LiteralButton 1.0 LiteralButton.qml
 MatchedFieldList 1.0 MatchedFieldList.qml
 NoResultsView 1.0 NoResultsView.qml

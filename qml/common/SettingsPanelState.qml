@@ -93,6 +93,8 @@ FocusScope {
   readonly property var part_settingsSearch: parts.settingsSearch
   readonly property var part_displayCard: parts.customizationScroll.part_displayCard
   readonly property var part_displaySizeChoice: parts.customizationScroll.part_displaySizeChoice
+  readonly property var part_layoutCard: parts.customizationScroll.part_layoutCard
+  readonly property var part_compactLayoutCheck: parts.customizationScroll.part_compactLayoutCheck
   readonly property var part_transparencyCard: parts.customizationScroll.part_transparencyCard
   readonly property var part_colorsCard: parts.customizationScroll.part_colorsCard
   readonly property var part_panelTransparencyCheck: parts.customizationScroll.part_panelTransparencyCheck
@@ -229,6 +231,8 @@ FocusScope {
     }
     return 0
   }
+  // Compact layout (QML-only, persisted outside the daemon snapshot).
+  property bool compactLayout: false
   // Panel transparency (QML-only, persisted outside the daemon snapshot).
   property bool panelTransparencyEnabled: false
   property int panelTransparencyPercent: 20
@@ -259,7 +263,7 @@ FocusScope {
       settingsState.owner.part_diagnosticsCard, settingsState.owner.part_aiManagementCard,
       settingsState.owner.part_aiProvidersCard, settingsState.owner.part_templatesCard],
     shortcuts: [settingsState.owner.part_shortcutsCard],
-    customization: [settingsState.owner.part_displayCard, settingsState.owner.part_colorsCard, settingsState.owner.part_transparencyCard, settingsState.owner.part_favoritesCard, settingsState.owner.part_hiddenItemsCard, settingsState.owner.part_dataCard, settingsState.owner.part_resetCard]
+    customization: [settingsState.owner.part_displayCard, settingsState.owner.part_layoutCard, settingsState.owner.part_colorsCard, settingsState.owner.part_transparencyCard, settingsState.owner.part_favoritesCard, settingsState.owner.part_hiddenItemsCard, settingsState.owner.part_dataCard, settingsState.owner.part_resetCard]
   })
   readonly property var filteredPages: owner.pages.filter(page =>
     page.id === Ui.SettingsPage.Ai && !settingsState.owner.aiFeaturesEnabled
@@ -291,6 +295,7 @@ FocusScope {
   signal preferencesChanged(var preferences)
   signal displaySizeSelected(string preset)
   signal panelTransparencyChanged(bool enabled, int percent)
+  signal compactLayoutSelected(bool enabled)
   signal colorThemeChanged(var change)
   signal colorThemeResetRequested()
   signal resetRequested()

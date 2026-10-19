@@ -68,6 +68,22 @@ QtObject {
       "choosing a display-size preset emits it for QML-only persistence")
     host.part_settings.displaySizePreset = "auto"
 
+    // The compact layout: a QML-only store, the host flag, and its Settings toggle.
+    const layout = host.part_integratedDeck.part_layoutStore
+    host.expect(!layout.parse("").compact && layout.parse("compact=on\n").compact
+        && !layout.parse("compact=maybe").compact && layout.parse(" Compact = ON ").compact,
+      "the layout file reads as the default layout unless compact is on")
+    host.part_integratedDeck.applyCompactLayout(true)
+    host.expect(host.part_integratedDeck.compactLayout && layout.serialize() === "compact=on\n",
+      "choosing the compact layout applies it to the launcher at once")
+    host.part_integratedDeck.applyCompactLayout(false)
+    host.expect(!host.part_integratedDeck.compactLayout, "turning it off restores the default layout")
+    host.part_settings.compactLayout = false
+    host.part_settings.compactLayoutControl.click()
+    host.expect(host.part_settings.compactLayoutChosen === true,
+      "the Settings toggle emits the compact layout choice")
+    host.part_settings.compactLayout = false
+
     // Panel transparency: theme, live launcher color, and settings controls.
     host.expect(!host.part_motionTheme.panelTransparencyEnabled
         && Math.abs(host.part_motionTheme.panelBackground.a - 1) < 0.001

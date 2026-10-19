@@ -34,6 +34,7 @@ CommandDeckState {
   readonly property alias part_aiSettingsController: aiSettingsController
   readonly property alias part_transparencyStore: displayPreferences.transparencyStore
   readonly property alias part_displayScaleStore: displayPreferences.displayScaleStore
+  readonly property alias part_layoutStore: displayPreferences.layoutStore
   readonly property alias part_colorThemeStore: displayPreferences.colorThemeStore
   readonly property alias part_navigation: navigation
   readonly property alias part_filterCatalog: filterCatalog
@@ -98,6 +99,7 @@ CommandDeckState {
   // Applied immediately (the binding below recomputes) and persisted QML-only.
   function applyDisplaySizePreset(preset) { return DeckDisplayActions.applyDisplaySizePreset(root, preset) }
   function stepDisplaySize(direction) { return DeckDisplayActions.stepDisplaySize(root, direction) }
+  function applyCompactLayout(enabled) { return DeckDisplayActions.applyCompactLayout(root, enabled) }
 
   function applyPanelTransparency(enabled, percent) { return DeckDisplayActions.applyPanelTransparency(root, enabled, percent) }
 

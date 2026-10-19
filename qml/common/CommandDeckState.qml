@@ -88,6 +88,9 @@ Item {
   function requestHiddenItems(query, offset) { return hiddenItemsController.refresh(query, offset) }
   // Durable display and AI choices, plus the inline answer presentation sessionState.
   property bool panelTransparencyEnabled: false
+  // Compact layout (QML-only): one-line rows, number badges only while Ctrl
+  // is held, and a lighter footer.
+  property bool compactLayout: false
   property bool aiFeaturesEnabled: true
   readonly property string aiSaveDirectory: {
     const home = Quickshell.env("HOME")

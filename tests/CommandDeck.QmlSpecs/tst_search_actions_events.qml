@@ -219,6 +219,39 @@ EventPathFixture {
       compare(fixture.part_actionPanel.chosen, "", "other chords choose nothing")
     }
 
+    // The compact footer keeps the primary action, Actions and Help; Tab skips
+    // the hidden buttons. Holding Ctrl in search is what shows row badges then.
+    function test_compact_footer_and_held_control() {
+      fixture.part_footerActions.directActions = [
+        { id: "reveal", title: "Reveal", keyLabel: "Ctrl+↵", slot: Ui.ShortcutSlot.Secondary },
+        { id: "copy-path", title: "Copy Path", keyLabel: "Ctrl+Shift+↵", slot: Ui.ShortcutSlot.Tertiary }
+      ]
+      fixture.part_footerActions.compact = true
+      wait(30)
+      verify(fixture.part_footerActions.primaryControl.visible)
+      verify(fixture.part_footerActions.actionsControl.visible)
+      verify(fixture.part_footerActions.helpControl.visible)
+      verify(!fixture.part_footerActions.firstShortcutControl.visible)
+      verify(!fixture.part_footerActions.secondShortcutControl.visible)
+      verify(!fixture.part_footerActions.prefixesControl.visible)
+      fixture.part_footerActions.primaryControl.forceActiveFocus()
+      keyClick(Qt.Key_Tab)
+      verify(fixture.part_footerActions.actionsControl.activeFocus, "Tab goes from the primary action to Actions")
+      keyClick(Qt.Key_Tab)
+      verify(fixture.part_footerActions.helpControl.activeFocus, "and then to Help")
+
+      fixture.part_searchField.inputControl.forceActiveFocus()
+      verify(!fixture.part_searchField.controlHeld)
+      keyPress(Qt.Key_Control, Qt.ControlModifier)
+      verify(fixture.part_searchField.controlHeld, "pressing Ctrl in search holds it")
+      keyRelease(Qt.Key_Control)
+      verify(!fixture.part_searchField.controlHeld, "releasing Ctrl lets go")
+      keyPress(Qt.Key_Control, Qt.ControlModifier)
+      fixture.part_footerActions.primaryControl.forceActiveFocus()
+      verify(!fixture.part_searchField.controlHeld, "leaving search lets go of Ctrl")
+      keyRelease(Qt.Key_Control)
+    }
+
     function test_footer_direct_actions_click_tab_and_forward_shortcuts() {
       const actions = [
         { id: "reveal", title: "Reveal", keyLabel: "Ctrl+↵", slot: Ui.ShortcutSlot.Secondary },

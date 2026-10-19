@@ -115,6 +115,8 @@ ColumnLayout {
           launcherContent.host.openActionPanel()
         }
         pointerGate: resultPointerGate
+        compactLayout: launcherContent.host.host.compactLayout
+        controlHeld: searchBar.controlHeld
         onHoverSelected: launcherContent.host.host.selectedIndex = listRow.index
       }
     }
@@ -277,6 +279,7 @@ ColumnLayout {
     FooterHintBar {
       id: footerActions
       objectName: "footerHintBar"
+      compact: launcherContent.host.host.compactLayout
       Layout.alignment: Qt.AlignVCenter
       theme: launcherContent.host.host.part_appTheme
       primaryActionTitle: launcherContent.host.host.primaryActionTitle
