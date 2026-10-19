@@ -174,5 +174,8 @@ public static partial class Program
         await RunAsync(
             "desktop controls run literal argv and report tool failures",
             DesktopControlsRunLiteralArgvThroughRunArgvAsync );
+        await RunAsync(
+            "color picker starts hyprpicker after the launcher closes and reports a missing tool",
+            ColorPickerStartsAfterTheLauncherAndReportsAMissingToolAsync );
     }
 }

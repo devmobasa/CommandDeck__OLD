@@ -48,8 +48,9 @@ public static partial class Program
         Equal( 0, (await FindAsync( "next track" )).Count );
         Equal( 0, (await FindAsync( "play pause" )).Count );
         Equal( 0, (await FindAsync( "firefox" )).Count );
-        Equal( DesktopControlCatalog.System.Count( static control => control.Tool != "playerctl" ),
-            (await FindAsync( "ctl:" )).Count );
+        var browsed = await FindAsync( "ctl:" );
+        Equal( DesktopControlCatalog.System.Count( static control => control.Tool != "playerctl" ) + 1, browsed.Count );
+        Equal( "desktop:color-picker-unavailable", browsed.Single( static result => result.Kind == ResultKinds.Status ).Id );
         True( (await FindAsync( "> volume up" )).Any( static result => result.Id == "desktop:volume-up" ),
             "command mode offers desktop controls" );
         installed.Add( "playerctl" );
@@ -83,12 +84,7 @@ public static partial class Program
         try
         {
             var capture = Path.Combine( root, "calls" );
-            var recorder = $$"""
-                #!/bin/sh
-                printf '%s' "${0##*/}" >> '{{capture}}'
-                for argument in "$@"; do printf '|%s' "$argument" >> '{{capture}}'; done
-                printf '\n' >> '{{capture}}'
-                """.ReplaceLineEndings( "\n" );
+            var recorder = ArgvRecorder( capture );
             await WriteExecutableAsync( Path.Combine( root, "wpctl" ), recorder );
             await WriteExecutableAsync( Path.Combine( root, "rfkill" ), recorder );
             await WriteExecutableAsync( Path.Combine( root, "playerctl" ),
@@ -136,6 +132,64 @@ public static partial class Program
             Directory.Delete( root, recursive: true );
         }
     }
+
+    private static async Task ColorPickerStartsAfterTheLauncherAndReportsAMissingToolAsync( )
+    {
+        if ( !OperatingSystem.IsLinux( ) )
+        {
+            throw new SpecSkippedException( "This fixture requires Linux." );
+        }
+
+        var root = Directory.CreateTempSubdirectory( "commanddeck-color-picker-" ).FullName;
+        var originalPath = Environment.GetEnvironmentVariable( "PATH" );
+        try
+        {
+            var capture = Path.Combine( root, "calls" );
+            var ran = Path.Combine( root, "hyprpicker-ran" );
+            await WriteExecutableAsync( Path.Combine( root, "systemd-run" ), ArgvRecorder( capture ) );
+
+            // Only the fixture directory is searched, so the real picker cannot start.
+            Environment.SetEnvironmentVariable( "PATH", root );
+            CommandDeckOptions options = new( )
+            {
+                Storage = new StorageOptions { DatabasePath = Path.Combine( root, "catalog.db" ) },
+                Ai = new AiOptions { Enabled = false, Providers = [] }
+            };
+            SqliteCatalog catalog = new( options.Storage );
+            await catalog.InitializeAsync( default );
+            await using var runtime = InvocationFixture( options, catalog, catalog.UsageHistory, new LinuxActionExecutor( ),
+                new SearchCoordinator( [new DesktopControlsProvider( )], options.Search ) );
+
+            // Asked for by name, a missing hyprpicker is reported on an inert row.
+            var unavailable = (await runtime.SearchAsync( new SearchRequest { Query = "color picker", Limit = 20 }, default )).Single( );
+            Equal( ResultKinds.Status, unavailable.Kind );
+            Equal( 0, unavailable.Actions.Count );
+            Equal( "Unavailable: install hyprpicker to pick a color from the screen", unavailable.Subtitle );
+
+            await WriteExecutableAsync( Path.Combine( root, "hyprpicker" ), $"#!/bin/sh\n: > '{ran}'\n" );
+            var picker = (await runtime.SearchAsync( new SearchRequest { Query = "pick color", Limit = 20 }, default )).Single( );
+            Equal( "desktop:color-picker", picker.Id );
+            Equal( "Color · hyprpicker", picker.Subtitle );
+            var outcome = await runtime.InvokeAsync( picker.Id, "run", false, default );
+            True( outcome.Succeeded, outcome.Message );
+            Equal( "systemd-run|--user|--quiet|--collect|--on-active=300ms|--timer-property=AccuracySec=10ms|--|hyprpicker|--autocopy",
+                (await File.ReadAllLinesAsync( capture )).Single( ) );
+            True( !File.Exists( ran ), "the timer starts hyprpicker once the launcher has closed" );
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable( "PATH", originalPath );
+            Directory.Delete( root, recursive: true );
+        }
+    }
+
+    // A fake tool that appends its name and arguments, separated by |, to a file.
+    private static string ArgvRecorder( string capture ) => $$"""
+        #!/bin/sh
+        printf '%s' "${0##*/}" >> '{{capture}}'
+        for argument in "$@"; do printf '|%s' "$argument" >> '{{capture}}'; done
+        printf '\n' >> '{{capture}}'
+        """.ReplaceLineEndings( "\n" );
 
     [System.Runtime.Versioning.SupportedOSPlatform( "linux" )]
     private static async Task WriteExecutableAsync( string path, string content )

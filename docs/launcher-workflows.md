@@ -200,7 +200,7 @@ on system-wide services.
 ## Desktop controls
 
 Type what you want to change: `volume`, `mute`, `next track`, `wifi`,
-`bluetooth`, or `left half`. Matching desktop commands appear beside your other results, and
+`bluetooth`, `color`, or `left half`. Matching desktop commands appear beside your other results, and
 `ctl:` (also `control:`) lists all of them. Enter runs the command; on success
 the launcher closes like other launches, as set by **Hide after opening an
 item**. A failure, such as no media player for `playerctl`, stays visible with
@@ -221,6 +221,24 @@ showing an error. Wi-Fi and Bluetooth use the rfkill soft block, the same switch
 that Omarchy's Bluetooth power script uses, so NetworkManager, iwd, and BlueZ
 follow it. Search needs at least two characters and does no work on bare Home.
 Turn the **Desktop controls** source off in Settings to remove these rows.
+
+### Color picker
+
+Type `color` or `pick color` and press Enter on **Pick Color**. The launcher
+closes, and `hyprpicker --autocopy` starts so you can click any pixel; the color
+is copied to the clipboard as hex. Press Escape in the picker to cancel.
+hyprpicker freezes the screen when it starts, so it must not start while the
+launcher is still visible. CommandDeck runs this literal argv, which returns
+once a one-shot user timer exists:
+
+```text
+systemd-run --user --quiet --collect --on-active=300ms --timer-property=AccuracySec=10ms -- hyprpicker --autocopy
+```
+
+The timer starts the picker 300 ms later in your user session. Copying needs
+`wl-copy`, as for hyprpicker itself. If `hyprpicker` or `systemd-run` is
+missing, the **Pick Color** row stays visible as an inert row that names the
+tool to install.
 
 ### Window commands
 

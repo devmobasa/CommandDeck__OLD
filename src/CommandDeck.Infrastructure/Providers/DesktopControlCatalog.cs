@@ -1,21 +1,24 @@
 namespace CommandDeck;
 
-// A built-in command that runs one literal argv. Its first argument is the tool
-// that must be on PATH for the row to appear.
+// A built-in command that runs one literal argv. Its first argument, and the
+// program it starts when that is a launcher, must be on PATH for the row to appear.
 internal sealed record DesktopControl(
     string Id,
     string Title,
     string Category,
     string Keywords,
     string Icon,
-    IReadOnlyList<string> Argv )
+    IReadOnlyList<string> Argv,
+    string? Program = null )
 {
-    public string Tool => Argv[0];
+    public string Tool => Program ?? Argv[0];
+
+    public IReadOnlyList<string> RequiredTools => Program is null ? [Argv[0]] : [Program, Argv[0]];
 }
 
-// Audio, media, and radio controls. wpctl targets the default PipeWire sink and
-// source, playerctl the active MPRIS player, and rfkill the soft-block switch
-// that Omarchy's own Bluetooth power script uses.
+// Audio, media, radio, and color controls. wpctl targets the default PipeWire
+// sink and source, playerctl the active MPRIS player, and rfkill the soft-block
+// switch that Omarchy's own Bluetooth power script uses.
 internal static class DesktopControlCatalog
 {
     private const string Sink = "@DEFAULT_AUDIO_SINK@";
@@ -50,6 +53,16 @@ internal static class DesktopControlCatalog
         new( "bluetooth-toggle", "Toggle Bluetooth", "Wireless", "bluetooth bt wireless radio on off",
             "bluetooth-active", ["rfkill", "toggle", "bluetooth"] )
     ];
+
+    // hyprpicker freezes the screen as it starts, so it has to start after the
+    // launcher overlay has closed. A one-shot user timer delays it by 300 ms
+    // without a shell; systemd-run returns once the timer exists.
+    public static DesktopControl ColorPicker { get; } = new(
+        "color-picker", "Pick Color", "Color", "colour picker eyedropper pipette hex rgb screen pixel hyprpicker",
+        "color-select",
+        ["systemd-run", "--user", "--quiet", "--collect", "--on-active=300ms", "--timer-property=AccuracySec=10ms",
+            "--", "hyprpicker", "--autocopy"],
+        Program: "hyprpicker" );
 
     private static DesktopControl SetVolume( int percent ) => new(
         $"volume-{percent}",

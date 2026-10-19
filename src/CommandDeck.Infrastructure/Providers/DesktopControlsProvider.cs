@@ -47,12 +47,13 @@ public sealed partial class DesktopControlsProvider : ICommandProvider
         foreach ( var control in DesktopControlCatalog.System )
         {
             var score = Score( text, control.Title, control.Keywords );
-            if ( score > 0 && IsAvailable( control.Tool, tools ) )
+            if ( score > 0 && control.RequiredTools.All( tool => IsAvailable( tool, tools ) ) )
             {
                 results.Add( BuildRow( control, score ) );
             }
         }
 
+        AddColorPickerRow( text, tools, results );
         await AddWindowRowsAsync( text, tools, results, cancellationToken ).ConfigureAwait( false );
         return results;
     }
@@ -100,6 +101,32 @@ public sealed partial class DesktopControlsProvider : ICommandProvider
         }
 
         return available;
+    }
+
+    // The color picker is asked for by name, so a missing tool is reported on
+    // its row instead of hiding it.
+    private void AddColorPickerRow( string text, Dictionary<string, bool> tools, List<SearchResult> results )
+    {
+        var picker = DesktopControlCatalog.ColorPicker;
+        var score = Score( text, picker.Title, picker.Keywords );
+        if ( score <= 0 )
+        {
+            return;
+        }
+
+        var missing = picker.RequiredTools.FirstOrDefault( tool => !IsAvailable( tool, tools ) );
+        results.Add( missing is null ? BuildRow( picker, score ) : new SearchResult
+        {
+            Id = DesktopControlResultIds.For( picker.Id + "-unavailable" ),
+            Kind = ResultKinds.Status,
+            Title = picker.Title,
+            Subtitle = $"Unavailable: install {missing} to pick a color from the screen",
+            Icon = picker.Icon,
+            ProviderId = ProviderIds.DesktopControls,
+            SourceId = SourceIds.DesktopControls,
+            Score = score,
+            Details = [new DetailField( "Missing tool", missing, Monospace: true )]
+        } );
     }
 
     private static SearchResult BuildRow( DesktopControl control, double score )

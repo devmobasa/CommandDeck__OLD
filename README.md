@@ -168,7 +168,7 @@ interaction. Settings controls which sources appear in Search and Home.
 | `tz: tokyo` / `time: 3pm london to tokyo` | Time zones |
 | `web: wayland layer shell` | Web search |
 | `emoji: rocket` | Emoji |
-| `ctl: volume` | Desktop controls: volume, media, Wi-Fi, Bluetooth, window placement |
+| `ctl: volume` | Desktop controls: volume, media, Wi-Fi, Bluetooth, color picker, window placement |
 | `hey: invoice` | Optional HEY mail search |
 | `codex:` / `claude:` / `cursor:` / `grok:` | A specific assistant backend |
 
