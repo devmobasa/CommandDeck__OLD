@@ -100,6 +100,8 @@ CommandDeckState {
   function applyDisplaySizePreset(preset) { return DeckDisplayActions.applyDisplaySizePreset(root, preset) }
   function stepDisplaySize(direction) { return DeckDisplayActions.stepDisplaySize(root, direction) }
   function applyCompactLayout(enabled) { return DeckDisplayActions.applyCompactLayout(root, enabled) }
+  function applyPreviewPane(visible) { return DeckDisplayActions.applyPreviewPane(root, visible) }
+  function togglePreviewPane() { return DeckDisplayActions.togglePreviewPane(root) }
 
   function applyPanelTransparency(enabled, percent) { return DeckDisplayActions.applyPanelTransparency(root, enabled, percent) }
 

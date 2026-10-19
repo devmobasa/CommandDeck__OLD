@@ -68,6 +68,7 @@ Rectangle {
         { keys: ["Ctrl+,"], text: "Settings" },
         { keys: ["Ctrl+=", "Ctrl+-"], text: "Larger or smaller display size" },
         { keys: ["Ctrl+0"], text: "Automatic display size" },
+        { keys: ["Ctrl+I"], text: "Show or hide the preview pane" },
         { keys: clipboardShortcut ? [root.chordLabel(clipboardShortcut)] : [], text: clipboardShortcut ? "Clipboard History" : "Clipboard History shortcut disabled" },
         { keys: ["F1", "Ctrl+/"], text: "This sheet" },
         { keys: ["Esc"], text: "Close CommandDeck" }

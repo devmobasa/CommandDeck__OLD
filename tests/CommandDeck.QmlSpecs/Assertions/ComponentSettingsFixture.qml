@@ -63,6 +63,7 @@ CommandDeck.SettingsPanel {
   })
   property string displaySizeChosen: ""
   property var compactLayoutChosen: null
+  property var previewPaneChosen: null
   property bool panelTransparencyChosenEnabled: false
   property int panelTransparencyChosenPercent: -1
   onOrphanRemoveRequested: customizationId => removedCustomizationId = customizationId
@@ -71,6 +72,7 @@ CommandDeck.SettingsPanel {
   onAiTemplateSaveRequested: template => savedAiTemplate = template
   onDisplaySizeSelected: preset => displaySizeChosen = preset
   onCompactLayoutSelected: enabled => compactLayoutChosen = enabled
+  onPreviewPaneSelected: visible => previewPaneChosen = visible
   onPanelTransparencyChanged: (enabled, percent) => {
     panelTransparencyChosenEnabled = enabled
     panelTransparencyChosenPercent = percent

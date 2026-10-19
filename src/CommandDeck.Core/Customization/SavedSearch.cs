@@ -103,7 +103,7 @@ public static partial class SavedSearchValidator
         [
             "CTRL+/", "CTRL+,", "CTRL+N", "CTRL+P", "CTRL+HOME", "CTRL+END",
             "CTRL+ENTER", "CTRL+SHIFT+ENTER", "CTRL+U", "CTRL+UP", "CTRL+DOWN",
-            "CTRL+K", "CTRL+D", "CTRL+SHIFT+C", "ALT+SHIFT+A", "ALT+SHIFT+D", "CTRL+0",
+            "CTRL+K", "CTRL+D", "CTRL+SHIFT+C", "ALT+SHIFT+A", "ALT+SHIFT+D", "CTRL+0", "CTRL+I",
             .. Enumerable.Range(1, 9).Select(static value => $"CTRL+{value}")
         ];
         if ( builtIns.Contains( normalized ) )

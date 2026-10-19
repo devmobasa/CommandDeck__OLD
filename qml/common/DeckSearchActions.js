@@ -254,7 +254,7 @@ function requestPreview(root, result, matchIndex) {
   root.cancelPreview()
   if (matchIndex === undefined) root.filePreview = null
   root.previewError = ""
-  if (!root.opened || !result || result.kind !== Protocol.ResultKinds.File) {
+  if (!root.opened || !root.previewPaneVisible || !result || result.kind !== Protocol.ResultKinds.File) {
     return
   }
 

@@ -91,6 +91,8 @@ Item {
   // Compact layout (QML-only): one-line rows, number badges only while Ctrl
   // is held, and a lighter footer.
   property bool compactLayout: false
+  // The details and file preview pane beside the results (QML-only).
+  property bool previewPaneVisible: true
   property bool aiFeaturesEnabled: true
   readonly property string aiSaveDirectory: {
     const home = Quickshell.env("HOME")

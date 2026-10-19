@@ -10,6 +10,18 @@ function applyCompactLayout(root, enabled) {
   root.part_layoutStore.setCompact(enabled)
 }
 
+// A hidden pane loads no file preview; showing it again loads the selected one.
+function applyPreviewPane(root, visible) {
+  root.part_layoutStore.setPreview(visible)
+  if (visible) root.requestPreview(root.currentResult)
+  else root.cancelPreview()
+}
+
+function togglePreviewPane(root) {
+  applyPreviewPane(root, !root.previewPaneVisible)
+  root.statusText = root.previewPaneVisible ? "Preview pane shown" : "Preview pane hidden"
+}
+
 function applyDisplaySizePreset(root, preset) {
   root.part_displayScaleStore.setPreset(preset)
 }

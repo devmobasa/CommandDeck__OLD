@@ -45,6 +45,8 @@ Rectangle {
   signal historyRecallRequested(bool restart)
   // Ctrl+= (or Ctrl++) is 1, Ctrl+- is -1, Ctrl+0 is 0 for the automatic size.
   signal zoomRequested(int direction)
+  // Ctrl+I shows or hides the details and preview pane.
+  signal previewToggleRequested()
 
   function zoomDirection(key, modifiers) {
     if ((modifiers & ~(Qt.KeypadModifier | Qt.ShiftModifier)) !== Qt.ControlModifier) return null
@@ -301,6 +303,9 @@ Rectangle {
           root.controller.invokeOrdinal(event.key - Qt.Key_0)
           event.accepted = true
         } else if (root.handleSectionJump(event.key, event.modifiers)) {
+          event.accepted = true
+        } else if ((event.modifiers & ~Qt.KeypadModifier) === Qt.ControlModifier && event.key === Qt.Key_I) {
+          root.previewToggleRequested()
           event.accepted = true
         } else if (root.zoomDirection(event.key, event.modifiers) !== null) {
           root.zoomRequested(root.zoomDirection(event.key, event.modifiers))

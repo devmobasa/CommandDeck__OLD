@@ -10,6 +10,7 @@ ScrollView {
   readonly property alias part_displaySizeChoice: displaySizeChoice
   readonly property alias part_layoutCard: layoutCard
   readonly property alias part_compactLayoutCheck: compactLayoutCheck
+  readonly property alias part_previewPaneCheck: previewPaneCheck
   readonly property alias part_colorsCard: colorsCard
   readonly property alias part_transparencyCard: transparencyCard
   readonly property alias part_panelTransparencyCheck: panelTransparencyCheck
@@ -64,7 +65,7 @@ ScrollView {
     SettingsCard {
       id: layoutCard
       searchQuery: customizationScroll.host.part_settingsSearch.text
-      searchTerms: "customization layout compact dense rows one line badges footer shortcuts"
+      searchTerms: "customization layout compact dense rows one line badges footer shortcuts preview pane details"
       theme: customizationScroll.host.theme
       title: "Layout"
       description: "How much each result row and the footer show. Applies immediately."
@@ -79,6 +80,18 @@ ScrollView {
         Accessible.name: "Compact layout"
         Accessible.description: "Show one line per result and fewer hints"
         onClicked: customizationScroll.host.compactLayoutSelected(checked)
+      }
+
+      SettingsToggle {
+        id: previewPaneCheck
+        theme: customizationScroll.host.theme
+        Layout.fillWidth: true
+        text: "Preview pane"
+        help: "Details and file previews beside the results. Ctrl+I shows or hides it from the launcher; hidden, it loads no previews."
+        checked: customizationScroll.host.previewPaneVisible
+        Accessible.name: "Preview pane"
+        Accessible.description: "Show result details and file previews beside the results"
+        onClicked: customizationScroll.host.previewPaneSelected(checked)
       }
     }
 

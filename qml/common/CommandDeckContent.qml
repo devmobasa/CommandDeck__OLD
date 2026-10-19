@@ -48,6 +48,7 @@ ColumnLayout {
   onActionsRequested: launcherContent.host.openActionPanel()
   onHistoryRecallRequested: restart => launcherContent.host.host.part_queryRecall.step(restart)
   onZoomRequested: direction => launcherContent.host.host.stepDisplaySize(direction)
+  onPreviewToggleRequested: launcherContent.host.host.togglePreviewPane()
   undoAvailable: launcherContent.host.host.lastHidden !== null || launcherContent.host.host.lastUndo !== null
   onUndoRequested: launcherContent.host.host.undoLast()
   }
@@ -185,6 +186,7 @@ ColumnLayout {
       onPreviewMatchRequested: index => launcherContent.host.host.requestPreview(launcherContent.host.host.currentResult, index)
       onPreviewOpenRequested: launcherContent.host.host.openPreviewMatch()
       visible: !launcherContent.host.host.answerOpen && hasContent
+        && (launcherContent.host.host.previewPaneVisible || launcherContent.host.host.calculatorOnly)
     }
 
     AiAnswerPane {

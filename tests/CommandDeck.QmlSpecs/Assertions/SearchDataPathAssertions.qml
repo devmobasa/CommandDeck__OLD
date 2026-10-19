@@ -51,8 +51,29 @@ QtObject {
     verifyOnlyRunningSearchesAreCancelled(deck)
     verifyLocalEditsKeepFreshReferences(deck)
     verifyUpRecallsRecentQueries(deck)
+    verifyHiddenPreviewPaneLoadsNothing(deck)
 
     if (!wasOpened) deck.close()
+  }
+
+  // A hidden preview pane requests no file preview as the selection moves;
+  // showing it again (Ctrl+I) previews the selected file.
+  function verifyHiddenPreviewPaneLoadsNothing(deck) {
+    deck.queryText = "preview"
+    deck.requestSearch()
+    deliver(deck, [result("file:p1", "p1.txt"), result("file:p2", "p2.txt")])
+    const start = deck.sentRequests.length
+    deck.applyPreviewPane(false)
+    deck.selectedIndex = deck.navigationController.indexOfResultId("file:p2")
+    host.expect(!deck.previewPaneVisible && lastRequest(deck, start, Protocol.Operations.Preview) === undefined,
+      "a hidden preview pane requests no file preview")
+    deck.togglePreviewPane()
+    const shown = lastRequest(deck, start, Protocol.Operations.Preview)
+    host.expect(deck.previewPaneVisible && shown !== undefined && shown.resultId === "file:p2"
+        && deck.statusText === "Preview pane shown",
+      "showing the preview pane again previews the selected file")
+    deck.cancelPreview()
+    deck.queryText = ""
   }
 
   // Up on an empty search reads the opt-in history once, applies the newest

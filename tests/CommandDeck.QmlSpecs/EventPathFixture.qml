@@ -128,6 +128,8 @@ Item {
     onHistoryRecallRequested: restart => recallRequests = recallRequests.concat([restart])
     property var zoomRequests: []
     onZoomRequested: direction => zoomRequests = zoomRequests.concat([direction])
+    property int previewToggles: 0
+    onPreviewToggleRequested: previewToggles++
   }
 
   CommandDeck.SearchLoadingIndicator {

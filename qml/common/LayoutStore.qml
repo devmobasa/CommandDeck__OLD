@@ -20,22 +20,29 @@ QtObject {
   // One line per result, Ctrl+number badges only while Ctrl is held, and a
   // footer with just the primary action, Actions and Help.
   property bool compact: false
+  // The result details and file preview beside the list.
+  property bool preview: true
   property bool loaded: false
 
   signal changed()
 
   function parse(text) {
-    const values = { compact: false }
+    const values = { compact: false, preview: true }
     const lines = String(text === null || text === undefined ? "" : text).split("\n")
     for (let index = 0; index < lines.length; index++) {
       const parts = lines[index].trim().toLowerCase().split("=")
-      if (parts.length === 2 && parts[0].trim() === "compact") values.compact = parts[1].trim() === "on"
+      if (parts.length !== 2) continue
+      const name = parts[0].trim()
+      const value = parts[1].trim()
+      if (name === "compact") values.compact = value === "on"
+      else if (name === "preview") values.preview = value !== "off"
     }
     return values
   }
 
   function serialize() {
     return "compact=" + (root.compact ? "on" : "off") + "\n"
+      + "preview=" + (root.preview ? "on" : "off") + "\n"
   }
 
   function load() {
@@ -47,15 +54,25 @@ QtObject {
         existing = ""
       }
     }
-    root.compact = root.parse(existing).compact
+    const parsed = root.parse(existing)
+    root.compact = parsed.compact
+    root.preview = parsed.preview
     root.loaded = true
     root.changed()
   }
 
   function setCompact(enabled) {
-    const next = enabled === true
-    if (root.loaded && next === root.compact) return
-    root.compact = next
+    root.set(enabled === true, root.preview)
+  }
+
+  function setPreview(visible) {
+    root.set(root.compact, visible === true)
+  }
+
+  function set(compact, preview) {
+    if (root.loaded && compact === root.compact && preview === root.preview) return
+    root.compact = compact
+    root.preview = preview
     root.changed()
     if (!root.active || root.filePath.length === 0) return
     try {

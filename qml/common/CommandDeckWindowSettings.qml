@@ -79,6 +79,8 @@ SettingsPanel {
   onDisplaySizeSelected: preset => settingsPanel.host.host.applyDisplaySizePreset(preset)
   compactLayout: settingsPanel.host.host.compactLayout
   onCompactLayoutSelected: enabled => settingsPanel.host.host.applyCompactLayout(enabled)
+  previewPaneVisible: settingsPanel.host.host.previewPaneVisible
+  onPreviewPaneSelected: visible => settingsPanel.host.host.applyPreviewPane(visible)
   panelTransparencyEnabled: settingsPanel.host.host.panelTransparencyEnabled
   panelTransparencyPercent: settingsPanel.host.host.panelTransparencyPercent
   onPanelTransparencyChanged: (enabled, percent) =>

@@ -95,6 +95,7 @@ FocusScope {
   readonly property var part_displaySizeChoice: parts.customizationScroll.part_displaySizeChoice
   readonly property var part_layoutCard: parts.customizationScroll.part_layoutCard
   readonly property var part_compactLayoutCheck: parts.customizationScroll.part_compactLayoutCheck
+  readonly property var part_previewPaneCheck: parts.customizationScroll.part_previewPaneCheck
   readonly property var part_transparencyCard: parts.customizationScroll.part_transparencyCard
   readonly property var part_colorsCard: parts.customizationScroll.part_colorsCard
   readonly property var part_panelTransparencyCheck: parts.customizationScroll.part_panelTransparencyCheck
@@ -233,6 +234,7 @@ FocusScope {
   }
   // Compact layout (QML-only, persisted outside the daemon snapshot).
   property bool compactLayout: false
+  property bool previewPaneVisible: true
   // Panel transparency (QML-only, persisted outside the daemon snapshot).
   property bool panelTransparencyEnabled: false
   property int panelTransparencyPercent: 20
@@ -296,6 +298,7 @@ FocusScope {
   signal displaySizeSelected(string preset)
   signal panelTransparencyChanged(bool enabled, int percent)
   signal compactLayoutSelected(bool enabled)
+  signal previewPaneSelected(bool visible)
   signal colorThemeChanged(var change)
   signal colorThemeResetRequested()
   signal resetRequested()

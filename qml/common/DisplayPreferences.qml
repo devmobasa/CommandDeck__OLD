@@ -27,7 +27,10 @@ QtObject {
   readonly property LayoutStore layoutStore: LayoutStore {
     active: !preferences.host.testMode
     stateDir: preferences.host.coachStateDir
-    onChanged: preferences.host.compactLayout = preferences.layoutStore.compact
+    onChanged: {
+      preferences.host.compactLayout = preferences.layoutStore.compact
+      preferences.host.previewPaneVisible = preferences.layoutStore.preview
+    }
   }
 
   readonly property ColorThemeStore colorThemeStore: ColorThemeStore {

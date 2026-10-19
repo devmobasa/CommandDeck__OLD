@@ -170,7 +170,8 @@ EventPathFixture {
     }
 
     // Ctrl+= and Ctrl++ zoom in, Ctrl+- zooms out and Ctrl+0 returns to the
-    // automatic size, from the main or keypad keys; none of them types text.
+    // automatic size, from the main or keypad keys, and Ctrl+I toggles the
+    // preview pane; none of them types text.
     function test_zoom_keys_ask_for_display_size_steps() {
       fixture.part_searchField.inputControl.forceActiveFocus()
       keyClick(Qt.Key_Equal, Qt.ControlModifier)
@@ -180,6 +181,8 @@ EventPathFixture {
       keyClick(Qt.Key_Minus, Qt.ControlModifier | Qt.KeypadModifier)
       keyClick(Qt.Key_0, Qt.ControlModifier)
       compare(fixture.part_searchField.zoomRequests, [1, 1, -1, 1, -1, 0])
+      keyClick(Qt.Key_I, Qt.ControlModifier)
+      compare(fixture.part_searchField.previewToggles, 1, "Ctrl+I shows or hides the preview pane")
       keyClick(Qt.Key_Equal)
       keyClick(Qt.Key_0)
       compare(fixture.part_searchField.zoomRequests.length, 6, "plain keys type")
