@@ -45,7 +45,8 @@ Rectangle {
       items: [
         { keys: ["→"], text: "Open actions, caret at end of query" },
         { keys: ["Ctrl+K"], text: "Open actions" },
-        { keys: ["Ctrl+↵"], text: "Reveal selected file (otherwise open actions)" },
+        { keys: ["Ctrl+↵"], text: "Run the second action, or Reveal for files" },
+        { keys: ["Ctrl+Shift+↵"], text: "Run the third action" },
         { keys: ["Ctrl+Shift+C"], text: "Copy selected file path" },
         { keys: ["Ctrl+D"], text: "Toggle bookmark for a customizable result" },
         { keys: ["←", "Esc"], text: "Close the action panel" }

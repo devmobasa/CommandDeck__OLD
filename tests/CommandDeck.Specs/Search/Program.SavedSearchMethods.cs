@@ -43,7 +43,8 @@ public static partial class Program
                         "ctrl+n", string.Empty, searches, inventory ) );
                 foreach ( var reserved in new[]
                 {
-                    "ctrl+home", "ctrl+end", "ctrl+enter", "ctrl+1", "ctrl+9", "ctrl+u", "ctrl+up", "ctrl+down"
+                    "ctrl+home", "ctrl+end", "ctrl+enter", "shift+ctrl+enter", "ctrl+1", "ctrl+9", "ctrl+u",
+                    "ctrl+up", "ctrl+down"
                 } )
                 {
                     Throws<InvalidOperationException>( ( ) =>

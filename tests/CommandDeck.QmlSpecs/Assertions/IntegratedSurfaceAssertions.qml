@@ -35,7 +35,8 @@ QtObject {
       "direct file shortcuts use the same result and action invocation as the menu")
     host.part_integratedDeck.handleMessage({ type: Protocol.Messages.ActionResult, requestId: invocations[1].requestId,
       actionResult: { succeeded: false, message: "Copy failed" } })
-    host.expect(host.part_integratedDeck.directActions.map(action => action.id).join(",") === "reveal,copy-path,favorite"
+    host.expect(host.part_integratedDeck.directActions.map(action => action.slot + ":" + action.id).join(",")
+          === "secondary:reveal,tertiary:copy-path,copy:copy-path,favorite:favorite"
         && host.part_integratedDeck.shortcutActions({ canCustomize: true, isFavorite: true, actions: [] })[0].title === "Unbookmark",
       "contextual shortcuts follow supported actions and current bookmark state")
     host.part_integratedDeck.daemonAvailable = false

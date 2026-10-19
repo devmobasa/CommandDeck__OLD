@@ -3,6 +3,7 @@ import QtTest
 import "../../qml/common" as CommandDeck
 import "../../qml/common/Protocol.js" as Protocol
 import "../../qml/common/UiConstants.js" as Ui
+import "../../qml/common/DeckDisplayActions.js" as DeckDisplayActions
 
 EventPathFixture {
   id: scene
@@ -126,13 +127,16 @@ EventPathFixture {
 
     function test_direct_shortcuts_do_not_open_menu_or_replace_text_editing() {
       fixture.part_searchField.directActions = [
-        { id: "reveal" }, { id: "copy-path" }, { id: "favorite" }
+        { id: "reveal", slot: Ui.ShortcutSlot.Secondary }, { id: "open-with", slot: Ui.ShortcutSlot.Tertiary },
+        { id: "copy-path", slot: Ui.ShortcutSlot.Copy }, { id: "favorite", slot: Ui.ShortcutSlot.Favorite }
       ]
       fixture.part_searchField.inputControl.forceActiveFocus()
       const menus = fixture.part_searchField.actionRequests
       const primaries = fixture.part_controller.primaryCalls
       keyClick(Qt.Key_Return, Qt.ControlModifier)
       compare(fixture.part_searchField.shortcutId, "reveal")
+      keyClick(Qt.Key_Return, Qt.ControlModifier | Qt.ShiftModifier)
+      compare(fixture.part_searchField.shortcutId, "open-with")
       keyClick(Qt.Key_C, Qt.ControlModifier | Qt.ShiftModifier)
       compare(fixture.part_searchField.shortcutId, "copy-path")
       keyClick(Qt.Key_D, Qt.ControlModifier)
@@ -147,12 +151,33 @@ EventPathFixture {
       fixture.part_searchField.directActions = []
       keyClick(Qt.Key_D, Qt.ControlModifier)
       compare(fixture.part_searchField.shortcutId, "")
+      // Without a second or third action, either chord opens the action menu.
+      keyClick(Qt.Key_Return, Qt.ControlModifier)
+      keyClick(Qt.Key_Return, Qt.ControlModifier | Qt.ShiftModifier)
+      compare(fixture.part_searchField.actionRequests, menus + 3)
+      compare(fixture.part_searchField.shortcutId, "")
+    }
+
+    // Ctrl+Enter prefers Reveal and otherwise takes the second listed action;
+    // Ctrl+Shift+Enter takes the next one. Hidden actions are never chosen.
+    function test_second_and_third_actions_follow_the_listed_order() {
+      const slots = result => DeckDisplayActions.shortcutActions(null, result)
+        .filter(value => value.slot === Ui.ShortcutSlot.Secondary || value.slot === Ui.ShortcutSlot.Tertiary)
+        .map(value => value.slot + ":" + value.id + ":" + value.keyLabel)
+      compare(slots({ actions: [{ id: "open" }, { id: "copy" }, { id: "edit" }, { id: "delete" }] }),
+        ["secondary:copy:Ctrl+↵", "tertiary:edit:Ctrl+Shift+↵"])
+      compare(slots({ actions: [{ id: "open" }, { id: "copy-path" }, { id: "reveal" }] }),
+        ["secondary:reveal:Ctrl+↵", "tertiary:copy-path:Ctrl+Shift+↵"])
+      compare(slots({ actions: [{ id: "open" }, { id: "undo:open", hidden: true }, { id: "copy" }] }),
+        ["secondary:copy:Ctrl+↵"])
+      compare(slots({ actions: [{ id: "open" }] }), [])
+      compare(slots(null), [])
     }
 
     function test_footer_direct_actions_click_tab_and_forward_shortcuts() {
       const actions = [
-        { id: "reveal", title: "Reveal", keyLabel: "Ctrl+↵" },
-        { id: "copy-path", title: "Copy Path", keyLabel: "Ctrl+Shift+C" }
+        { id: "reveal", title: "Reveal", keyLabel: "Ctrl+↵", slot: Ui.ShortcutSlot.Secondary },
+        { id: "copy-path", title: "Copy Path", keyLabel: "Ctrl+Shift+↵", slot: Ui.ShortcutSlot.Tertiary }
       ]
       fixture.part_footerActions.directActions = actions
       fixture.part_searchField.directActions = actions

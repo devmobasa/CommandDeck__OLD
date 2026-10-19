@@ -44,18 +44,23 @@ Rectangle {
   signal undoRequested()
   property var directActions: []
 
-  function requestShortcut(id) {
-    if (!directActions.some(action => action.id === id)) return false
-    shortcutRequested(id)
+  function requestShortcut(slot) {
+    const action = directActions.find(value => value.slot === slot)
+    if (!action) return false
+    shortcutRequested(action.id)
     return true
   }
+  // Ctrl+Enter and Ctrl+Shift+Enter open the action menu when the row has no
+  // second or third action to run.
   function handleActionShortcut(key, modifiers) {
     const enter = key === Qt.Key_Return || key === Qt.Key_Enter
-    if (modifiers === Qt.ControlModifier && enter && requestShortcut(Ui.SearchShortcut.Reveal)) return true
-    if (modifiers === (Qt.ControlModifier | Qt.ShiftModifier) && key === Qt.Key_C)
-      return requestShortcut(Ui.SearchShortcut.CopyPath)
-    if (modifiers === Qt.ControlModifier && key === Qt.Key_D) return requestShortcut(Ui.SearchShortcut.Favorite)
-    if (modifiers === Qt.ControlModifier && (key === Qt.Key_K || enter)) {
+    const control = (modifiers & ~Qt.KeypadModifier) === Qt.ControlModifier
+    const controlShift = (modifiers & ~Qt.KeypadModifier) === (Qt.ControlModifier | Qt.ShiftModifier)
+    if (control && enter && requestShortcut(Ui.ShortcutSlot.Secondary)) return true
+    if (controlShift && enter && requestShortcut(Ui.ShortcutSlot.Tertiary)) return true
+    if (controlShift && key === Qt.Key_C) return requestShortcut(Ui.ShortcutSlot.Copy)
+    if (control && key === Qt.Key_D) return requestShortcut(Ui.ShortcutSlot.Favorite)
+    if ((control && key === Qt.Key_K) || ((control || controlShift) && enter)) {
       actionsRequested()
       return true
     }

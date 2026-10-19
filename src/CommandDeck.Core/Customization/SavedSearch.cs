@@ -102,7 +102,7 @@ public static partial class SavedSearchValidator
         HashSet<string> builtIns =
         [
             "CTRL+/", "CTRL+,", "CTRL+N", "CTRL+P", "CTRL+HOME", "CTRL+END",
-            "CTRL+ENTER", "CTRL+U", "CTRL+UP", "CTRL+DOWN",
+            "CTRL+ENTER", "CTRL+SHIFT+ENTER", "CTRL+U", "CTRL+UP", "CTRL+DOWN",
             .. Enumerable.Range(1, 9).Select(static value => $"CTRL+{value}")
         ];
         if ( builtIns.Contains( normalized ) )

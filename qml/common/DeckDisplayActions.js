@@ -33,16 +33,24 @@ function invokeShortcut(root, id) {
   if (action) root.invokeAction(result, action, false)
 }
 
+// Enter runs the first listed action. Ctrl+Enter runs Reveal where a row
+// offers it and otherwise the second action; Ctrl+Shift+Enter runs the next
+// one after those two. Each entry names its key slot.
 function shortcutActions(root, result) {
   if (!result) return []
-  const actions = result.actions || []
+  const listed = (result.actions || []).filter(value => value.hidden !== true)
+  const later = listed.slice(1)
+  const secondary = later.find(value => value.id === Ui.SearchShortcut.Reveal) || later[0]
+  const tertiary = later.find(value => value !== secondary)
   const shortcuts = []
-  for (const id of [Ui.SearchShortcut.Reveal, Ui.SearchShortcut.CopyPath]) {
-    const action = actions.find(value => value.id === id)
-    if (action) shortcuts.push({ id: id, title: action.title,
-      keyLabel: id === Ui.SearchShortcut.Reveal ? "Ctrl+↵" : "Ctrl+Shift+C" })
-  }
+  if (secondary) shortcuts.push({ id: secondary.id, title: secondary.title, keyLabel: "Ctrl+↵",
+    slot: Ui.ShortcutSlot.Secondary })
+  if (tertiary) shortcuts.push({ id: tertiary.id, title: tertiary.title, keyLabel: "Ctrl+Shift+↵",
+    slot: Ui.ShortcutSlot.Tertiary })
+  const copyPath = listed.find(value => value.id === Ui.SearchShortcut.CopyPath)
+  if (copyPath) shortcuts.push({ id: copyPath.id, title: copyPath.title, keyLabel: "Ctrl+Shift+C",
+    slot: Ui.ShortcutSlot.Copy })
   if (result.canCustomize) shortcuts.push({ id: Ui.SearchShortcut.Favorite,
-    title: result.isFavorite ? "Unbookmark" : "Bookmark", keyLabel: "Ctrl+D" })
+    title: result.isFavorite ? "Unbookmark" : "Bookmark", keyLabel: "Ctrl+D", slot: Ui.ShortcutSlot.Favorite })
   return shortcuts
 }
