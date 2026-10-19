@@ -14,6 +14,7 @@ public static class ProviderIds
     public const string Clipboard = "clipboard";
     public const string Commands = "commands";
     public const string Config = "config";
+    public const string DesktopControls = "desktop-controls";
     public const string Emoji = "emoji";
     public const string Extensions = "extensions";
     public const string Fallback = "fallback";

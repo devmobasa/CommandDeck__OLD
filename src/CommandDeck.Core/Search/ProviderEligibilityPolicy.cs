@@ -46,7 +46,8 @@ public static class ProviderEligibilityPolicy
         if ( query.IsCommandMode )
         {
             return candidates.Where( provider =>
-                provider.Id is ProviderIds.Catalog or ProviderIds.Extensions || (liveSourcesEnabled && provider.Id == ProviderIds.Hyprland) );
+                provider.Id is ProviderIds.Catalog or ProviderIds.Extensions or ProviderIds.DesktopControls ||
+                (liveSourcesEnabled && provider.Id == ProviderIds.Hyprland) );
         }
 
         var applicationsIncluded = IncludesApplications( query );

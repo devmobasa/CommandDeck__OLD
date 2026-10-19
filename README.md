@@ -24,7 +24,8 @@ windows, run Omarchy actions, and ask optional AI tools from one search field.
 
 - **One search for the whole desktop.** Applications, files and file contents,
   Hyprland config keys, open windows and workspaces, user services, Omarchy menu
-  actions, projects, snippets, and opt-in clipboard history, grouped by source.
+  actions, desktop controls such as volume and Wi-Fi, projects, snippets, and
+  opt-in clipboard history, grouped by source.
 - **Made for Omarchy.** It follows the active Omarchy theme, finds a config key
   at its file and line, runs Omarchy menu actions, and flags
   [Herdr](docs/search-and-ranking.md#herdr-spaces-and-tabs) agent tabs that need attention.
@@ -167,6 +168,7 @@ interaction. Settings controls which sources appear in Search and Home.
 | `tz: tokyo` / `time: 3pm london to tokyo` | Time zones |
 | `web: wayland layer shell` | Web search |
 | `emoji: rocket` | Emoji |
+| `ctl: volume` | Desktop controls: volume, media, Wi-Fi, Bluetooth |
 | `hey: invoice` | Optional HEY mail search |
 | `codex:` / `claude:` / `cursor:` / `grok:` | A specific assistant backend |
 
@@ -176,7 +178,8 @@ launcher to browse every prefix with an example.
 </details>
 
 The [launcher guide](docs/launcher-workflows.md) covers projects, snippets,
-script commands, clipboard history, folder browsing, and piped selection. The
+script commands, clipboard history, folder browsing, desktop controls, and piped
+selection. The
 [search reference](docs/search-and-ranking.md) explains filters and ranking.
 
 ## Privacy and AI

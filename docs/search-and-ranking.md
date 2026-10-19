@@ -130,6 +130,7 @@ a query preserves its expression; clipboard and HEY privacy checks still apply.
 | `hspace:` / `hspaces:` / `herdr-space:` | Herdr spaces only |
 | `htab:` / `htabs:` / `herdr-tab:` | Herdr tabs only |
 | `hattention:` / `herdr-attention:` | Herdr tabs whose agent status is blocked |
+| `ctl:` / `control:` / `controls:` | built-in desktop controls; they also match plain search |
 | `=` | calculator |
 | `>` | command-oriented providers |
 | `@provider` | explicit provider ID |

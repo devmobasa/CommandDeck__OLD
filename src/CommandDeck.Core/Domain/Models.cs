@@ -48,6 +48,7 @@ public static class SourceIds
     public const string Emoji = "emoji";
     public const string Herdr = "herdr";
     public const string Hey = "hey";
+    public const string DesktopControls = "desktop-controls";
 
     public static readonly IReadOnlySet<string> All = new HashSet<string>( StringComparer.Ordinal )
     {
@@ -71,7 +72,8 @@ public static class SourceIds
         WebSearch,
         Emoji,
         Herdr,
-        Hey
+        Hey,
+        DesktopControls
     };
 }
 

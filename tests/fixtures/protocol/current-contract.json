@@ -555,6 +555,18 @@
       "providerId": "emoji",
       "sourceId": "emoji",
       "kind": "emoji"
+    },
+    {
+      "id": "desktop-controls",
+      "label": "Desktop controls",
+      "token": "ctl:",
+      "aliases": [
+        "control:",
+        "controls:"
+      ],
+      "providerId": "desktop-controls",
+      "sourceId": "desktop-controls",
+      "kind": null
     }
   ],
   "sources": [
@@ -664,6 +676,12 @@
       "id": "emoji",
       "label": "Emoji",
       "icon": "face-smile",
+      "homeAvailable": true
+    },
+    {
+      "id": "desktop-controls",
+      "label": "Desktop controls",
+      "icon": "preferences-desktop",
       "homeAvailable": true
     }
   ]

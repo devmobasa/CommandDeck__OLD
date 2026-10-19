@@ -343,6 +343,7 @@ Generated from Core protocol constants and registries. Run `scripts/generate-pro
 | `timezone` | `tz:` | `time:` |
 | `web-search` | `web:` | — |
 | `emoji` | `emoji:` | `e:` |
+| `desktop-controls` | `ctl:` | `control:`, `controls:` |
 
 ## Configurable sources
 
@@ -364,3 +365,4 @@ Generated from Core protocol constants and registries. Run `scripts/generate-pro
 - `timezone` — Timezone
 - `web-search` — Web Search
 - `emoji` — Emoji
+- `desktop-controls` — Desktop controls

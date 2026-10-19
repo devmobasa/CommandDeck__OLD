@@ -197,6 +197,31 @@ have timeout, output, and memory bounds. Logs are on-demand action output, not
 indexed content. These controls neither enable/disable boot activation nor act
 on system-wide services.
 
+## Desktop controls
+
+Type what you want to change: `volume`, `mute`, `next track`, `wifi`, or
+`bluetooth`. Matching desktop commands appear beside your other results, and
+`ctl:` (also `control:`) lists all of them. Enter runs the command; on success
+the launcher closes like other launches, as set by **Hide after opening an
+item**. A failure, such as no media player for `playerctl`, stays visible with
+the tool's error output.
+
+| Commands | Literal argv |
+|---|---|
+| Volume Up / Volume Down | `wpctl set-volume -l 1.0 @DEFAULT_AUDIO_SINK@ 5%+` / `5%-` |
+| Toggle Mute | `wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle` |
+| Set Volume to 0%, 25%, 50%, 75%, 100% | `wpctl set-volume @DEFAULT_AUDIO_SINK@ 50%` |
+| Toggle Microphone Mute | `wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle` |
+| Play / Pause Media, Next Track, Previous Track | `playerctl play-pause`, `next`, `previous` |
+| Toggle Wi-Fi / Toggle Bluetooth | `rfkill toggle wlan` / `rfkill toggle bluetooth` |
+
+Each command is one literal argument vector, never a shell string. A command
+whose tool is not on the daemon's `PATH` is left out of the results instead of
+showing an error. Wi-Fi and Bluetooth use the rfkill soft block, the same switch
+that Omarchy's Bluetooth power script uses, so NetworkManager, iwd, and BlueZ
+follow it. Search needs at least two characters and does no work on bare Home.
+Turn the **Desktop controls** source off in Settings to remove these rows.
+
 ## Verification
 
 `dotnet tests/workflows-smoke.cs /path/to/commanddeck` runs all six workflows

@@ -168,5 +168,11 @@ public static partial class Program
         await RunAsync(
             "emoji provider matches by name and keyword and copies the glyph",
             EmojiProviderMatchesByNameAndKeywordAndCopiesGlyphAsync );
+        await RunAsync(
+            "desktop controls match plain search and hide commands whose tool is missing",
+            DesktopControlsMatchPlainSearchAndHideMissingToolsAsync );
+        await RunAsync(
+            "desktop controls run literal argv and report tool failures",
+            DesktopControlsRunLiteralArgvThroughRunArgvAsync );
     }
 }

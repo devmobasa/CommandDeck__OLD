@@ -29,7 +29,8 @@ public static class SearchFilterRegistry
         Filter("services", "Services", "svc:", ProviderIds.SystemdUnits, SourceIds.SystemdUnits, null, "unit:", "service:"),
         Filter("timezone", "Timezone", "tz:", ProviderIds.Timezone, SourceIds.Timezone, null, "time:"),
         Filter(WebSearchFilterId, "Web Search", "web:", ProviderIds.WebSearch, SourceIds.WebSearch),
-        Filter("emoji", "Emoji", "emoji:", ProviderIds.Emoji, SourceIds.Emoji, ResultKinds.Emoji, "e:")
+        Filter("emoji", "Emoji", "emoji:", ProviderIds.Emoji, SourceIds.Emoji, ResultKinds.Emoji, "e:"),
+        Filter("desktop-controls", "Desktop controls", "ctl:", ProviderIds.DesktopControls, SourceIds.DesktopControls, null, "control:", "controls:")
     ];
 
     private static readonly Dictionary<string, FilterDescriptor> ById = Descriptors

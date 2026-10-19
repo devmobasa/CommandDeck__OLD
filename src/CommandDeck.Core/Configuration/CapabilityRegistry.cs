@@ -21,6 +21,7 @@ public static class CapabilityRegistry
         new("Structured config indexing", "On for selected roots", "Static keys/values", "Config records/FTS", "Background reindex", "Root/exclusions"),
         new("Hyprland inspection", "On", "Windows/workspaces/monitors", "None except transient results", "Search", "Disable provider"),
         new("Hyprland actions", "On", "Current compositor state", "Hyprland IPC action", "Explicit Enter/action", "Disable provider/action"),
+        new("Desktop controls", "On", "Whether wpctl, playerctl, and rfkill are on PATH", "Literal wpctl, playerctl, or rfkill argv for the default audio sink/source, the active media player, or the Wi-Fi/Bluetooth soft block", "Explicit Enter/action on a matching search row or `ctl:`", "Disable the Desktop controls source"),
         new("Calculator", "On", "Query expression", "None for arithmetic and units; optional qalc exchange-rate fetch on currency expressions at most once per 15 minutes", "`=` prefix", "Disable provider; `search.calculator.useQalc=never`"),
         new("Quicklinks", "On", "User config/query", "URL to browser", "Explicit action", "Remove quicklink"),
         new("Custom commands", "Configurable", "User command config", "Executes configured argv", "Explicit action", "Remove/disable command"),

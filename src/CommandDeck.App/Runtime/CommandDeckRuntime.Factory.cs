@@ -97,7 +97,8 @@ public sealed partial class CommandDeckRuntime
             new SystemdUserServiceProvider(),
             new TimezoneProvider(),
             new WebSearchProvider(options.Search.WebEngines),
-            new EmojiProvider()
+            new EmojiProvider(),
+            new DesktopControlsProvider()
                 ];
                 if ( clipboardProvider is not null )
                 {
