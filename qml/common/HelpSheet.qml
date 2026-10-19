@@ -38,7 +38,7 @@ Rectangle {
       items: [
         { keys: ["↵"], text: "Run the primary action" },
         { keys: ["Ctrl+1", "Ctrl+9"], text: "Run the numbered result" },
-        { keys: ["Tab"], text: "Complete a filter hint or the selected result" }
+        { keys: ["Tab"], text: "Complete a filter hint or the selected result, or fill its inputs" }
       ]
     },
     {

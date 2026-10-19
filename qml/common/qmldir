@@ -25,6 +25,7 @@ AiProviderSettingsController 1.0 AiProviderSettingsController.qml
 AiStreamingSurface 1.0 AiStreamingSurface.qml
 AliasDialog 1.0 AliasDialog.qml
 AnnouncementCoalescer 1.0 AnnouncementCoalescer.qml
+ArgumentPills 1.0 ArgumentPills.qml
 CalculatorResultView 1.0 CalculatorResultView.qml
 ClipboardActionBar 1.0 ClipboardActionBar.qml
 ClipboardActionButton 1.0 ClipboardActionButton.qml

@@ -50,6 +50,20 @@ Rectangle {
   // Ctrl+I shows or hides the details and preview pane.
   signal previewToggleRequested()
 
+  // The selected result's primary action when it takes one to three inputs,
+  // as { result, action }; its inputs show as pills after the query. The pills
+  // are rebuilt only when the result, action or inputs change.
+  property var pillTarget: null
+  readonly property string pillKey: pillTarget
+    ? pillTarget.result.id + "\u001f" + pillTarget.action.id + "\u001f" + JSON.stringify(pillTarget.action.inputs)
+    : ""
+  readonly property alias pillsControl: argumentPills
+  signal pillsSubmitted(var values)
+  signal pillValueMissing(string name)
+  onPillKeyChanged: argumentPills.inputs = pillTarget
+    ? pillTarget.action.inputs.map(input => ({ name: input.name, defaultValue: input.defaultValue || "" }))
+    : []
+
   function zoomDirection(key, modifiers) {
     if ((modifiers & ~(Qt.KeypadModifier | Qt.ShiftModifier)) !== Qt.ControlModifier) return null
     if (key === Qt.Key_Equal || key === Qt.Key_Plus) return 1
@@ -294,6 +308,9 @@ Rectangle {
           event.accepted = true
         } else if (root.controller.handleSettingsShortcut(event.key, event.modifiers)) {
           event.accepted = true
+        } else if (event.key === Qt.Key_Tab && !control && !alt && !shift && argumentPills.count > 0) {
+          argumentPills.focusFirst()
+          event.accepted = true
         } else if (event.key === Qt.Key_Tab && !control && !alt && !shift) {
           const completion = root.prefixHint !== null
             ? (searchInput.text.charAt(0) === "-" ? "-" : "") + root.prefixHint.token
@@ -328,6 +345,9 @@ Rectangle {
           event.accepted = true
         } else if (root.handleActionShortcut(event.key, event.modifiers)) {
           event.accepted = true
+        } else if (enter && event.modifiers === Qt.NoModifier && argumentPills.count > 0) {
+          argumentPills.submit()
+          event.accepted = true
         } else if (enter && event.modifiers === Qt.NoModifier) {
           root.controller.invokePrimary()
           event.accepted = true
@@ -343,6 +363,19 @@ Rectangle {
           root.controller.dismiss()
           event.accepted = true
         }
+      }
+    }
+
+    ArgumentPills {
+      id: argumentPills
+      Layout.alignment: Qt.AlignVCenter
+      Layout.maximumWidth: Math.round(root.width * 0.45)
+      theme: root.theme
+      onSubmitted: values => root.pillsSubmitted(values)
+      onMissingValue: name => root.pillValueMissing(name)
+      onExitRequested: forward => {
+        if (forward) settingsButton.forceActiveFocus()
+        else searchInput.forceActiveFocus()
       }
     }
 

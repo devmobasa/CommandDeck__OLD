@@ -132,6 +132,10 @@ Item {
     onZoomRequested: direction => zoomRequests = zoomRequests.concat([direction])
     property int previewToggles: 0
     property var favoriteMoves: []
+    property var pillSubmissions: []
+    property string missingPill: ""
+    onPillsSubmitted: values => pillSubmissions = pillSubmissions.concat([values])
+    onPillValueMissing: name => missingPill = name
     onFavoriteMoveRequested: direction => favoriteMoves = favoriteMoves.concat([direction])
     onPreviewToggleRequested: previewToggles++
   }

@@ -24,6 +24,10 @@ during discovery. Git status excludes untracked files to keep searches quick.
 ## Snippets and templates
 
 Search `snip: review`. Enter copies a snippet, asking for any named inputs first.
+When the selected result's primary action takes one to three inputs and needs no
+confirmation, they appear as pills after the query: Tab moves into them, Tab and
+Shift+Tab move between them, Escape returns to the query, and Enter runs the action
+with their values (or moves to the first empty one). Other actions keep the form.
 The action menu also offers an expanded preview. Paste copied text into your
 destination with its normal paste shortcut.
 

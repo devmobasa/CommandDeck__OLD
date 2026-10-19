@@ -56,8 +56,36 @@ QtObject {
     verifyCopyMessageOutlivesTheLauncher(deck)
     verifyResetRankingRefreshesInPlace(deck)
     verifyHomeBookmarksMoveWithTheKeyboard(deck)
+    verifyArgumentPillsInvokeWithTheirValues(deck)
 
     if (!wasOpened) deck.close()
+  }
+
+  // A primary action with one to three inputs and no confirmation takes them
+  // as pills, and submitting them invokes it with those values and no form.
+  function verifyArgumentPillsInvokeWithTheirValues(deck) {
+    const withAction = (id, action) => Object.assign(result(id, id), { actions: [action] })
+    const copy = { id: "copy", title: "Copy", kind: Protocol.ActionKinds.SnippetCopy, inputs: [{ name: "topic" }] }
+    deck.queryText = "pills"
+    deck.requestSearch()
+    deliver(deck, [withAction("snippet:review", copy),
+      withAction("script:confirm", Object.assign({}, copy, { requiresConfirmation: true })),
+      withAction("snippet:many", Object.assign({}, copy, { inputs: [{ name: "a" }, { name: "b" }, { name: "c" }, { name: "d" }] }))])
+    deck.selectedIndex = deck.navigationController.indexOfResultId("script:confirm")
+    host.expect(deck.argumentPillTarget === null, "an action that asks for confirmation keeps its form")
+    deck.selectedIndex = deck.navigationController.indexOfResultId("snippet:many")
+    host.expect(deck.argumentPillTarget === null, "four inputs keep the form")
+    deck.selectedIndex = deck.navigationController.indexOfResultId("snippet:review")
+    host.expect(deck.argumentPillTarget !== null && deck.argumentPillTarget.action.id === "copy",
+      "one input shows as a pill")
+    const start = deck.sentRequests.length
+    deck.submitArgumentPills({ topic: "tests" })
+    const invoke = lastRequest(deck, start, Protocol.Operations.Invoke)
+    host.expect(invoke !== undefined && invoke.resultId === "snippet:review" && invoke.inputValues.topic === "tests"
+        && !deck.part_invocationController.actionInputOpen,
+      "submitting pills invokes the action with their values and no form")
+    deck.handleMessage({ type: Protocol.Messages.ActionResult, requestId: invoke.requestId,
+      actionResult: { succeeded: false, message: "Fixture snippet" } })
   }
 
   // Ctrl+Alt+Down on the first Home bookmark moves it to the second position

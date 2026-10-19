@@ -229,6 +229,52 @@ EventPathFixture {
       compare(fixture.part_searchField.inputControl.text, "")
     }
 
+    // A primary action with inputs shows them as pills after the query. Tab
+    // enters them, Tab and Shift+Tab move between them, Escape returns to the
+    // query, Enter runs the action with their values or asks for a missing
+    // one, and a refresh of the same result keeps what was typed.
+    function test_argument_pills_take_inputs_inline() {
+      const target = () => ({ result: { id: "snippet:review" }, action: { id: "copy",
+        inputs: [{ name: "topic", defaultValue: "code" }, { name: "who" }] } })
+      const field = fixture.part_searchField
+      const pills = field.pillsControl
+      field.pillTarget = target()
+      field.inputControl.forceActiveFocus()
+      compare(pills.count, 2)
+      keyClick(Qt.Key_Tab)
+      verify(pills.fieldAt(0).activeFocus, "Tab enters the first pill")
+      compare(pills.fieldAt(0).text, "code", "a default prefills its pill")
+      keyClick(Qt.Key_Tab)
+      verify(pills.fieldAt(1).activeFocus)
+      keyClick(Qt.Key_Return)
+      compare(field.missingPill, "who", "Enter names a missing value")
+      verify(pills.fieldAt(1).activeFocus)
+      typeText("Ana")
+      field.pillTarget = target()
+      compare(pills.fieldAt(1).text, "Ana", "a refresh of the same result keeps typed values")
+      verify(pills.fieldAt(1).activeFocus)
+      keyClick(Qt.Key_Backtab)
+      verify(pills.fieldAt(0).activeFocus)
+      keyClick(Qt.Key_Backtab)
+      verify(field.inputControl.activeFocus, "Shift+Tab from the first pill returns to the query")
+      keyClick(Qt.Key_Return)
+      compare(field.pillSubmissions.length, 1)
+      compare(field.pillSubmissions[0].topic, "code")
+      compare(field.pillSubmissions[0].who, "Ana")
+      compare(fixture.part_controller.primaryCalls, 0, "Enter runs the action with its inputs")
+
+      keyClick(Qt.Key_Tab)
+      keyClick(Qt.Key_Escape)
+      verify(field.inputControl.activeFocus, "Escape returns to the query")
+      field.pillTarget = { result: { id: "snippet:other" }, action: { id: "copy", inputs: [{ name: "topic" }] } }
+      compare(pills.count, 1)
+      compare(pills.fieldAt(0).text, "", "another result starts empty")
+      field.pillTarget = null
+      compare(pills.count, 0)
+      keyClick(Qt.Key_Return)
+      compare(fixture.part_controller.primaryCalls, 1, "without pills Enter runs the primary action")
+    }
+
     // Ctrl+U deletes from the start of the query to the caret, leaving the
     // rest and any filter chip, and the field keeps focus for typing.
     function test_control_u_deletes_the_query_before_the_caret() {

@@ -181,6 +181,22 @@ function selectFile(root, result, enabled) {
     operation: Protocol.Operations.FilesSelect, resultId: result.id, enabled: enabled })
 }
 
+// The primary action that takes its inputs inline: one to three of them, and
+// no confirmation, which would ask again without the entered values.
+function pillTarget(root, result) {
+  const action = result && result.actions && result.actions.length > 0 ? result.actions[0] : null
+  if (!action || action.requiresConfirmation === true || result.kind === Protocol.ResultKinds.ExtensionCommand) return null
+  const inputs = action.inputs || []
+  return inputs.length >= 1 && inputs.length <= 3 ? { result: result, action: action } : null
+}
+
+function submitPills(root, values) {
+  const target = pillTarget(root, root.part_navigation.selectedResult())
+  if (!target) return
+  root.focusRevision++
+  root.invokeAction(target.result, target.action, false, values)
+}
+
 function invokeSelectedPrimary(root) {
   if (!root.daemonAvailable || root.reconciliationPending) return
   const result = root.part_navigation.selectedResult()

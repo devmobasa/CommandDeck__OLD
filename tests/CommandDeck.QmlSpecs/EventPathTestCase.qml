@@ -25,6 +25,9 @@ TestCase {
     fixture.part_searchField.zoomRequests = []
     fixture.part_searchField.previewToggles = 0
     fixture.part_searchField.favoriteMoves = []
+    fixture.part_searchField.pillTarget = null
+    fixture.part_searchField.pillSubmissions = []
+    fixture.part_searchField.missingPill = ""
     fixture.part_controller.recalledText = ""
     fixture.part_controller.escapeClearsQuery = false
     fixture.part_controller.rootCalls = 0

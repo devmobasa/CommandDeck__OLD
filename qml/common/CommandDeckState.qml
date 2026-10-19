@@ -282,5 +282,7 @@ Item {
       ? sessionState.owner.currentResult.actions[0].title
       : ""
   readonly property var directActions: sessionState.owner.shortcutActions(sessionState.owner.currentResult)
+  readonly property var argumentPillTarget: DeckInvocationActions.pillTarget(sessionState.owner, sessionState.owner.currentResult)
+  function submitArgumentPills(values) { return DeckInvocationActions.submitPills(sessionState.owner, values) }
 
 }
