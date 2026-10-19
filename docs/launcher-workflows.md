@@ -199,8 +199,8 @@ on system-wide services.
 
 ## Desktop controls
 
-Type what you want to change: `volume`, `mute`, `next track`, `wifi`, or
-`bluetooth`. Matching desktop commands appear beside your other results, and
+Type what you want to change: `volume`, `mute`, `next track`, `wifi`,
+`bluetooth`, or `left half`. Matching desktop commands appear beside your other results, and
 `ctl:` (also `control:`) lists all of them. Enter runs the command; on success
 the launcher closes like other launches, as set by **Hide after opening an
 item**. A failure, such as no media player for `playerctl`, stays visible with
@@ -221,6 +221,40 @@ showing an error. Wi-Fi and Bluetooth use the rfkill soft block, the same switch
 that Omarchy's Bluetooth power script uses, so NetworkManager, iwd, and BlueZ
 follow it. Search needs at least two characters and does no work on bare Home.
 Turn the **Desktop controls** source off in Settings to remove these rows.
+
+### Window commands
+
+Window commands act on the window that was focused when you opened the
+launcher. Type `left half`, `center third`, `maximize`, `tile`, `fullscreen`,
+`next monitor`, or `workspace 3`. Each row names its window in the subtitle.
+
+| Commands | Effect |
+|---|---|
+| Left Half, Right Half, Top Half, Bottom Half | Half of the monitor's work area |
+| First Third, Center Third, Last Third | One column of three |
+| First Two Thirds, Last Two Thirds | Two columns of three |
+| Center Window | Keeps the window's size and centers it |
+| Maximize Window / Almost Maximize Window | The whole work area / 90% of it, centered |
+| Toggle Floating / Tile Window | Floats or tiles the window |
+| Toggle Fullscreen | Hyprland fullscreen |
+| Move Window to Next / Previous Monitor | The neighbouring enabled monitor, in monitor ID order |
+| Move Window to Workspace 1–10 | Moves the window and follows it |
+
+The launcher is a layer-shell overlay, so opening it does not change
+Hyprland's active window. When a window command matches your search, the daemon
+reads `hyprctl -j activewindow` and binds that window's literal address to the
+row. At invocation it checks that the address is still a client, then dispatches
+only to that address. It never acts on whatever has focus at dispatch time. A
+closed window reports an error; search again.
+
+Hyprland tiles windows, so a placement floats the window first and leaves
+fullscreen if needed. **Tile Window** returns it to the layout. Placements use
+the work area of the window's monitor from `hyprctl -j monitors`: the logical
+size after scale and rotation, minus the space that bars reserve. Halves and
+thirds share edges, so adjacent placements do not overlap. Gaps are not added.
+Every dispatch must answer `ok`. A Lua warning stops the sequence and is shown
+as a failure, even when `hyprctl` exits with status zero. Without `hyprctl`, a
+focused window, or a second monitor, the affected rows are not shown.
 
 ## Verification
 

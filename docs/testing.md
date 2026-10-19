@@ -299,6 +299,7 @@ build manually across:
 - a missing bridge, a missing daemon, and daemon or shell restarts;
 - theme changes;
 - the keyboard-only action panel;
+- window commands on a scaled, rotated, or second monitor;
 - long and Unicode results;
 - an AI response.
 

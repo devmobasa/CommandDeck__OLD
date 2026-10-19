@@ -24,8 +24,8 @@ windows, run Omarchy actions, and ask optional AI tools from one search field.
 
 - **One search for the whole desktop.** Applications, files and file contents,
   Hyprland config keys, open windows and workspaces, user services, Omarchy menu
-  actions, desktop controls such as volume and Wi-Fi, projects, snippets, and
-  opt-in clipboard history, grouped by source.
+  actions, desktop controls such as volume, Wi-Fi, and window placement,
+  projects, snippets, and opt-in clipboard history, grouped by source.
 - **Made for Omarchy.** It follows the active Omarchy theme, finds a config key
   at its file and line, runs Omarchy menu actions, and flags
   [Herdr](docs/search-and-ranking.md#herdr-spaces-and-tabs) agent tabs that need attention.
@@ -168,7 +168,7 @@ interaction. Settings controls which sources appear in Search and Home.
 | `tz: tokyo` / `time: 3pm london to tokyo` | Time zones |
 | `web: wayland layer shell` | Web search |
 | `emoji: rocket` | Emoji |
-| `ctl: volume` | Desktop controls: volume, media, Wi-Fi, Bluetooth |
+| `ctl: volume` | Desktop controls: volume, media, Wi-Fi, Bluetooth, window placement |
 | `hey: invoice` | Optional HEY mail search |
 | `codex:` / `claude:` / `cursor:` / `grok:` | A specific assistant backend |
 

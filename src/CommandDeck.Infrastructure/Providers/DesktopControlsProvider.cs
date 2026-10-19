@@ -1,12 +1,12 @@
 namespace CommandDeck;
 
 /// <summary>
-/// Built-in desktop commands found from plain search: typing "volume" or "wifi"
-/// offers the matching controls, and <c>ctl:</c> lists them all. A command whose
-/// tool is not on PATH is left out rather than shown as an error. Bare Home and
-/// one-letter queries do no work.
+/// Built-in desktop commands found from plain search: typing "volume" or "left
+/// half" offers the matching controls, and <c>ctl:</c> lists them all. A command
+/// whose tool is not on PATH is left out rather than shown as an error. Bare Home
+/// and one-letter queries do no work.
 /// </summary>
-public sealed class DesktopControlsProvider : ICommandProvider
+public sealed partial class DesktopControlsProvider : ICommandProvider
 {
     private const int MinimumQueryLength = 2;
     private const double MinimumTermScore = 0.53;
@@ -14,15 +14,19 @@ public sealed class DesktopControlsProvider : ICommandProvider
     private const double BrowseScore = 0.5;
 
     private readonly Func<string, bool> _toolAvailable;
+    private readonly ExternalProcessRunner _hyprland;
 
-    public DesktopControlsProvider( Func<string, bool>? toolAvailable = null )
+    public DesktopControlsProvider(
+        Func<string, bool>? toolAvailable = null,
+        ExternalProcessRunner? hyprlandRunner = null )
     {
         _toolAvailable = toolAvailable ?? ProcessRunner.ExistsOnPath;
+        _hyprland = hyprlandRunner ?? DefaultHyprlandRunAsync;
     }
 
     public string Id => ProviderIds.DesktopControls;
 
-    public ValueTask<IReadOnlyList<SearchResult>> SearchAsync(
+    public async ValueTask<IReadOnlyList<SearchResult>> SearchAsync(
         ParsedQuery query,
         SearchRequest request,
         CancellationToken cancellationToken )
@@ -35,22 +39,26 @@ public sealed class DesktopControlsProvider : ICommandProvider
         var browsing = query.IncludedFilters.Any( static filter => filter.SourceId == SourceIds.DesktopControls );
         if ( !Participates( query, request ) || (!browsing && text.Length < MinimumQueryLength) )
         {
-            return ValueTask.FromResult<IReadOnlyList<SearchResult>>( [] );
+            return [];
         }
 
         Dictionary<string, bool> tools = new( StringComparer.Ordinal );
         List<SearchResult> results = [];
         foreach ( var control in DesktopControlCatalog.System )
         {
-            var score = text.Length == 0 ? BrowseScore : Match( text, control.Title, control.Keywords );
+            var score = Score( text, control.Title, control.Keywords );
             if ( score > 0 && IsAvailable( control.Tool, tools ) )
             {
                 results.Add( BuildRow( control, score ) );
             }
         }
 
-        return ValueTask.FromResult<IReadOnlyList<SearchResult>>( results );
+        await AddWindowRowsAsync( text, tools, results, cancellationToken ).ConfigureAwait( false );
+        return results;
     }
+
+    private static double Score( string text, string title, string keywords ) =>
+        text.Length == 0 ? BrowseScore : Match( text, title, keywords );
 
     // A disabled or excluded source, calculator, and assistant input never list
     // desktop commands.
