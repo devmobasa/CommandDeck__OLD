@@ -347,6 +347,8 @@ search or filter first, and a search you close can be kept for 30 seconds to
 10 minutes so reopening shows it with its selection. A search an action ran
 from, a private-source search, and an explicit open query are never restored.
 Shift+Escape returns to an empty search on Home from any filter or folder.
+A copy that closes the launcher shows its message, such as "Copied.", for a
+moment near the bottom of that screen; it takes no input and reopening clears it.
 
 Moving the pointer over a result selects it without taking focus from search.
 A row that appears or scrolls under a resting pointer, including when the

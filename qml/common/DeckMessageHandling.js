@@ -228,6 +228,7 @@ function handleMessage(root, message) {
     } else if (transition.dismiss) {
       root.forgetSearchOnClose = true
       root.dismiss()
+      root.showHud(transition.hud)
     }
     return
   }

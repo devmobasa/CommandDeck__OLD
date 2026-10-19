@@ -21,6 +21,7 @@ PanelWindow {
   readonly property alias part_runtimeStatusSurface: launcherContent.part_runtimeStatusSurface
   readonly property alias part_footerActions: launcherContent.part_footerActions
   readonly property alias part_detailPane: launcherContent.part_detailPane
+  readonly property alias part_hud: launcherHud
 
   required property var modelData
   screen: modelData
@@ -445,5 +446,14 @@ PanelWindow {
         launcherWindow.host.focusRevision++
       }
     }
+  }
+
+  // A copy that closes the launcher leaves its message on this screen.
+  LauncherHud {
+    id: launcherHud
+    host: launcherWindow.host
+    screen: launcherWindow.modelData
+    onLauncherScreen: launcherWindow.host.openedScreenName.length === 0
+      || launcherWindow.host.openedScreenName === launcherWindow.modelData.name
   }
 }

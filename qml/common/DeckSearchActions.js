@@ -202,6 +202,7 @@ function open(root, payloadJson) {
     : ""
   root.openWorkspaceMruIds = root.workspaceMruIds.slice()
   root.part_navigation.clearHerdrBrowse()
+  root.showHud("")
   const kept = root.lastSearch
   root.lastSearch = null
   const restore = kept !== null && !payload.query && !payload.filterId

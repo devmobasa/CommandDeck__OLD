@@ -53,8 +53,34 @@ QtObject {
     verifyUpRecallsRecentQueries(deck)
     verifyHiddenPreviewPaneLoadsNothing(deck)
     verifyClosedSearchIsKeptForReopen(deck)
+    verifyCopyMessageOutlivesTheLauncher(deck)
 
     if (!wasOpened) deck.close()
+  }
+
+  // A copy that closes the launcher leaves its message for a moment; reopening
+  // clears it, and a launch that closes the launcher shows nothing.
+  function verifyCopyMessageOutlivesTheLauncher(deck) {
+    const runAndSucceed = (action, message) => {
+      deck.queryText = "hud"
+      deck.requestSearch()
+      deliver(deck, [Object.assign(result("file:hud", "hud.txt"), { actions: [action] })])
+      const start = deck.sentRequests.length
+      deck.invokeAction(deck.currentResult, action, false)
+      const invoke = lastRequest(deck, start, Protocol.Operations.Invoke)
+      deck.handleMessage({ type: Protocol.Messages.ActionResult, requestId: invoke.requestId,
+        actionResult: { succeeded: true, message: message } })
+    }
+    runAndSucceed({ id: "copy-path", title: "Copy Path", kind: Protocol.ActionKinds.CopyText }, "Copied.")
+    host.expect(!deck.opened && deck.hudText === "Copied." && deck.part_hudTimer.running,
+      "a copy that closes the launcher leaves its message on screen")
+    deck.open("{}")
+    host.expect(deck.hudText === "", "reopening the launcher clears the message")
+    deliver(deck, [])
+    runAndSucceed({ id: "open", title: "Open", kind: Protocol.ActionKinds.OpenPath }, "Opened.")
+    host.expect(!deck.opened && deck.hudText === "", "an open that closes the launcher shows no message")
+    deck.open("{}")
+    deliver(deck, [])
   }
 
   // With a kept-search time, closing keeps the search and reopening soon

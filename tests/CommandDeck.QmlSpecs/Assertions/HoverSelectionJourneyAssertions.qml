@@ -69,6 +69,34 @@ QtObject {
           host.expect(deck.testSearchInput.text === "x" && deck.queryText === "x",
             "typing right after hovering edits the query")
         }
+      },
+      {
+        ready: () => latestSearch("x") !== null,
+        message: "the typed search is sent before a copy row arrives",
+        action: () => {
+          const request = latestSearch("x")
+          deck.handleMessage({ type: Protocol.Messages.Result, requestId: request.requestId, result: {
+            id: "file:hover-copy", kind: Protocol.ResultKinds.File, sourceId: Protocol.SourceIds.Files,
+            title: "copy.txt", invocationReference: "hover-copy",
+            actions: [{ id: "copy-path", title: "Copy Path", kind: Protocol.ActionKinds.CopyText }] } })
+          deck.handleMessage({ type: Protocol.Messages.Done, requestId: request.requestId })
+        }
+      },
+      {
+        ready: () => deck.currentResult !== null && deck.currentResult.title === "copy.txt",
+        message: "a copy row is selected in production",
+        action: () => {
+          const start = deck.sentRequests.length
+          host.part_hostEvents.keyClick(Qt.Key_Return)
+          const invoke = deck.sentRequests.slice(start).find(request => request.operation === Protocol.Operations.Invoke)
+          deck.handleMessage({ type: Protocol.Messages.ActionResult, requestId: invoke.requestId,
+            actionResult: { succeeded: true, message: "Copied." } })
+          const hud = deck.testSurfaceWindow.part_hud
+          host.expect(!deck.opened && hud.visible && hud.text === "Copied.",
+            "Enter on a copy closes the launcher and shows its message window")
+          deck.part_hudTimer.triggered()
+          host.expect(!hud.visible, "the message window hides when its time is up")
+        }
       }
     ]
   }

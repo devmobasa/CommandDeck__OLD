@@ -1,5 +1,6 @@
 import QtQml
 import "ActionMeaning.js" as ActionMeaning
+import "Protocol.js" as Protocol
 
 QtObject {
   id: invocation
@@ -12,6 +13,9 @@ QtObject {
   property bool actionInputConfirmed: false
   property bool refreshAfterAction: false
   property bool herdrEditPending: false
+  // The kind of the running action: a copy that closes the launcher leaves
+  // its message on screen, since nothing else shows that it happened.
+  property string actionKind: ""
   readonly property bool busy: requestId > 0
   readonly property bool collecting: actionInputOpen || !!pendingConfirmationAction
 
@@ -73,11 +77,12 @@ QtObject {
     return true
   }
 
-  function begin(nextRequestId, refresh, herdrEdit) {
+  function begin(nextRequestId, refresh, herdrEdit, kind) {
     if (busy || collecting || nextRequestId <= 0) return false
     requestId = nextRequestId
     refreshAfterAction = refresh
     herdrEditPending = herdrEdit
+    actionKind = kind || ""
     return true
   }
 
@@ -86,6 +91,7 @@ QtObject {
     requestId = 0
     refreshAfterAction = false
     herdrEditPending = false
+    actionKind = ""
     return true
   }
 
@@ -95,14 +101,17 @@ QtObject {
     const refresh = !!outcome && outcome.succeeded && refreshAfterAction
     const output = !!outcome && !!outcome.detailMarkdown
     const dismiss = !!outcome && outcome.succeeded && !refresh && !output && hideAfterAction
+    const copied = actionKind === Protocol.ActionKinds.CopyText || actionKind === Protocol.ActionKinds.SnippetCopy
     settle(completedRequestId)
 
+    const status = outcome && outcome.message
+      ? outcome.message : (outcome && outcome.succeeded ? "Done" : "Action failed")
     return {
-      status: outcome && outcome.message
-        ? outcome.message : (outcome && outcome.succeeded ? "Done" : "Action failed"),
+      status: status,
       refresh: refresh,
       output: output,
-      dismiss: dismiss
+      dismiss: dismiss,
+      hud: dismiss && copied ? status : ""
     }
   }
 
@@ -110,6 +119,7 @@ QtObject {
     requestId = 0
     refreshAfterAction = false
     herdrEditPending = false
+    actionKind = ""
     pendingConfirmationResult = null
     pendingConfirmationAction = null
     cancelInput()

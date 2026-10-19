@@ -100,6 +100,19 @@ Item {
   property int keepSearchSeconds: 0
   property var lastSearch: null
   property bool forgetSearchOnClose: false
+  // A short message left on screen after an action closes the launcher.
+  property string hudText: ""
+  readonly property alias part_hudTimer: hudTimer
+  Timer {
+    id: hudTimer
+    interval: 1600
+    onTriggered: sessionState.hudText = ""
+  }
+  function showHud(text) {
+    sessionState.hudText = text || ""
+    if (sessionState.hudText.length > 0) hudTimer.restart()
+    else hudTimer.stop()
+  }
   property bool aiFeaturesEnabled: true
   readonly property string aiSaveDirectory: {
     const home = Quickshell.env("HOME")
