@@ -70,6 +70,7 @@ Generated from Core protocol constants and registries. Run `scripts/generate-pro
 - `extension.open`
 - `extension.present`
 - `extensions.manage`
+- `favorite.move`
 - `favorite.remove-orphan`
 - `favorite.reorder`
 - `favorite.set`

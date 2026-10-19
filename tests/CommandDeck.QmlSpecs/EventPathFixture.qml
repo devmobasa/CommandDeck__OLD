@@ -131,6 +131,8 @@ Item {
     property var zoomRequests: []
     onZoomRequested: direction => zoomRequests = zoomRequests.concat([direction])
     property int previewToggles: 0
+    property var favoriteMoves: []
+    onFavoriteMoveRequested: direction => favoriteMoves = favoriteMoves.concat([direction])
     onPreviewToggleRequested: previewToggles++
   }
 

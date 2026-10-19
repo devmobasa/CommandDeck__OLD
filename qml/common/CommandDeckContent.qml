@@ -48,6 +48,7 @@ ColumnLayout {
   onActionsRequested: launcherContent.host.openActionPanel()
   onHistoryRecallRequested: restart => launcherContent.host.host.part_queryRecall.step(restart)
   onZoomRequested: direction => launcherContent.host.host.stepDisplaySize(direction)
+  onFavoriteMoveRequested: direction => launcherContent.host.host.moveFavorite(direction)
   onPreviewToggleRequested: launcherContent.host.host.togglePreviewPane()
   undoAvailable: launcherContent.host.host.lastHidden !== null || launcherContent.host.host.lastUndo !== null
   onUndoRequested: launcherContent.host.host.undoLast()

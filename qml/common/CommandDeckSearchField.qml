@@ -45,6 +45,8 @@ Rectangle {
   signal historyRecallRequested(bool restart)
   // Ctrl+= (or Ctrl++) is 1, Ctrl+- is -1, Ctrl+0 is 0 for the automatic size.
   signal zoomRequested(int direction)
+  // Ctrl+Alt+Up is -1 and Ctrl+Alt+Down is 1: move the selected Home bookmark.
+  signal favoriteMoveRequested(int direction)
   // Ctrl+I shows or hides the details and preview pane.
   signal previewToggleRequested()
 
@@ -79,6 +81,12 @@ Rectangle {
       return true
     }
     return false
+  }
+  function handleFavoriteMove(key, modifiers) {
+    if ((modifiers & ~Qt.KeypadModifier) !== (Qt.ControlModifier | Qt.AltModifier)) return false
+    if (key !== Qt.Key_Up && key !== Qt.Key_Down) return false
+    favoriteMoveRequested(key === Qt.Key_Down ? 1 : -1)
+    return true
   }
   function handleSectionJump(key, modifiers) {
     if ((modifiers & ~Qt.KeypadModifier) !== Qt.ControlModifier) return false
@@ -302,7 +310,8 @@ Rectangle {
         } else if (event.modifiers === Qt.ControlModifier && event.key >= Qt.Key_1 && event.key <= Qt.Key_9) {
           root.controller.invokeOrdinal(event.key - Qt.Key_0)
           event.accepted = true
-        } else if (root.handleSectionJump(event.key, event.modifiers)) {
+        } else if (root.handleSectionJump(event.key, event.modifiers)
+                   || root.handleFavoriteMove(event.key, event.modifiers)) {
           event.accepted = true
         } else if ((event.modifiers & ~Qt.KeypadModifier) === Qt.ControlModifier && event.key === Qt.Key_I) {
           root.previewToggleRequested()

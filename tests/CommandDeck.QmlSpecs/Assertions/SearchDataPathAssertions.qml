@@ -55,8 +55,43 @@ QtObject {
     verifyClosedSearchIsKeptForReopen(deck)
     verifyCopyMessageOutlivesTheLauncher(deck)
     verifyResetRankingRefreshesInPlace(deck)
+    verifyHomeBookmarksMoveWithTheKeyboard(deck)
 
     if (!wasOpened) deck.close()
+  }
+
+  // Ctrl+Alt+Down on the first Home bookmark moves it to the second position
+  // and keeps it selected; the ends and non-bookmarks send nothing.
+  function verifyHomeBookmarksMoveWithTheKeyboard(deck) {
+    const bookmark = (id, title) => Object.assign(result(id, title), {
+      canCustomize: true, isFavorite: true, section: { id: "bookmarks", title: "Bookmarks", order: 1 } })
+    deck.queryText = ""
+    deck.requestSearch()
+    deliver(deck, [bookmark("file:first", "first.txt"), bookmark("file:second", "second.txt"),
+      Object.assign(result("file:recent", "recent.txt"), { canCustomize: true,
+        section: { id: "recent-frequent", title: "Recent & Frequent", order: 2 } })])
+    const moves = start => deck.sentRequests.slice(start)
+      .filter(request => request.operation === Protocol.Operations.FavoriteMove)
+    deck.selectedIndex = deck.navigationController.indexOfResultId("file:first")
+    let start = deck.sentRequests.length
+    deck.moveFavorite(-1)
+    host.expect(moves(start).length === 0, "the first bookmark cannot move up")
+    deck.moveFavorite(1)
+    const move = moves(start)[0]
+    host.expect(move !== undefined && move.resultId === "file:first" && move.offset === 1
+        && deck.navigationController.restoreSelectionId === "file:first",
+      "moving the first bookmark down sends its new position and keeps it selected")
+    deck.handleMessage({ type: Protocol.Messages.PreferencesResult, requestId: move.requestId,
+      preferences: preferencesSnapshot(deck.part_personalization.acknowledged) })
+    deliver(deck, [])
+    deck.requestSearch()
+    deliver(deck, [bookmark("file:first", "first.txt"), Object.assign(result("file:recent", "recent.txt"), {
+      section: { id: "recent-frequent", title: "Recent & Frequent", order: 2 } })])
+    deck.selectedIndex = deck.navigationController.indexOfResultId("file:recent")
+    start = deck.sentRequests.length
+    deck.moveFavorite(-1)
+    host.expect(moves(start).length === 0, "a row outside Bookmarks never moves")
+    deck.navigationController.restoreSelectionId = ""
   }
 
   // Reset Ranking keeps the launcher open and searches again so the result

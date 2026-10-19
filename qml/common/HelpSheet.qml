@@ -50,6 +50,7 @@ Rectangle {
         { keys: ["Ctrl+Shift+↵"], text: "Run the third action" },
         { keys: ["Ctrl+Shift+C"], text: "Copy the file path, or the result's first Copy action" },
         { keys: ["Ctrl+D"], text: "Toggle bookmark for a customizable result" },
+        { keys: ["Ctrl+Alt+↑", "Ctrl+Alt+↓"], text: "Move the selected bookmark on Home" },
         { keys: ["Alt+Shift+A"], text: "Set or edit the result's alias" },
         { keys: ["Alt+Shift+D"], text: "Don't show this result" },
         { keys: ["Alt+Shift+R"], text: "Reset the result's ranking" },

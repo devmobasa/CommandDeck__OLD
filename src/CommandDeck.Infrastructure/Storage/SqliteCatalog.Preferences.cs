@@ -37,6 +37,12 @@ public sealed partial class SqliteCatalog
         CancellationToken cancellationToken ) =>
         _launcherPreferences.ReorderFavoritesAsync( stableIds, cancellationToken );
 
+    public ValueTask MoveFavoriteAsync(
+        SearchResult result,
+        int position,
+        CancellationToken cancellationToken ) =>
+        _launcherPreferences.MoveFavoriteAsync( result, position, cancellationToken );
+
     public ValueTask<SearchResult?> FindAliasAsync(
         string aliasValue,
         CancellationToken cancellationToken ) =>

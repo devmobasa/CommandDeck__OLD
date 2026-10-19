@@ -270,6 +270,10 @@ Windows & Workspaces, Herdr (only when the Herdr source is enabled on Home), and
 Omarchy sections according to preferences and available results. Learned
 typed-search promotion does not change Home's formula.
 
+On Home, Ctrl+Alt+Up and Ctrl+Alt+Down move the selected bookmark one place
+among the bookmarks shown, through `favorite.move` (the daemon-cached result and
+its new position, clamped to the list), and the selection follows it.
+
 Hidden items ("Don't show this" in a result's actions) are excluded on every
 catalog path inside the shared candidate-scoping clause, before any `LIMIT`,
 so a hidden bookmark or frequent item never consumes a Home or Top Matches

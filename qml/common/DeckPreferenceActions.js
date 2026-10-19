@@ -53,6 +53,26 @@ function setFavorite(root, result, enabled) {
   }, { kind: Ui.MutationKind.Favorite, resultId: result.id })
 }
 
+// Ctrl+Alt+Up or Down on a Home bookmark swaps it with its neighbour; the
+// selection follows it once Home is searched again.
+function moveFavorite(root, direction) {
+  const navigation = root.part_navigation
+  const result = navigation.selectedResult()
+  if (!result || !result.canCustomize || !result.section || result.section.id !== Ui.HomeSection.Bookmarks) return 0
+  const bookmarks = []
+  for (let index = 0; index < navigation.rowCount(); index++) {
+    const value = navigation.resultAt(index)
+    if (value && value.section && value.section.id === Ui.HomeSection.Bookmarks) bookmarks.push(value.id)
+  }
+  const target = bookmarks.indexOf(result.id) + (direction > 0 ? 1 : -1)
+  if (target < 0 || target >= bookmarks.length) return 0
+  navigation.restoreSelectionId = result.id
+  return root.enqueuePersonalization(Protocol.Operations.FavoriteMove, {
+    resultId: result.id,
+    offset: target
+  }, { kind: Ui.MutationKind.Reorder })
+}
+
 function enqueuePersonalization(root, operation, values, context) {
   if (!root.daemonAvailable || root.reconciliationPending) {
     root.statusText = root.reconciliationWarning.length > 0

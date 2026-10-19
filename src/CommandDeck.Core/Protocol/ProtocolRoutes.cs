@@ -86,6 +86,7 @@ public static class ProtocolRoutes
             ProtocolOperations.ExtensionsManage, ProtocolOperations.Bootstrap,
             ProtocolOperations.PreferencesGet, ProtocolOperations.PreferencesUpdate,
             ProtocolOperations.FavoriteSet, ProtocolOperations.FavoriteRemoveOrphan, ProtocolOperations.FavoriteReorder,
+            ProtocolOperations.FavoriteMove,
             ProtocolOperations.AliasSet, ProtocolOperations.FilterAliasSet,
             ProtocolOperations.CustomizationsExport, ProtocolOperations.CustomizationsReset,
             ProtocolOperations.HiddenSet, ProtocolOperations.HiddenRestore, ProtocolOperations.HiddenList,

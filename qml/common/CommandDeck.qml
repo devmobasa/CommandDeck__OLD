@@ -383,6 +383,7 @@ CommandDeckState {
   function enqueuePersonalization(operation, values, context) { return DeckPreferenceActions.enqueuePersonalization(root, operation, values, context) }
 
   function setFavorite(result, enabled) { return DeckPreferenceActions.setFavorite(root, result, enabled) }
+  function moveFavorite(direction) { return DeckPreferenceActions.moveFavorite(root, direction) }
 
   function setAlias(result, value) { return DeckPreferenceActions.setAlias(root, result, value) }
 

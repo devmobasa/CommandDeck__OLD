@@ -67,6 +67,7 @@
     "extension.open",
     "extension.present",
     "extensions.manage",
+    "favorite.move",
     "favorite.remove-orphan",
     "favorite.reorder",
     "favorite.set",

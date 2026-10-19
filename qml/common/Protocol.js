@@ -69,6 +69,7 @@ var Operations = Object.freeze({
   ExtensionOpen: "extension.open",
   ExtensionPresent: "extension.present",
   ExtensionsManage: "extensions.manage",
+  FavoriteMove: "favorite.move",
   FavoriteRemoveOrphan: "favorite.remove-orphan",
   FavoriteReorder: "favorite.reorder",
   FavoriteSet: "favorite.set",

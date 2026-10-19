@@ -217,6 +217,18 @@ EventPathFixture {
       fixture.part_searchField.inputControl.text = ""
     }
 
+    // Ctrl+Alt+Up and Down ask to move the selected bookmark; they leave the
+    // selection and the query alone, unlike Ctrl+Up and Down.
+    function test_control_alt_arrows_ask_to_move_a_bookmark() {
+      fixture.part_searchField.inputControl.forceActiveFocus()
+      const selected = fixture.part_controller.selectedIndex
+      keyClick(Qt.Key_Down, Qt.ControlModifier | Qt.AltModifier)
+      keyClick(Qt.Key_Up, Qt.ControlModifier | Qt.AltModifier)
+      compare(fixture.part_searchField.favoriteMoves, [1, -1])
+      compare(fixture.part_controller.selectedIndex, selected)
+      compare(fixture.part_searchField.inputControl.text, "")
+    }
+
     // Ctrl+U deletes from the start of the query to the caret, leaving the
     // rest and any filter chip, and the field keeps focus for typing.
     function test_control_u_deletes_the_query_before_the_caret() {

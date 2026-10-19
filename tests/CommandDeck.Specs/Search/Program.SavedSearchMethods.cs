@@ -45,7 +45,7 @@ public static partial class Program
                 {
                     "ctrl+home", "ctrl+end", "ctrl+enter", "shift+ctrl+enter", "ctrl+1", "ctrl+9", "ctrl+u",
                     "ctrl+up", "ctrl+down", "ctrl+k", "ctrl+d", "ctrl+shift+c", "alt+shift+a", "shift+alt+d",
-                    "ctrl+0", "ctrl+i", "alt+shift+r"
+                    "ctrl+0", "ctrl+i", "alt+shift+r", "ctrl+alt+up", "alt+ctrl+down"
                 } )
                 {
                     Throws<InvalidOperationException>( ( ) =>

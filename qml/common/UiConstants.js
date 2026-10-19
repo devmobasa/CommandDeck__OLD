@@ -40,6 +40,7 @@ var ResultAction = Object.freeze({
   FavoriteToggle: "favorite-toggle", AliasEdit: "alias-edit", Hide: "hide", HideResult: "hide-result"
 });
 var SearchShortcut = Object.freeze({ Reveal: "reveal", CopyPath: "copy-path", Favorite: "favorite" });
+var HomeSection = Object.freeze({ Bookmarks: "bookmarks" });
 var ShortcutSlot = Object.freeze({
   Secondary: "secondary", Tertiary: "tertiary", Copy: "copy", Favorite: "favorite", Alias: "alias", Hide: "hide",
   ResetRanking: "reset-ranking"
