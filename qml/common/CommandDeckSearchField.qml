@@ -38,6 +38,9 @@ Rectangle {
   }
   signal searchEdited()
   signal actionsRequested()
+  // Up with nothing to move to on an empty or recalled query; restart is true
+  // when the query is empty, so the newest entry comes first again.
+  signal historyRecallRequested(bool restart)
   signal shortcutRequested(string actionId)
   // Ctrl+Z restores the last hidden item while its undo strip is visible;
   // otherwise the field keeps its ordinary text undo.
@@ -242,6 +245,14 @@ Rectangle {
       }
 
       Keys.onPressed: event => {
+        const recall = event.key === Qt.Key_Up && (event.modifiers & ~Qt.KeypadModifier) === Qt.NoModifier
+          ? root.controller.recallWanted()
+          : ""
+        if (recall.length > 0) {
+          root.historyRecallRequested(recall === "restart")
+          event.accepted = true
+          return
+        }
         // The field drives the result list with the keys every list answers.
         if (ListKeys.handle(event, root.resultKeys, 8, true)) return
 

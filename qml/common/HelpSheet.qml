@@ -29,7 +29,8 @@ Rectangle {
         { keys: ["Ctrl+P", "Ctrl+N"], text: "Move selection" },
         { keys: ["PgUp", "PgDn"], text: "Move by eight" },
         { keys: ["Ctrl+Home", "Ctrl+End"], text: "First or last result" },
-        { keys: ["Ctrl+↑", "Ctrl+↓"], text: "Previous or next section" }
+        { keys: ["Ctrl+↑", "Ctrl+↓"], text: "Previous or next section" },
+        { keys: ["↑"], text: "From an empty search, recall recent searches (with query history on)" }
       ]
     },
     {

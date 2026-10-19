@@ -141,6 +141,34 @@ EventPathFixture {
       compare(fixture.part_controller.primaryCalls, 0)
     }
 
+    // Up from the first result of an empty search asks for the newest recent
+    // query; on a query left as recalled it asks for an older one. Anywhere
+    // else Up still moves the selection, and edited text never recalls.
+    function test_up_on_an_empty_or_recalled_search_recalls_history() {
+      fixture.part_controller.replaceResults([{ id: "a", kind: "file", title: "A", actions: [] },
+        { id: "b", kind: "file", title: "B", actions: [] }], true)
+      fixture.part_searchField.inputControl.forceActiveFocus()
+      keyClick(Qt.Key_Down)
+      keyClick(Qt.Key_Up)
+      compare(fixture.part_controller.selectedResult().id, "a", "Up below the first row moves")
+      compare(fixture.part_searchField.recallRequests, [])
+      keyClick(Qt.Key_Up)
+      compare(fixture.part_searchField.recallRequests, [true], "the first row of an empty search recalls")
+      compare(fixture.part_controller.selectedResult().id, "a")
+
+      fixture.part_controller.recalledText = "notes"
+      typeText("notes")
+      keyClick(Qt.Key_Up)
+      compare(fixture.part_searchField.recallRequests, [true, false], "a recalled query steps back")
+      typeText("x")
+      keyClick(Qt.Key_Up)
+      compare(fixture.part_searchField.recallRequests, [true, false], "an edited query does not recall")
+      keyClick(Qt.Key_Up, Qt.ShiftModifier)
+      compare(fixture.part_searchField.recallRequests.length, 2, "Shift+Up stays with the text field")
+      verify(fixture.part_searchField.inputControl.activeFocus)
+      fixture.part_searchField.inputControl.text = ""
+    }
+
     // Ctrl+U deletes from the start of the query to the caret, leaving the
     // rest and any filter chip, and the field keeps focus for typing.
     function test_control_u_deletes_the_query_before_the_caret() {

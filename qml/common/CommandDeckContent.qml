@@ -39,6 +39,7 @@ ColumnLayout {
   directActions: launcherContent.host.host.directActions
   onShortcutRequested: actionId => launcherContent.host.host.invokeShortcut(actionId)
   onActionsRequested: launcherContent.host.openActionPanel()
+  onHistoryRecallRequested: restart => launcherContent.host.host.part_queryRecall.step(restart)
   undoAvailable: launcherContent.host.host.lastHidden !== null || launcherContent.host.host.lastUndo !== null
   onUndoRequested: launcherContent.host.host.undoLast()
   }

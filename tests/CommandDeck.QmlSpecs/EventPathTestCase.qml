@@ -21,6 +21,8 @@ TestCase {
     fixture.part_theme.reduceMotion = false
     fixture.part_searchField.directActions = []
     fixture.part_searchField.shortcutId = ""
+    fixture.part_searchField.recallRequests = []
+    fixture.part_controller.recalledText = ""
     fixture.part_footerActions.availableWidth = 100000
     fixture.part_footerActions.directActions = []
     fixture.part_footerActions.shortcutId = ""

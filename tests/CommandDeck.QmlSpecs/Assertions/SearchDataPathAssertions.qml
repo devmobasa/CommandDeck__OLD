@@ -50,8 +50,46 @@ QtObject {
     verifyEmptyStatesWaitForTheReply(deck)
     verifyOnlyRunningSearchesAreCancelled(deck)
     verifyLocalEditsKeepFreshReferences(deck)
+    verifyUpRecallsRecentQueries(deck)
 
     if (!wasOpened) deck.close()
+  }
+
+  // Up on an empty search reads the opt-in history once, applies the newest
+  // query and searches it; Up again on that query applies the next older one.
+  // Closing forgets what was read.
+  function verifyUpRecallsRecentQueries(deck) {
+    deck.queryText = ""
+    deck.activeFilters = []
+    deck.requestSearch()
+    deliver(deck, [result("file:home", "home.txt")])
+    const start = deck.sentRequests.length
+    const want = deck.part_navigation.recallWanted()
+    deck.part_queryRecall.step(want === "restart")
+    const historyRequest = lastRequest(deck, start, Protocol.Operations.QueryHistoryGet)
+    host.expect(want === "restart" && historyRequest !== undefined,
+      "Up on an empty search reads query history")
+    deck.handleMessage({ type: Protocol.Messages.QueryHistoryResult, requestId: historyRequest.requestId,
+      queryHistory: { enabled: true, entries: [
+        { id: 2, query: "roadmap", stableId: "file:roadmap", actionId: "open" },
+        { id: 1, query: "gaps", stableId: "config:gaps", actionId: "edit" }] } })
+    const search = lastRequest(deck, start, Protocol.Operations.Search)
+    host.expect(deck.queryText === "roadmap" && search !== undefined && JSON.stringify(search).indexOf("roadmap") >= 0
+        && deck.part_navigation.recallWanted() === "continue",
+      "the newest recalled query is shown and searched")
+    deliver(deck, [result("file:roadmap", "roadmap.md")])
+
+    const older = deck.sentRequests.length
+    deck.part_queryRecall.step(false)
+    host.expect(deck.queryText === "gaps" && lastRequest(deck, older, Protocol.Operations.Search) !== undefined
+        && lastRequest(deck, older, Protocol.Operations.QueryHistoryGet) === undefined,
+      "Up again recalls the older query without reading history again")
+    deliver(deck, [result("file:gaps", "gaps.conf")])
+
+    deck.clearModalState()
+    host.expect(!deck.part_queryRecall.loaded && deck.part_navigation.recalledText === "",
+      "closing forgets the recalled queries")
+    deck.queryText = ""
   }
 
   // A refresh that changes only invocation references leaves the model rows

@@ -122,8 +122,10 @@ Item {
     surfaceVisible: true
     property int actionRequests: 0
     property string shortcutId: ""
+    property var recallRequests: []
     onShortcutRequested: actionId => shortcutId = actionId
     onActionsRequested: actionRequests++
+    onHistoryRecallRequested: restart => recallRequests = recallRequests.concat([restart])
   }
 
   CommandDeck.SearchLoadingIndicator {

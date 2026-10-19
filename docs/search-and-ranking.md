@@ -343,6 +343,12 @@ query or disappearing selection chooses the first result. Action menus retain
 their opening result identity, and stale query responses cannot replace results.
 Space in the search input continues to type text.
 
+With query history on (`privacy.storeQueryHistory`), Up from the first row of an
+empty search recalls the most recent query and searches it; Up again on the
+unchanged query recalls the next older one. Each query appears once. History is
+read when Up is first pressed after opening and forgotten when the launcher
+closes; with history off, Up there does nothing.
+
 ## Explanations and validation
 
 **Why this result?** shows numeric contributions, matched fields, indexing

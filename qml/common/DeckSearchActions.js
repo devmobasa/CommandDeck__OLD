@@ -104,6 +104,15 @@ function applySavedSearch(root, search) {
   root.requestSearch()
 }
 
+// A recalled query is typed as it was, so a leading filter prefix becomes a
+// chip again; Up keeps stepping back while the query is left as recalled.
+function applyRecalledQuery(root, query) {
+  root.part_navigation.applySuggestion({ text: query, expression: {} })
+  root.queryInputRequested(query)
+  root.part_navigation.recalledText = root.part_navigation.queryText
+  root.requestSearch()
+}
+
 function savedSearchText(root, expression) {
   if (expression && typeof expression.literalQuery === "string") return expression.literalQuery
   const clauses = expression && expression.clauses ? expression.clauses : []
@@ -220,6 +229,8 @@ function clearModalState(root) {
   root.detailContent = ""
   root.dialogTitle = "AI response"
   root.part_queryHistoryController.clear()
+  root.part_queryRecall.clear()
+  root.part_navigation.recalledText = ""
   root.clearAiState()
   // Deliberately not `agentController.clear()`: the daemon keeps the turn
   // and the transcript, so closing the palette must be resumable.

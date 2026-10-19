@@ -55,6 +55,15 @@ Item {
     onUpdated: sessionState.statusText = "Query history updated"
   }
 
+  readonly property alias part_queryRecall: queryRecall
+  QueryRecallController {
+    id: queryRecall
+    nextRequestId: function() { return ++sessionState.owner.requestSequence }
+    available: sessionState.daemonAvailable
+    onRequest: message => sessionState.owner.part_protocol.send(message)
+    onRecalled: query => DeckSearchActions.applyRecalledQuery(sessionState.owner, query)
+  }
+
   // Hidden items: the last hide feeds the undo strip; the settings list is
   // loaded on demand in bounded pages, never as part of the preferences snapshot.
   property var lastHidden: null

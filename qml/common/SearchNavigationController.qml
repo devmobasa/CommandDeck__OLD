@@ -21,6 +21,9 @@ QtObject {
   property string herdrWorkspaceTitle: ""
   property var herdrParentSearch: null
   property string restoreSelectionId: ""
+  // The query text the last recall produced; Up keeps stepping back through
+  // history while the query still reads exactly this.
+  property string recalledText: ""
 
   signal searchRequested()
   signal settingsRequested()
@@ -257,8 +260,17 @@ QtObject {
     if (previousId !== nextId) selectionIdentityChanged(next)
   }
 
+  // Up from the first result asks for an older query when the search is empty
+  // or still shows a recalled one; anywhere else it moves the selection.
+  function recallWanted() {
+    if (selectedIndex > firstSelectableIndex()) return ""
+    if (queryText.length === 0 && activeFilters.length === 0) return "restart"
+    return recalledText.length > 0 && queryText === recalledText ? "continue" : ""
+  }
+
   function clear() {
     clearHerdrBrowse()
+    recalledText = ""
     activeFilters = []
     queryText = ""
     selectedIndex = 0
