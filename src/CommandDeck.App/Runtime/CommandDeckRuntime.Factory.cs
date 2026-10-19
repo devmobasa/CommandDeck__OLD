@@ -67,7 +67,8 @@ public sealed partial class CommandDeckRuntime
                     resources.OwnDisposable( clipboardActions );
                     clipboardCapture = new( clipboardStore, clipboardProjections );
                     resources.Own( clipboardCapture );
-                    clipboardProvider = new( clipboardStore, ( ) => clipboardCapture.Status );
+                    clipboardProvider = new( clipboardStore, ( ) => clipboardCapture.Status,
+                        ( offers, token ) => clipboardCapture.ServeAsync( offers, token ) );
                 }
 
                 CommandDeckRuntime? runtime = null;

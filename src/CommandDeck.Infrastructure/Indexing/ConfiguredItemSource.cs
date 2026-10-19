@@ -18,6 +18,10 @@ public sealed class ConfiguredItemSource
 
         cancellationToken.ThrowIfCancellationRequested( );
         yield return ClipboardHistoryNavigation.CreateItem( );
+        foreach ( var item in ClipboardSequenceCommands.CreateItems( ) )
+        {
+            yield return item;
+        }
 
         foreach ( var link in _options.Quicklinks )
         {

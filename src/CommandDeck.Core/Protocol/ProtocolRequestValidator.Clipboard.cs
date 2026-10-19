@@ -96,7 +96,8 @@ public static partial class ProtocolRequestValidator
             throw new InvalidOperationException( "Clipboard query requires a generation and supported text fields." );
         }
 
-        if ( request.Operation == ProtocolOperations.ClipboardAction && value.Action is not (ClipboardActionIds.Copy or ClipboardActionIds.Pin or ClipboardActionIds.Unpin or ClipboardActionIds.Delete or ClipboardActionIds.Keywords or ClipboardActionIds.Clear) )
+        if ( request.Operation == ProtocolOperations.ClipboardAction && value.Action is not (ClipboardActionIds.Copy or ClipboardActionIds.Pin or
+            ClipboardActionIds.Unpin or ClipboardActionIds.Delete or ClipboardActionIds.Keywords or ClipboardActionIds.Clear or ClipboardActionIds.SequenceStart) )
         {
             throw new InvalidOperationException( "Clipboard action is unavailable." );
         }

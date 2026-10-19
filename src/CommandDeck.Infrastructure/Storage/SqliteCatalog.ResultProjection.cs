@@ -37,7 +37,7 @@ public sealed partial class SqliteCatalog
             SourceId = sourceId,
             IsFavorite = isFavorite,
             Aliases = aliases,
-            CanCustomize = CanCustomize( kind, sourceId ),
+            CanCustomize = CanCustomize( kind, sourceId ) && !ClipboardSequenceCommands.IsCommand( stableId ),
             Score = score,
             MatchedRanges = ranking?.Matches.FirstOrDefault( static match =>
                 match.Field == RankingFieldNames.Title )?.Ranges ?? [],
@@ -158,6 +158,11 @@ public sealed partial class SqliteCatalog
         if ( stableId == ClipboardHistoryNavigation.Id && kind == ResultKinds.CustomCommand )
         {
             return [ClipboardHistoryNavigation.CreateAction( )];
+        }
+
+        if ( ClipboardSequenceCommands.IsCommand( stableId ) && kind == ResultKinds.CustomCommand )
+        {
+            return [ClipboardSequenceCommands.CreateAction( stableId )];
         }
 
         switch ( kind )

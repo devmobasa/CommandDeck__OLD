@@ -29,6 +29,7 @@ CalculatorResultView 1.0 CalculatorResultView.qml
 ClipboardActionBar 1.0 ClipboardActionBar.qml
 ClipboardActionButton 1.0 ClipboardActionButton.qml
 ClipboardBrowserDialogs 1.0 ClipboardBrowserDialogs.qml
+ClipboardCaptureStatus 1.0 ClipboardCaptureStatus.qml
 ClipboardEmptyState 1.0 ClipboardEmptyState.qml
 ClipboardEntryRow 1.0 ClipboardEntryRow.qml
 ClipboardHistoryController 1.0 ClipboardHistoryController.qml

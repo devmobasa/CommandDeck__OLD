@@ -1,6 +1,9 @@
 namespace CommandDeck;
 
-public sealed class ClipboardHistoryProvider( ClipboardHistoryStore store, Func<string>? captureStatus = null ) : ICommandProvider
+public sealed class ClipboardHistoryProvider(
+    ClipboardHistoryStore store,
+    Func<string>? captureStatus = null,
+    Func<IReadOnlyList<ClipboardServeOffer>, CancellationToken, ValueTask<ActionExecutionResult>>? serve = null ) : ICommandProvider
 {
     public string Id => ProviderIds.Clipboard;
 
@@ -37,6 +40,7 @@ public sealed class ClipboardHistoryProvider( ClipboardHistoryStore store, Func<
                 Section = new ResultSection { Id = "clipboard", Title = "Clipboard history", Order = 6 },
                 Actions = [Action("copy", "Copy again", entry.Id),
                     Action(entry.Pinned ? "unpin" : "pin", entry.Pinned ? "Unpin" : "Pin", entry.Id),
+                    Action(ClipboardActionIds.SequenceStart, "Start clipboard sequence here", entry.Id),
                     Action("delete", "Delete entry", entry.Id)]
             } );
         }
@@ -79,10 +83,54 @@ public sealed class ClipboardHistoryProvider( ClipboardHistoryStore store, Func<
                     return ActionExecutionResult.Failure( "This clipboard entry expired or was deleted. Search again." );
                 }
                 return await ClipboardCopyProcess.CopyAsync( text, cancellationToken ).ConfigureAwait( false );
+            case ClipboardActionIds.SequenceStart:
+                return ActionExecutionResult.Success( ClipboardSequenceCommands.Started( store.StartSequenceAt( id ) ) );
+            case ClipboardSequenceCommands.RestartAction:
+                store.RestartSequence( );
+                return ActionExecutionResult.Success( "Clipboard sequence restarted. Copy next clipboard entry starts with the next entry you copy." );
+            case ClipboardSequenceCommands.NextAction:
+                return await CopyNextInSequenceAsync( cancellationToken ).ConfigureAwait( false );
             default:
                 return ActionExecutionResult.Failure( "Unknown clipboard action." );
         }
         return ActionExecutionResult.Success( "Clipboard history updated" );
+    }
+
+    // Copies like the browser does: every retained offer through native serving, or
+    // plain text when serving is unavailable. The position moves only after a copy succeeds.
+    private async ValueTask<ActionExecutionResult> CopyNextInSequenceAsync( CancellationToken cancellationToken )
+    {
+        var next = store.PeekSequence( );
+        if ( next is null )
+        {
+            return ActionExecutionResult.Failure( "The clipboard sequence has no newer entry. Copy something, or start the sequence again." );
+        }
+
+        using var lifetime = CancellationTokenSource.CreateLinkedTokenSource( cancellationToken );
+        lifetime.CancelAfter( TimeSpan.FromSeconds( 10 ) );
+        ActionExecutionResult copied;
+        if ( serve is null )
+        {
+            var text = store.ReadCopyText( next.Id, next.Incarnation, next.Revision );
+            copied = await ClipboardCopyProcess.CopyAsync( text, lifetime.Token ).ConfigureAwait( false );
+        }
+        else
+        {
+            using var selection = store.ReadCopySelection( next.Id, next.Incarnation, next.Revision );
+            copied = await serve( selection.Offers, lifetime.Token ).ConfigureAwait( false );
+            if ( copied.Succeeded )
+            {
+                store.TouchCopied( next.Id, next.Incarnation );
+            }
+        }
+
+        if ( !copied.Succeeded )
+        {
+            return ActionExecutionResult.Failure( "Clipboard copy failed; the sequence did not advance." );
+        }
+
+        var progress = store.AdvanceSequence( next );
+        return ActionExecutionResult.Success( $"Copied clipboard sequence entry {progress.Copied}; {progress.Queued} more queued." );
     }
 
     private static CommandAction Action( string id, string title, string entry = "", bool confirm = false ) => new( )

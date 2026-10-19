@@ -50,6 +50,9 @@ public static partial class Program
         await RunAsync( "clipboard transport dies with its parent", ClipboardTransportDiesWithParentAsync );
         await RunAsync( "clipboard copy binds entry owner and generation", ClipboardCopyBindsEntryOwnerAndGenerationAsync );
         await RunAsync( "clipboard copy rejects payload damage after browser open", ClipboardCopyRejectsPayloadDamageAfterBrowserOpenAsync );
+        await RunAsync( "clipboard sequence restart copies later entries in order", ClipboardSequenceRestartCopiesLaterEntriesInOrderAsync );
+        await RunAsync( "clipboard sequence starts at browser and search entries", ClipboardSequenceStartsAtBrowserAndSearchEntriesAsync );
+        await RunAsync( "clipboard sequence commands are private rows", ClipboardSequenceCommandsArePrivateRowsAsync );
         await RunAsync( "clipboard copy process cancels and reaps without changing the real clipboard", ClipboardCopyProcessCancelsAndReapsAsync );
         await RunAsync( "clipboard copy cancellation retains busy slot until completion", ClipboardCopyCancellationRetainsBusySlotUntilCompletionAsync );
         Run( "clipboard digests preserve names bytes and order independence", ClipboardDigestsPreserveNamesBytesAndOrderIndependence );

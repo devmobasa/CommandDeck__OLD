@@ -26,7 +26,7 @@ var ClipboardDialogPurpose = Object.freeze({
 var ClipboardPendingKey = Object.freeze({
   Open: "open", Close: "close", Query: "query", More: "more", Preview: "preview",
   Action: "action", Prepare: "prepare", Abort: "abort", Copy: "copy", Clear: "clear",
-  Settings: "settings", SettingsSet: "settingsSet", Migration: "migration"
+  Settings: "settings", SettingsSet: "settingsSet", Migration: "migration", Sequence: "sequence"
 });
 var ExtensionManagementPage = Object.freeze({
   List: "list", Detail: "detail", Confirm: "confirm", Logs: "logs",

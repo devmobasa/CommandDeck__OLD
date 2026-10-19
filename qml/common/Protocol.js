@@ -317,6 +317,7 @@ var ClipboardActionIds = Object.freeze({
   Keywords: "keywords",
   Open: "open",
   Pin: "pin",
+  SequenceStart: "sequence-start",
   Unpin: "unpin"
 });
 

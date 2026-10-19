@@ -1,12 +1,12 @@
 pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Layouts
-import "ClipboardFormat.js" as Format
 
 // Bottom bar of the clipboard browser: actions for the selected entry with
-// their shortcuts, then the capture status and its pause toggle. Clicks never
-// take focus from search; a request names its button as the invoker only when
-// that button holds keyboard focus, so dialogs can hand focus back to it.
+// their shortcuts. History-wide controls, including capture, live in the
+// header. Clicks never take focus from search; a request names its button as
+// the invoker only when that button holds keyboard focus, so dialogs can hand
+// focus back to it.
 RowLayout {
   id: root
 
@@ -14,20 +14,18 @@ RowLayout {
   required property var controller
   readonly property alias copyControl: copy
   readonly property alias pinControl: pin
+  readonly property alias sequenceControl: sequenceAction
   readonly property alias openControl: openAction
   readonly property alias keywordsControl: keywords
   readonly property alias deleteControl: deleteAction
-  readonly property alias captureControl: captureToggle
   readonly property var policy: root.controller.settings && root.controller.settings.policy ? root.controller.settings.policy : null
-  readonly property string captureStatus: root.controller.settings ? String(root.controller.settings.status || "") : ""
-  readonly property string captureTone: Format.captureTone(root.captureStatus)
   readonly property bool entrySelected: root.controller.selected !== null
   signal copyRequested(Item invoker)
   signal pinRequested()
+  signal sequenceRequested()
   signal openRequested(Item invoker)
   signal keywordsRequested(Item invoker)
   signal deleteRequested()
-  signal captureRequested(Item invoker)
 
   spacing: Math.round(4 * root.theme.scale)
 
@@ -47,6 +45,15 @@ RowLayout {
     keyHint: "Ctrl+P"
     enabled: root.controller.mutationReady
     onClicked: root.pinRequested()
+  }
+  // Copy next clipboard entry continues from the selected entry; it needs capture consent.
+  ClipboardActionButton {
+    id: sequenceAction
+    theme: root.theme
+    text: "Start sequence"
+    keyHint: "Ctrl+S"
+    enabled: root.controller.mutationReady && root.policy !== null && root.policy.consent !== "None"
+    onClicked: root.sequenceRequested()
   }
   ClipboardActionButton {
     id: openAction
@@ -75,30 +82,4 @@ RowLayout {
     onClicked: root.deleteRequested()
   }
   Item { Layout.fillWidth: true; Layout.minimumWidth: 0 }
-  Rectangle {
-    Layout.alignment: Qt.AlignVCenter
-    implicitWidth: Math.round(8 * root.theme.scale)
-    implicitHeight: implicitWidth
-    radius: implicitWidth / 2
-    color: root.captureTone === "warning" ? root.theme.urgent
-      : root.captureTone === "idle" ? root.theme.textFaint : root.theme.accent
-  }
-  Text {
-    Layout.preferredWidth: Math.min(implicitWidth, Math.round(240 * root.theme.scale))
-    text: Format.captureLabel(root.captureStatus)
-    textFormat: Text.PlainText
-    elide: Text.ElideRight
-    color: root.captureTone === "warning" ? root.theme.urgent : root.theme.textMuted
-    font.family: root.theme.fontFamily
-    font.pixelSize: root.theme.fontSmall
-    Accessible.role: Accessible.StaticText
-    Accessible.name: "Capture status: " + text
-  }
-  ClipboardActionButton {
-    id: captureToggle
-    theme: root.theme
-    text: !root.policy || root.policy.consent === "None" ? "Enable capture…" : root.policy.paused ? "Resume" : "Pause"
-    enabled: root.controller.settings !== null
-    onClicked: root.captureRequested(captureToggle.activeFocus ? captureToggle : null)
-  }
 }

@@ -136,7 +136,8 @@ The browser offers focused search, a **Pinned only** toggle, a kind filter (All/
 Images/Files), bounded pages, exact plain-text previews with match navigation, isolated PNG
 thumbnails, pin/unpin, keywords, delete, pause/resume, limits and Clear. Pinned entries are
 listed first under their own label. Enter or a double-click copies the selected entry;
-Ctrl+P pins, Ctrl+E edits keywords, Ctrl+Tab and Ctrl+Shift+Tab switch the kind filter, and
+Ctrl+P pins, Ctrl+S starts a sequence at the selected entry (see below), Ctrl+E edits
+keywords, Ctrl+Tab and Ctrl+Shift+Tab switch the kind filter, and
 Ctrl+G and Ctrl+Shift+G step through text matches. Up/Down, PageUp/PageDown and
 Ctrl+Home/Ctrl+End move the selection; Down on the last loaded entry loads the next page.
 File entries show references, never referenced contents; previews never fetch URLs. For a single copied
@@ -144,6 +145,18 @@ URL, **Open…** (Ctrl+K) lists the registered desktop handlers; launching from 
 disabled until the release-acknowledgement and managed-launch gates pass. Escape clears
 the query, then resets filters, then returns to the invoking result. These actions do
 not alter the current system clipboard except when you explicitly copy an entry again.
+
+To paste several entries in order, select the first one and choose **Start sequence**
+(Ctrl+S in the browser, or the action on a `clip:` row). Each run of the query-free
+**Copy next clipboard entry** command then copies the next entry by last-copy time,
+oldest first, and reports how many remain queued. **Restart clipboard sequence**
+instead begins with the next entry you copy. Entries copied later join the end; a
+copied entry moves to the newest position but is not copied twice; deleted or expired
+entries are skipped, and a failed copy does not advance. Both commands need capture
+consent. They are private clipboard rows: they cannot be bookmarked, never appear on
+Home, and are not recorded, suggested, attached to AI requests or offered to assistant
+tools. The position lives only in daemon memory and is never exported; Clear, turning
+capture off, or restarting the daemon ends it, while pausing keeps it.
 
 ```json
 "clipboardHistory": { "maximumEntries": 200, "retentionHours": 168 }

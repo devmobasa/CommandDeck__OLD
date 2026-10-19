@@ -247,8 +247,9 @@ public static partial class Program
                 config,
                 CancellationToken.None );
             await owner.Indexer.ReindexAsync( progress: null, CancellationToken.None );
-            // One user file and the query-free Clipboard History navigation command.
-            Equal( 2L, (await owner.CatalogOperations.InspectAsync( CancellationToken.None ))
+            // One user file, the query-free Clipboard History navigation command,
+            // and the two clipboard sequence commands.
+            Equal( 4L, (await owner.CatalogOperations.InspectAsync( CancellationToken.None ))
                 .Stats.ItemCount );
 
             var purge = await RunCommandDeckProcessAsync(
@@ -273,7 +274,7 @@ public static partial class Program
                     $"stdout={reindex.StandardOutput}; stderr={reindex.StandardError}" );
             }
             True( reindex.StandardError.Contains( "owned", StringComparison.OrdinalIgnoreCase ) );
-            Equal( 2L, (await owner.CatalogOperations.InspectAsync( CancellationToken.None ))
+            Equal( 4L, (await owner.CatalogOperations.InspectAsync( CancellationToken.None ))
                 .Stats.ItemCount );
 
             var result = await owner.CatalogOperations.PurgeProjectionAsync(
