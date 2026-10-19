@@ -43,6 +43,8 @@ public sealed class ClipboardHistoryProvider( ClipboardHistoryStore store, Func<
         return ValueTask.FromResult<IReadOnlyList<SearchResult>>( results.Take( Math.Clamp( request.Limit, 1, 100 ) ).ToArray( ) );
     }
 
+    public string? ReadRecentText( int offset ) => store.ReadRecentText( offset );
+
     public async ValueTask<ActionExecutionResult> ExecuteAsync( CommandAction action, CancellationToken cancellationToken )
     {
         ArgumentNullException.ThrowIfNull( action );

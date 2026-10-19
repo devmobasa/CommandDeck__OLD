@@ -24,22 +24,61 @@ during discovery. Git status excludes untracked files to keep searches quick.
 ## Snippets and templates
 
 Search `snip: review`. Enter copies a snippet, asking for any named inputs first.
-The action menu also offers an expanded preview. `{date}` uses the local date
-(`yyyy-MM-dd`), `{time}` uses local `HH:mm`, and `{clipboard}` reads current text
-only when you copy or preview. Other placeholders, such as `{topic}`, become
-required form fields. Values are inserted literally, without recursive expansion.
-Paste copied text into your destination with its normal paste shortcut.
+The action menu also offers an expanded preview. Paste copied text into your
+destination with its normal paste shortcut.
 
 ```json
 "snippets": [
-  { "id": "review", "title": "Review prompt", "text": "Review {topic} on {date}: {clipboard}" }
+  { "id": "review", "title": "Review prompt",
+    "text": "Review {topic default=\"code\"} by {date offset=\"+2d\"}: {clipboard | trim}" }
 ]
 ```
 
-Up to 1000 snippets and 16 inputs per snippet are supported. Inputs and expanded
-text are not added to query/usage history. Clipboard placeholders need `wl-paste`;
-copying needs `wl-copy`. The launcher does not synthesize keystrokes or perform
-automatic text expansion.
+A placeholder is a name, then optional `key=value` options, then optional
+`| modifier` steps: `{date format="dd.MM.yyyy" offset="+1d"}`, `{topic | uppercase}`.
+
+| Placeholder | Inserts | Options |
+|---|---|---|
+| `{date}` / `{time}` | Local `yyyy-MM-dd` / `HH:mm` | `format`, `offset`, `locale` |
+| `{datetime}` / `{day}` | Local `yyyy-MM-dd HH:mm` / weekday name (`dddd`) | `format`, `offset`, `locale` |
+| `{uuid}` | A new random (version 4) UUID for each occurrence | None |
+| `{clipboard}` | Current clipboard text, read only when you copy or preview | `offset=N` (0–999) |
+| Any other, such as `{topic}` | A required form field | `default` prefills the field |
+
+| Modifier | Effect |
+|---|---|
+| `uppercase`, `lowercase` | Culture-invariant case mapping |
+| `trim` | Removes leading and trailing whitespace |
+| `percent-encode` | Percent-encodes UTF-8, keeping only RFC 3986 unreserved characters |
+| `json-stringify` | A JSON string literal, quotes included |
+
+- `format` is a .NET custom date and time format string. Output uses the invariant
+  culture unless `locale` names a culture from the system ICU data, such as `"de-DE"`.
+- `offset` lists signed steps applied in order, such as `"+1d -2h"`. Units are `m`
+  (minutes), `h` (hours), `d` (days), `M` (months) and `y` (years). Days, months and
+  years keep the local wall-clock time across daylight-saving changes.
+- Values can be bare (`offset=+1d`) or quoted with `"…"` or `'…'`; a backslash makes
+  the next character literal. Modifiers apply from left to right.
+- A repeated name, such as `{topic}` and `{topic | uppercase}`, is one form field.
+  Values are inserted literally, without recursive expansion.
+- Braces that do not form a complete placeholder on one line stay literal, so JSON
+  and code pass through and `{{date}}` becomes `{2026-09-06}`. A line break inside
+  a placeholder also leaves it literal.
+- An unknown option or modifier, an invalid format, offset or locale, or two
+  defaults for one input stop configuration loading. The message names the snippet
+  and the placeholder.
+
+`{clipboard offset=N}` with N of 1 or more inserts the plain-text history entry N
+places before the newest one, ordered by last copy; pins do not change the order.
+Image, file and rich entries are skipped. It needs clipboard capture consent and
+fails while consent is off. A snippet that reads history is a private clipboard
+row: it is never shown on Home or in suggestions, attached to AI requests, or
+offered to assistant tools.
+
+Up to 1000 snippets and 16 inputs per snippet are supported. Expanded text is
+limited to 128 KiB. Inputs and expanded text are not added to query/usage history.
+Clipboard placeholders need `wl-paste`; copying needs `wl-copy`. The launcher does
+not synthesize keystrokes or perform automatic text expansion.
 
 The v3 `invoke` request accepts optional `inputValues` (name/value object).
 Actions advertise their required `inputs`; only those names are accepted.

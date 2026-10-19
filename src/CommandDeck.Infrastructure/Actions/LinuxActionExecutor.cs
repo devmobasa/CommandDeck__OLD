@@ -19,13 +19,14 @@ public sealed class LinuxActionExecutor : IActionExecutor
         BoundedProcessRunner? snippetClipboardRunner = null,
         HeyClient? hey = null,
         LinuxProcessTable? processTable = null,
-        ProcessPinner? processPinner = null )
+        ProcessPinner? processPinner = null,
+        TimeProvider? timeProvider = null )
     {
         EditorLauncher editor = new( preferences );
         ILinuxActionHandler[] handlers =
         [
             new DesktopActionHandler( editor ),
-            new ClipboardActionHandler( clipboardHistory, snippetClipboardRunner ),
+            new ClipboardActionHandler( clipboardHistory, snippetClipboardRunner, timeProvider ),
             new SystemdActionHandler( editor, systemdRunner ),
             new HyprlandActionHandler( hyprlandRunner ),
             new HerdrActionHandler( herdr, herdrWindowActivator ),

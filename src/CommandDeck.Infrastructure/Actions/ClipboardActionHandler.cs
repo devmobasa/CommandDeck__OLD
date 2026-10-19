@@ -1,11 +1,14 @@
 namespace CommandDeck;
 
 // Clipboard writes: Copy, snippets (which may read the clipboard once to fill
-// {clipboard}), and clipboard history's own row actions.
+// {clipboard}, or retained history for {clipboard offset=N}), and clipboard
+// history's own row actions.
 internal sealed class ClipboardActionHandler(
     ClipboardHistoryProvider? clipboardHistory,
-    BoundedProcessRunner? snippetClipboardRunner ) : ILinuxActionHandler
+    BoundedProcessRunner? snippetClipboardRunner,
+    TimeProvider? timeProvider = null ) : ILinuxActionHandler
 {
+    private readonly TimeProvider _time = timeProvider ?? TimeProvider.System;
     private const int MaximumSnippetClipboardBytes = 64 * 1024;
     private const int MaximumSnippetClipboardErrorBytes = 4 * 1024;
     private const long MaximumSnippetClipboardProcessBytes = 128 * 1024 * 1024;
@@ -35,46 +38,33 @@ internal sealed class ClipboardActionHandler(
     private async ValueTask<ActionExecutionResult> ExecuteSnippetAsync(
         CommandAction action, CancellationToken cancellationToken )
     {
-        var template = SnippetActionPayload.Read( action.Arguments ).Template;
-        var clipboard = string.Empty;
-        if ( template.Contains( "{clipboard}", StringComparison.Ordinal ) )
+        var payload = SnippetActionPayload.Read( action.Arguments );
+        var template = SnippetTemplate.Compile( payload.Template );
+        if ( template.ReadsClipboardHistory && !payload.ReadsClipboardHistory )
         {
-            ProcessExecutionLimits limits = new( )
-            {
-                MaximumStandardOutputBytes = MaximumSnippetClipboardBytes,
-                MaximumStandardErrorBytes = MaximumSnippetClipboardErrorBytes,
-                MaximumMemoryBytes = MaximumSnippetClipboardProcessBytes,
-                ClearEnvironment = true,
-                EnvironmentVariables = SnippetClipboardEnvironment( )
-            };
-            ProcessResult read;
-            if ( snippetClipboardRunner is null )
-            {
-                read = await ProcessRunner.RunBoundedAsync( "wl-paste", ["--no-newline", "--type", "text"],
-                    null, TimeSpan.FromSeconds( 2 ), limits, cancellationToken ).ConfigureAwait( false );
-            }
-            else
-            {
-                read = await snippetClipboardRunner( "wl-paste", ["--no-newline", "--type", "text"],
-                    TimeSpan.FromSeconds( 2 ), limits, cancellationToken ).ConfigureAwait( false );
-            }
-            if ( read.ExitCode != 0 || read.TimedOut || read.AnyOutputLimitExceeded || read.MemoryLimitExceeded )
-            {
-                return ActionExecutionResult.Failure( read.AnyOutputLimitExceeded
-                    ? "Clipboard text exceeds 64 KiB."
-                    : "Could not read clipboard text." );
-            }
-            clipboard = read.StandardOutput;
+            return ActionExecutionResult.Failure( "Search for this snippet again before it reads clipboard history." );
         }
-        var expanded = SnippetTemplate.Expand( template, action.Arguments, DateTimeOffset.Now, clipboard );
-        if ( expanded.Length > 128 * 1024 )
+
+        Dictionary<int, string> clipboard = [];
+        foreach ( var offset in template.ClipboardOffsets )
         {
-            return ActionExecutionResult.Failure( "Expanded snippet exceeds 128 KiB." );
+            var (text, failure) = offset == 0
+                ? await ReadCurrentClipboardAsync( cancellationToken ).ConfigureAwait( false )
+                : ReadClipboardHistory( offset );
+            if ( failure is not null )
+            {
+                return failure;
+            }
+
+            clipboard[offset] = text!;
         }
+
+        var expanded = template.Expand( action.Arguments, _time, clipboard );
         if ( action.Kind == ActionKinds.SnippetPreview )
         {
             return ActionExecutionResult.Success( "Snippet preview", expanded );
         }
+
         return await CopyTextAsync( new CommandAction
         {
             Id = "copy",
@@ -82,6 +72,54 @@ internal sealed class ClipboardActionHandler(
             Kind = ActionKinds.CopyText,
             Arguments = new TextActionPayload( expanded ).ToArguments( )
         }, cancellationToken ).ConfigureAwait( false );
+    }
+
+    private async ValueTask<(string? Text, ActionExecutionResult? Failure)> ReadCurrentClipboardAsync( CancellationToken cancellationToken )
+    {
+        ProcessExecutionLimits limits = new( )
+        {
+            MaximumStandardOutputBytes = MaximumSnippetClipboardBytes,
+            MaximumStandardErrorBytes = MaximumSnippetClipboardErrorBytes,
+            MaximumMemoryBytes = MaximumSnippetClipboardProcessBytes,
+            ClearEnvironment = true,
+            EnvironmentVariables = SnippetClipboardEnvironment( )
+        };
+        ProcessResult read;
+        if ( snippetClipboardRunner is null )
+        {
+            read = await ProcessRunner.RunBoundedAsync( "wl-paste", ["--no-newline", "--type", "text"],
+                null, TimeSpan.FromSeconds( 2 ), limits, cancellationToken ).ConfigureAwait( false );
+        }
+        else
+        {
+            read = await snippetClipboardRunner( "wl-paste", ["--no-newline", "--type", "text"],
+                TimeSpan.FromSeconds( 2 ), limits, cancellationToken ).ConfigureAwait( false );
+        }
+
+        if ( read.ExitCode != 0 || read.TimedOut || read.AnyOutputLimitExceeded || read.MemoryLimitExceeded )
+        {
+            return (null, ActionExecutionResult.Failure( read.AnyOutputLimitExceeded
+                ? "Clipboard text exceeds 64 KiB."
+                : "Could not read clipboard text." ));
+        }
+
+        return (read.StandardOutput, null);
+    }
+
+    private (string? Text, ActionExecutionResult? Failure) ReadClipboardHistory( int offset )
+    {
+        if ( clipboardHistory is null )
+        {
+            return (null, ActionExecutionResult.Failure( "Clipboard history is unavailable." ));
+        }
+
+        var text = clipboardHistory.ReadRecentText( offset );
+        if ( text is null )
+        {
+            return (null, ActionExecutionResult.Failure( $"Clipboard history has no text entry {offset} places back." ));
+        }
+
+        return (text, null);
     }
 
     private static Dictionary<string, string> SnippetClipboardEnvironment( )

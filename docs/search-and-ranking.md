@@ -76,7 +76,8 @@ get a 5 s provider deadline, and their rows keep HEY's order.
 
 Trusted callers select an in-process search purpose: Interactive, Suggestion or
 AssistantTool. It is not a wire field. Clipboard history and HEY mail are
-private sources (`PrivateSources`). Noninteractive searches never schedule their
+private sources (`PrivateSources`); a snippet row that reads clipboard history
+counts as a clipboard row. Noninteractive searches never schedule their
 providers and remove private output from other providers too. Suggestions
 reject private filters, including aliases, exclusions and mixed queries;
 historical private queries are omitted from completion results. Invocations

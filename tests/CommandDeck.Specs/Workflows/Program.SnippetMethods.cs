@@ -10,7 +10,9 @@ public static partial class Program
         Equal( 1, rows.Count );
         Equal( 1, rows[0].Actions[0].Inputs.Count );
         var action = ActionInputValues.Bind( rows[0].Actions[0], new Dictionary<string, string> { ["topic"] = "{clipboard} $(touch /tmp/never)" } );
-        var text = SnippetTemplate.Expand( template, action.Arguments, new DateTimeOffset( 2026, 9, 6, 14, 30, 0, TimeSpan.Zero ), "literal {date}" );
+        var text = SnippetTemplate.Expand( template, action.Arguments,
+            new SnippetClock( new DateTimeOffset( 2026, 9, 6, 14, 30, 0, TimeSpan.Zero ), TimeZoneInfo.Utc ),
+            new Dictionary<int, string> { [0] = "literal {date}" } );
         Equal( "Review {clipboard} $(touch /tmp/never) on 2026-09-06 at 14:30: literal {date}. Again: {clipboard} $(touch /tmp/never)", text );
         Throws<InvalidOperationException>( ( ) => ActionInputValues.Bind( rows[0].Actions[0], null ) );
         Throws<InvalidOperationException>( ( ) => ActionInputValues.Bind( rows[0].Actions[0], new Dictionary<string, string> { ["argv"] = "sh" } ) );

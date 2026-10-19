@@ -116,6 +116,13 @@ public static partial class Program
         await RunAsync( "script commands keep inputs literal and bound execution", ScriptCommandsRespectInputsAndBoundsAsync );
         await RunAsync( "snippets bind named inputs and expand placeholders once", SnippetInputsAndExpansionAsync );
         await RunAsync( "snippet clipboard reads enforce a 64 KiB capture budget", SnippetClipboardReadIsBoundedAsync );
+        Run( "snippet syntax keeps malformed placeholders literal", SnippetSyntaxKeepsMalformedPlaceholdersLiteral );
+        await RunAsync( "snippet placeholder errors reject configuration with a diagnostic", SnippetPlaceholderErrorsRejectConfigurationAsync );
+        Run( "snippet modifiers transform each value in order", SnippetModifiersTransformEachValueInOrder );
+        Run( "snippet dates use the clock formats locales and offsets", SnippetDatesUseTheClockFormatsLocalesAndOffsets );
+        Run( "snippet uuids are fresh version 4 values", SnippetUuidsAreFreshVersionFourValues );
+        await RunAsync( "snippet input defaults reach preview and copy", SnippetInputDefaultsReachPreviewAndCopyAsync );
+        await RunAsync( "snippet clipboard history offsets are private and need consent", SnippetClipboardHistoryOffsetsArePrivateAndNeedConsentAsync );
         await RunAsync( "project checkouts have distinct paths and usable actions", ProjectCheckoutsAsync );
         await RunAsync(
             "systemd provider discovers services and timers without reading logs",

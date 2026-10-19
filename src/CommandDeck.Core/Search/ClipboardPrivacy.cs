@@ -16,7 +16,7 @@ public static class ClipboardPrivacy
         result.SourceId == SourceIds.Clipboard || result.ProviderId == ProviderIds.Clipboard ||
         result.Id.StartsWith( "clipboard:", StringComparison.Ordinal ) ||
         result.Metadata.GetValueOrDefault( ResultMetadataKeys.CatalogResultId, "" ).StartsWith( "clipboard:", StringComparison.Ordinal ) ||
-        result.Actions.Any( static action => action.Kind == ActionKinds.ClipboardHistory );
+        result.Actions.Any( static action => action.Kind == ActionKinds.ClipboardHistory || SnippetActionPayload.IsHistoryReader( action ) );
 
     public static bool ReferencesHistory( ParsedQuery query ) =>
         string.Equals( query.ProviderFilter, "clipboard", StringComparison.OrdinalIgnoreCase ) ||
