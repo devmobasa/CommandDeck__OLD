@@ -41,6 +41,16 @@ Rectangle {
   // Up with nothing to move to on an empty or recalled query; restart is true
   // when the query is empty, so the newest entry comes first again.
   signal historyRecallRequested(bool restart)
+  // Ctrl+= (or Ctrl++) is 1, Ctrl+- is -1, Ctrl+0 is 0 for the automatic size.
+  signal zoomRequested(int direction)
+
+  function zoomDirection(key, modifiers) {
+    if ((modifiers & ~(Qt.KeypadModifier | Qt.ShiftModifier)) !== Qt.ControlModifier) return null
+    if (key === Qt.Key_Equal || key === Qt.Key_Plus) return 1
+    if (key === Qt.Key_Minus) return -1
+    if (key === Qt.Key_0 && (modifiers & Qt.ShiftModifier) === 0) return 0
+    return null
+  }
   signal shortcutRequested(string actionId)
   // Ctrl+Z restores the last hidden item while its undo strip is visible;
   // otherwise the field keeps its ordinary text undo.
@@ -282,6 +292,9 @@ Rectangle {
           root.controller.invokeOrdinal(event.key - Qt.Key_0)
           event.accepted = true
         } else if (root.handleSectionJump(event.key, event.modifiers)) {
+          event.accepted = true
+        } else if (root.zoomDirection(event.key, event.modifiers) !== null) {
+          root.zoomRequested(root.zoomDirection(event.key, event.modifiers))
           event.accepted = true
         } else if (event.modifiers === Qt.ControlModifier && event.key === Qt.Key_U) {
           // Readline's Ctrl+U: delete from the start of the query to the caret.

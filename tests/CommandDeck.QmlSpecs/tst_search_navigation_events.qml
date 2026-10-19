@@ -169,6 +169,25 @@ EventPathFixture {
       fixture.part_searchField.inputControl.text = ""
     }
 
+    // Ctrl+= and Ctrl++ zoom in, Ctrl+- zooms out and Ctrl+0 returns to the
+    // automatic size, from the main or keypad keys; none of them types text.
+    function test_zoom_keys_ask_for_display_size_steps() {
+      fixture.part_searchField.inputControl.forceActiveFocus()
+      keyClick(Qt.Key_Equal, Qt.ControlModifier)
+      keyClick(Qt.Key_Plus, Qt.ControlModifier | Qt.ShiftModifier)
+      keyClick(Qt.Key_Minus, Qt.ControlModifier)
+      keyClick(Qt.Key_Plus, Qt.ControlModifier | Qt.KeypadModifier)
+      keyClick(Qt.Key_Minus, Qt.ControlModifier | Qt.KeypadModifier)
+      keyClick(Qt.Key_0, Qt.ControlModifier)
+      compare(fixture.part_searchField.zoomRequests, [1, 1, -1, 1, -1, 0])
+      keyClick(Qt.Key_Equal)
+      keyClick(Qt.Key_0)
+      compare(fixture.part_searchField.zoomRequests.length, 6, "plain keys type")
+      compare(fixture.part_searchField.inputControl.text, "=0")
+      compare(fixture.part_controller.primaryCalls, 0)
+      fixture.part_searchField.inputControl.text = ""
+    }
+
     // Ctrl+U deletes from the start of the query to the caret, leaving the
     // rest and any filter chip, and the field keeps focus for typing.
     function test_control_u_deletes_the_query_before_the_caret() {

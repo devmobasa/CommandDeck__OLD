@@ -97,6 +97,7 @@ CommandDeckState {
 
   // Applied immediately (the binding below recomputes) and persisted QML-only.
   function applyDisplaySizePreset(preset) { return DeckDisplayActions.applyDisplaySizePreset(root, preset) }
+  function stepDisplaySize(direction) { return DeckDisplayActions.stepDisplaySize(root, direction) }
 
   function applyPanelTransparency(enabled, percent) { return DeckDisplayActions.applyPanelTransparency(root, enabled, percent) }
 

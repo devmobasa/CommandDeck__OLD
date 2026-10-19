@@ -10,6 +10,31 @@ function applyDisplaySizePreset(root, preset) {
   root.part_displayScaleStore.setPreset(preset)
 }
 
+// Zoom steps through the fixed presets; Auto sits where Default does, and a
+// zero step returns to Auto. Each end holds.
+function nextDisplaySize(preset, direction) {
+  if (direction === 0) return Ui.DisplaySize.Auto
+  const steps = [Ui.DisplaySize.Small, Ui.DisplaySize.Default, Ui.DisplaySize.Large, Ui.DisplaySize.ExtraLarge]
+  const current = Math.max(0, steps.indexOf(preset === Ui.DisplaySize.Auto ? Ui.DisplaySize.Default : preset))
+  return steps[Math.max(0, Math.min(steps.length - 1, current + (direction > 0 ? 1 : -1)))]
+}
+
+function displaySizeLabel(preset) {
+  switch (preset) {
+    case Ui.DisplaySize.Small: return "Small"
+    case Ui.DisplaySize.Default: return "Default"
+    case Ui.DisplaySize.Large: return "Large"
+    case Ui.DisplaySize.ExtraLarge: return "Extra large"
+    default: return "Auto"
+  }
+}
+
+function stepDisplaySize(root, direction) {
+  const next = nextDisplaySize(root.displaySizePreset, direction)
+  root.applyDisplaySizePreset(next)
+  root.statusText = "Display size: " + displaySizeLabel(next)
+}
+
 function displaySizeMultiplierFor(root, preset) {
   switch (preset) {
     case Ui.DisplaySize.Small: return 0.9

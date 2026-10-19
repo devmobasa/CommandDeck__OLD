@@ -126,6 +126,8 @@ Item {
     onShortcutRequested: actionId => shortcutId = actionId
     onActionsRequested: actionRequests++
     onHistoryRecallRequested: restart => recallRequests = recallRequests.concat([restart])
+    property var zoomRequests: []
+    onZoomRequested: direction => zoomRequests = zoomRequests.concat([direction])
   }
 
   CommandDeck.SearchLoadingIndicator {

@@ -44,6 +44,18 @@ QtObject {
       "selecting Small applies a 0.9 multiplier")
     host.part_integratedDeck.applyDisplaySizePreset("auto")
 
+    // Zoom keys step through the same presets, hold at each end, and reset to Auto.
+    const zoomed = []
+    for (const direction of [1, 1, 1, 0, -1, -1, -1]) {
+      host.part_integratedDeck.stepDisplaySize(direction)
+      zoomed.push(host.part_integratedDeck.displaySizePreset)
+    }
+    host.expect(zoomed.join(",") === "large,xlarge,xlarge,auto,small,small,small"
+        && Math.abs(host.part_integratedDeck.displaySizeMultiplier - 0.9) < 0.001
+        && host.part_integratedDeck.statusText === "Display size: Small",
+      "zoom steps through the display-size presets and names the result (" + zoomed.join(",") + ")")
+    host.part_integratedDeck.stepDisplaySize(0)
+
     // D13 - the settings control offers the presets and emits the choice.
     host.expect(host.part_settings.displaySizeControl.count === 5,
       "settings offers five display-size presets")
