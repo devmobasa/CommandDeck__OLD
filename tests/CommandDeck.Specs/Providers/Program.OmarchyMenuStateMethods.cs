@@ -101,6 +101,69 @@ public static partial class Program
         }
     }
 
+    // A batch that answers nothing is cached like an answer. Concurrent
+    // searches share one batch; later searches neither run nor wait for it
+    // until it is stale, and then refresh it without waiting. A failed refresh
+    // keeps a condition's last real answer.
+    private static async Task OmarchyMenuStateCachesUnansweredConditionsAsync( )
+    {
+        SteppingTimeProvider clock = new( DateTimeOffset.UnixEpoch.AddDays( 20_000 ) );
+        var calls = 0;
+        var output = "";
+        var gate = new TaskCompletionSource( TaskCreationOptions.RunContinuationsAsynchronously );
+        async ValueTask<ProcessResult> RunAsync( string file, IReadOnlyList<string> arguments, TimeSpan timeout,
+            ProcessExecutionLimits limits, CancellationToken cancellationToken )
+        {
+            Interlocked.Increment( ref calls );
+            await gate.Task.WaitAsync( cancellationToken );
+            return new ProcessResult { ExitCode = 0, StandardOutput = output, StandardError = "" };
+        }
+        using OmarchyMenuState state = new( RunAsync, clock, TimeSpan.FromSeconds( 5 ) );
+        static SearchResult Row( string condition ) => new( )
+        {
+            Id = "omarchy:" + condition,
+            Kind = ResultKinds.Omarchy,
+            Title = condition,
+            SourceId = SourceIds.OmarchyControl,
+            Metadata = new( StringComparer.Ordinal ) { [OmarchyMenuState.CheckedKey] = condition }
+        };
+        static bool Checked( IReadOnlyList<SearchResult> rows ) =>
+            rows[0].Metadata.GetValueOrDefault( ResultMetadataKeys.OmarchyChecked ) == "true";
+
+        var first = state.ApplyAsync( [Row( "broken" )], default ).AsTask( );
+        var second = state.ApplyAsync( [Row( "broken" )], default ).AsTask( );
+        gate.SetResult( );
+        await Task.WhenAll( first, second );
+        Equal( 1, calls );
+        True( !Checked( first.Result ) && !Checked( second.Result ) );
+        True( !Checked( await state.ApplyAsync( [Row( "broken" )], default ) ) );
+        Equal( 1, calls );
+
+        gate = new TaskCompletionSource( TaskCreationOptions.RunContinuationsAsynchronously );
+        clock.Now = clock.Now.AddSeconds( 21 );
+        var refreshing = state.ApplyAsync( [Row( "broken" )], default );
+        True( refreshing.IsCompleted );
+        var deadline = DateTime.UtcNow.AddSeconds( 10 );
+        while ( Volatile.Read( ref calls ) < 2 && DateTime.UtcNow < deadline )
+        {
+            await Task.Delay( 20 );
+        }
+
+        Equal( 2, calls );
+        gate.SetResult( );
+
+        output = "0:1\n";
+        True( Checked( await state.ApplyAsync( [Row( "known" )], default ) ) );
+        Equal( 3, calls );
+        output = "";
+        clock.Now = clock.Now.AddSeconds( 21 );
+        True( Checked( await state.ApplyAsync( [Row( "known" ), Row( "never-seen" )], default ) ) );
+        Equal( 4, calls );
+        clock.Now = clock.Now.AddSeconds( 10 );
+        True( Checked( await state.ApplyAsync( [Row( "known" )], default ) ) );
+        Equal( 4, calls );
+    }
+
     private static void OmarchyMenuStateScriptIsolatesEachCondition( )
     {
         var script = OmarchyMenuState.Script( ["true", "exit 3"] );

@@ -128,6 +128,7 @@ public static partial class Program
         await RunAsync( "snippet clipboard history offsets are private and need consent", SnippetClipboardHistoryOffsetsArePrivateAndNeedConsentAsync );
         await RunAsync( "project checkouts have distinct paths and usable actions", ProjectCheckoutsAsync );
         await RunAsync( "omarchy menu state marks rows from one bounded batch", OmarchyMenuStateMarksRowsFromOneBatchAsync );
+        await RunAsync( "omarchy menu state caches conditions that answer nothing", OmarchyMenuStateCachesUnansweredConditionsAsync );
         Run( "omarchy menu state isolates each condition in the batch", OmarchyMenuStateScriptIsolatesEachCondition );
         await RunAsync( "omarchy menu indexes submenu rows that open in the launcher", OmarchyMenuIndexesSubmenuRowsAsync );
         await RunAsync( "omarchy menu browse lists one submenu in Omarchy order with catalog identities", OmarchyMenuBrowseListsChildrenInOmarchyOrderAsync );

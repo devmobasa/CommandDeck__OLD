@@ -292,9 +292,11 @@ Omarchy menu rows show the state Omarchy's own menu shows. A row whose `when`
 guard fails is dimmed and scores half as much; a row whose `checked` condition
 holds shows ✓. Up to twelve Omarchy rows per search are checked in one bounded
 batch, cached by condition for twenty seconds. A search waits up to 120 ms for
-conditions it has never answered and otherwise uses the last answers while a
-refresh runs, so a row can briefly show the previous state. Actions are
-unchanged either way. Turn off Omarchy menu state in Settings > Search, or set
+conditions it has never run and otherwise uses the last answers while a
+refresh runs, so a row can briefly show the previous state. A batch that times
+out or fails is cached the same way: its conditions keep their last answers (or
+leave rows unmarked) and run again only once stale. Actions are unchanged
+either way. Turn off Omarchy menu state in Settings > Search, or set
 `search.omarchyMenuState=false`, to run no conditions.
 
 ## Omarchy submenus
