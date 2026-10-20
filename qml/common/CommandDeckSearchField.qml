@@ -428,7 +428,10 @@ Rectangle {
       }
       Accessible.name: "Open settings"
       KeyNavigation.tab: root.additionalTabStop || root.filterChipControl || searchInput
-      KeyNavigation.backtab: searchInput
+      Keys.onBacktabPressed: event => {
+        if (!argumentPills.focusLast()) searchInput.forceActiveFocus()
+        event.accepted = true
+      }
       onClicked: root.controller.openSettings()
     }
   }

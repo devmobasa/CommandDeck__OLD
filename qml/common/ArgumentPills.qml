@@ -34,6 +34,13 @@ RowLayout {
     return field !== null
   }
 
+  // Shift+Tab from the control after the pills.
+  function focusLast() {
+    const field = fieldAt(repeater.count - 1)
+    if (field) field.forceActiveFocus()
+    return field !== null
+  }
+
   function submit() {
     const values = {}
     for (let index = 0; index < repeater.count; index++) {
