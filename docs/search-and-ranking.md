@@ -89,6 +89,12 @@ unavailable generic row with Delete only; Home and shortcuts omit them.
 Customization exports omit them and report the count in
 `omittedClipboardSearches`, preserving the original database rows.
 
+A saved-search shortcut cannot take a chord the launcher handles itself, under
+either of Qt's names for a key (Ctrl+Return is Ctrl+Enter, Shift+Esc is
+Shift+Escape). A shortcut saved before CommandDeck reserved its chord loads as
+`reservedShortcut` instead: it no longer runs the search, Settings names it, and
+editing the search drops it.
+
 For text queries that can include applications, an application-only catalog
 lookup runs beside the full catalog query, so a file-heavy FTS timeout cannot
 discard an application match. The lookup is skipped in command mode, under an

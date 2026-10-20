@@ -1,3 +1,5 @@
+using Microsoft.Data.Sqlite;
+
 namespace CommandDeck.Specs;
 
 public static partial class Program
@@ -45,7 +47,8 @@ public static partial class Program
                 {
                     "ctrl+home", "ctrl+end", "ctrl+enter", "shift+ctrl+enter", "ctrl+1", "ctrl+9", "ctrl+u",
                     "ctrl+up", "ctrl+down", "ctrl+k", "ctrl+d", "ctrl+shift+c", "alt+shift+a", "shift+alt+d",
-                    "ctrl+0", "ctrl+i", "alt+shift+r", "ctrl+alt+up", "alt+ctrl+down"
+                    "ctrl+0", "ctrl+i", "alt+shift+r", "ctrl+alt+up", "alt+ctrl+down", "shift+escape", "shift+esc",
+                    "ctrl+return", "ctrl+shift+return"
                 } )
                 {
                     Throws<InvalidOperationException>( ( ) =>
@@ -67,6 +70,19 @@ public static partial class Program
             Equal( id, persisted.Id );
             Equal( "Public roadmap", persisted.Name );
             Equal( 1, (await reopened.ExportAsync( CancellationToken.None )).SavedSearches.Count );
+
+            // A shortcut saved before CommandDeck reserved it loads as reserved,
+            // so the launcher never registers it over the built-in.
+            using ( SqliteConnection connection = new( new SqliteConnectionStringBuilder { DataSource = database, Pooling = false }.ToString( ) ) )
+            {
+                connection.Open( );
+                using var command = connection.CreateCommand( );
+                command.CommandText = "UPDATE saved_searches SET shortcut = 'CTRL+D' WHERE id = $id;";
+                command.Parameters.AddWithValue( "$id", id );
+                command.ExecuteNonQuery( );
+            }
+            var stale = (await reopened.GetSavedSearchesAsync( CancellationToken.None )).Single( );
+            True( stale.Shortcut is null && stale.ReservedShortcut == "CTRL+D" );
 
             SearchCoordinator coordinator = new(
                 [], new SearchOptions( ), reopened, reopened, reopened.UsageHistory );
