@@ -49,10 +49,18 @@ internal sealed partial class DesktopWiringDoctor(
             InspectPluginEnabled( omarchyDirectory )
         ];
 
-        (var module, var chord) = InspectHotkeyModule( paths );
+        // Like `hotkey install`, a binding of the default chord that the user
+        // wrote in bindings.lua stands in for the generated module.
+        var bindings = ReadBounded( paths.Bindings );
+        var userChord = bindings is not null && ReadBounded( paths.HotkeyFile ) is null &&
+            HyprlandHotkeyConfig.HasUserBinding( HyprlandHotkeyConfig.RemoveLegacyBlock( bindings ),
+                HyprlandHotkeyConfig.DefaultChord )
+            ? HyprlandHotkeyConfig.NormalizeChord( HyprlandHotkeyConfig.DefaultChord )
+            : null;
+        (var module, var chord) = InspectHotkeyModule( paths, userChord );
         checks.Add( module );
-        checks.Add( InspectHotkeyRequire( paths ) );
-        if ( ReadBounded( paths.Bindings ) is { } bindings && HyprlandHotkeyConfig.HasLegacyBlock( bindings ) )
+        checks.Add( InspectHotkeyRequire( paths, userChord ) );
+        if ( bindings is not null && HyprlandHotkeyConfig.HasLegacyBlock( bindings ) )
         {
             checks.Add( new(
                 "Earlier binding",
@@ -61,7 +69,7 @@ internal sealed partial class DesktopWiringDoctor(
                 "Run `commanddeck hotkey install`; it moves the binding to commanddeck.lua." ) );
         }
 
-        checks.AddRange( await InspectHyprlandAsync( chord, cancellationToken ).ConfigureAwait( false ) );
+        checks.AddRange( await InspectHyprlandAsync( chord, userChord, cancellationToken ).ConfigureAwait( false ) );
         return checks;
     }
 
@@ -130,10 +138,16 @@ internal sealed partial class DesktopWiringDoctor(
         }
     }
 
-    private static (DesktopCheck Check, string? Chord) InspectHotkeyModule( HyprlandHotkeyPaths paths )
+    private static (DesktopCheck Check, string? Chord) InspectHotkeyModule( HyprlandHotkeyPaths paths, string? userChord )
     {
         const string name = "Hotkey module";
         var content = ReadBounded( paths.HotkeyFile );
+        if ( content is null && userChord is not null )
+        {
+            return (new( name, DesktopCheckState.Passed,
+                $"{paths.Bindings} binds {userChord} to CommandDeck, so no {HyprlandHotkeyConfig.ModuleName} module is needed" ), null);
+        }
+
         if ( content is null )
         {
             return (new( name, DesktopCheckState.Warning, $"{paths.HotkeyFile} is missing", InstallHotkey ), null);
@@ -147,7 +161,7 @@ internal sealed partial class DesktopWiringDoctor(
                 $"{chord} sends {HyprlandHotkeyConfig.ShortcutId} ({paths.HotkeyFile})" ), chord);
     }
 
-    private static DesktopCheck InspectHotkeyRequire( HyprlandHotkeyPaths paths )
+    private static DesktopCheck InspectHotkeyRequire( HyprlandHotkeyPaths paths, string? userChord )
     {
         const string name = "Hotkey require";
         var content = ReadBounded( paths.MainConfig );
@@ -159,6 +173,11 @@ internal sealed partial class DesktopWiringDoctor(
         }
 
         var count = HyprlandHotkeyConfig.CountRequires( content );
+        if ( count == 0 && userChord is not null )
+        {
+            return new( name, DesktopCheckState.Passed, $"not needed; {paths.Bindings} binds {userChord} to CommandDeck" );
+        }
+
         return count switch
         {
             1 => new( name, DesktopCheckState.Passed, $"{HyprlandHotkeyConfig.ModuleName} is required once in {paths.MainConfig}" ),

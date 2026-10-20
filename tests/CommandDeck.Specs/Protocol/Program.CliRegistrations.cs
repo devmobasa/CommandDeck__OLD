@@ -44,6 +44,7 @@ public static partial class Program
         await RunAsync( "doctor desktop checks pass for a wired plugin hotkey and live binding", DoctorDesktopChecksPassWhenWiredAsync );
         await RunAsync( "doctor desktop checks explain a missing installation and skip without Hyprland", DoctorDesktopChecksExplainAMissingInstallationAsync );
         await RunAsync( "doctor desktop checks report stale wiring and unavailable hyprctl", DoctorDesktopChecksReportStaleWiringAsync );
+        await RunAsync( "doctor desktop checks accept a user's own hotkey binding", DoctorDesktopChecksAcceptAUserBindingAsync );
         await RunAsync( "doctor prints desktop wiring warnings skips and remediation", DoctorPrintsDesktopRemediationAsync );
     }
 

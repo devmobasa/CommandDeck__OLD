@@ -44,6 +44,39 @@ public static partial class Program
         }
     }
 
+    // `hotkey install` leaves a user's own CommandDeck binding in place and
+    // writes no module, so doctor accepts that binding instead of asking for
+    // the install again.
+    private static async Task DoctorDesktopChecksAcceptAUserBindingAsync( )
+    {
+        using DesktopDoctorFixture fixture = new( );
+        fixture.InstallPlugin( );
+        fixture.WriteShellConfig( """{"version":1,"plugins":[{"id":"local.commanddeck"}]}""" );
+        File.WriteAllText( fixture.Paths.Bindings, StockBindingsLua + """
+            hl.bind(
+              "CTRL+SPACE",
+              hl.dsp.exec_cmd("omarchy-shell shell toggle local.commanddeck '{}'")
+            )
+
+            """ );
+        fixture.InstallHotkey( "CTRL + SPACE" );
+        True( !File.Exists( fixture.Paths.HotkeyFile ) );
+        fixture.Respond( "binds", """
+            [{"modmask":4,"key":"SPACE","dispatcher":"exec","arg":"omarchy-shell shell toggle local.commanddeck '{}'","description":""}]
+            """ );
+        fixture.Respond( "globalshortcuts", WiredShortcutsJson );
+
+        var checks = await fixture.InspectAsync( );
+        True( checks.All( static check => check.State == DesktopCheckState.Passed ),
+            string.Join( "; ", checks.Select( static check => $"{check.Name}: {check.State} {check.Detail}" ) ) );
+        True( checks.Single( static check => check.Name == "Hotkey module" ).Detail.Contains( "binds CTRL + SPACE", StringComparison.Ordinal ) );
+
+        fixture.Respond( "binds", "[]" );
+        var inactive = await fixture.InspectAsync( );
+        Remedy( inactive, "Hyprland binding", DesktopCheckState.Warning, "hyprctl reload" );
+        True( inactive.All( static check => check.Remediation?.Contains( "hotkey install", StringComparison.Ordinal ) != true ) );
+    }
+
     private static async Task DoctorDesktopChecksExplainAMissingInstallationAsync( )
     {
         using DesktopDoctorFixture fixture = new( );
