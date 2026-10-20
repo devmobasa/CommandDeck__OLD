@@ -11,6 +11,8 @@ internal sealed record DesktopControl(
     IReadOnlyList<string> Argv,
     string? Program = null )
 {
+    public bool CloseAfterAction { get; init; }
+
     public string Tool => Program ?? Argv[0];
 
     public IReadOnlyList<string> RequiredTools => Program is null ? [Argv[0]] : [Program, Argv[0]];
@@ -62,7 +64,8 @@ internal static class DesktopControlCatalog
         "color-select",
         ["systemd-run", "--user", "--quiet", "--collect", "--on-active=300ms", "--timer-property=AccuracySec=10ms",
             "--", "hyprpicker", "--autocopy"],
-        Program: "hyprpicker" );
+        Program: "hyprpicker" )
+    { CloseAfterAction = true };
 
     private static DesktopControl SetVolume( int percent ) => new(
         $"volume-{percent}",

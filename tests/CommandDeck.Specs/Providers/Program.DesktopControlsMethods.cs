@@ -170,6 +170,8 @@ public static partial class Program
             var picker = (await runtime.SearchAsync( new SearchRequest { Query = "pick color", Limit = 20 }, default )).Single( );
             Equal( "desktop:color-picker", picker.Id );
             Equal( "Color · hyprpicker", picker.Subtitle );
+            True( picker.Actions.Single( ).CloseAfterAction,
+                "the cached picker action tells the launcher to close regardless of the ordinary action preference" );
             var outcome = await runtime.InvokeAsync( picker.Id, "run", false, default );
             True( outcome.Succeeded, outcome.Message );
             Equal( "systemd-run|--user|--quiet|--collect|--on-active=300ms|--timer-property=AccuracySec=10ms|--|hyprpicker|--autocopy",

@@ -53,6 +53,7 @@ public static class ActionInputValues
             Inputs = action.Inputs,
             Hidden = action.Hidden,
             RequiresConfirmation = action.RequiresConfirmation,
+            CloseAfterAction = action.CloseAfterAction,
             IsDestructive = action.IsDestructive
         };
     }

@@ -294,6 +294,17 @@
     "ContainsPrivateQuery",
     "IncompleteProviderCount"
   ],
+  "actionFields": [
+    "Arguments",
+    "CloseAfterAction",
+    "Hidden",
+    "Id",
+    "Inputs",
+    "IsDestructive",
+    "Kind",
+    "RequiresConfirmation",
+    "Title"
+  ],
   "queryExpressionFields": [
     "Clauses",
     "ExcludeFilterIds",

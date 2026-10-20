@@ -301,6 +301,18 @@ Generated from Core protocol constants and registries. Run `scripts/generate-pro
 - `ContainsPrivateQuery`
 - `IncompleteProviderCount`
 
+## Action fields
+
+- `Arguments`
+- `CloseAfterAction`
+- `Hidden`
+- `Id`
+- `Inputs`
+- `IsDestructive`
+- `Kind`
+- `RequiresConfirmation`
+- `Title`
+
 ## Query expression fields
 
 - `Clauses`

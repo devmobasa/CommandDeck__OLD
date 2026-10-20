@@ -16,5 +16,6 @@ function same(left, right) {
     && equal(left.arguments || {}, right.arguments || {})
     && equal(left.inputs || [], right.inputs || [])
     && !!left.requiresConfirmation === !!right.requiresConfirmation
+    && !!left.closeAfterAction === !!right.closeAfterAction
     && !!left.isDestructive === !!right.isDestructive
 }

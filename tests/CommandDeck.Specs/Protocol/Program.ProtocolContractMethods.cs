@@ -99,6 +99,7 @@ public static partial class Program
             requestFields,
             responseFields,
             searchCompletionFields = ReadProperties( typeof( SearchCompletion ) ),
+            actionFields = ReadProperties( typeof( CommandAction ) ),
             queryExpressionFields = ReadProperties( typeof( QueryExpression ) ),
             rankingFields = ReadProperties( typeof( RankingExplanation ) ),
             placementFields = ReadProperties( typeof( RankingPlacement ) ),
@@ -118,6 +119,7 @@ public static partial class Program
         AppendValues( markdown, "Request fields", requestFields );
         AppendValues( markdown, "Response fields", responseFields );
         AppendValues( markdown, "Search completion fields", ReadProperties( typeof( SearchCompletion ) ) );
+        AppendValues( markdown, "Action fields", ReadProperties( typeof( CommandAction ) ) );
         AppendValues( markdown, "Query expression fields", ReadProperties( typeof( QueryExpression ) ) );
         AppendValues( markdown, "Ranking explanation fields", ReadProperties( typeof( RankingExplanation ) ) );
         AppendValues( markdown, "Ranking placement fields", ReadProperties( typeof( RankingPlacement ) ) );

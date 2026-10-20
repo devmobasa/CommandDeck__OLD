@@ -133,6 +133,9 @@ public sealed class CommandAction
     public Dictionary<string, string> Arguments { get; init; } = new( StringComparer.Ordinal );
     public bool IsDestructive { get; init; }
     public bool RequiresConfirmation { get; init; }
+    // Successful silent actions that need the desktop, such as a screen picker,
+    // close the launcher even when the user's ordinary action policy keeps it open.
+    public bool CloseAfterAction { get; init; }
     // An action no menu lists: the launcher invokes it itself, such as the undo of
     // a HEY triage change. Null (omitted on the wire) for every listed action.
     public bool? Hidden { get; init; }

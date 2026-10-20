@@ -91,4 +91,16 @@ TestCase {
     invocation.clear()
     compare(invocation.actionKind, "")
   }
+
+  function test_actions_that_need_the_desktop_close_after_success_even_when_kept_open() {
+    verify(invocation.begin(70, false, false, "run-argv", true))
+    verify(invocation.complete(70, { succeeded: true }, false).dismiss,
+      "the picker must close the launcher even when Hide after opening an item is off")
+    verify(invocation.begin(71, false, false, "run-argv", true))
+    verify(!invocation.complete(71, { succeeded: false, message: "Could not start picker" }, false).dismiss,
+      "a failed picker launch keeps its error visible")
+    verify(invocation.begin(72, false, false, "run-argv"))
+    verify(!invocation.complete(72, { succeeded: true }, false).dismiss,
+      "ordinary commands still follow the user's setting")
+  }
 }

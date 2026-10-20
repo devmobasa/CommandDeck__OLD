@@ -285,6 +285,8 @@ Turn the **Desktop controls** source off in Settings to remove these rows.
 Type `color` or `pick color` and press Enter on **Pick Color**. The launcher
 closes, and `hyprpicker --autocopy` starts so you can click any pixel; the color
 is copied to the clipboard as hex. Press Escape in the picker to cancel.
+This action closes the launcher even when **Hide after opening an item** is
+off. If dispatch fails, the launcher stays open to show the error.
 hyprpicker freezes the screen when it starts, so it must not start while the
 launcher is still visible. CommandDeck runs this literal argv, which returns
 once a one-shot user timer exists:

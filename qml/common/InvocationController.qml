@@ -16,6 +16,7 @@ QtObject {
   // The kind of the running action: a copy that closes the launcher leaves
   // its message on screen, since nothing else shows that it happened.
   property string actionKind: ""
+  property bool closeAfterAction: false
   readonly property bool busy: requestId > 0
   readonly property bool collecting: actionInputOpen || !!pendingConfirmationAction
 
@@ -77,12 +78,13 @@ QtObject {
     return true
   }
 
-  function begin(nextRequestId, refresh, herdrEdit, kind) {
+  function begin(nextRequestId, refresh, herdrEdit, kind, closeAfterAction) {
     if (busy || collecting || nextRequestId <= 0) return false
     requestId = nextRequestId
     refreshAfterAction = refresh
     herdrEditPending = herdrEdit
     actionKind = kind || ""
+    invocation.closeAfterAction = closeAfterAction === true
     return true
   }
 
@@ -92,6 +94,7 @@ QtObject {
     refreshAfterAction = false
     herdrEditPending = false
     actionKind = ""
+    closeAfterAction = false
     return true
   }
 
@@ -100,7 +103,7 @@ QtObject {
 
     const refresh = !!outcome && outcome.succeeded && refreshAfterAction
     const output = !!outcome && !!outcome.detailMarkdown
-    const dismiss = !!outcome && outcome.succeeded && !refresh && !output && hideAfterAction
+    const dismiss = !!outcome && outcome.succeeded && !refresh && !output && (hideAfterAction || closeAfterAction)
     const copied = actionKind === Protocol.ActionKinds.CopyText || actionKind === Protocol.ActionKinds.SnippetCopy
     settle(completedRequestId)
 
@@ -120,6 +123,7 @@ QtObject {
     refreshAfterAction = false
     herdrEditPending = false
     actionKind = ""
+    closeAfterAction = false
     pendingConfirmationResult = null
     pendingConfirmationAction = null
     cancelInput()

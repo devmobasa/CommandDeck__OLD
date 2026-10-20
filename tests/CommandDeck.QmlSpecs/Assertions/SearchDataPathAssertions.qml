@@ -55,11 +55,38 @@ QtObject {
     verifyHiddenPreviewPaneLoadsNothing(deck)
     verifyClosedSearchIsKeptForReopen(deck)
     verifyCopyMessageOutlivesTheLauncher(deck)
+    verifyPickerClosesWithKeepOpenEnabled(deck)
     verifyResetRankingRefreshesInPlace(deck)
     verifyHomeBookmarksMoveWithTheKeyboard(deck)
     verifyArgumentPillsInvokeWithTheirValues(deck)
 
     if (!wasOpened) deck.close()
+  }
+
+  function verifyPickerClosesWithKeepOpenEnabled(deck) {
+    const originalPreferences = deck.part_personalization.acknowledged
+    deck.part_personalization.resetPreferences(Object.assign({}, originalPreferences, { hideAfterAction: false }))
+    const action = { id: "run", title: "Pick Color", kind: Protocol.ActionKinds.RunArgv, closeAfterAction: true }
+    deck.queryText = "pick color"
+    deck.requestSearch()
+    deliver(deck, [Object.assign(result("desktop:color-picker", "Pick Color"), {
+      sourceId: Protocol.SourceIds.DesktopControls, kind: Protocol.ResultKinds.CustomCommand, actions: [action] })])
+    let start = deck.sentRequests.length
+    deck.invokeSelectedPrimary()
+    let request = lastRequest(deck, start, Protocol.Operations.Invoke)
+    deck.handleMessage({ type: Protocol.Messages.ActionResult, requestId: request.requestId,
+      actionResult: { succeeded: false, message: "Could not start picker" } })
+    host.expect(deck.opened && deck.statusText === "Could not start picker", "a picker failure stays visible")
+
+    start = deck.sentRequests.length
+    deck.invokeSelectedPrimary()
+    request = lastRequest(deck, start, Protocol.Operations.Invoke)
+    deck.handleMessage({ type: Protocol.Messages.ActionResult, requestId: request.requestId,
+      actionResult: { succeeded: true } })
+    host.expect(!deck.opened, "a dispatched picker closes the launcher even when other actions keep it open")
+    deck.open("{}")
+    deliver(deck, [])
+    deck.part_personalization.resetPreferences(originalPreferences)
   }
 
   // A primary action with one to three inputs and no confirmation takes them

@@ -193,7 +193,8 @@ public sealed class CatalogSearchProvider : ICommandProvider
             Inputs = action.Inputs,
             Hidden = action.Hidden,
             IsDestructive = action.IsDestructive,
-            RequiresConfirmation = action.RequiresConfirmation
+            RequiresConfirmation = action.RequiresConfirmation,
+            CloseAfterAction = action.CloseAfterAction
         };
     }
 }

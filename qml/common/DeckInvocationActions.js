@@ -142,7 +142,7 @@ function invokeAction(root, result, action, confirmed, inputValues, fromUndo) {
   const herdrEditPending = action.kind === Protocol.ActionKinds.HerdrCreateTab || action.kind === Protocol.ActionKinds.HerdrRenameTab
     || action.kind === Protocol.ActionKinds.HerdrOpenProject
   const requestId = ++root.requestSequence
-  if (!root.part_invocationController.begin(requestId, refreshAfterAction, herdrEditPending, action.kind)) return
+  if (!root.part_invocationController.begin(requestId, refreshAfterAction, herdrEditPending, action.kind, action.closeAfterAction)) return
   // A change whose row carries its hidden undo is offered for undo once it succeeds.
   const undo = fromUndo !== true && result && result.actions
     ? result.actions.find(value => value.hidden === true && value.id === Protocol.UndoActions.Prefix + action.id)

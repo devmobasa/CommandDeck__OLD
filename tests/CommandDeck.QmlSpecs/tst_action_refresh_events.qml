@@ -88,6 +88,7 @@ Item {
         {tag: "arguments", field: "arguments", value: {argv: "second"}},
         {tag: "inputs", field: "inputs", value: [{id: "secret", required: true}]},
         {tag: "confirmation", field: "requiresConfirmation", value: false},
+        {tag: "close after action", field: "closeAfterAction", value: true},
         {tag: "destructive", field: "isDestructive", value: true},
         {tag: "id", field: "id", value: "other"}
       ]

@@ -215,6 +215,7 @@ internal sealed class SearchResultCache
             Title = action.Title,
             Kind = action.Kind,
             RequiresConfirmation = action.RequiresConfirmation,
+            CloseAfterAction = action.CloseAfterAction,
             IsDestructive = action.IsDestructive,
             Hidden = action.Hidden,
             Arguments = new Dictionary<string, string>( action.Arguments, StringComparer.Ordinal ),

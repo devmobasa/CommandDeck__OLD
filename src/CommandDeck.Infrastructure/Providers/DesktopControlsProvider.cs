@@ -154,6 +154,7 @@ public sealed partial class DesktopControlsProvider : ICommandProvider
                     Id = "run",
                     Title = control.Title,
                     Kind = ActionKinds.RunArgv,
+                    CloseAfterAction = control.CloseAfterAction,
                     Arguments = new Dictionary<string, string>( StringComparer.Ordinal )
                     {
                         ["argv"] = string.Join( '\u001f', control.Argv )
