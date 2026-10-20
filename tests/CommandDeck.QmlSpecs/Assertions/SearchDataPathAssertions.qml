@@ -88,7 +88,7 @@ QtObject {
       actionResult: { succeeded: false, message: "Fixture snippet" } })
   }
 
-  // Ctrl+Alt+Down on the first Home bookmark moves it to the second position
+  // Ctrl+Alt+Down on the first Home bookmark trades places with the second
   // and keeps it selected; the ends and non-bookmarks send nothing.
   function verifyHomeBookmarksMoveWithTheKeyboard(deck) {
     const bookmark = (id, title) => Object.assign(result(id, title), {
@@ -106,9 +106,9 @@ QtObject {
     host.expect(moves(start).length === 0, "the first bookmark cannot move up")
     deck.moveFavorite(1)
     const move = moves(start)[0]
-    host.expect(move !== undefined && move.resultId === "file:first" && move.offset === 1
+    host.expect(move !== undefined && move.resultId === "file:first" && move.targetResultId === "file:second"
         && deck.navigationController.restoreSelectionId === "file:first",
-      "moving the first bookmark down sends its new position and keeps it selected")
+      "moving the first bookmark down names the bookmark it trades places with and keeps it selected")
     deck.handleMessage({ type: Protocol.Messages.PreferencesResult, requestId: move.requestId,
       preferences: preferencesSnapshot(deck.part_personalization.acknowledged) })
     deliver(deck, [])

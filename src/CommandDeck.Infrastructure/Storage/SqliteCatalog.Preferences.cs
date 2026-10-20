@@ -39,9 +39,9 @@ public sealed partial class SqliteCatalog
 
     public ValueTask MoveFavoriteAsync(
         SearchResult result,
-        int position,
+        SearchResult target,
         CancellationToken cancellationToken ) =>
-        _launcherPreferences.MoveFavoriteAsync( result, position, cancellationToken );
+        _launcherPreferences.MoveFavoriteAsync( result, target, cancellationToken );
 
     public ValueTask<SearchResult?> FindAliasAsync(
         string aliasValue,

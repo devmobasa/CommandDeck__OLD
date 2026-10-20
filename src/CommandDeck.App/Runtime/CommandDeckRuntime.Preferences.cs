@@ -143,12 +143,13 @@ public sealed partial class CommandDeckRuntime
         CancellationToken cancellationToken ) =>
         _preferences.ReorderFavoritesAsync( stableIds, cancellationToken );
 
-    // Like bookmarking, the target is the daemon-cached result.
+    // Like bookmarking, both bookmarks are daemon-cached results.
     public ValueTask MoveFavoriteAsync(
         string resultId,
-        int position,
+        string targetResultId,
         CancellationToken cancellationToken ) =>
-        _preferences.MoveFavoriteAsync( GetCustomizableCachedResult( resultId ), position, cancellationToken );
+        _preferences.MoveFavoriteAsync( GetCustomizableCachedResult( resultId ),
+            GetCustomizableCachedResult( targetResultId ), cancellationToken );
 
     public ValueTask<CustomizationExport> ExportCustomizationsAsync(
         CancellationToken cancellationToken ) =>

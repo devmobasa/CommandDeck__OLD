@@ -326,8 +326,9 @@ Omarchy sections according to preferences and available results. Learned
 typed-search promotion does not change Home's formula.
 
 On Home, Ctrl+Alt+Up and Ctrl+Alt+Down move the selected bookmark one place
-among the bookmarks shown, through `favorite.move` (the daemon-cached result and
-its new position, clamped to the list), and the selection follows it.
+among the bookmarks shown, and the selection follows it. `favorite.move` takes the
+daemon-cached result and the shown bookmark it trades places with
+(`targetResultId`), so bookmarks Home leaves out keep their places.
 
 Hidden items ("Don't show this" in a result's actions) are excluded on every
 catalog path inside the shared candidate-scoping clause, before any `LIMIT`,

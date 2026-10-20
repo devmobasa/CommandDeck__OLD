@@ -230,7 +230,7 @@ public static partial class Program
         ArgumentNullException.ThrowIfNull( reordered?.Preferences );
         Equal( result.Result.Id, reordered.Preferences.Customizations[0].StableId );
 
-        await VerifyFavoriteMoveProtocolAsync( client, preferencesStore, result.Result.Id, cancellationToken );
+        await VerifyFavoriteMoveProtocolAsync( client, result.Result.Id, cancellationToken );
 
         SearchResult unavailableFavorite = new( )
         {

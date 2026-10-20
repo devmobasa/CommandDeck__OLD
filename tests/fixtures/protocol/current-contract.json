@@ -228,6 +228,7 @@
     "StableIds",
     "TargetFilterId",
     "TargetRequestId",
+    "TargetResultId",
     "TrustDuration",
     "TrustLevel",
     "TurnId",

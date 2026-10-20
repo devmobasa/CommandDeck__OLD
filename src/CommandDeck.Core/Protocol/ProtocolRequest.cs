@@ -16,6 +16,7 @@ public sealed class ProtocolRequest
     public int Limit { get; init; } = 50;
     public int Offset { get; init; }
     public string? ResultId { get; init; }
+    public string? TargetResultId { get; init; }
     public string? InvocationReference { get; init; }
     public string? ActionId { get; init; }
     public Dictionary<string, string>? InputValues { get; init; }
