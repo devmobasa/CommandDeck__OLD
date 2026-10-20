@@ -10,8 +10,7 @@ public sealed partial class SearchCoordinator
         Explicit, Exact, Learned, Grouped
     }
 
-    private bool LearningAvailable => _usageHistory is not null &&
-        _options.LearnFromInvocations && _privacy.StoreUsageHistory &&
+    private bool LearningAvailable => _usageHistory is not null && _history.LearnFromUse &&
         _options.Ranking.Adaptive.Enabled && _options.Ranking.TimeAware.Enabled;
 
     private static string UsageId( SearchResult result ) =>
@@ -60,7 +59,7 @@ public sealed partial class SearchCoordinator
     private async ValueTask<IReadOnlyDictionary<string, LearnedQuery>> ReadLearnedQueriesAsync(
         SearchRequest request, SearchPurpose purpose, DateTimeOffset now, CancellationToken cancellationToken )
     {
-        if ( purpose != SearchPurpose.Interactive || !LearningAvailable || !_privacy.StoreQueryHistory ||
+        if ( purpose != SearchPurpose.Interactive || !LearningAvailable || !_history.RememberSearches ||
             _usageHistory is not ILearnedQueryStore store )
         {
             return new Dictionary<string, LearnedQuery>( StringComparer.Ordinal );

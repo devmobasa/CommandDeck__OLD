@@ -15,6 +15,7 @@ FocusScope {
   readonly property var part_aiProviderEditor: parts.aiProviderEditor
   readonly property var part_fileSearchCard: parts.searchScroll.part_fileSearchCard
   readonly property var part_homeFolderOnlyCheck: parts.searchScroll.part_homeFolderOnlyCheck
+  readonly property var part_omarchyMenuStateCheck: parts.searchScroll.part_omarchyMenuStateCheck
   readonly property var part_sourcesCard: parts.searchScroll.part_sourcesCard
   readonly property var part_manageExtensions: parts.searchScroll.part_manageExtensions
   readonly property var part_sourceRepeater: parts.searchScroll.part_sourceRepeater
@@ -95,6 +96,8 @@ FocusScope {
   readonly property var part_displaySizeChoice: parts.customizationScroll.part_displaySizeChoice
   readonly property var part_layoutCard: parts.customizationScroll.part_layoutCard
   readonly property var part_compactLayoutCheck: parts.customizationScroll.part_compactLayoutCheck
+  readonly property var part_rememberSearchesCheck: parts.customizationScroll.part_rememberSearchesCheck
+  readonly property var part_learnFromUseCheck: parts.customizationScroll.part_learnFromUseCheck
   readonly property var part_previewPaneCheck: parts.customizationScroll.part_previewPaneCheck
   readonly property var part_closingCard: parts.customizationScroll.part_closingCard
   readonly property var part_escapeClearsCheck: parts.customizationScroll.part_escapeClearsCheck

@@ -5,7 +5,7 @@ internal sealed class InvocationWorkflow(
     IActionExecutor actions,
     IUsageHistoryStore usageHistory,
     SearchOptions searchOptions,
-    PrivacyOptions privacy )
+    HistoryPolicy history )
 {
     public async ValueTask<ActionExecutionResult> InvokeAsync(
         string resultId,
@@ -134,10 +134,8 @@ internal sealed class InvocationWorkflow(
             !cached.PrivateQuery &&
             !PrivateSources.IsPrivate( cached.Result ) &&
             ShouldRecordUsage( action ) &&
-            ((searchOptions.LearnFromInvocations &&
-              searchOptions.Ranking.Adaptive.Enabled &&
-              privacy.StoreUsageHistory) ||
-             privacy.StoreQueryHistory) )
+            ((history.LearnFromUse && searchOptions.Ranking.Adaptive.Enabled) ||
+             history.RememberSearches) )
         {
             var catalogResultId = cached.Result.Metadata.GetValueOrDefault(
                 ResultMetadataKeys.CatalogResultId,
@@ -151,7 +149,7 @@ internal sealed class InvocationWorkflow(
                 await usageHistory.RecordInvocationAsync(
                     catalogResultId,
                     actionId,
-                    privacy.StoreQueryHistory ? cached.Query : null,
+                    history.RememberSearches ? cached.Query : null,
                     completion.Token ).ConfigureAwait( false );
             }
             catch ( Exception )

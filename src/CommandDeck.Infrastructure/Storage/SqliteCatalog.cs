@@ -16,7 +16,7 @@ public sealed partial class SqliteCatalog :
     private readonly TimeProvider _timeProvider;
     private readonly PathPolicy _pathPolicy;
     private readonly RankingOptions _rankingOptions;
-    private readonly bool _learnFromInvocations;
+    private readonly HistoryPolicy _history;
     private readonly PrivacyOptions _privacyOptions;
     private readonly IMimeTypeResolver _mimeTypeResolver;
     private readonly SemaphoreSlim _initializationLock = new( 1, 1 );
@@ -30,12 +30,13 @@ public sealed partial class SqliteCatalog :
         TimeProvider? timeProvider = null,
         PrivacyOptions? privacy = null,
         SearchOptions? searchOptions = null,
-        IMimeTypeResolver? mimeTypeResolver = null )
+        IMimeTypeResolver? mimeTypeResolver = null,
+        HistoryPolicy? history = null )
     {
         _timeProvider = timeProvider ?? TimeProvider.System;
         _privacyOptions = privacy ?? new PrivacyOptions( );
         _pathPolicy = new PathPolicy( _privacyOptions );
-        _learnFromInvocations = searchOptions?.LearnFromInvocations ?? true;
+        _history = history ?? new HistoryPolicy( _privacyOptions, searchOptions );
         _rankingOptions = (searchOptions ?? new SearchOptions( )).Ranking;
         _mimeTypeResolver = mimeTypeResolver ?? new SharedMimeTypeResolver( );
         _databasePath = PathExpansion.Expand( options.DatabasePath );
@@ -64,10 +65,14 @@ public sealed partial class SqliteCatalog :
             ( ) => ContributionSnapshot, AiPreferences );
         UsageHistory = new SqliteUsageHistoryStore(
             InitializeAsync, OpenAsync, _launcherPreferences.GetFilterAliasesAsync,
-            ( ) => ContributionSnapshot, _timeProvider, _rankingOptions, _learnFromInvocations, _privacyOptions );
+            ( ) => ContributionSnapshot, _timeProvider, _rankingOptions, _history, _privacyOptions );
     }
 
     public IUsageHistoryStore UsageHistory { get; }
+
+    // What this catalog may remember and learn from; shared with the search
+    // coordinator and the runtime so a Settings change reaches all of them.
+    public HistoryPolicy History => _history;
 
     public IAiPreferenceStore AiPreferences { get; }
 

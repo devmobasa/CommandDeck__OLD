@@ -62,6 +62,7 @@ internal sealed partial class SqliteLauncherPreferenceStore
         var heyOpenTarget = defaults.HeyOpenTarget;
         var graphicalEditor = defaults.GraphicalEditor;
         var terminalEditor = defaults.TerminalEditor;
+        Dictionary<string, string> choices = new( StringComparer.Ordinal );
         await using ( var command = connection.CreateCommand( ) )
         {
             command.CommandText = "SELECT key, value FROM launcher_preferences;";
@@ -113,6 +114,10 @@ internal sealed partial class SqliteLauncherPreferenceStore
                     terminalEditor = System.Text.Json.JsonSerializer.Deserialize(
                         value, CommandDeckJsonContext.Default.EditorAdapter ) ?? terminalEditor;
                 }
+                else if ( key is RememberSearchesKey or LearnFromUseKey or OmarchyMenuStateKey )
+                {
+                    choices[key] = value;
+                }
                 else if ( key == "source_preferences_revision" )
                 {
                     preferenceRevision = long.Parse( value, System.Globalization.CultureInfo.InvariantCulture );
@@ -135,9 +140,31 @@ internal sealed partial class SqliteLauncherPreferenceStore
             PreferredEditor = preferredEditor,
             HeyOpenTarget = heyOpenTarget,
             GraphicalEditor = EditorAdapterValidator.Validate( graphicalEditor, terminal: false ),
-            TerminalEditor = EditorAdapterValidator.Validate( terminalEditor, terminal: true )
+            TerminalEditor = EditorAdapterValidator.Validate( terminalEditor, terminal: true ),
+            RememberSearches = ReadChoice( choices.GetValueOrDefault( RememberSearchesKey ) ),
+            LearnFromUse = ReadChoice( choices.GetValueOrDefault( LearnFromUseKey ) ),
+            OmarchyMenuState = ReadChoice( choices.GetValueOrDefault( OmarchyMenuStateKey ) )
         };
     }
+
+    private const string RememberSearchesKey = "remember_searches";
+    private const string LearnFromUseKey = "learn_from_use";
+    private const string OmarchyMenuStateKey = "omarchy_menu_state";
+
+    // A choice made in Settings; a missing, empty or unknown value follows the configuration.
+    private static bool? ReadChoice( string? value ) => value switch
+    {
+        "true" => true,
+        "false" => false,
+        _ => null
+    };
+
+    private static string WriteChoice( bool? value ) => value switch
+    {
+        true => "true",
+        false => "false",
+        null => string.Empty
+    };
 
     public async ValueTask<PreferencesSnapshot> GetSnapshotAsync(
         bool includeShortcuts,
@@ -227,6 +254,16 @@ internal sealed partial class SqliteLauncherPreferenceStore
             preferences.ReduceMotion ? "true" : "false",
             now,
             cancellationToken ).ConfigureAwait( false );
+        foreach ( var (key, value) in new[]
+        {
+            (RememberSearchesKey, preferences.RememberSearches),
+            (LearnFromUseKey, preferences.LearnFromUse),
+            (OmarchyMenuStateKey, preferences.OmarchyMenuState)
+        } )
+        {
+            await UpsertLauncherPreferenceAsync( connection, transaction, key, WriteChoice( value ), now, cancellationToken )
+                .ConfigureAwait( false );
+        }
         await UpsertLauncherPreferenceAsync(
             connection,
             transaction,

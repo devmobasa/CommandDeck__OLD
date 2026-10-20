@@ -314,7 +314,7 @@ public sealed partial class SearchCoordinator
         IReadOnlyList<SearchResult> results,
         CancellationToken cancellationToken )
     {
-        if ( _usageHistory is null || !_options.LearnFromInvocations || !_privacy.StoreUsageHistory || !_options.Ranking.Adaptive.Enabled ||
+        if ( _usageHistory is null || !_history.LearnFromUse || !_options.Ranking.Adaptive.Enabled ||
             !_options.Ranking.TimeAware.Enabled )
         {
             return new Dictionary<string, UsageSignal>( StringComparer.Ordinal );

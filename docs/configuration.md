@@ -554,6 +554,17 @@ private store are described in [clipboard history](launcher-workflows.md#clipboa
 When `storeQueryHistory=false`, successful invocations record no raw query.
 When `storeUsageHistory=false`, no invocation event is written at all.
 
+These are defaults that Settings can override without editing this file:
+**Remember searches** (Customization > Data) overrides `storeQueryHistory`,
+**Learn from what you open** overrides `search.learnFromInvocations` together
+with `storeUsageHistory`, and **Omarchy menu state** (Search) overrides
+`search.omarchyMenuState`. Until you change one in Settings, the configuration
+applies; once changed, the choice is stored with the launcher preferences and
+takes effect from the next search, without a restart. Resetting customizations
+returns all three to the configuration. `search.ranking.adaptive.enabled` still
+gates usage learning, and `commanddeck preferences` shows each value and where
+it comes from.
+
 ## `ui`
 
 UI options are static shell hints. Interactive launcher preferences override

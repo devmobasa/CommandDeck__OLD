@@ -193,6 +193,9 @@ SettingsPanelState {
   readonly property alias displaySizeControl: root.part_displaySizeChoice
   readonly property alias panelTransparencyControl: root.part_panelTransparencyCheck
   readonly property alias compactLayoutControl: root.part_compactLayoutCheck
+  readonly property alias rememberSearchesControl: root.part_rememberSearchesCheck
+  readonly property alias learnFromUseControl: root.part_learnFromUseCheck
+  readonly property alias omarchyMenuStateControl: root.part_omarchyMenuStateCheck
   readonly property alias previewPaneControl: root.part_previewPaneCheck
   readonly property alias escapeClearsControl: root.part_escapeClearsCheck
   readonly property alias keepSearchControl: root.part_keepSearchChoice
@@ -342,6 +345,8 @@ SettingsPanelState {
   function removeUnavailable(customizationId) { return SettingsCustomizationActions.removeUnavailable(root, customizationId) }
 
   function clonePreferences() { return SettingsCustomizationActions.clonePreferences(root) }
+  function historyChoice(name) { return SettingsCustomizationActions.historyChoice(root, name) }
+  function setHistoryChoice(name, value) { return SettingsCustomizationActions.setHistoryChoice(root, name, value) }
 
   function mutateSource(index, field, value) { return SettingsCustomizationActions.mutateSource(root, index, field, value) }
 

@@ -14,7 +14,7 @@ public sealed partial class SearchCoordinator
     private readonly ILauncherSearchPreferences? _preferences;
     private readonly IUsageSignalStore? _usageHistory;
     private readonly TimeProvider _timeProvider;
-    private readonly PrivacyOptions _privacy;
+    private readonly HistoryPolicy _history;
     private readonly IContributionRegistry? _contributions;
     private readonly Action<SearchProviderDiagnostic>? _providerDiagnostic;
 
@@ -30,7 +30,8 @@ public sealed partial class SearchCoordinator
         TimeProvider? timeProvider = null,
         PrivacyOptions? privacy = null,
         IContributionRegistry? contributions = null,
-        Action<SearchProviderDiagnostic>? providerDiagnostic = null )
+        Action<SearchProviderDiagnostic>? providerDiagnostic = null,
+        HistoryPolicy? history = null )
     {
         _providers = providers.ToArray( );
         _providerSlots = _providers.Distinct( ).ToDictionary( static provider => provider, static _ => new SemaphoreSlim( 2, 2 ) );
@@ -39,7 +40,7 @@ public sealed partial class SearchCoordinator
         _preferences = preferences;
         _usageHistory = usageHistory;
         _timeProvider = timeProvider ?? TimeProvider.System;
-        _privacy = privacy ?? new PrivacyOptions( );
+        _history = history ?? new HistoryPolicy( privacy, options );
         _contributions = contributions;
         _providerDiagnostic = providerDiagnostic;
     }

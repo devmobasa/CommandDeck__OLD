@@ -86,6 +86,23 @@ function mutateSource(root, index, field, value) {
   root.preferencesChanged(preferences)
 }
 
+// A history or state choice made in Settings, or the configuration's value
+// while none is made (the daemon sends those defaults with the snapshot).
+function historyChoice(root, name) {
+  const preferences = root.snapshot && root.snapshot.preferences ? root.snapshot.preferences : null
+  const chosen = preferences ? preferences[name] : null
+  if (chosen === true || chosen === false) return chosen
+  const defaults = root.snapshot && root.snapshot.defaults ? root.snapshot.defaults : null
+  return !!defaults && defaults[name] === true
+}
+
+function setHistoryChoice(root, name, value) {
+  const preferences = root.clonePreferences()
+  if (!preferences) return
+  preferences[name] = value === true
+  root.preferencesChanged(preferences)
+}
+
 function clonePreferences(root) {
   const preferences = root.snapshot && root.snapshot.preferences
     ? JSON.parse(JSON.stringify(root.snapshot.preferences))

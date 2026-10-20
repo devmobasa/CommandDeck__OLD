@@ -18,6 +18,9 @@ public sealed partial class CommandDeckRuntime : IAsyncDisposable, IAgentLaunche
     private readonly AiGenerationCoordinator _aiGenerations;
     private readonly AiOutputService _aiOutputs;
     private readonly ILauncherPreferenceStore _preferences;
+    // What may be remembered and learned from; shared with the catalog and the
+    // search coordinator, and refreshed whenever preferences are read or saved.
+    private readonly HistoryPolicy _history;
     private readonly IAiPreferenceStore _aiPreferences;
     private readonly OpenWithDetection? _openWith;
     private readonly SearchResultCache _cache = new( );
@@ -44,7 +47,8 @@ public sealed partial class CommandDeckRuntime : IAsyncDisposable, IAgentLaunche
         ILauncherPreferenceStore preferences,
         IAiPreferenceStore aiPreferences,
         RuntimeResources resources,
-        RuntimeConstructionOptions? constructionOptions = null )
+        RuntimeConstructionOptions? constructionOptions = null,
+        HistoryPolicy? history = null )
     {
         ArgumentNullException.ThrowIfNull( resources );
 
@@ -57,7 +61,8 @@ public sealed partial class CommandDeckRuntime : IAsyncDisposable, IAgentLaunche
         _indexer = indexer;
         _search = search;
         _actions = actions;
-        _invocations = new InvocationWorkflow( _cache, actions, usageHistory, options.Search, options.Privacy );
+        _history = history ?? new HistoryPolicy( options.Privacy, options.Search );
+        _invocations = new InvocationWorkflow( _cache, actions, usageHistory, options.Search, _history );
         _filePreviews = new FilePreviewWorkflow( _cache, previews, preferences, ( ) => Contributions );
         _fileSelection = new FileSelectionService( actions, ResolveOwnedCachedResult );
         _aiSettings = aiSettings;

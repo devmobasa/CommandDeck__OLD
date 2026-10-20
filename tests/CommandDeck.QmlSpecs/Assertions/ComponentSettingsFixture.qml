@@ -65,6 +65,7 @@ CommandDeck.SettingsPanel {
   property var compactLayoutChosen: null
   property var previewPaneChosen: null
   property var behaviorChosen: null
+  property var changedPreferences: null
   property bool panelTransparencyChosenEnabled: false
   property int panelTransparencyChosenPercent: -1
   onOrphanRemoveRequested: customizationId => removedCustomizationId = customizationId
@@ -74,6 +75,7 @@ CommandDeck.SettingsPanel {
   onDisplaySizeSelected: preset => displaySizeChosen = preset
   onCompactLayoutSelected: enabled => compactLayoutChosen = enabled
   onPreviewPaneSelected: visible => previewPaneChosen = visible
+  onPreferencesChanged: preferences => changedPreferences = preferences
   onLauncherBehaviorSelected: (escapeClears, keepSeconds) =>
     behaviorChosen = { escapeClears: escapeClears, keepSeconds: keepSeconds }
   onPanelTransparencyChanged: (enabled, percent) => {

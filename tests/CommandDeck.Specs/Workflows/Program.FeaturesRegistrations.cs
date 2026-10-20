@@ -13,6 +13,8 @@ public static partial class Program
         await RunAsync( "usage and query history gates remain independent", UsageAndQueryHistoryGatesRemainIndependentAsync );
         await RunAsync( "reset ranking forgets one result's use without recording any", ResetRankingForgetsOneResultsUseAsync );
         await RunAsync( "learned queries promote abbreviations behind every gate", LearnedQueriesPromoteAbbreviationsAsync );
+        await RunAsync( "settings history choices override the configuration at run time", HistoryChoicesOverrideTheConfigurationAsync );
+        await RunAsync( "omarchy menu state follows its settings choice", OmarchyMenuStateFollowsItsChoiceAsync );
         await RunAsync( "learned promotion rejects navigation and falls back without signals", LearnedPromotionRejectsNavigationAndMissingSignalsAsync );
         await RunAsync( "learned promotion respects strong match and age gates", LearnedPromotionGatesAsync );
         await RunAsync( "learned promotion preserves caps fairness intent and deterministic ties", LearnedPromotionCapsAndTiesAsync );
