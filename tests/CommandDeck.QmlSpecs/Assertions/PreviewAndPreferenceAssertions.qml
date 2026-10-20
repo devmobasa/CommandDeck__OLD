@@ -151,6 +151,14 @@ QtObject {
     host.expect(host.part_settings.renderedSavedSearchCount === 1
         && host.part_settings.renderedSavedSearchAt(0).Accessible.name.indexOf("Docs") >= 0,
       "settings renders saved searches and shortcuts accessibly")
+    const savedSearches = host.part_settings.savedSearches
+    host.part_settings.savedSearches = savedSearches.concat([{ id: "saved-search:old", name: "Old",
+      reservedShortcut: "CTRL+D", showOnHome: false, position: 2,
+      expression: { includeFilterIds: [], excludeFilterIds: [], clauses: [] } }])
+    host.expect(host.part_settings.renderedSavedSearchAt(1).Accessible.name
+        === "Old, CTRL+D is reserved by CommandDeck; edit to choose another",
+      "settings names a saved shortcut CommandDeck has since reserved")
+    host.part_settings.savedSearches = savedSearches
     host.part_settings.synchronizeAiChoices()
     host.expect(host.part_settings.aiProviderControl.currentIndex === 1
         && host.part_settings.aiModelControl.currentIndex === 1,

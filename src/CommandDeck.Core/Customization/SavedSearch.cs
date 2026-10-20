@@ -9,6 +9,9 @@ public sealed class SavedSearch
     public required string Name { get; init; }
     public QueryExpression Expression { get; init; } = new( );
     public string? Shortcut { get; init; }
+    // A stored shortcut that CommandDeck has since reserved for itself; it no
+    // longer runs the search, and saving the search again drops it.
+    public string? ReservedShortcut { get; init; }
     public bool ShowOnHome { get; init; }
     public int Position { get; init; }
     public bool Unavailable { get; init; }
@@ -59,6 +62,30 @@ public static partial class SavedSearchValidator
         return query.Expression;
     }
 
+    // Chords the launcher handles itself.
+    private static readonly HashSet<string> ReservedShortcuts =
+    [
+        "CTRL+/", "CTRL+,", "CTRL+N", "CTRL+P", "CTRL+HOME", "CTRL+END",
+        "CTRL+ENTER", "CTRL+SHIFT+ENTER", "CTRL+U", "CTRL+UP", "CTRL+DOWN",
+        "CTRL+K", "CTRL+D", "CTRL+SHIFT+C", "ALT+SHIFT+A", "ALT+SHIFT+D", "ALT+SHIFT+R", "CTRL+0", "CTRL+I",
+        "CTRL+ALT+UP", "CTRL+ALT+DOWN", "SHIFT+ESCAPE",
+        .. Enumerable.Range( 1, 9 ).Select( static value => $"CTRL+{value}" )
+    ];
+
+    // Whether a normalized shortcut is one the launcher handles. Qt also calls
+    // the Enter and Escape keys the launcher accepts Return and Esc.
+    public static bool IsReserved( string normalizedShortcut )
+    {
+        var keyStart = normalizedShortcut.LastIndexOf( '+' ) + 1;
+        var key = normalizedShortcut[keyStart..] switch
+        {
+            "RETURN" => "ENTER",
+            "ESC" => "ESCAPE",
+            var other => other
+        };
+        return ReservedShortcuts.Contains( normalizedShortcut[..keyStart] + key );
+    }
+
     public static string? NormalizeShortcut( string? shortcut )
     {
         if ( string.IsNullOrWhiteSpace( shortcut ) )
@@ -99,15 +126,7 @@ public static partial class SavedSearchValidator
         {
             return;
         }
-        HashSet<string> builtIns =
-        [
-            "CTRL+/", "CTRL+,", "CTRL+N", "CTRL+P", "CTRL+HOME", "CTRL+END",
-            "CTRL+ENTER", "CTRL+SHIFT+ENTER", "CTRL+U", "CTRL+UP", "CTRL+DOWN",
-            "CTRL+K", "CTRL+D", "CTRL+SHIFT+C", "ALT+SHIFT+A", "ALT+SHIFT+D", "ALT+SHIFT+R", "CTRL+0", "CTRL+I",
-            "CTRL+ALT+UP", "CTRL+ALT+DOWN",
-            .. Enumerable.Range(1, 9).Select(static value => $"CTRL+{value}")
-        ];
-        if ( builtIns.Contains( normalized ) )
+        if ( IsReserved( normalized ) )
         {
             throw new InvalidOperationException(
                 $"Shortcut '{normalized}' is reserved by CommandDeck." );

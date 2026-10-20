@@ -89,6 +89,12 @@ unavailable generic row with Delete only; Home and shortcuts omit them.
 Customization exports omit them and report the count in
 `omittedClipboardSearches`, preserving the original database rows.
 
+A saved-search shortcut cannot take a chord the launcher handles itself, under
+either of Qt's names for a key (Ctrl+Return is Ctrl+Enter, Shift+Esc is
+Shift+Escape). A shortcut saved before CommandDeck reserved its chord loads as
+`reservedShortcut` instead: it no longer runs the search, Settings names it, and
+editing the search drops it.
+
 For text queries that can include applications, an application-only catalog
 lookup runs beside the full catalog query, so a file-heavy FTS timeout cannot
 discard an application match. The lookup is skipped in command mode, under an
@@ -266,8 +272,9 @@ configured timeout. A history failure preserves the successful outcome and outpu
 an explicit history-not-saved message; it never retries the launch. Exactly once
 means once per accepted executor call, not cross-request deduplication.
 
-`learnFromInvocations`, `ranking.adaptive.enabled`, and `privacy.storeUsageHistory`
-all gate usage writes. Query history is independently optional and cannot
+`ranking.adaptive.enabled` and the **Learn from what you open** choice gate usage
+writes. Until that choice is made in Settings, it follows `learnFromInvocations`
+and `privacy.storeUsageHistory` together. Query history is independently optional and cannot
 re-enable usage writes. Invocation events never retain query text; opted-in query
 history uses its separate bounded table. The usage count is an aggregate of
 accepted invocations, **not** a rolling count within 21 days. Adaptive retention
@@ -286,10 +293,13 @@ Omarchy menu rows show the state Omarchy's own menu shows. A row whose `when`
 guard fails is dimmed and scores half as much; a row whose `checked` condition
 holds shows ✓. Up to twelve Omarchy rows per search are checked in one bounded
 batch, cached by condition for twenty seconds. A search waits up to 120 ms for
-conditions it has never answered and otherwise uses the last answers while a
-refresh runs, so a row can briefly show the previous state. Actions are
-unchanged either way. Turn off Omarchy menu state in Settings > Search, or set
-`search.omarchyMenuState=false`, to run no conditions.
+conditions it has never run and otherwise uses the last answers while a
+refresh runs, so a row can briefly show the previous state. A batch that times
+out or fails is cached the same way: its conditions keep their last answers (or
+leave rows unmarked) and run again only once stale. Actions are unchanged
+either way. Turn off Omarchy menu state in Settings > Search to run no
+conditions; `search.omarchyMenuState=false` does the same until a choice is made
+there.
 
 ## Omarchy submenus
 
@@ -326,8 +336,9 @@ Omarchy sections according to preferences and available results. Learned
 typed-search promotion does not change Home's formula.
 
 On Home, Ctrl+Alt+Up and Ctrl+Alt+Down move the selected bookmark one place
-among the bookmarks shown, through `favorite.move` (the daemon-cached result and
-its new position, clamped to the list), and the selection follows it.
+among the bookmarks shown, and the selection follows it. `favorite.move` takes the
+daemon-cached result and the shown bookmark it trades places with
+(`targetResultId`), so bookmarks Home leaves out keep their places.
 
 Hidden items ("Don't show this" in a result's actions) are excluded on every
 catalog path inside the shared candidate-scoping clause, before any `LIMIT`,

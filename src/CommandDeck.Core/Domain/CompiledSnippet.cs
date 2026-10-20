@@ -36,7 +36,7 @@ public sealed class CompiledSnippet
             output.Append( part.Render( scope ) );
             if ( output.Length > MaximumExpandedLength )
             {
-                throw new InvalidOperationException( "Expanded snippet exceeds 128 KiB." );
+                throw new InvalidOperationException( "Expanded snippet exceeds 131,072 characters." );
             }
         }
 

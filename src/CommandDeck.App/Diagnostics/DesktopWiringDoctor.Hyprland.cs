@@ -22,6 +22,7 @@ internal sealed partial class DesktopWiringDoctor
 
     private async ValueTask<IReadOnlyList<DesktopCheck>> InspectHyprlandAsync(
         string? expectedChord,
+        string? userChord,
         CancellationToken cancellationToken )
     {
         const string binding = "Hyprland binding";
@@ -44,7 +45,7 @@ internal sealed partial class DesktopWiringDoctor
         [
             binds.Document is null
                 ? new( binding, DesktopCheckState.Skipped, binds.Problem! )
-                : InspectBinding( binds.Document, expectedChord ),
+                : InspectBinding( binds.Document, expectedChord, userChord ),
             shortcuts.Document is null
                 ? new( shortcut, DesktopCheckState.Skipped, shortcuts.Problem! )
                 : InspectShortcut( shortcuts.Document )
@@ -52,18 +53,30 @@ internal sealed partial class DesktopWiringDoctor
     }
 
     // CommandDeck's Lua bind reports dispatcher "__lua", so its description identifies it.
-    private static DesktopCheck InspectBinding( JsonDocument document, string? expectedChord )
+    // A binding the user wrote carries no CommandDeck description, so it is
+    // found by its chord.
+    private static DesktopCheck InspectBinding( JsonDocument document, string? expectedChord, string? userChord )
     {
         const string name = "Hyprland binding";
         using ( document )
         {
-            var chords = document.RootElement.EnumerateArray( )
-                .Where( static bind => bind.ValueKind == JsonValueKind.Object &&
-                    GetString( bind, "description" ) == HyprlandHotkeyConfig.BindingDescription )
+            var binds = document.RootElement.EnumerateArray( )
+                .Where( static bind => bind.ValueKind == JsonValueKind.Object ).ToList( );
+            var chords = binds
+                .Where( static bind => GetString( bind, "description" ) == HyprlandHotkeyConfig.BindingDescription )
                 .Select( FormatChord )
                 .Where( static chord => chord.Length > 0 )
                 .Distinct( StringComparer.Ordinal )
                 .ToList( );
+            if ( chords.Count == 0 && userChord is not null )
+            {
+                var canonical = Canonical( userChord );
+                return binds.Any( bind => FormatChord( bind ) == canonical )
+                    ? new( name, DesktopCheckState.Passed, $"{canonical} is active, from your binding" )
+                    : new( name, DesktopCheckState.Warning, $"Hyprland does not bind {canonical}",
+                        "Run `hyprctl reload`, then `hyprctl configerrors`." );
+            }
+
             if ( chords.Count == 0 )
             {
                 return new( name, DesktopCheckState.Warning, "Hyprland has no active CommandDeck binding",

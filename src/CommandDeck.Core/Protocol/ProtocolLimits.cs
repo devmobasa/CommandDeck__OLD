@@ -53,6 +53,7 @@ public static partial class ProtocolRequestValidator
         CheckLength( request.Operation, nameof( request.Operation ), 32 );
         CheckLength( request.Query, nameof( request.Query ), ProtocolLimits.MaximumQueryCharacters );
         CheckLength( request.ResultId, nameof( request.ResultId ), ProtocolLimits.MaximumIdentifierCharacters );
+        CheckLength( request.TargetResultId, nameof( request.TargetResultId ), ProtocolLimits.MaximumIdentifierCharacters );
         CheckLength( request.InvocationReference, nameof( request.InvocationReference ), ProtocolLimits.MaximumIdentifierCharacters );
         CheckLength( request.ActionId, nameof( request.ActionId ), ProtocolLimits.MaximumIdentifierCharacters );
         CheckLength( request.ProviderId, nameof( request.ProviderId ), ProtocolLimits.MaximumIdentifierCharacters );

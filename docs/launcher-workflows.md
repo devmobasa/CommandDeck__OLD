@@ -61,8 +61,10 @@ A placeholder is a name, then optional `key=value` options, then optional
 - `offset` lists signed steps applied in order, such as `"+1d -2h"`. Units are `m`
   (minutes), `h` (hours), `d` (days), `M` (months) and `y` (years). Days, months and
   years keep the local wall-clock time across daylight-saving changes.
-- Values can be bare (`offset=+1d`) or quoted with `"…"` or `'…'`; a backslash makes
-  the next character literal. Modifiers apply from left to right.
+- Values can be bare (`offset=+1d`) or quoted with `"…"` or `'…'`. Inside quotes a
+  backslash makes the next character literal. A bare value ends at a space, `}` or
+  `|`; a quote, backslash or `{` inside one leaves the placeholder literal.
+  Modifiers apply from left to right.
 - A repeated name, such as `{topic}` and `{topic | uppercase}`, is one form field.
   Values are inserted literally, without recursive expansion.
 - Braces that do not form a complete placeholder on one line stay literal, so JSON
@@ -80,7 +82,7 @@ row: it is never shown on Home or in suggestions, attached to AI requests, or
 offered to assistant tools.
 
 Up to 1000 snippets and 16 inputs per snippet are supported. Expanded text is
-limited to 128 KiB. Inputs and expanded text are not added to query/usage history.
+limited to 131,072 characters (UTF-16 code units). Inputs and expanded text are not added to query/usage history.
 Clipboard placeholders need `wl-paste`; copying needs `wl-copy`. The launcher does
 not synthesize keystrokes or perform automatic text expansion.
 

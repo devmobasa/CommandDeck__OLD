@@ -29,13 +29,16 @@ internal sealed partial class SqliteLauncherPreferenceStore
             }
 
             var unavailable = PrivateSources.ReferencesPrivateSource( expression );
+            var shortcut = unavailable || reader.IsDBNull( 3 ) ? null : reader.GetString( 3 );
+            var reserved = shortcut is not null && SavedSearchValidator.IsReserved( shortcut );
             searches.Add( new SavedSearch
             {
                 Id = reader.GetString( 0 ),
                 Name = !unavailable ? reader.GetString( 1 )
                     : ClipboardPrivacy.ReferencesHistory( expression ) ? "Unsupported clipboard saved search" : "Unsupported HEY saved search",
                 Expression = unavailable ? new QueryExpression( ) : QueryParser.ValidateShape( expression ),
-                Shortcut = unavailable || reader.IsDBNull( 3 ) ? null : reader.GetString( 3 ),
+                Shortcut = reserved ? null : shortcut,
+                ReservedShortcut = reserved ? shortcut : null,
                 ShowOnHome = !unavailable && reader.GetInt64( 4 ) != 0,
                 Position = reader.GetInt32( 5 ),
                 Unavailable = unavailable

@@ -53,8 +53,9 @@ function setFavorite(root, result, enabled) {
   }, { kind: Ui.MutationKind.Favorite, resultId: result.id })
 }
 
-// Ctrl+Alt+Up or Down on a Home bookmark swaps it with its neighbour; the
-// selection follows it once Home is searched again.
+// Ctrl+Alt+Up or Down on a Home bookmark swaps it with the neighbour shown
+// there, by ID, so bookmarks Home leaves out keep their places; the selection
+// follows it once Home is searched again.
 function moveFavorite(root, direction) {
   const navigation = root.part_navigation
   const result = navigation.selectedResult()
@@ -69,7 +70,7 @@ function moveFavorite(root, direction) {
   navigation.restoreSelectionId = result.id
   return root.enqueuePersonalization(Protocol.Operations.FavoriteMove, {
     resultId: result.id,
-    offset: target
+    targetResultId: bookmarks[target]
   }, { kind: Ui.MutationKind.Reorder })
 }
 

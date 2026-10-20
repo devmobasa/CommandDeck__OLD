@@ -37,8 +37,9 @@ public sealed partial class CommandDeckRuntime
                 catalog.Contributions = extensions;
                 // Settings choices about history apply before the first search,
                 // including in a CLI process that never searches.
-                catalog.History.Apply( await catalog.LauncherPreferences.GetPreferencesAsync( cancellationToken )
-                    .ConfigureAwait( false ) );
+                var historyVersion = catalog.History.Version;
+                catalog.History.ApplyRead( await catalog.LauncherPreferences.GetPreferencesAsync( cancellationToken )
+                    .ConfigureAwait( false ), historyVersion );
                 IExtensionLauncher extensionLauncher = new ExtensionSupervisor( executable, executablePrefix );
                 var extensionJournal = new FileRemoteEffectJournal( Path.Combine( extensions.ArtifactRoot, "effect-journal" ) );
                 resources.OwnDisposable( extensionJournal );

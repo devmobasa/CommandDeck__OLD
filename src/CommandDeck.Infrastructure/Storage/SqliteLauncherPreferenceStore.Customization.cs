@@ -167,72 +167,81 @@ internal sealed partial class SqliteLauncherPreferenceStore
         await using var connection = await OpenAsync( cancellationToken ).ConfigureAwait( false );
         await using var transaction =
             ( SqliteTransaction ) await connection.BeginTransactionAsync( cancellationToken ).ConfigureAwait( false );
-        await using ( var current = connection.CreateCommand( ) )
+        var existing = await ReadFavoriteOrderAsync( connection, transaction, cancellationToken ).ConfigureAwait( false );
+        if ( existing.Count != stableIds.Count ||
+            existing.Except( stableIds, StringComparer.Ordinal ).Any( ) )
         {
-            current.Transaction = transaction;
-            current.CommandText = "SELECT stable_id FROM favorites ORDER BY position;";
-            List<string> existing = [];
-            await using var reader =
-                await current.ExecuteReaderAsync( cancellationToken ).ConfigureAwait( false );
-            while ( await reader.ReadAsync( cancellationToken ).ConfigureAwait( false ) )
-            {
-                existing.Add( reader.GetString( 0 ) );
-            }
-
-            if ( existing.Count != stableIds.Count ||
-                existing.Except( stableIds, StringComparer.Ordinal ).Any( ) )
-            {
-                throw new InvalidOperationException( "Favorite order must contain every current favorite exactly once." );
-            }
+            throw new InvalidOperationException( "Favorite order must contain every current favorite exactly once." );
         }
 
+        await WriteFavoriteOrderAsync( connection, transaction, stableIds, cancellationToken ).ConfigureAwait( false );
+        await transaction.CommitAsync( cancellationToken ).ConfigureAwait( false );
+    }
+
+    // The order is read and written in one transaction, so a move made
+    // meanwhile is never overwritten.
+    public async ValueTask MoveFavoriteAsync(
+        SearchResult result,
+        SearchResult target,
+        CancellationToken cancellationToken )
+    {
+        EnsureCustomizable( result );
+        EnsureCustomizable( target );
+
+        await using var connection = await OpenAsync( cancellationToken ).ConfigureAwait( false );
+        await using var transaction =
+            ( SqliteTransaction ) await connection.BeginTransactionAsync( cancellationToken ).ConfigureAwait( false );
+        var order = await ReadFavoriteOrderAsync( connection, transaction, cancellationToken ).ConfigureAwait( false );
+        var index = order.IndexOf( StableCustomizationId( result ) );
+        var targetIndex = order.IndexOf( StableCustomizationId( target ) );
+        if ( index < 0 || targetIndex < 0 )
+        {
+            throw new InvalidOperationException( "Both results must be bookmarked." );
+        }
+
+        (order[index], order[targetIndex]) = (order[targetIndex], order[index]);
+        await WriteFavoriteOrderAsync( connection, transaction, order, cancellationToken ).ConfigureAwait( false );
+        await transaction.CommitAsync( cancellationToken ).ConfigureAwait( false );
+    }
+
+    private static async ValueTask<List<string>> ReadFavoriteOrderAsync(
+        SqliteConnection connection,
+        SqliteTransaction transaction,
+        CancellationToken cancellationToken )
+    {
+        List<string> order = [];
+        await using var command = connection.CreateCommand( );
+        command.Transaction = transaction;
+        command.CommandText = "SELECT stable_id FROM favorites ORDER BY position;";
+        await using var reader = await command.ExecuteReaderAsync( cancellationToken ).ConfigureAwait( false );
+        while ( await reader.ReadAsync( cancellationToken ).ConfigureAwait( false ) )
+        {
+            order.Add( reader.GetString( 0 ) );
+        }
+
+        return order;
+    }
+
+    private static async ValueTask WriteFavoriteOrderAsync(
+        SqliteConnection connection,
+        SqliteTransaction transaction,
+        IReadOnlyList<string> order,
+        CancellationToken cancellationToken )
+    {
         await SqliteCatalog.ExecuteNonQueryAsync(
             connection,
             transaction,
             "UPDATE favorites SET position = -position;",
             cancellationToken ).ConfigureAwait( false );
-        for ( var index = 0; index < stableIds.Count; index++ )
+        for ( var index = 0; index < order.Count; index++ )
         {
             await using var update = connection.CreateCommand( );
             update.Transaction = transaction;
             update.CommandText = "UPDATE favorites SET position = $position WHERE stable_id = $id;";
             update.Parameters.AddWithValue( "$position", index + 1 );
-            update.Parameters.AddWithValue( "$id", stableIds[index] );
+            update.Parameters.AddWithValue( "$id", order[index] );
             await update.ExecuteNonQueryAsync( cancellationToken ).ConfigureAwait( false );
         }
-
-        await transaction.CommitAsync( cancellationToken ).ConfigureAwait( false );
-    }
-
-    public async ValueTask MoveFavoriteAsync(
-        SearchResult result,
-        int position,
-        CancellationToken cancellationToken )
-    {
-        EnsureCustomizable( result );
-        var stableId = StableCustomizationId( result );
-
-        List<string> order = [];
-        await using ( var connection = await OpenAsync( cancellationToken ).ConfigureAwait( false ) )
-        {
-            await using var command = connection.CreateCommand( );
-            command.CommandText = "SELECT stable_id FROM favorites ORDER BY position;";
-            await using var reader = await command.ExecuteReaderAsync( cancellationToken ).ConfigureAwait( false );
-            while ( await reader.ReadAsync( cancellationToken ).ConfigureAwait( false ) )
-            {
-                order.Add( reader.GetString( 0 ) );
-            }
-        }
-
-        var index = order.IndexOf( stableId );
-        if ( index < 0 )
-        {
-            throw new InvalidOperationException( "This result is not bookmarked." );
-        }
-
-        order.RemoveAt( index );
-        order.Insert( Math.Clamp( position, 0, order.Count ), stableId );
-        await ReorderFavoritesAsync( order, cancellationToken ).ConfigureAwait( false );
     }
 
     public async ValueTask<SearchResult?> FindAliasAsync(

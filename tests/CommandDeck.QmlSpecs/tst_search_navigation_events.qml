@@ -253,6 +253,10 @@ EventPathFixture {
       field.pillTarget = target()
       compare(pills.fieldAt(1).text, "Ana", "a refresh of the same result keeps typed values")
       verify(pills.fieldAt(1).activeFocus)
+      keyClick(Qt.Key_Tab)
+      verify(field.settingsControl.activeFocus, "Tab from the last pill reaches Settings")
+      keyClick(Qt.Key_Backtab)
+      verify(pills.fieldAt(1).activeFocus, "Shift+Tab from Settings returns to the last pill")
       keyClick(Qt.Key_Backtab)
       verify(pills.fieldAt(0).activeFocus)
       keyClick(Qt.Key_Backtab)
@@ -271,6 +275,9 @@ EventPathFixture {
       compare(pills.fieldAt(0).text, "", "another result starts empty")
       field.pillTarget = null
       compare(pills.count, 0)
+      field.settingsControl.forceActiveFocus()
+      keyClick(Qt.Key_Backtab)
+      verify(field.inputControl.activeFocus, "without pills Shift+Tab from Settings returns to the query")
       keyClick(Qt.Key_Return)
       compare(fixture.part_controller.primaryCalls, 1, "without pills Enter runs the primary action")
     }

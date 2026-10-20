@@ -9,8 +9,10 @@ namespace CommandDeck;
 // bash conditions from Omarchy's own menu files, the same trust as the row's
 // action. Like Omarchy's menu, the conditions a search needs run as one login
 // bash batch, bounded in time, memory and output, and answers are cached by
-// condition text. A search waits briefly for a fresh batch and otherwise uses
-// the previous answers while a refresh runs; the query is never passed in.
+// condition text. A search waits briefly for a condition it has never run and
+// otherwise uses the previous answers while a refresh runs; the query is never
+// passed in. A batch that answers nothing (it timed out or failed) is cached
+// too, so a broken condition runs again only once its answer is stale.
 // Disposal cancels a batch still running.
 public sealed class OmarchyMenuState : IDisposable
 {
@@ -29,7 +31,8 @@ public sealed class OmarchyMenuState : IDisposable
     private readonly ConcurrentDictionary<string, Task> _pending = new( StringComparer.Ordinal );
     private readonly CancellationTokenSource _shutdown = new( );
 
-    private readonly record struct Answer( bool Holds, DateTimeOffset At );
+    // Holds is null when the condition has never answered.
+    private readonly record struct Answer( bool? Holds, DateTimeOffset At );
 
     // `enabled` is asked on every search, so turning the state off in Settings
     // stops running conditions from the next search on.
@@ -89,8 +92,8 @@ public sealed class OmarchyMenuState : IDisposable
     {
         var when = Condition( result, WhenKey );
         var checkedCondition = Condition( result, CheckedKey );
-        var unavailable = when is not null && _answers.TryGetValue( when, out var guard ) && !guard.Holds;
-        var isChecked = checkedCondition is not null && _answers.TryGetValue( checkedCondition, out var mark ) && mark.Holds;
+        var unavailable = when is not null && _answers.TryGetValue( when, out var guard ) && guard.Holds == false;
+        var isChecked = checkedCondition is not null && _answers.TryGetValue( checkedCondition, out var mark ) && mark.Holds == true;
         if ( !unavailable && !isChecked )
         {
             return result;
@@ -116,40 +119,41 @@ public sealed class OmarchyMenuState : IDisposable
         return string.IsNullOrWhiteSpace( value ) || value.Length > MaximumConditionLength ? null : value;
     }
 
-    // One batch per set of conditions not already being evaluated; a condition
-    // in flight is never started twice.
+    // One batch for the conditions this call claims; a condition another
+    // search already has in flight is never started twice. The returned task
+    // completes when every condition's batch has.
     private Task Refresh( string[] conditions )
     {
-        var fresh = conditions.Where( condition => !_pending.ContainsKey( condition ) ).ToArray( );
-        if ( fresh.Length == 0 )
-        {
-            return Task.WhenAll( conditions.Select( condition => _pending.GetValueOrDefault( condition ) ?? Task.CompletedTask ) );
-        }
-
-        // Registered before the batch starts, so a fast batch cannot finish
-        // first and leave its conditions marked in flight for good.
+        // Claimed before the batch starts, so a fast batch cannot finish first
+        // and leave its conditions marked in flight for good.
         TaskCompletionSource done = new( TaskCreationOptions.RunContinuationsAsynchronously );
-        foreach ( var condition in fresh )
+        var claimed = conditions.Where( condition => _pending.TryAdd( condition, done.Task ) ).ToArray( );
+        if ( claimed.Length > 0 )
         {
-            _pending[condition] = done.Task;
+            _ = Task.Run( async ( ) =>
+            {
+                try
+                {
+                    await EvaluateAsync( claimed ).ConfigureAwait( false );
+                }
+                finally
+                {
+                    foreach ( var condition in claimed )
+                    {
+                        _pending.TryRemove( KeyValuePair.Create( condition, done.Task ) );
+                    }
+
+                    done.TrySetResult( );
+                }
+            } );
         }
 
-        _ = Task.Run( async ( ) =>
-        {
-            try
-            {
-                await EvaluateAsync( fresh ).ConfigureAwait( false );
-            }
-            finally
-            {
-                done.TrySetResult( );
-            }
-        } );
-        return done.Task;
+        return Task.WhenAll( conditions.Select( condition => _pending.GetValueOrDefault( condition ) ?? Task.CompletedTask ) );
     }
 
     private async Task EvaluateAsync( string[] conditions )
     {
+        var answered = new bool[conditions.Length];
         try
         {
             var result = await _run( "/bin/bash", ["-lc", Script( conditions )], BatchTimeout, new ProcessExecutionLimits
@@ -163,17 +167,24 @@ public sealed class OmarchyMenuState : IDisposable
             foreach ( var (index, holds) in Parse( result.StandardOutput, conditions.Length ) )
             {
                 _answers[conditions[index]] = new Answer( holds, now );
+                answered[index] = true;
             }
         }
         catch ( Exception exception ) when ( exception is not OutOfMemoryException )
         {
             // An unanswered condition leaves its rows as they are.
         }
-        finally
+
+        // An unanswered condition keeps its last answer, freshly dated, so it
+        // is not run again until that is stale.
+        var at = _time.GetUtcNow( );
+        for ( var index = 0; index < conditions.Length; index++ )
         {
-            foreach ( var condition in conditions )
+            if ( !answered[index] )
             {
-                _pending.TryRemove( condition, out _ );
+                _answers[conditions[index]] = _answers.TryGetValue( conditions[index], out var previous )
+                    ? previous with { At = at }
+                    : new Answer( null, at );
             }
         }
     }

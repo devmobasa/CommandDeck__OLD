@@ -223,12 +223,20 @@ ScrollView {
           readonly property alias runControl: runSavedSearchButton
           readonly property alias editControl: editSavedSearchButton
           readonly property alias deleteControl: deleteSavedSearchButton
+          // A shortcut CommandDeck reserved after it was saved no longer runs
+          // the search.
+          readonly property string reservedNote: savedSearchRow.modelData.reservedShortcut
+            ? String(savedSearchRow.modelData.reservedShortcut) + " is reserved by CommandDeck; edit to choose another"
+            : ""
+          readonly property string shortcutText: savedSearchRow.modelData.shortcut
+            ? String(savedSearchRow.modelData.shortcut) : savedSearchRow.reservedNote
           Layout.fillWidth: true
           Layout.preferredHeight: Math.round(44 * filtersScroll.host.theme.scale)
           spacing: Math.round(8 * filtersScroll.host.theme.scale)
           Accessible.role: Accessible.ListItem
           Accessible.name: savedSearchRow.modelData.name
-            + (savedSearchRow.modelData.shortcut ? ", shortcut " + savedSearchRow.modelData.shortcut : "")
+            + (savedSearchRow.modelData.shortcut ? ", shortcut " + savedSearchRow.modelData.shortcut
+              : savedSearchRow.reservedNote ? ", " + savedSearchRow.reservedNote : "")
 
           ColumnLayout {
             Layout.fillWidth: true
@@ -249,8 +257,8 @@ ScrollView {
               Layout.fillWidth: true
               visible: text.length > 0
               textFormat: Text.PlainText
-              text: (savedSearchRow.modelData.shortcut ? String(savedSearchRow.modelData.shortcut) : "")
-                + (savedSearchRow.modelData.showOnHome ? (savedSearchRow.modelData.shortcut ? " · " : "") + "On Home" : "")
+              text: savedSearchRow.shortcutText
+                + (savedSearchRow.modelData.showOnHome ? (savedSearchRow.shortcutText ? " · " : "") + "On Home" : "")
               color: filtersScroll.host.theme.textFaint
               font.family: filtersScroll.host.theme.fontFamily
               font.pixelSize: filtersScroll.host.theme.fontSmall

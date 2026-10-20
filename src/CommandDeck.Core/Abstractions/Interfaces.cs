@@ -183,11 +183,11 @@ public interface ILauncherPreferenceStore : ILauncherSearchPreferences
     ValueTask ReorderFavoritesAsync(
         IReadOnlyList<string> stableIds,
         CancellationToken cancellationToken );
-    // Moves one bookmarked result to a zero-based position among bookmarks,
-    // clamped to the list; the others keep their order.
+    // Swaps two bookmarks' places, so a result moves one place among the
+    // bookmarks a view shows; bookmarks between them keep theirs.
     ValueTask MoveFavoriteAsync(
         SearchResult result,
-        int position,
+        SearchResult target,
         CancellationToken cancellationToken );
     ValueTask<CustomizationResult> RemoveOrphanAsync(
         string customizationId,

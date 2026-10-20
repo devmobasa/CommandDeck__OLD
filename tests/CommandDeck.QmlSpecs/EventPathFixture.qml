@@ -1,7 +1,6 @@
 import QtQuick
 import QtTest
 import "../../qml/common" as CommandDeck
-import "../../qml/common/Protocol.js" as Protocol
 import "../../qml/common/UiConstants.js" as Ui
 
 Item {
@@ -378,66 +377,9 @@ Item {
     ])
   }
 
-  CommandDeck.AgentSurface {
+  EventAgentSurface {
     id: agentEventSurface
-    anchors.fill: parent
-    z: 140
-    theme: theme
-    controller: agentEventController
-    opened: false
-    property int requestSequence: 900
-    property int backToSearchCount: 0
-    property int dismissCount: 0
-    property int cancelCount: 0
-    property string submitted: ""
-    property var decisions: []
-    property string answeredPendingId: ""
-    property string answeredText: ""
-    property string loginMethod: ""
-    property string submittedLoginCode: ""
-    property int enableCount: 0
-    property int copyCodeCount: 0
-    property int openLoginCount: 0
-    property int backendSettingsCount: 0
-    property string requestedOutputAction: ""
-    onBackToSearch: backToSearchCount++
-    onDismissed: {
-      dismissCount++
-      opened = false
-    }
-    onCancelRequested: {
-      cancelCount++
-      agentEventController.cancelTurn(++requestSequence)
-    }
-    onLoginCodeSubmitted: code => submittedLoginCode = code
-    onSubmitRequested: text => {
-      submitted = text
-      agentEventController.startTurn(++requestSequence, text, "")
-    }
-    onDecisionRequested: (pendingId, decision) => {
-      decisions = decisions.concat([pendingId + ":" + decision])
-      agentEventController.resolve(++requestSequence, pendingId, decision)
-    }
-    onAnswerRequested: (pendingId, answers) => {
-      answeredPendingId = pendingId
-      answeredText = String(answers["question-1"] || "")
-      agentEventController.answer(++requestSequence, pendingId, answers)
-    }
-    onLoginRequested: method => {
-      loginMethod = method
-      agentEventController.startLogin(++requestSequence, method, "")
-    }
-    onEnableRequested: enableCount++
-    onCopyCodeRequested: {
-      copyCodeCount++
-      agentEventController.invokeLoginAction(++requestSequence, Protocol.AgentLoginActionIds.CopyCode, "agent:login")
-    }
-    onOpenLoginPageRequested: {
-      openLoginCount++
-      agentEventController.invokeLoginAction(++requestSequence, Protocol.AgentLoginActionIds.OpenUrl, "agent:login")
-    }
-    onBackendSettingsRequested: backendSettingsCount++
-    onOutputRequested: (action, path, token) => requestedOutputAction = action
+    host: root
   }
 
   EventSettingsPanel {

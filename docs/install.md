@@ -156,7 +156,8 @@ edited file is first copied to `$XDG_STATE_HOME/commanddeck/binding-backups/`.
 The command also removes the `-- BEGIN COMMANDDECK CTRL SPACE` block that earlier
 installers appended to `~/.config/hypr/bindings.lua`. If `bindings.lua` already
 binds the chord to CommandDeck itself, the command leaves your binding in place
-and writes nothing. Validate Ctrl+Space before choosing a replacement for your
+and writes nothing; for the default chord, `commanddeck doctor` then accepts that
+binding instead of the module. Validate Ctrl+Space before choosing a replacement for your
 desktop's existing Super+Space binding.
 
 ## Check and troubleshoot

@@ -551,8 +551,9 @@ explicitly through the `clip:` workflow. Its persistent opt-in and bounded
 private store are described in [clipboard history](launcher-workflows.md#clipboard-history);
 `persistClipboard` is not the capture toggle.
 
-When `storeQueryHistory=false`, successful invocations record no raw query.
-When `storeUsageHistory=false`, no invocation event is written at all.
+Unless Settings overrides them (below), `storeQueryHistory=false` means successful
+invocations record no raw query, and `storeUsageHistory=false` means they record
+no usage.
 
 These are defaults that Settings can override without editing this file:
 **Remember searches** (Customization > Data) overrides `storeQueryHistory`,

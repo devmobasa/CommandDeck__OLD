@@ -233,6 +233,7 @@ Generated from Core protocol constants and registries. Run `scripts/generate-pro
 - `StableIds`
 - `TargetFilterId`
 - `TargetRequestId`
+- `TargetResultId`
 - `TrustDuration`
 - `TrustLevel`
 - `TurnId`

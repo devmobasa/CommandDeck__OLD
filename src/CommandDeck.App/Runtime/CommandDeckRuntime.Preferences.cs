@@ -9,8 +9,9 @@ public sealed partial class CommandDeckRuntime
         bool includeShortcuts,
         CancellationToken cancellationToken )
     {
+        var historyVersion = _history.Version;
         var snapshot = await _preferences.GetSnapshotAsync( includeShortcuts, cancellationToken ).ConfigureAwait( false );
-        _history.Apply( snapshot.Preferences );
+        _history.ApplyRead( snapshot.Preferences, historyVersion );
         return new PreferencesSnapshot
         {
             Preferences = snapshot.Preferences,
@@ -143,12 +144,13 @@ public sealed partial class CommandDeckRuntime
         CancellationToken cancellationToken ) =>
         _preferences.ReorderFavoritesAsync( stableIds, cancellationToken );
 
-    // Like bookmarking, the target is the daemon-cached result.
+    // Like bookmarking, both bookmarks are daemon-cached results.
     public ValueTask MoveFavoriteAsync(
         string resultId,
-        int position,
+        string targetResultId,
         CancellationToken cancellationToken ) =>
-        _preferences.MoveFavoriteAsync( GetCustomizableCachedResult( resultId ), position, cancellationToken );
+        _preferences.MoveFavoriteAsync( GetCustomizableCachedResult( resultId ),
+            GetCustomizableCachedResult( targetResultId ), cancellationToken );
 
     public ValueTask<CustomizationExport> ExportCustomizationsAsync(
         CancellationToken cancellationToken ) =>

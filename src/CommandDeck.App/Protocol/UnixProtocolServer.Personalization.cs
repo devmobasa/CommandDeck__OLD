@@ -300,7 +300,8 @@ public sealed partial class UnixProtocolServer
         CancellationToken cancellationToken )
     {
         var resultId = RequireValue( request.ResultId, "favorite.move requires resultId." );
-        await _runtime.MoveFavoriteAsync( resultId, request.Offset, cancellationToken ).ConfigureAwait( false );
+        var targetResultId = RequireValue( request.TargetResultId, "favorite.move requires targetResultId." );
+        await _runtime.MoveFavoriteAsync( resultId, targetResultId, cancellationToken ).ConfigureAwait( false );
         return new ProtocolMessage
         {
             RequestId = request.RequestId,
