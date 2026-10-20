@@ -272,8 +272,9 @@ configured timeout. A history failure preserves the successful outcome and outpu
 an explicit history-not-saved message; it never retries the launch. Exactly once
 means once per accepted executor call, not cross-request deduplication.
 
-`learnFromInvocations`, `ranking.adaptive.enabled`, and `privacy.storeUsageHistory`
-all gate usage writes. Query history is independently optional and cannot
+`ranking.adaptive.enabled` and the **Learn from what you open** choice gate usage
+writes. Until that choice is made in Settings, it follows `learnFromInvocations`
+and `privacy.storeUsageHistory` together. Query history is independently optional and cannot
 re-enable usage writes. Invocation events never retain query text; opted-in query
 history uses its separate bounded table. The usage count is an aggregate of
 accepted invocations, **not** a rolling count within 21 days. Adaptive retention
@@ -296,8 +297,9 @@ conditions it has never run and otherwise uses the last answers while a
 refresh runs, so a row can briefly show the previous state. A batch that times
 out or fails is cached the same way: its conditions keep their last answers (or
 leave rows unmarked) and run again only once stale. Actions are unchanged
-either way. Turn off Omarchy menu state in Settings > Search, or set
-`search.omarchyMenuState=false`, to run no conditions.
+either way. Turn off Omarchy menu state in Settings > Search to run no
+conditions; `search.omarchyMenuState=false` does the same until a choice is made
+there.
 
 ## Omarchy submenus
 

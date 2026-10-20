@@ -37,7 +37,8 @@ authority. Command/script definitions remain trusted user configuration.
 
 Omarchy menu rows can carry `when` and `checked` bash conditions from Omarchy's
 own menu files and your menu extension file, the same trust as the row's action.
-With `search.omarchyMenuState` on (the default), the conditions of the first
+With Omarchy menu state on (Settings > Search; until chosen there it follows
+`search.omarchyMenuState`, which is on by default), the conditions of the first
 Omarchy rows a search returns run as one login bash batch: each in its own
 subshell with stdin from `/dev/null` and output discarded, the batch limited to
 five seconds, 256 MiB and bounded output, and cancelled on shutdown. The query is
