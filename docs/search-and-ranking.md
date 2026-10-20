@@ -144,6 +144,21 @@ retrieval. Fuzzy matching supports exact, prefix, word-boundary, acronym, typo,
 and subsequence matches, including Latin diacritic folding. These weaker matches
 can remain useful in groups without qualifying for learned promotion.
 
+### Typed URLs
+
+When a plain or `web:` search is one web address, the Web Search source offers
+**Open <url>** as an explicit Top Match, with **Copy URL** in its actions.
+Only `http://` and `https://` count. Text without a scheme gets `https://` and
+needs a port, a path, or a `www.` host: `github.com/devmobasa` and
+`localhost:8080` open, while `notes.md`, `1.5`, and `example.com` stay searches.
+The host must parse unchanged as a dotted name ending in letters, `localhost`,
+or a four-part IPv4 address. Text with spaces, user info, non-ASCII characters,
+or another scheme is never a URL. Type `http://` for a server without TLS.
+Turning off Web Search or using another filter removes the row. Nothing is
+fetched. Accepted use is recorded under one fixed ID, never the address; query
+history keeps the typed text only when it is on. Quicklinks stay JSONC
+configuration, so a typed URL cannot be saved as one.
+
 ## Final score and frequency
 
 The coordinator combines the provider score (weight 0.82), best weighted field
@@ -181,7 +196,8 @@ The `top-match` section is titled **Top Matches** and holds at most three result
 bounded further by the request limit and each source's allowance. Its ordered
 tiers are:
 
-1. **Explicit:** exact aliases and calculator results supplied in valid modes.
+1. **Explicit:** exact aliases, calculator results supplied in valid modes, and
+   [typed URLs](#typed-urls). An exact alias comes first in this tier.
 2. **Exact:** case-insensitive exact trimmed title or path basename.
 3. **Learned:** a strong title/basename match with at least two accepted uses and
    last use no more than 21 days ago, inclusive.

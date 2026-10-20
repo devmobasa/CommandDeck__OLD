@@ -17,6 +17,12 @@ public sealed partial class SearchCoordinator
     private static string UsageId( SearchResult result ) =>
         result.Metadata.GetValueOrDefault( ResultMetadataKeys.CatalogResultId, result.Id );
 
+    // Exact aliases, calculator results, and rows a provider places explicitly
+    // (a typed URL) answer the query itself rather than match it.
+    private static bool IsExplicitIntent( SearchResult result ) =>
+        result.Metadata.ContainsKey( ResultMetadataKeys.ExactAlias ) || result.Kind == ResultKinds.Calculator ||
+        ResultPlacements.IsExplicit( result );
+
     private static bool StrongTitleMatch( SearchResult result, ParsedQuery query )
     {
         var positive = query.Expression.Clauses.Where( static clause => !clause.Excluded ).ToArray( );
@@ -133,7 +139,7 @@ public sealed partial class SearchCoordinator
         var age = signal.LastUsedUnixMilliseconds > 0
             ? Math.Max( 0, (now.ToUnixTimeMilliseconds( ) - signal.LastUsedUnixMilliseconds) / 86_400_000d )
             : double.PositiveInfinity;
-        if ( result.Metadata.ContainsKey( ResultMetadataKeys.ExactAlias ) || result.Kind == ResultKinds.Calculator )
+        if ( IsExplicitIntent( result ) )
         {
             tier = PromotionTier.Explicit;
             reason = "Explicit intent";
@@ -178,7 +184,10 @@ public sealed partial class SearchCoordinator
         var target = Math.Min( pageSize, Math.Min( _options.Ranking.MinimumSourcesOnFirstPage,
             results.Select( static result => result.SourceId ).Distinct( ).Count( ) ) );
         var entries = results.Select( result => ClassifyPromotion( result, query, usage, learnedQueries, now ) ).ToArray( );
+        // An exact alias leads the explicit tier even when a source weight lifts
+        // another explicit row, such as a typed URL, to the same capped score.
         var ordered = entries.OrderBy( static entry => entry.Tier )
+            .ThenByDescending( static entry => entry.Result.Metadata.ContainsKey( ResultMetadataKeys.ExactAlias ) )
             .ThenByDescending( static entry => entry.Result.Score ).ThenByDescending( static entry => entry.Tie )
             .ThenBy( static entry => ResultTitleOrderKey( entry.Result ), StringComparer.OrdinalIgnoreCase )
             .ThenBy( static entry => entry.Result.Id, StringComparer.Ordinal ).ToArray( );

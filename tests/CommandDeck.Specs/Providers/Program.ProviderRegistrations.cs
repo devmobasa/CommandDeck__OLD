@@ -177,6 +177,20 @@ public static partial class Program
         await RunAsync(
             "web-search stays off bare Home and wires its base filter",
             WebSearchProviderStaysOffHomeAndWiresFilterAsync );
+        Run( "typed URL detection accepts web addresses and rejects files versions emails and paths",
+            TypedUrlDetectionAcceptsAddressesAndRejectsLookalikes );
+        await RunAsync(
+            "typed URL row opens and copies the address from the web-search source",
+            TypedUrlRowOpensAndCopiesTheAddressAsync );
+        await RunAsync(
+            "typed URL ranks first in Top Matches but never above an exact alias",
+            TypedUrlRanksFirstButNeverAboveAnExactAliasAsync );
+        await RunAsync(
+            "typed URL follows the web-search source switch and explicit filters",
+            TypedUrlFollowsTheWebSourceAndExplicitFiltersAsync );
+        await RunAsync(
+            "typed URL invocation records usage under a fixed id without the address",
+            TypedUrlInvocationStoresNoAddressAsync );
         await RunAsync(
             "emoji provider matches by name and keyword and copies the glyph",
             EmojiProviderMatchesByNameAndKeywordAndCopiesGlyphAsync );

@@ -167,6 +167,7 @@ interaction. Settings controls which sources appear in Search and Home.
 | `link: github` | Quicklinks |
 | `tz: tokyo` / `time: 3pm london to tokyo` | Time zones |
 | `web: wayland layer shell` | Web search |
+| `github.com/devmobasa` | Open a typed URL directly, no prefix needed |
 | `emoji: rocket` | Emoji |
 | `ctl: volume` | Desktop controls: volume, media, Wi-Fi, Bluetooth, color picker, window placement |
 | `kill: firefox` | Your own processes, to terminate or force kill after confirmation |

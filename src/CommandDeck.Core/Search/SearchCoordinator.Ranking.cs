@@ -75,7 +75,7 @@ public sealed partial class SearchCoordinator
             return false;
         }
 
-        if ( result.Metadata.ContainsKey( ResultMetadataKeys.ExactAlias ) || result.Kind == ResultKinds.Calculator )
+        if ( IsExplicitIntent( result ) )
         {
             return true;
         }
