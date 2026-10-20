@@ -220,4 +220,30 @@ TestCase {
     compare(divertedSpy.count, 1)
     compare(sent.length, 0)
   }
+
+  function test_keep_search_requires_the_current_query_to_be_classified_nonprivate() {
+    session.query = "ordinary"
+    session.search()
+    const ordinary = session.activeRequestId
+    verify(!session.canKeepSearch, "an unfinished search cannot be kept")
+    session.handleMessage({ type: Protocol.Messages.Done, requestId: ordinary,
+      searchCompletion: { containsPrivateQuery: false } })
+    verify(session.canKeepSearch, "the daemon classified this query as nonprivate")
+
+    session.query = "@hey private-token"
+    verify(!session.canKeepSearch, "the previous query's classification never applies to an edit")
+    session.search()
+    verify(!session.handleMessage({ type: Protocol.Messages.Done, requestId: ordinary,
+      searchCompletion: { containsPrivateQuery: false } }))
+    session.handleMessage({ type: Protocol.Messages.Done, requestId: session.activeRequestId,
+      searchCompletion: { containsPrivateQuery: true } })
+    verify(!session.canKeepSearch, "a private query is never kept")
+
+    session.query = "ordinary"
+    session.search()
+    reply(session.activeRequestId, [])
+    verify(!session.canKeepSearch, "a reply without classification cannot permit retention")
+    session.clear()
+    verify(!session.canKeepSearch)
+  }
 }

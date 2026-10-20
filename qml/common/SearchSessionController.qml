@@ -37,6 +37,8 @@ QtObject {
   property int committedRequestId: 0
   property string activeIdentity: ""
   property string committedIdentity: ""
+  property string retainableIdentity: ""
+  readonly property bool canKeepSearch: retainableIdentity.length > 0 && retainableIdentity === currentIdentity()
   // Set when a search runs long enough to show loading feedback.
   property bool pending: false
   property bool inFlight: false
@@ -162,6 +164,7 @@ QtObject {
   function begin(requestId, identity) {
     activeRequestId = requestId
     activeIdentity = identity
+    retainableIdentity = ""
     pendingResults = []
     pending = false
     inFlight = true
@@ -185,6 +188,8 @@ QtObject {
 
     if (message.type === Protocol.Messages.Done) {
       inFlight = false
+      retainableIdentity = message.searchCompletion && message.searchCompletion.containsPrivateQuery === false
+        ? activeIdentity : ""
       commitDelay.stop()
       commit(true)
       finished(message.searchCompletion)
@@ -193,6 +198,7 @@ QtObject {
 
     if (message.type === Protocol.Messages.Error) {
       activeRequestId = 0
+      retainableIdentity = ""
       inFlight = false
       pending = false
       commitDelay.stop()
@@ -241,6 +247,7 @@ QtObject {
     committedRequestId = 0
     activeIdentity = ""
     committedIdentity = ""
+    retainableIdentity = ""
     pending = false
     inFlight = false
     stale = false

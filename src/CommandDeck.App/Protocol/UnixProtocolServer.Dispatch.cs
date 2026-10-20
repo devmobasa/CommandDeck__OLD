@@ -303,7 +303,10 @@ public sealed partial class UnixProtocolServer
                 search.Results.Count,
                 SearchLogging.CompletedStatus );
             await writer.DoneAsync( context.RequestId,
-                new SearchCompletion( search.IsComplete, search.IncompleteProviderCount ) )
+                new SearchCompletion( search.IsComplete, search.IncompleteProviderCount )
+                {
+                    ContainsPrivateQuery = !searchRequest.IsPrivacyClassified || searchRequest.ContainsPrivateQuery
+                } )
                 .ConfigureAwait( false );
         }
         catch ( OperationCanceledException ) when ( cancellationToken.IsCancellationRequested )

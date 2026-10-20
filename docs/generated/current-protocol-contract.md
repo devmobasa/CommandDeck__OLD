@@ -295,6 +295,12 @@ Generated from Core protocol constants and registries. Run `scripts/generate-pro
 - `Type`
 - `Version`
 
+## Search completion fields
+
+- `Complete`
+- `ContainsPrivateQuery`
+- `IncompleteProviderCount`
+
 ## Query expression fields
 
 - `Clauses`

@@ -19,6 +19,9 @@ boundary against every process already running as the same user.
   search and payload retention remain unchanged. Older binaries cannot reopen
   schema 4; downgrading requires a compatible pre-upgrade backup.
 - HEY results use transient memory caching. HEY owns its credential and login.
+- Keeping the last search requires the daemon to classify the current query as
+  nonprivate. Private provider syntax, mixed queries and aliases are excluded;
+  an unfinished or unclassified search is not kept.
 - Clipboard and HEY queries/results are excluded from assistant tools, AI context,
   query/learning history, saved searches, suggestions, and Home.
 - Direct AI and the assistant are disabled until enabled. Provider configuration

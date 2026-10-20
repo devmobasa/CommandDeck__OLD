@@ -144,7 +144,7 @@ function keptSearch(root) {
   const forget = root.forgetSearchOnClose
   root.forgetSearchOnClose = false
   const filters = root.activeFilters || []
-  if (forget || root.keepSearchSeconds <= 0 || root.browseDirectory.length > 0
+  if (forget || root.keepSearchSeconds <= 0 || !root.part_searchSession.canKeepSearch || root.browseDirectory.length > 0
       || root.part_navigation.herdrWorkspaceId.length > 0
       || root.part_navigation.omarchyMenuId.length > 0
       || (root.queryText.length === 0 && filters.length === 0)

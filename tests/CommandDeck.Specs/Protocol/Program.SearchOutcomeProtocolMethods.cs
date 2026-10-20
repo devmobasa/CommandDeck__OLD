@@ -15,7 +15,9 @@ public static partial class Program
             };
             SqliteCatalog catalog = new( options.Storage );
             await catalog.InitializeAsync( default );
-            SearchCoordinator search = new( [new FailingSearchProvider( )], options.Search );
+            await catalog.LauncherPreferences.SetFilterAliasAsync( "inboxq", SourceIds.Hey, default );
+            SearchCoordinator search = new( [new FailingSearchProvider( )], options.Search,
+                catalog, catalog.LauncherPreferences );
             await using var runtime = InvocationFixture( options, catalog, catalog.UsageHistory,
                 new AcceptanceExecutor( ), search );
             var socket = Path.Combine( root, "daemon.sock" );
@@ -39,6 +41,8 @@ public static partial class Program
                 True( messages.All( static message =>
                     !ProtocolJson.SerializeMessage( message ).Contains( "private synthetic error", StringComparison.Ordinal ) ),
                     "search completion must not expose provider exception text" );
+
+                await VerifySearchCompletionPrivacyAsync( client );
             }
             finally
             {
@@ -49,6 +53,33 @@ public static partial class Program
         finally
         {
             Directory.Delete( root, recursive: true );
+        }
+    }
+
+    private static async Task VerifySearchCompletionPrivacyAsync( UnixProtocolClient client )
+    {
+        foreach ( var (query, isPrivate) in new[]
+        {
+            ("ordinary", false),
+            ("@hey private-token", true),
+            ("notes hey:private-token", true),
+            ("notes inboxq:private-token", true),
+            ("file: -clip: notes", true)
+        } )
+        {
+            await client.SendAsync( new ProtocolRequest
+            {
+                RequestId = 2,
+                Operation = ProtocolOperations.Search,
+                Query = query
+            }, default );
+            var completed = (await CollectUntilDoneAsync( client, 2 ))
+                .Single( static message => message.Type == ProtocolMessageTypes.Done );
+            using var json = System.Text.Json.JsonDocument.Parse( ProtocolJson.SerializeMessage( completed ) );
+            True( json.RootElement.GetProperty( "searchCompletion" )
+                .TryGetProperty( "containsPrivateQuery", out var privacy ),
+                "search completion must classify the query before the frontend may retain it" );
+            Equal( isPrivate, privacy.GetBoolean( ) );
         }
     }
 }

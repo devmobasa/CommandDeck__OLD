@@ -204,4 +204,8 @@ public sealed class ProtocolMessage
     public PackageCommitResult? PackageCommit { get; init; }
 }
 
-public sealed record SearchCompletion( bool Complete, int IncompleteProviderCount );
+public sealed record SearchCompletion( bool Complete, int IncompleteProviderCount )
+{
+    // Retention requires an explicit nonprivate classification from the daemon.
+    public bool ContainsPrivateQuery { get; init; } = true;
+}

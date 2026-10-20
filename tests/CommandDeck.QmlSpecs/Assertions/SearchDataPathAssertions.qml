@@ -18,12 +18,13 @@ QtObject {
     }
   }
 
-  function deliver(deck, results) {
+  function deliver(deck, results, containsPrivateQuery = false) {
     const requestId = deck.part_searchSession.activeRequestId
     for (const value of results) {
       deck.handleMessage({ type: Protocol.Messages.Result, requestId: requestId, result: value })
     }
-    deck.handleMessage({ type: Protocol.Messages.Done, requestId: requestId })
+    deck.handleMessage({ type: Protocol.Messages.Done, requestId: requestId,
+      searchCompletion: { containsPrivateQuery: containsPrivateQuery } })
   }
 
   function operationsSince(deck, start) {
@@ -216,6 +217,23 @@ QtObject {
     deck.queryText = "invoice"
     deck.close()
     host.expect(deck.lastSearch === null, "a private source search is never kept")
+    deck.open("{}")
+    deliver(deck, [])
+
+    for (const query of ["@hey private-token", "notes hey:private-token", "notes inboxq:private-token", "file: -clip: notes"]) {
+      deck.activeFilters = []
+      deck.queryText = query
+      deck.requestSearch()
+      deliver(deck, [], true)
+      deck.close()
+      host.expect(deck.lastSearch === null, "private provider, mixed and aliased queries are never kept: " + query)
+      deck.open("{}")
+      deliver(deck, [])
+    }
+    deck.queryText = "not yet classified"
+    deck.requestSearch()
+    deck.close()
+    host.expect(deck.lastSearch === null, "closing before the current query is classified never keeps it")
     deck.open("{}")
     deliver(deck, [])
 
