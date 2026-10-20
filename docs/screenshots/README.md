@@ -49,7 +49,7 @@ desktop windows, or notifications are read.
 - **themes.png** applies the colours from four Omarchy themes' `colors.toml`
   (recorded in `themes.json`) through the same token defaults as
   `qml/omarchy/ThemeTokens.qml`, with Omarchy's square corners.
-- **demo.gif** and **demo.mp4** are 18 seconds of frames from the same stage.
+- **demo.gif** and **demo.mp4** are 24 seconds of frames from the same stage.
   The typed queries filter the demonstration results by title; they are not
   ranked by the daemon.
 - **social-preview.png** is the 1280 × 640 image for the GitHub repository's

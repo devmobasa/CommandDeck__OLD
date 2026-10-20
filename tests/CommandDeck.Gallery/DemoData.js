@@ -113,6 +113,24 @@ function omarchy(icon, id, title, parents, command, placement) {
   }
 }
 
+// A submenu row: Enter lists its entries in the launcher under its path.
+function omarchyMenu(icon, id, title, parents, items, placement) {
+  const path = parents + " › " + title
+  return {
+    id: "omarchy:" + id, kind: K.Omarchy, sourceId: "omarchy-control", providerId: "omarchy",
+    icon: icon, canCustomize: true, title: title, subtitle: parents, section: placement,
+    details: [
+      { label: "Menu", value: path },
+      { label: "Entries", value: String(items) },
+      { label: "Source", value: "/home/demo/.local/share/omarchy/default/omarchy/omarchy-menu.jsonc",
+        monospace: true }
+    ],
+    metadata: { omarchyMenu: id, omarchyMenuPath: path, omarchyMenuItems: String(items) },
+    actions: [{ id: "open-submenu", title: "Open Submenu", kind: A.BrowseOmarchyMenu,
+      arguments: { omarchyMenu: id, omarchyMenuPath: path } }]
+  }
+}
+
 function herdrTab(icon, id, title, space, number, panes, status, focused) {
   return {
     id: "herdr:tab:" + id, kind: K.Tab, sourceId: "herdr", providerId: "herdr", icon: icon,
@@ -171,6 +189,7 @@ function corpus(icon) {
       "background=$(omarchy-theme-bg-switcher); [[ -n $background ]] && omarchy-theme-bg-set \"$background\"", control),
     omarchy(omarchyIcon, "trigger.toggle.nightlight", "Nightlight", "Trigger › Toggle",
       "omarchy-toggle-nightlight", control),
+    omarchyMenu(omarchyIcon, "setup.network.dns", "DNS", "Setup › Network", 4, control),
     app(icon("signal-desktop"), "signal-desktop", "Signal", "Private messenger", "signal-desktop %U", applications),
     app(icon("chromium"), "chromium", "Chromium", "Access the Internet", "chromium %U", applications),
     file(icon("text-x-generic"), "window-no-gaps", "window-no-gaps.lua",
@@ -224,6 +243,46 @@ function omarchyControls(icon) {
     omarchy(icon("omarchy"), "style.menu-bar.transparency", "Transparency", "Style › Menu Bar",
       "omarchy-bar transparent toggle", placement)
   ]
+}
+
+// The DNS submenu's entries; the provider in use carries Omarchy's checked state.
+function dnsMenu(icon) {
+  const placement = section("omarchy-control", "Omarchy Control", 5)
+  const omarchyIcon = icon("omarchy")
+  return ["DHCP", "Cloudflare", "Google", "Custom"].map(function(name) {
+    const row = omarchy(omarchyIcon, "setup.network.dns." + name.toLowerCase(), name, "Setup › Network › DNS",
+      "omarchy-dns " + name, placement)
+    row.metadata = { omarchyChecked: name === "Cloudflare" ? "true" : "false" }
+    return row
+  })
+}
+
+// Snippets whose title contains `query`. Inputs are the template's form fields,
+// which the launcher shows as pills in the search bar.
+function snippets(icon, query) {
+  const placement = section("snippets", "Snippets", 6)
+  const snippet = function(id, title, text, inputs) {
+    const action = function(kind, actionTitle) {
+      return { id: kind, title: actionTitle, kind: kind, arguments: {}, inputs: inputs }
+    }
+    return {
+      id: "snippet:" + id, kind: K.CustomCommand, sourceId: "snippets", providerId: "snippets",
+      title: title, subtitle: "Snippet · copy or preview with inputs", icon: icon("edit-paste"),
+      section: placement, detailMarkdown: text,
+      actions: [action(A.SnippetCopy, "Copy snippet"), action(A.SnippetPreview, "Preview expanded snippet")]
+    }
+  }
+  return [
+    snippet("follow-up", "Follow-up email",
+      "Hi {name},\n\nThanks for the call today. I'll send the {topic default=draft} by Friday.",
+      [{ name: "name" }, { name: "topic", defaultValue: "draft" }]),
+    snippet("release", "Release announcement", "Release {version}\n\nWhat's new:\n{highlights}",
+      [{ name: "version" }, { name: "highlights" }]),
+    snippet("late", "Running late", "Running {minutes default=\"10\"} minutes late, start without me.",
+      [{ name: "minutes", defaultValue: "10" }])
+  ].filter(function(row) {
+    return row.title.toLowerCase().indexOf(query.toLowerCase()) >= 0
+  })
 }
 
 function herdrTabs(icon) {
