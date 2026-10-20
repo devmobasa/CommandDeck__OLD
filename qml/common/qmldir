@@ -95,6 +95,7 @@ LayoutStore 1.0 LayoutStore.qml
 LiteralButton 1.0 LiteralButton.qml
 MatchedFieldList 1.0 MatchedFieldList.qml
 NoResultsView 1.0 NoResultsView.qml
+OmarchyMenuBar 1.0 OmarchyMenuBar.qml
 OnDemandSurface 1.0 OnDemandSurface.qml
 PersonalizationController 1.0 PersonalizationController.qml
 PersonalizationMutationQueue 1.0 PersonalizationMutationQueue.qml

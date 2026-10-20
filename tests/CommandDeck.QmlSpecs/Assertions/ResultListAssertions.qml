@@ -128,6 +128,18 @@ QtObject {
     host.expect(stale.contentOpacity === 1, "a selected unavailable row is shown in full")
     show([omarchy("dark", {}), omarchy("stale", { omarchyUnavailable: "true" })], false)
     host.expect(!loaded(1).checkedMarkControl.visible, "a refresh that clears the check repaints the row")
+
+    // A submenu row reads as a menu; an action row keeps its own label.
+    const submenu = { omarchyMenu: "style.theme", omarchyMenuPath: "Style › Theme", omarchyMenuItems: "3" }
+    show([omarchy("theme", submenu), omarchy("dark", {})], true)
+    const theme = loaded(1)
+    host.expect(theme.kindCue === "Menu" && theme.submenuChevronControl.visible
+        && theme.submenuChevronControl.text === "3 ›" && theme.accessibilityName.indexOf("opens 3 entries") >= 0,
+      "an Omarchy submenu row shows a Menu label and a chevron with its entry count (" + theme.kindCue + ")")
+    host.expect(loaded(2).kindCue === "System" && !loaded(2).submenuChevronControl.visible,
+      "an Omarchy action row keeps its label and shows no chevron")
+    show([omarchy("theme", Object.assign({}, submenu, { omarchyMenuItems: "4" })), omarchy("dark", {})], false)
+    host.expect(loaded(1).submenuChevronControl.text === "4 ›", "a refresh that changes the entry count repaints the row")
   }
 
   // The compact layout puts every row on one line and shows its Ctrl+number

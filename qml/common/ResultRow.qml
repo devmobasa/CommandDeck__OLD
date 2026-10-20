@@ -12,7 +12,7 @@ Rectangle {
     Calculator: "calc", Service: "service", Application: "app", File: "file",
     Configuration: "config", Window: "window", Command: "command", Ai: "ai",
     Link: "link", System: "system", Search: "search", Herdr: "herdr", Control: "control",
-    Process: "process"
+    Process: "process", Menu: "menu"
   })
 
   NumberAnimation on opacity {
@@ -76,7 +76,14 @@ Rectangle {
   // signal (a service and a calculator both arrive from dedicated sources), so
   // it wins; otherwise the freedesktop-style `kind` decides. Everything folds
   // into a small family so the label and the tint stay in lock-step.
-  readonly property string cueFamily: root.familyFor(root.sourceId, root.kind)
+  readonly property string cueFamily: root.omarchySubmenu ? root.cueFamilies.Menu
+    : root.familyFor(root.sourceId, root.kind)
+  // An Omarchy submenu row opens its entries in the launcher, so it reads as a
+  // menu: a "Menu" tag and a chevron with its entry count, as in Omarchy's menu.
+  readonly property bool omarchySubmenu: root.kind === Protocol.ResultKinds.Omarchy && !!root.result.metadata
+    && !!root.result.metadata[Protocol.ResultMetadataKeys.OmarchyMenu]
+  readonly property string omarchyMenuItems: root.omarchySubmenu
+    ? String(root.result.metadata[Protocol.ResultMetadataKeys.OmarchyMenuItems] || "") : ""
   readonly property string kindCue: root.cueLabel(root.cueFamily)
   readonly property bool hasKindCue: root.kindCue.length > 0
   // A calculator row leads its value with `=` in the accent colour so the answer
@@ -126,6 +133,7 @@ Rectangle {
       case root.cueFamilies.Herdr: return "Herdr"
       case root.cueFamilies.Control: return "Control"
       case root.cueFamilies.Process: return "Process"
+      case root.cueFamilies.Menu: return "Menu"
       default: return ""
     }
   }
@@ -142,6 +150,7 @@ Rectangle {
       case root.cueFamilies.Command:
       case root.cueFamilies.Link:
       case root.cueFamilies.System:
+      case root.cueFamilies.Menu:
         return root.theme.withAlpha(root.theme.accent, 0.14)
       case root.cueFamilies.Window:
       case root.cueFamilies.Service:
@@ -171,6 +180,7 @@ Rectangle {
       + root.titleText
       + (root.omarchyChecked ? ", checked" : "")
       + (root.omarchyUnavailable ? ", unavailable here" : "")
+      + (root.omarchySubmenu ? ", opens " + (root.omarchyMenuItems ? root.omarchyMenuItems + " entries" : "a submenu") : "")
       + (root.statusBadgeText ? ", " + root.statusBadgeText : "")
       + (root.subtitleText ? ", " + root.subtitleText : "")
       + (root.hasKindCue ? ", " + root.kindCue : "")
@@ -368,6 +378,16 @@ Rectangle {
     }
 
     Text {
+      id: submenuChevron
+      visible: root.omarchySubmenu
+      text: (root.omarchyMenuItems ? root.omarchyMenuItems + " " : "") + "›"
+      textFormat: Text.PlainText
+      color: root.theme.textMuted
+      font.family: root.theme.fontFamily
+      font.pixelSize: root.theme.fontBody
+    }
+
+    Text {
       visible: !!root.result && root.result.isFavorite === true
       text: "★"
       color: root.theme.accent
@@ -379,6 +399,7 @@ Rectangle {
   readonly property alias toolTipControl: rowToolTip
   readonly property alias ordinalBadgeControl: ordinalBadge
   readonly property alias checkedMarkControl: checkedMark
+  readonly property alias submenuChevronControl: submenuChevron
   readonly property real contentOpacity: content.opacity
   ThemedToolTip {
     id: rowToolTip

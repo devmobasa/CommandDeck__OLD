@@ -136,6 +136,10 @@ QtObject {
         === nextMetadata[Protocol.ResultMetadataKeys.OmarchyChecked]
       && previousMetadata[Protocol.ResultMetadataKeys.OmarchyUnavailable]
         === nextMetadata[Protocol.ResultMetadataKeys.OmarchyUnavailable]
+      && previousMetadata[Protocol.ResultMetadataKeys.OmarchyMenu]
+        === nextMetadata[Protocol.ResultMetadataKeys.OmarchyMenu]
+      && previousMetadata[Protocol.ResultMetadataKeys.OmarchyMenuItems]
+        === nextMetadata[Protocol.ResultMetadataKeys.OmarchyMenuItems]
       && sameList(previous.aliases, next.aliases, (left, right) => left === right)
       && sameList(previous.matchedRanges, next.matchedRanges,
         (left, right) => left.start === right.start && left.length === right.length)

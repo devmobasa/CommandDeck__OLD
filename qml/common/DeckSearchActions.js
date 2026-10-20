@@ -137,15 +137,16 @@ function dismiss(root) {
   }
 }
 
-// A search the user closed, kept for a reopen within keepSearchSeconds. Folder
-// and Herdr views, private sources, and a search an action just ran from are
-// not kept.
+// A search the user closed, kept for a reopen within keepSearchSeconds. Folder,
+// Herdr and Omarchy menu views, private sources, and a search an action just
+// ran from are not kept.
 function keptSearch(root) {
   const forget = root.forgetSearchOnClose
   root.forgetSearchOnClose = false
   const filters = root.activeFilters || []
   if (forget || root.keepSearchSeconds <= 0 || root.browseDirectory.length > 0
       || root.part_navigation.herdrWorkspaceId.length > 0
+      || root.part_navigation.omarchyMenuId.length > 0
       || (root.queryText.length === 0 && filters.length === 0)
       || filters.some(value => value.id === Protocol.SourceIds.Clipboard || value.id === Protocol.SourceIds.Hey)) {
     return null
@@ -162,6 +163,7 @@ function close(root) {
   root.activeFileSelectionRequestId = 0
   root.browseDirectory = ""
   root.part_navigation.clearHerdrBrowse()
+  root.part_navigation.clearOmarchyBrowse()
   root.browseOffset = 0
   root.cancelPreview()
   root.opened = false
@@ -202,6 +204,7 @@ function open(root, payloadJson) {
     : ""
   root.openWorkspaceMruIds = root.workspaceMruIds.slice()
   root.part_navigation.clearHerdrBrowse()
+  root.part_navigation.clearOmarchyBrowse()
   root.showHud("")
   const kept = root.lastSearch
   root.lastSearch = null
@@ -263,11 +266,13 @@ function clearModalState(root) {
   root.agentChallenge = null
 }
 
-// Shift+Escape: an empty search on Home, leaving any filter, folder or Herdr view.
+// Shift+Escape: an empty search on Home, leaving any filter, folder, Herdr or
+// Omarchy menu view.
 function backToRoot(root) {
   root.browseDirectory = ""
   root.browseOffset = 0
   root.part_navigation.clearHerdrBrowse()
+  root.part_navigation.clearOmarchyBrowse()
   root.activeFilters = []
   root.queryText = ""
   root.queryInputRequested("")

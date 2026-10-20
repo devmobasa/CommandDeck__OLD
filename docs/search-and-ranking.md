@@ -289,6 +289,33 @@ conditions it has never answered and otherwise uses the last answers while a
 refresh runs, so a row can briefly show the previous state. Actions are
 unchanged either way. Set `search.omarchyMenuState=false` to run no conditions.
 
+## Omarchy submenus
+
+An Omarchy menu entry without an action is indexed as a submenu row when it
+lists at least one row, directly or through a `target` link. It shows a
+**Menu** label and a chevron with its entry count. Its subtitle is its path,
+and typing `theme` can find a Theme submenu. The Apps and System menus keep
+their own rows, and menus that Omarchy fills at runtime through a `provider`
+are not listed. **Open Submenu** (Enter) is a launcher action; the daemon
+refuses to run it.
+
+An open submenu sends its ID as the search's `omarchyMenuId` scope. The
+Omarchy menu provider answers only that scope. It reads the parsed menu files
+again only after one of them changes, so a long menu is never cut short by
+catalog candidate limits. Entries follow Omarchy's order: a later file that
+reuses an ID replaces the entry in its place, and new IDs follow. Rows use the
+catalog's stable IDs, actions, bookmarks, aliases, and hidden items, and get
+the same Omarchy menu state. Typing filters the entries by label, last ID
+segment, Omarchy aliases, and your aliases; accepted use ranks the matches.
+The scoped list has one section with no Top Matches. The launcher asks for up
+to 200 rows.
+
+A bar under the search field shows the path, such as `Omarchy › Style ›
+Theme`, and **Back · Esc**. Escape clears the typed text first and then goes
+back one level, which restores the previous query and selection. A nested
+submenu adds a level. Shift+Escape returns to Home, and a closed submenu
+search is not kept for reopening.
+
 ## Home and keyboard behavior
 
 Home uses existing Saved Searches, Bookmarks, Recent & Frequent,

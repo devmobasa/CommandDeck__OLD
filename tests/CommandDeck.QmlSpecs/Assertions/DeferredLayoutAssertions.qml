@@ -210,6 +210,7 @@ QtObject {
                       host.failures++
                       console.error("FAIL QML harness executed zero assertions")
                     }
+                    host.verifyOmarchyMenuBrowse()
                     host.verifyHerdrLiveUpdates()
                   })
                 })

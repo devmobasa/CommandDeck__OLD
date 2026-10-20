@@ -38,6 +38,11 @@ function invokeAction(root, result, action, confirmed, inputValues, fromUndo) {
     root.part_navigation.browseHerdrSpace(result)
     return
   }
+  if (action.kind === Protocol.ActionKinds.BrowseOmarchyMenu) {
+    root.actionPanelOpen = false
+    root.part_navigation.browseOmarchyMenu(result, action)
+    return
+  }
   // A row that changes the search (a HEY box, "Search again") replaces the
   // query and its filter chip, searches, and leaves the search field ready.
   if (action.kind === Protocol.ActionKinds.ApplyQuery) {

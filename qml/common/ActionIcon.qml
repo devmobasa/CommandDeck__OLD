@@ -40,6 +40,7 @@ Text {
       case Protocol.ActionKinds.ApplyQuery:
       case Protocol.ActionKinds.ApplySavedSearch:
       case Protocol.ActionKinds.BrowseHerdrTabs: return "⌕"
+      case Protocol.ActionKinds.BrowseOmarchyMenu: return "›"
       case Protocol.ActionKinds.RunArgv:
       case Protocol.ActionKinds.RunTrustedShell:
       case Protocol.ActionKinds.RunScript:

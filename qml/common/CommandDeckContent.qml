@@ -19,6 +19,10 @@ ColumnLayout {
   readonly property alias part_pointerGate: resultPointerGate
 
   id: launcherContent
+  // The Herdr or Omarchy menu bar under the search field, first in Tab order
+  // after it; null when neither view is open.
+  readonly property var scopeBar: herdrNavigation.visible ? herdrNavigation
+    : omarchyNavigation.visible ? omarchyNavigation : null
 
   PointerMoveGate { id: resultPointerGate }
   Connections {
@@ -39,7 +43,7 @@ ColumnLayout {
     filterDescriptors: launcherContent.host.host.filterDescriptors
     surfaceVisible: launcherContent.host.visible
     loading: launcherContent.host.host.part_searchSession.pending
-    additionalTabStop: herdrNavigation.visible ? herdrNavigation.firstControl : fileSelectionBar.visible ? fileSelectionBar.firstControl : runtimeStatusSurface.visible ? runtimeStatusSurface : footerActions.firstControl
+    additionalTabStop: launcherContent.scopeBar ? launcherContent.scopeBar.firstControl : fileSelectionBar.visible ? fileSelectionBar.firstControl : runtimeStatusSurface.visible ? runtimeStatusSurface : footerActions.firstControl
     precedingTabStop: detailPane.lastPreviewControl || footerActions.lastControl
       || (runtimeStatusSurface.visible ? runtimeStatusSurface : null)
   onSearchEdited: { if (!launcherContent.host.host.applyingBrowseNavigation) launcherContent.host.host.browseOffset = 0; launcherContent.host.host.part_searchSession.schedule() }
@@ -68,9 +72,20 @@ ColumnLayout {
     nextTabStop: fileSelectionBar.visible ? fileSelectionBar.firstControl : runtimeStatusSurface.visible ? runtimeStatusSurface : footerActions.firstControl
   }
 
+  OmarchyMenuBar {
+    id: omarchyNavigation
+    Layout.fillWidth: true
+    visible: launcherContent.host.host.omarchyMenuOpen && !herdrNavigation.visible
+    theme: launcherContent.host.host.part_appTheme
+    controller: launcherContent.host.host.part_navigation
+    searchInput: searchBar.inputControl
+    previousTabStop: searchBar.settingsControl
+    nextTabStop: fileSelectionBar.visible ? fileSelectionBar.firstControl : runtimeStatusSurface.visible ? runtimeStatusSurface : footerActions.firstControl
+  }
+
   FileSelectionBar {
     id: fileSelectionBar
-    previousTabStop: herdrNavigation.visible ? herdrNavigation.lastControl : searchBar.settingsControl
+    previousTabStop: launcherContent.scopeBar ? launcherContent.scopeBar.lastControl : searchBar.settingsControl
     nextTabStop: runtimeStatusSurface.visible ? runtimeStatusSurface : footerActions.firstControl
     Layout.fillWidth: true
     visible: launcherContent.host.host.fileSelection.length > 0
@@ -244,7 +259,7 @@ ColumnLayout {
     reconciliationPending: launcherContent.host.host.reconciliationPending
     reconciliationWarning: launcherContent.host.host.reconciliationWarning
     KeyNavigation.tab: footerActions.firstControl || searchBar.filterChipControl || searchBar.inputControl
-    KeyNavigation.backtab: fileSelectionBar.visible ? fileSelectionBar.lastControl : herdrNavigation.visible ? herdrNavigation.lastControl : searchBar.settingsControl
+    KeyNavigation.backtab: fileSelectionBar.visible ? fileSelectionBar.lastControl : launcherContent.scopeBar ? launcherContent.scopeBar.lastControl : searchBar.settingsControl
     onInspectorRequested: launcherContent.host.host.indexInspectorOpen = true
   }
 
@@ -295,7 +310,7 @@ ColumnLayout {
       actionsEnabled: launcherContent.host.host.daemonAvailable && !launcherContent.host.host.reconciliationPending
       onPrefixesRequested: () => launcherContent.host.host.openFilterPalette(Ui.FocusReturnControl.FooterPrefixes)
       onHelpRequested: () => launcherContent.host.host.toggleHelp(Ui.FocusReturnControl.FooterHelp)
-      previousTabStop: runtimeStatusSurface.visible ? runtimeStatusSurface : fileSelectionBar.visible ? fileSelectionBar.lastControl : herdrNavigation.visible ? herdrNavigation.lastControl : searchBar.settingsControl
+      previousTabStop: runtimeStatusSurface.visible ? runtimeStatusSurface : fileSelectionBar.visible ? fileSelectionBar.lastControl : launcherContent.scopeBar ? launcherContent.scopeBar.lastControl : searchBar.settingsControl
       nextTabStop: detailPane.firstPreviewControl || searchBar.filterChipControl || searchBar.inputControl
       shortcutTarget: searchBar.inputControl
       shortcutHandler: searchBar.handleActionShortcut

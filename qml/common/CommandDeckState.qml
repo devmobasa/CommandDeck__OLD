@@ -28,6 +28,7 @@ Item {
     browseDirectory: sessionState.browseDirectory
     browseOffset: sessionState.browseOffset
     herdrWorkspaceId: sessionState.owner.part_navigation.herdrWorkspaceId
+    omarchyMenuId: sessionState.owner.part_navigation.omarchyMenuId
     activeWorkspace: sessionState.compositor.activeWorkspace && sessionState.compositor.activeWorkspace.name
       ? sessionState.compositor.activeWorkspace.name : ""
     currentDirectory: sessionState.currentDirectoryContext
@@ -167,6 +168,7 @@ Item {
   property int herdrRefreshInterval: 2000
   readonly property bool herdrViewOpen: sessionState.owner.part_navigation.herdrWorkspaceId.length > 0
     || sessionState.owner.activeFilters.some(value => !value.excluded && value.id.indexOf("herdr") === 0)
+  readonly property bool omarchyMenuOpen: sessionState.owner.part_navigation.omarchyMenuId.length > 0
   readonly property bool herdrLiveUpdatesEnabled: opened && herdrViewOpen && daemonAvailable
     && !reconciliationPending && !sessionState.owner.anyBlockingSurface && !sessionState.owner.part_extensionController.opened
     && !extensionManagementOpen && !sessionState.owner.part_invocationController.busy && !searchSession.searching

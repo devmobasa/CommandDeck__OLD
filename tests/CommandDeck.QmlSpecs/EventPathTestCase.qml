@@ -15,6 +15,7 @@ TestCase {
 
   function init() {
     fixture.part_controller.clearHerdrBrowse()
+    fixture.part_controller.clearOmarchyBrowse()
     fixture.width = 900
     fixture.part_theme.background = "#090909"
     fixture.part_searchLoading.loading = false
