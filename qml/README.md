@@ -89,6 +89,7 @@ shows a conflict warning if one already uses the clipboard chord.
 - `HiddenUndoBar.qml`, `SettingsHiddenItemsCard.qml`, `DeckHiddenItemActions.js`: hidden items — the undo strip after "Don't show this" (and after a reversible HEY change, with its own message), the Settings → Customization list with search and Restore, and the hide/restore/list actions behind both.
 - `SettingsColorsCard.qml`, `SettingsColorRow.qml`: Settings → Customization → Colors, choosing the Omarchy theme or CommandDeck's palette and editing its accent, background, and text with swatches or a hex value.
 - `DisplayPreferences.qml`: owns the QML-only display-size, transparency, and color stores for the launcher.
+- `WindowDisplay.qml` and `DisplaySizing.js`: derive each presenting window's layout and typography from its logical geometry, requested zoom, Omarchy tokens, and a shared fit factor. `WindowTheme.qml` applies those metrics without changing the shared colour/token source.
 - `DeckButton.qml`: the one button used across the whole deck (primary, secondary, danger; compact and flat modes) with shared hover and keyboard-focus emphasis. `AgentButton.qml` is the same button without the settings tab fence.
 - `HelpSheet.qml`: F1 keyboard and filter reference.
 - `PreferenceUpdateQueue.qml`: serialized optimistic preference updates with rollback.

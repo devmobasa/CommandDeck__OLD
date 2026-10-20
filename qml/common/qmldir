@@ -58,6 +58,7 @@ DetailDialog 1.0 DetailDialog.qml
 DetailPane 1.0 DetailPane.qml
 DisplayPreferences 1.0 DisplayPreferences.qml
 DisplayScaleStore 1.0 DisplayScaleStore.qml
+DisplaySizeSlider 1.0 DisplaySizeSlider.qml
 EmptyStateView 1.0 EmptyStateView.qml
 ExtensionConnectionsView 1.0 ExtensionConnectionsView.qml
 ExtensionDetailView 1.0 ExtensionDetailView.qml
@@ -145,6 +146,7 @@ SettingsSlider 1.0 SettingsSlider.qml
 SettingsSourceList 1.0 SettingsSourceList.qml
 SettingsTextArea 1.0 SettingsTextArea.qml
 SettingsToggle 1.0 SettingsToggle.qml
+SizingViewport 1.0 SizingViewport.qml
 SourcePreferenceRow 1.0 SourcePreferenceRow.qml
 Theme 1.0 Theme.qml
 ThemedToolTip 1.0 ThemedToolTip.qml
@@ -152,6 +154,8 @@ TransparencyStore 1.0 TransparencyStore.qml
 WindowPreview 1.0 WindowPreview.qml
 WorkspacePreview 1.0 WorkspacePreview.qml
 WorkspacePreviewHyprland 1.0 WorkspacePreviewHyprland.qml
+WindowDisplay 1.0 WindowDisplay.qml
+WindowTheme 1.0 WindowTheme.qml
 WorkspacePreviewMember 1.0 WorkspacePreviewMember.qml
 WorkspacePreviewModel 1.0 WorkspacePreviewModel.qml
 WorkspaceSnapshotCell 1.0 WorkspaceSnapshotCell.qml

@@ -203,6 +203,32 @@ disposable Arch install proof, which need the helper installed with `sudo`.
 
 ### QML
 
+Display sizing has a production-function matrix in `tst_display_sizing.qml`:
+every 5% zoom step, font scales 0.8–2, laptops/desktops, equivalent logical
+workspaces, ultrawide, portrait, 720p, and constrained fallbacks. Window/theme
+tests cover full-strength text zoom and requested values surviving geometry
+changes; real-event tests cover dragging during live resizing and reset focus.
+The production-host journey verifies that another monitor gaining focus cannot
+resize the presenting window.
+
+Render the shared production calculation and controls across logical geometry
+and raster-density combinations with:
+
+```bash
+dotnet scripts/check-display-sizing.cs
+dotnet scripts/capture-gallery.cs sizing --width 2304 --height 1296 --dpr 1.666667 --percent 150 --font-scale 1.25 --output build/sizing-review
+```
+
+The matrix writes 20 configurations and 120 PNGs under
+`build/display-sizing-matrix/`, with containment checks on launcher, Settings,
+help, actions, confirmation and extension surfaces. It compares rendered layout
+and text measurements across DPRs and checks PNG pixel dimensions to confirm Qt
+applied each raster density. A DPR changes raster density, not logical geometry.
+The production-host journey also checks full-screen backdrop coverage with a
+real top-bar exclusive zone and Ctrl+0 preserving the legacy sizing profile.
+These isolated renders and compositor checks do not establish real desktop fractional
+scaling, installed input routing, physical readability, or output hot-plug.
+
 QML event journeys live in `tests/CommandDeck.QmlSpecs/tst_*_events.qml`, with
 shared controls in `EventPathFixture.qml` and shared setup in
 `EventPathTestCase.qml`. Other focused `tst_*.qml` suites remain alongside them.

@@ -61,7 +61,7 @@ CommandDeck.SettingsPanel {
     shortcuts: [],
     customizations: []
   })
-  property string displaySizeChosen: ""
+  property int displaySizePercentChosen: -1
   property var compactLayoutChosen: null
   property var previewPaneChosen: null
   property var behaviorChosen: null
@@ -72,7 +72,8 @@ CommandDeck.SettingsPanel {
   onFavoritesReordered: stableIds => favoriteReorderDispatches++
   onFilterAliasRemoveRequested: alias => removedFilterAlias = alias
   onAiTemplateSaveRequested: template => savedAiTemplate = template
-  onDisplaySizeSelected: preset => displaySizeChosen = preset
+  onDisplaySizePercentSelected: percent => displaySizePercentChosen = percent
+  onDisplaySizeRecommendedRequested: displaySizePercentChosen = 100
   onCompactLayoutSelected: enabled => compactLayoutChosen = enabled
   onPreviewPaneSelected: visible => previewPaneChosen = visible
   onPreferencesChanged: preferences => changedPreferences = preferences

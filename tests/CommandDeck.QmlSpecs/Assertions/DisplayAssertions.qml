@@ -25,48 +25,51 @@ QtObject {
       "the scrim strength is tunable and applied to the scrim color")
     host.part_motionTheme.scrimStrength = 0.72
 
-    // D13 - the display-size preset composes with the screen-derived factor.
-    host.expect(host.part_integratedDeck.displaySizePreset === "auto"
+    // The display-size percentage composes with the current profile's baseline.
+    host.expect(host.part_integratedDeck.displaySizePercent === 100
         && Math.abs(host.part_integratedDeck.displaySizeMultiplier - 1.0) < 0.001,
-      "the display size defaults to Auto with a 1x multiplier")
-    host.expect(Math.abs(host.part_integratedDeck.effectiveDisplayScale
-        - host.part_integratedDeck.displayScaleFactor) < 0.001,
-      "Auto feeds the screen-derived display-scale factor straight through")
-    host.part_integratedDeck.applyDisplaySizePreset("large")
-    host.expect(host.part_integratedDeck.displaySizePreset === "large"
+      "the display size defaults to 100 percent with a 1x multiplier")
+    host.part_integratedDeck.applyDisplaySizePercent(115)
+    host.expect(host.part_integratedDeck.displaySizePercent === 115
         && Math.abs(host.part_integratedDeck.displaySizeMultiplier - 1.15) < 0.001,
-      "selecting Large applies a 1.15 multiplier")
-    host.expect(Math.abs(host.part_integratedDeck.effectiveDisplayScale
-        - host.part_integratedDeck.displayScaleFactor * 1.15) < 0.001,
-      "the display-size multiplier composes on top of the screen factor")
-    host.part_integratedDeck.applyDisplaySizePreset("small")
-    host.expect(Math.abs(host.part_integratedDeck.displaySizeMultiplier - 0.9) < 0.001,
-      "selecting Small applies a 0.9 multiplier")
-    host.part_integratedDeck.applyDisplaySizePreset("auto")
+      "selecting 115 percent applies a 1.15 multiplier")
+    host.part_integratedDeck.applyDisplaySizePercent(100)
 
-    // Zoom keys step through the same presets, hold at each end, and reset to Auto.
+    // Zoom moves by ten points, holds at the bounds, and resets to 100 percent.
     const zoomed = []
-    for (const direction of [1, 1, 1, 0, -1, -1, -1]) {
+    for (const direction of [1, 1, 1, 1, 1, 1, 0, -1, -1, -1, -1]) {
       host.part_integratedDeck.stepDisplaySize(direction)
-      zoomed.push(host.part_integratedDeck.displaySizePreset)
+      zoomed.push(host.part_integratedDeck.displaySizePercent)
     }
-    host.expect(zoomed.join(",") === "large,xlarge,xlarge,auto,small,small,small"
-        && Math.abs(host.part_integratedDeck.displaySizeMultiplier - 0.9) < 0.001
-        && host.part_integratedDeck.statusText === "Display size: Small",
-      "zoom steps through the display-size presets and names the result (" + zoomed.join(",") + ")")
+    host.expect(zoomed.join(",") === "110,120,130,140,150,150,100,90,80,75,75"
+        && Math.abs(host.part_integratedDeck.displaySizeMultiplier - 0.75) < 0.001
+        && host.part_integratedDeck.statusText === "Display size: 75%",
+      "zoom moves in ten-percent steps and holds at both ends (" + zoomed.join(",") + ")")
+    host.part_integratedDeck.stepDisplaySize(1)
+    host.expect(host.part_integratedDeck.displaySizePercent === 85,
+      "zoom from 75 percent preserves the five-percent grid")
     host.part_integratedDeck.stepDisplaySize(0)
+    host.expect(host.part_integratedDeck.statusText === "Display size: 100% (Recommended)",
+      "resetting zoom selects Recommended")
 
-    // D13 - the settings control offers the presets and emits the choice.
-    host.expect(host.part_settings.displaySizeControl.count === 5,
-      "settings offers five display-size presets")
-    host.part_settings.displaySizePreset = "large"
-    host.expect(host.part_settings.displaySizeControl.currentIndex === host.part_settings.displaySizeIndex("large"),
-      "the settings display-size control reflects the active preset")
-    host.part_settings.displaySizeChosen = ""
-    host.part_settings.displaySizeControl.activated(1)
-    host.expect(host.part_settings.displaySizeChosen === "small",
-      "choosing a display-size preset emits it for QML-only persistence")
-    host.part_settings.displaySizePreset = "auto"
+    // Settings reflects the live percentage and emits slider/reset choices.
+    const sizeControl = host.part_settings.displaySizeControl
+    host.expect(sizeControl.from === 75 && sizeControl.to === 150 && sizeControl.stepSize === 5,
+      "settings offers display sizes from 75 to 150 percent in steps of five")
+    host.expect(!host.part_settings.displaySizeResetControl.enabled,
+      "Recommended is disabled at 100 percent in the logical sizing profile")
+    host.part_settings.displaySizePercent = 115
+    host.expect(sizeControl.value === 115 && host.part_settings.displaySizeResetControl.enabled,
+      "the settings slider reflects the current percentage and enables Recommended")
+    host.part_settings.displaySizePercentChosen = -1
+    sizeControl.value = 120
+    sizeControl.moved()
+    host.expect(host.part_settings.displaySizePercentChosen === 120,
+      "moving the display-size slider emits the percentage for QML-only persistence")
+    host.part_settings.displaySizeResetControl.click()
+    host.expect(host.part_settings.displaySizePercentChosen === 100,
+      "Recommended emits 100 percent")
+    host.part_settings.displaySizePercent = 100
 
     // The compact layout: a QML-only store, the host flag, and its Settings toggle.
     const layout = host.part_integratedDeck.part_layoutStore

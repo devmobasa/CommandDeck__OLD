@@ -43,7 +43,7 @@ Rectangle {
   // Up with nothing to move to on an empty or recalled query; restart is true
   // when the query is empty, so the newest entry comes first again.
   signal historyRecallRequested(bool restart)
-  // Ctrl+= (or Ctrl++) is 1, Ctrl+- is -1, Ctrl+0 is 0 for the automatic size.
+  // Ctrl+= (or Ctrl++) is 1, Ctrl+- is -1, Ctrl+0 resets the percentage.
   signal zoomRequested(int direction)
   // Ctrl+Alt+Up is -1 and Ctrl+Alt+Down is 1: move the selected Home bookmark.
   signal favoriteMoveRequested(int direction)

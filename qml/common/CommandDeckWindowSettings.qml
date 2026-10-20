@@ -18,9 +18,9 @@ SettingsPanel {
   onExtensionsRequested: settingsPanel.host.host.extensionManagementOpen = true
   opacity: visible ? 1 : 0
   Behavior on opacity {
-    NumberAnimation { duration: settingsPanel.host.host.part_appTheme.durationNormal }
+    NumberAnimation { duration: settingsPanel.host.part_appTheme.durationNormal }
   }
-  theme: settingsPanel.host.host.part_settingsTheme
+  theme: settingsPanel.host.part_settingsTheme
   snapshot: settingsPanel.host.host.settingsSnapshot
   fallbackQuicklinks: settingsPanel.host.host.fallbackQuicklinks
   sourceDescriptors: settingsPanel.host.host.sourceDescriptors
@@ -75,8 +75,11 @@ SettingsPanel {
   }
   loading: settingsPanel.host.host.preferencesSnapshotLoading
   snapshotMutationBusy: settingsPanel.host.host.part_personalization.preferenceInFlight || settingsPanel.host.host.part_personalization.busy
-  displaySizePreset: settingsPanel.host.host.displaySizePreset
-  onDisplaySizeSelected: preset => settingsPanel.host.host.applyDisplaySizePreset(preset)
+  displaySizePercent: settingsPanel.host.host.displaySizePercent
+  displaySizeLegacy: settingsPanel.host.host.part_displayScaleStore.legacy
+  displaySizeDescription: settingsPanel.host.displayDescription
+  onDisplaySizePercentSelected: percent => settingsPanel.host.host.applyDisplaySizePercent(percent)
+  onDisplaySizeRecommendedRequested: settingsPanel.host.host.part_displayScaleStore.useRecommended()
   compactLayout: settingsPanel.host.host.compactLayout
   onCompactLayoutSelected: enabled => settingsPanel.host.host.applyCompactLayout(enabled)
   previewPaneVisible: settingsPanel.host.host.previewPaneVisible
@@ -92,7 +95,7 @@ SettingsPanel {
   preferencesSaveError: settingsPanel.host.host.preferencesSaveError
   colorThemeSource: settingsPanel.host.host.part_colorThemeStore.source
   deckColors: settingsPanel.host.host.part_colorThemeStore.colors
-  hostThemeAvailable: settingsPanel.host.host.part_appTheme.shellThemed
+  hostThemeAvailable: settingsPanel.host.part_appTheme.shellThemed
   onColorThemeChanged: change => settingsPanel.host.host.part_colorThemeStore.set(change)
   onColorThemeResetRequested: settingsPanel.host.host.part_colorThemeStore.resetColors()
   onDismissed: settingsPanel.host.host.closeSettings()

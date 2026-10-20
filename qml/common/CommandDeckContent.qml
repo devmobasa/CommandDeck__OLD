@@ -31,13 +31,13 @@ ColumnLayout {
   }
   visible: !launcherContent.host.host.part_extensionController.opened && !launcherContent.host.host.part_clipboardController.opened
   anchors.fill: parent
-  anchors.margins: launcherContent.host.host.part_appTheme.panelPadding
-  spacing: launcherContent.host.host.part_appTheme.gap
+  anchors.margins: launcherContent.host.part_appTheme.panelPadding
+  spacing: launcherContent.host.part_appTheme.gap
 
   CommandDeckSearchField {
     id: searchBar
     Layout.fillWidth: true
-    theme: launcherContent.host.host.part_appTheme
+    theme: launcherContent.host.part_appTheme
     controller: launcherContent.host.host.part_navigation
     focusRequestsEnabled: !launcherContent.host.host.part_extensionController.opened && !launcherContent.host.host.anyBlockingSurface
     filterDescriptors: launcherContent.host.host.filterDescriptors
@@ -65,7 +65,7 @@ ColumnLayout {
     id: herdrNavigation
     Layout.fillWidth: true
     visible: launcherContent.host.host.herdrViewOpen
-    theme: launcherContent.host.host.part_appTheme
+    theme: launcherContent.host.part_appTheme
     controller: launcherContent.host.host.part_navigation
     searchInput: searchBar.inputControl
     previousTabStop: searchBar.settingsControl
@@ -76,7 +76,7 @@ ColumnLayout {
     id: omarchyNavigation
     Layout.fillWidth: true
     visible: launcherContent.host.host.omarchyMenuOpen && !herdrNavigation.visible
-    theme: launcherContent.host.host.part_appTheme
+    theme: launcherContent.host.part_appTheme
     controller: launcherContent.host.host.part_navigation
     searchInput: searchBar.inputControl
     previousTabStop: searchBar.settingsControl
@@ -89,7 +89,7 @@ ColumnLayout {
     nextTabStop: runtimeStatusSurface.visible ? runtimeStatusSurface : footerActions.firstControl
     Layout.fillWidth: true
     visible: launcherContent.host.host.fileSelection.length > 0
-    theme: launcherContent.host.host.part_appTheme
+    theme: launcherContent.host.part_appTheme
     entries: launcherContent.host.host.fileSelection
     enabled: launcherContent.host.host.activeFileSelectionRequestId === 0
     onCopyRequested: launcherContent.host.host.runFileSelection(Protocol.FileSelectionActionIds.CopyPaths)
@@ -116,14 +116,14 @@ ColumnLayout {
       id: resultList
       anchors.fill: parent
       clip: true
-      spacing: launcherContent.host.host.part_appTheme.rowGap
+      spacing: launcherContent.host.part_appTheme.rowGap
       model: launcherContent.host.host.part_rows
-      highlightMoveDuration: launcherContent.host.host.part_appTheme.highlightMoveDuration
+      highlightMoveDuration: launcherContent.host.part_appTheme.highlightMoveDuration
 
       delegate: ResultListDelegate {
         id: listRow
         width: resultList.width
-        theme: launcherContent.host.host.part_appTheme
+        theme: launcherContent.host.part_appTheme
         selected: !listRow.isHeader && listRow.index === launcherContent.host.host.selectedIndex
         actionCount: listRow.selected ? launcherContent.host.host.actionCount : 0
         onActivated: {
@@ -146,7 +146,7 @@ ColumnLayout {
         objectName: "emptyStateView"
         anchors.fill: parent
         visible: launcherContent.host.host.showEmptyState
-        theme: launcherContent.host.host.part_appTheme
+        theme: launcherContent.host.part_appTheme
         filterDescriptors: launcherContent.host.host.filterDescriptors
         onTokenActivated: token => launcherContent.host.host.insertFilterToken(token)
         assistantAvailable: launcherContent.host.host.aiFeaturesEnabled
@@ -159,7 +159,7 @@ ColumnLayout {
         objectName: "noResultsView"
         anchors.fill: parent
         visible: launcherContent.host.host.showNoResults
-        theme: launcherContent.host.host.part_appTheme
+        theme: launcherContent.host.part_appTheme
         query: launcherContent.host.host.part_navigation.queryText
         filterDescriptors: launcherContent.host.host.filterDescriptors
         assistantAvailable: launcherContent.host.host.aiFeaturesEnabled
@@ -170,7 +170,7 @@ ColumnLayout {
 
     DetailPane {
       id: detailPane
-      theme: launcherContent.host.host.part_appTheme
+      theme: launcherContent.host.part_appTheme
       Layout.fillHeight: true
       Layout.fillWidth: launcherContent.host.host.calculatorOnly
       Layout.preferredWidth: 0.42 * launcherContent.host.part_palette.width
@@ -205,14 +205,14 @@ ColumnLayout {
       onPreviewMatchRequested: index => launcherContent.host.host.requestPreview(launcherContent.host.host.currentResult, index)
       onPreviewOpenRequested: launcherContent.host.host.openPreviewMatch()
       visible: !launcherContent.host.host.answerOpen && hasContent
-        && (launcherContent.host.host.previewPaneVisible || launcherContent.host.host.calculatorOnly)
+        && ((launcherContent.host.host.previewPaneVisible && !launcherContent.host.narrow) || launcherContent.host.host.calculatorOnly)
     }
 
     AiAnswerPane {
       id: answerPane
       objectName: "aiAnswerPane"
       visible: launcherContent.host.host.answerOpen
-      theme: launcherContent.host.host.part_appTheme
+      theme: launcherContent.host.part_appTheme
       Layout.fillHeight: true
       Layout.preferredWidth: 0.42 * launcherContent.host.part_palette.width
       mode: launcherContent.host.host.answerMode
@@ -251,9 +251,9 @@ ColumnLayout {
     id: runtimeStatusSurface
     Layout.fillWidth: true
     Layout.maximumHeight: Math.max(
-      Math.round(48 * launcherContent.host.host.part_appTheme.scale),
+      Math.round(48 * launcherContent.host.part_appTheme.scale),
       Math.round(launcherContent.host.part_palette.height * 0.28))
-    theme: launcherContent.host.host.part_appTheme
+    theme: launcherContent.host.part_appTheme
     daemonAvailable: launcherContent.host.host.daemonAvailable
     status: launcherContent.host.host.runtimeStatus
     reconciliationPending: launcherContent.host.host.reconciliationPending
@@ -267,7 +267,7 @@ ColumnLayout {
     id: undoBar
     objectName: "hiddenUndoBar"
     Layout.fillWidth: true
-    theme: launcherContent.host.host.part_appTheme
+    theme: launcherContent.host.part_appTheme
     active: launcherContent.host.host.lastHidden !== null || launcherContent.host.host.lastUndo !== null
     title: launcherContent.host.host.lastHidden ? launcherContent.host.host.lastHidden.title : ""
     message: launcherContent.host.host.lastUndo ? launcherContent.host.host.lastUndo.message : ""
@@ -288,9 +288,9 @@ ColumnLayout {
       // Daemon and action messages are shown as written, never as markup.
       textFormat: Text.PlainText
       text: launcherContent.host.host.statusText
-      color: launcherContent.host.host.daemonAvailable ? launcherContent.host.host.part_appTheme.textFaint : launcherContent.host.host.part_appTheme.urgent
-      font.family: launcherContent.host.host.part_appTheme.fontFamily
-      font.pixelSize: launcherContent.host.host.part_appTheme.fontSmall
+      color: launcherContent.host.host.daemonAvailable ? launcherContent.host.part_appTheme.textFaint : launcherContent.host.part_appTheme.urgent
+      font.family: launcherContent.host.part_appTheme.fontFamily
+      font.pixelSize: launcherContent.host.part_appTheme.fontSmall
       elide: Text.ElideRight
       Accessible.role: Accessible.StaticText
       Accessible.name: launcherContent.host.host.announcementText
@@ -302,7 +302,7 @@ ColumnLayout {
       objectName: "footerHintBar"
       compact: launcherContent.host.host.compactLayout
       Layout.alignment: Qt.AlignVCenter
-      theme: launcherContent.host.host.part_appTheme
+      theme: launcherContent.host.part_appTheme
       primaryActionTitle: launcherContent.host.host.primaryActionTitle
       actionCount: launcherContent.host.host.actionCount
       directActions: launcherContent.host.host.directActions.slice(0, 2)
@@ -314,7 +314,7 @@ ColumnLayout {
       nextTabStop: detailPane.firstPreviewControl || searchBar.filterChipControl || searchBar.inputControl
       shortcutTarget: searchBar.inputControl
       shortcutHandler: searchBar.handleActionShortcut
-      availableWidth: launcherContent.host.part_palette.width - 2 * launcherContent.host.host.part_appTheme.panelPadding
+      availableWidth: launcherContent.host.part_palette.width - 2 * launcherContent.host.part_appTheme.panelPadding
       onPrimaryRequested: launcherContent.host.host.part_navigation.invokePrimary()
       onActionsRequested: launcherContent.host.openActionPanel()
     }

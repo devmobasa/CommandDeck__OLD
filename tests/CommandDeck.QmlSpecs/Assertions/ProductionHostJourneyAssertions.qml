@@ -1,4 +1,6 @@
 import QtQuick
+import Quickshell
+import Quickshell.Wayland
 import "Protocol.js" as Protocol
 
 Item {
@@ -17,6 +19,32 @@ Item {
     { id: "reveal", title: "Reveal in File Manager", kind: Protocol.ActionKinds.RevealPath, arguments: {} }
   ]
   property int originalDebounce: 0
+  property var originalSizing: null
+  property var originalScreens: []
+
+  // A real exclusive zone, plus a non-exclusive witness that confirms the
+  // compositor applied it before we inspect the launcher's full-screen scrim.
+  PanelWindow {
+    id: reservedBar
+    visible: false
+    screen: journey.deck.desktopIntegration.screens[0] || null
+    anchors { top: true; left: true; right: true }
+    implicitHeight: 48
+    exclusiveZone: 48
+    color: "transparent"
+    WlrLayershell.layer: WlrLayer.Top
+    WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+  }
+  PanelWindow {
+    id: workArea
+    visible: reservedBar.visible
+    screen: reservedBar.screen
+    anchors { top: true; bottom: true; left: true; right: true }
+    exclusionMode: ExclusionMode.Normal
+    color: "transparent"
+    WlrLayershell.layer: WlrLayer.Overlay
+    WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+  }
 
   SavedSearchShortcutJourneyAssertions { id: savedShortcuts; host: journey.host }
   HoverSelectionJourneyAssertions { id: hoverSelection; host: journey.host }
@@ -54,9 +82,8 @@ Item {
     const strip = surface ? host.part_hostEvents.findChild(surface, "hiddenUndoBar") : null
     if (strip === null || !strip.visible) return false
     const palette = surface.part_palette
-    const width = Math.min(deck.part_appTheme.paletteWidth, surface.width - 80)
-    const height = Math.min(deck.part_appTheme.paletteHeight,
-      surface.height - palette.topInset - palette.bottomInset)
+    const width = surface.displaySizing.panelWidth
+    const height = surface.displaySizing.panelHeight
     // A positive button size can still belong to a palette animating out of
     // Settings. Wait for its final bounds before QtTest maps the click.
     return Math.abs(palette.width - width) < 0.1 && Math.abs(palette.height - height) < 0.1
@@ -132,9 +159,76 @@ Item {
     deck.reconciliationPending = false
     host.expect(!deck.opened && !deck.testSurfaceWindow.part_searchBar.placeholderRotating,
       "a closed launcher leaves its search placeholder timer stopped")
+    reservedBar.visible = true
     deck.open("{}")
 
     steps = [
+      {
+        ready: () => deck.testSurfaceWindow !== null && deck.testSearchInput.activeFocus
+          && workArea.height === reservedBar.screen.height - 48,
+        message: "window sizing is ready before another monitor receives focus",
+        action: () => {
+          host.expect(deck.testSurfaceWindow.height === reservedBar.screen.height
+              && deck.testSurfaceWindow.width === reservedBar.screen.width,
+            "the backdrop covers the whole screen even with an exclusive top bar")
+          host.expect(deck.testSurfaceWindow.part_palette.y >= 48,
+            "the launcher panel leaves room for the top bar inside its full-screen backdrop")
+          deck.applyDisplaySizePercent(105)
+          host.part_hostEvents.keyClick(Qt.Key_Equal, Qt.ControlModifier)
+          host.expect(deck.displaySizePercent === 115
+              && /^Display size: 115%(; limited to fit)?(; narrow layout)?(; scroll to view)?$/.test(deck.statusText),
+            "real zoom keys keep the concise percentage status in a presenting window")
+          host.part_hostEvents.keyClick(Qt.Key_0, Qt.ControlModifier)
+          host.expect(deck.displaySizePercent === 100
+              && /^Display size: 100% \(Recommended\)(; limited to fit)?(; narrow layout)?(; scroll to view)?$/.test(deck.statusText),
+            "real zoom reset keys identify Recommended in a presenting window")
+          const store = deck.part_displayScaleStore
+          store.legacy = true
+          store.legacyPercent = 115
+          deck.applyDisplaySizePercent(125)
+          host.part_hostEvents.keyClick(Qt.Key_0, Qt.ControlModifier)
+          host.expect(deck.displaySizePercent === 100 && store.legacy && store.legacyPercent === 115
+              && /^Display size: 100%(; limited to fit)?(; narrow layout)?(; scroll to view)?$/.test(deck.statusText),
+            "Ctrl+0 resets only the percentage and preserves the previous sizing profile")
+          store.useRecommended()
+          originalSizing = deck.testSurfaceWindow.displaySizing
+          deck.desktopIntegration.focusedMonitor = { name: "another-monitor", width: 7680, height: 4320 }
+        }
+      },
+      {
+        ready: () => deck.testSearchInput.activeFocus,
+        message: "another monitor's focus leaves the presenting window stable",
+        action: () => {
+          host.expect(JSON.stringify(deck.testSurfaceWindow.displaySizing) === JSON.stringify(originalSizing),
+            "focusing a different-resolution monitor cannot resize the open launcher")
+          deck.desktopIntegration.focusedMonitor = Qt.binding(function() {
+            return deck.desktopIntegration.screens.length > 0 ? deck.desktopIntegration.screens[0] : null
+          })
+          typePrompt("retained draft")
+          originalScreens = deck.desktopIntegration.screens.slice()
+          deck.desktopIntegration.screens = []
+        }
+      },
+      {
+        ready: () => !deck.opened && deck.testSurfaceWindow === null,
+        message: "removing the presenting output unmaps its exclusive-input window",
+        action: () => {
+          host.expect(deck.queryText === "retained draft",
+            "removing the output preserves the pending search draft")
+          deck.desktopIntegration.screens = originalScreens
+          deck.open("{}")
+        }
+      },
+      {
+        ready: () => deck.testSurfaceWindow !== null && deck.testSearchInput.activeFocus,
+        message: "reopening after output removal restores a usable search",
+        action: () => {
+          host.expect(deck.testSearchInput.text === "retained draft",
+            "reopening on an available output restores the interrupted draft")
+          host.part_hostEvents.keyClick(Qt.Key_A, Qt.ControlModifier)
+          host.part_hostEvents.keyClick(Qt.Key_Backspace)
+        }
+      },
       {
         ready: () => deck.testSurfaceWindow !== null && deck.testSurfaceWindow.visible
           && deck.testSearchInput !== null && deck.testSearchInput.activeFocus,
@@ -440,6 +534,7 @@ Item {
   function finish() {
     stepTimer.stop()
     deliveryTimer.stop()
+    reservedBar.visible = false
     savedShortcuts.restore()
     deck.close()
     deck.part_searchSession.debounce.interval = originalDebounce

@@ -77,6 +77,9 @@ public static partial class Program
     {
         var configPath = arguments.GetOption( "--config" );
         var command = arguments.Command.ToLowerInvariant( );
+
+        await DisplaySizingMigration.InitializeAsync( configPath, cancellationToken ).ConfigureAwait( false );
+
         await using var runtime =
             await CommandDeckRuntime.CreateAsync(
                 configPath,
