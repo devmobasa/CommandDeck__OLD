@@ -22,3 +22,4 @@ omarchy plugin validate "$plugin_dir"
 
 echo "Installed plugin in $plugin_dir"
 echo "Enable with: omarchy plugin enable local.commanddeck"
+echo "Bind the hotkey with: commanddeck hotkey install && hyprctl reload"

@@ -61,6 +61,8 @@ public static partial class Program
               commanddeck agent status|backends|models|preferences|login|logout|ask|conversation
               commanddeck agent trust|grants|packages|probe   (see 'commanddeck agent help')
               commanddeck doctor
+              commanddeck hotkey install [--chord "CTRL + SPACE"]   (Omarchy Hyprland Lua binding)
+              commanddeck hotkey remove
               commanddeck config init [--config PATH] [--force]
               commanddeck version
 
