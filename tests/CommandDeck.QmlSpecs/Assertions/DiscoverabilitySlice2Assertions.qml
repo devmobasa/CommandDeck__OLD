@@ -253,6 +253,9 @@ QtObject {
         && host.part_resultIcon.glyph("tab") === "⧉"
         && host.part_resultIcon.tint("tab") === host.part_resultIcon.tint("workspace"),
       "tab results fall back to a terminal icon, a distinct glyph, and the focus tint")
+    host.expect(host.part_resultIcon.candidates("\udb80\udde6", "omarchy").join(",")
+        === "\udb80\udde6,omarchy,applications-system,system-run",
+      "an Omarchy row whose menu icon is a font glyph falls back to the Omarchy logo first")
     host.part_kindCueRow.result = ({ title: "Right", subtitle: "Style › Menu Bar › Position", kind: "omarchy" })
     host.expect(!host.part_kindCueRow.compact && host.part_kindCueRow.implicitHeight >= host.part_theme.rowHeight,
       "Omarchy commands retain the second line for their menu path")

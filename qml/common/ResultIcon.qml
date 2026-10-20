@@ -38,6 +38,8 @@ Rectangle {
 
   // Icon themes disagree about which generic names they ship, so each kind
   // lists more than one and anything unresolved falls through to a glyph.
+  // Omarchy's menu icons are font glyphs rather than theme names, so its rows
+  // fall back to the Omarchy logo it installs.
   function genericNames(kind) {
     switch (kind) {
       case Protocol.ResultKinds.Application: return ["application-x-executable", "system-run"]
@@ -47,7 +49,7 @@ Rectangle {
       case Protocol.ResultKinds.Workspace: return ["preferences-desktop", "user-desktop"]
       case Protocol.ResultKinds.Tab: return ["utilities-terminal", "preferences-desktop"]
       case Protocol.ResultKinds.Calculator: return ["accessories-calculator"]
-      case Protocol.ResultKinds.Omarchy: return ["applications-system", "system-run"]
+      case Protocol.ResultKinds.Omarchy: return ["omarchy", "applications-system", "system-run"]
       case Protocol.ResultKinds.Quicklink: return ["internet-web-browser"]
       case Protocol.ResultKinds.CustomCommand: return ["utilities-terminal", "system-run"]
       case Protocol.ResultKinds.Process: return ["utilities-system-monitor", "system-run"]
