@@ -238,7 +238,15 @@ public static partial class Program
         True( host.Contains( "\"hotkey/LauncherShortcut.qml\"", StringComparison.Ordinal ) );
     }
 
-    private static async Task<ProcessOutcome> RunHotkeyCliAsync( string configHome, string stateHome, params string[] arguments )
+    private static Task<ProcessOutcome> RunHotkeyCliAsync( string configHome, string stateHome, params string[] arguments ) =>
+        RunCommandDeckWithEnvironmentAsync(
+            new Dictionary<string, string?> { ["XDG_CONFIG_HOME"] = configHome, ["XDG_STATE_HOME"] = stateHome },
+            arguments );
+
+    // A null value removes the variable from the child's environment.
+    private static async Task<ProcessOutcome> RunCommandDeckWithEnvironmentAsync(
+        IReadOnlyDictionary<string, string?> environment,
+        params string[] arguments )
     {
         ProcessStartInfo start = new( )
         {
@@ -253,8 +261,18 @@ public static partial class Program
             start.ArgumentList.Add( argument );
         }
 
-        start.Environment["XDG_CONFIG_HOME"] = configHome;
-        start.Environment["XDG_STATE_HOME"] = stateHome;
+        foreach ( (var name, var value) in environment )
+        {
+            if ( value is null )
+            {
+                start.Environment.Remove( name );
+            }
+            else
+            {
+                start.Environment[name] = value;
+            }
+        }
+
         using Process process = new( ) { StartInfo = start };
         True( process.Start( ) );
         var output = process.StandardOutput.ReadToEndAsync( );

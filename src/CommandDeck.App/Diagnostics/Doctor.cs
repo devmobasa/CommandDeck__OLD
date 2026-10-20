@@ -95,13 +95,20 @@ public static class Doctor
         }
 
         await AddAssistantChecksAsync( runtime, checks, cancellationToken ).ConfigureAwait( false );
+        var desktop = await DesktopWiringDoctor.CreateDefault( ).InspectAsync( cancellationToken )
+            .ConfigureAwait( false );
+        checks.AddRange( desktop.Select( Check.FromDesktop ) );
 
         Console.WriteLine( "CommandDeck doctor" );
         Console.WriteLine( new string( '─', 76 ) );
         foreach ( var check in checks )
         {
-            var marker = check.Passed ? "OK" : check.Required ? "FAIL" : "WARN";
+            var marker = check.Passed ? "OK" : check.Skipped ? "SKIP" : check.Required ? "FAIL" : "WARN";
             Console.WriteLine( $"{marker,-5} {check.Name,-22} {check.Detail}" );
+            if ( !check.Passed && check.Remediation is not null )
+            {
+                Console.WriteLine( $"{string.Empty,-28} Fix: {check.Remediation}" );
+            }
         }
 
         Console.WriteLine( new string( '─', 76 ) );
@@ -235,6 +242,20 @@ public static class Doctor
         public required bool Passed { get; init; }
         public required bool Required { get; init; }
         public required string Detail { get; init; }
+        public bool Skipped { get; init; }
+        public string? Remediation { get; init; }
+
+        // Desktop wiring is never required: a skip or warning keeps the exit code.
+        public static Check FromDesktop( DesktopCheck check ) =>
+            new( )
+            {
+                Name = check.Name,
+                Passed = check.State == DesktopCheckState.Passed,
+                Skipped = check.State == DesktopCheckState.Skipped,
+                Required = false,
+                Detail = check.Detail,
+                Remediation = check.Remediation
+            };
 
         public static Check Value(
             string name,

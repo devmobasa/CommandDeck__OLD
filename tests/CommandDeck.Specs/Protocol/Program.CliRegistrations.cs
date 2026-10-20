@@ -41,6 +41,10 @@ public static partial class Program
         Run( "hotkey install requires Omarchy's Lua Hyprland configuration", HotkeyInstallRequiresOmarchyLuaConfiguration );
         await RunAsync( "hotkey CLI installs and removes through XDG paths", HotkeyCliInstallsAndRemovesThroughXdgPathsAsync );
         Run( "Omarchy plugin global shortcut matches the generated Hyprland binding", OmarchyShortcutMatchesTheGeneratedBinding );
+        await RunAsync( "doctor desktop checks pass for a wired plugin hotkey and live binding", DoctorDesktopChecksPassWhenWiredAsync );
+        await RunAsync( "doctor desktop checks explain a missing installation and skip without Hyprland", DoctorDesktopChecksExplainAMissingInstallationAsync );
+        await RunAsync( "doctor desktop checks report stale wiring and unavailable hyprctl", DoctorDesktopChecksReportStaleWiringAsync );
+        await RunAsync( "doctor prints desktop wiring warnings skips and remediation", DoctorPrintsDesktopRemediationAsync );
     }
 
     private static async Task PreferencesResetRequiresProcessConfirmationAsync( )

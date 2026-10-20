@@ -170,6 +170,13 @@ journalctl --user -u commanddeck.service -n 100 --no-pager
 omarchy plugin validate ./qml
 ```
 
+`commanddeck doctor` also reads the desktop wiring without changing it. It
+checks that the plugin is installed and enabled in `~/.config/omarchy/shell.json`,
+and that `commanddeck.lua` exists and `hyprland.lua` requires it once. In a
+Hyprland session, it also checks that `hyprctl -j binds` shows the CommandDeck
+chord and `hyprctl -j globalshortcuts` lists `commanddeck:toggle`. These checks
+only warn or skip, so they never fail `doctor`. Each warning prints a `Fix:` line.
+
 - No files: check roots/exclusions, run `commanddeck reindex`, and inspect
   `commanddeck index status`.
 - No windows/workspaces: import the graphical session environment and restart
@@ -177,9 +184,10 @@ omarchy plugin validate ./qml
 - No copy: check `command -v wl-copy` and the Wayland session.
 - No overlay: inspect plugin validation and shell diagnostics; check that the
   daemon and `commanddeck` on the shell PATH match the installed frontend.
-- Hotkey does nothing: run `commanddeck hotkey install` and `hyprctl reload`,
-  then check that `hyprctl globalshortcuts` lists `commanddeck:toggle`. If it
-  does not, the shell has not loaded the plugin; run `omarchy restart shell`.
+- Hotkey does nothing: run `commanddeck doctor` and follow its `Fix:` lines.
+  Usually `commanddeck hotkey install` and `hyprctl reload` repair the binding.
+  If `hyprctl globalshortcuts` does not list `commanddeck:toggle`, the shell has
+  not loaded the plugin; run `omarchy restart shell`.
 - AI failure: review [AI prerequisites](ai.md). Never print a key
   while checking systemd credential/environment setup.
 
