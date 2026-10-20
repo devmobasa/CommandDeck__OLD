@@ -27,6 +27,7 @@ public sealed partial class SearchCoordinator
             request.Limit <= 0 ? _options.DefaultLimit : request.Limit,
             1,
             _options.MaximumLimit );
+        var historyVersion = _history.Version;
         var preferences = _preferences is null
             ? LauncherPreferences.CreateDefault( )
             : await _preferences.GetPreferencesAsync( cancellationToken ).ConfigureAwait( false );
@@ -46,7 +47,7 @@ public sealed partial class SearchCoordinator
         // they were saved from.
         if ( _preferences is not null )
         {
-            _history.Apply( preferences );
+            _history.ApplyRead( preferences, historyVersion );
         }
 
         var filterAliases = _preferences is null

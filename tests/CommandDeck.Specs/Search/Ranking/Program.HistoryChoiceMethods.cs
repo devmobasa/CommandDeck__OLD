@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 namespace CommandDeck.Specs;
 
 public static partial class Program
@@ -65,6 +67,54 @@ public static partial class Program
             Equal( (1L, true), await RunAsync( "signal" ) );
             True( PreferencesTextFormatter.Format( await runtime.GetPreferencesAsync( false, default ) )
                 .Contains( "Remember searches: off (configuration)" ) );
+        }
+        finally
+        {
+            Directory.Delete( root, recursive: true );
+        }
+    }
+
+    // A read that began before a choice was applied never restores the older
+    // choice it read; a search after a choice saved elsewhere, and a runtime
+    // starting up, apply that choice.
+    private static async Task HistoryChoicesReadBeforeAChangeNeverRestoreItAsync( )
+    {
+        HistoryPolicy policy = new( new PrivacyOptions { StoreQueryHistory = false } );
+        var version = policy.Version;
+        policy.Apply( new LauncherPreferences( ) { RememberSearches = false } );
+        policy.ApplyRead( new LauncherPreferences( ) { RememberSearches = true }, version );
+        True( !policy.RememberSearches );
+        policy.ApplyRead( new LauncherPreferences( ) { RememberSearches = true }, policy.Version );
+        True( policy.RememberSearches );
+
+        var root = Directory.CreateTempSubdirectory( "commanddeck-history-reads-" ).FullName;
+        try
+        {
+            CommandDeckOptions options = new( )
+            {
+                Storage = new StorageOptions { DatabasePath = Path.Combine( root, "catalog.db" ) },
+                Indexing = new IndexingOptions { Roots = [], IndexDesktopApplications = false, IndexOmarchyCommands = false },
+                Privacy = new PrivacyOptions { StoreQueryHistory = false },
+                Ai = new AiOptions { Enabled = false, Providers = [] }
+            };
+            SqliteCatalog catalog = new( options.Storage, privacy: options.Privacy, searchOptions: options.Search );
+            await catalog.InitializeAsync( default );
+            var current = await catalog.LauncherPreferences.GetPreferencesAsync( default );
+            await catalog.LauncherPreferences.ReplacePreferencesAsync( new LauncherPreferences( )
+            {
+                Sources = current.Sources,
+                RememberSearches = true
+            }, default );
+            True( !catalog.History.RememberSearches );
+            SearchCoordinator search = new( [new StaticSearchProvider( [PromotionRow( "app:signal", "Signal" )] )], options.Search,
+                catalog, catalog.LauncherPreferences, catalog.UsageHistory, privacy: options.Privacy, history: catalog.History );
+            await search.SearchWithOutcomeAsync( new SearchRequest { Query = "sig" }, SearchPurpose.Interactive, default );
+            True( catalog.History.RememberSearches );
+
+            var config = Path.Combine( root, "config.json" );
+            await File.WriteAllTextAsync( config, JsonSerializer.Serialize( options, CommandDeckJsonContext.Default.CommandDeckOptions ) );
+            await using var runtime = await CommandDeckRuntime.CreateAsync( config, CancellationToken.None );
+            True( (await runtime.QueryHistory.GetAsync( 10, default )).Enabled );
         }
         finally
         {

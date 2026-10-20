@@ -9,8 +9,9 @@ public sealed partial class CommandDeckRuntime
         bool includeShortcuts,
         CancellationToken cancellationToken )
     {
+        var historyVersion = _history.Version;
         var snapshot = await _preferences.GetSnapshotAsync( includeShortcuts, cancellationToken ).ConfigureAwait( false );
-        _history.Apply( snapshot.Preferences );
+        _history.ApplyRead( snapshot.Preferences, historyVersion );
         return new PreferencesSnapshot
         {
             Preferences = snapshot.Preferences,
