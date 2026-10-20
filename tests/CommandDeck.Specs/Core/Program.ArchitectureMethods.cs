@@ -137,6 +137,7 @@ public static partial class Program
 
         AssertProgramPartLineLimits( Path.Combine( root, "src/CommandDeck.App" ) );
         AssertProgramPartLineLimits( Path.Combine( root, "tests/CommandDeck.Specs" ) );
+        AssertHandwrittenLineLimits( root );
 
         AssertSourcesExclude(
             Path.Combine( root, "src/CommandDeck.Core/Search" ),
@@ -231,6 +232,28 @@ public static partial class Program
             {
                 throw new InvalidOperationException(
                     $"{Path.GetFileName( path )} has {lineCount} lines; split it below 500." );
+            }
+        }
+    }
+
+    // AGENTS.md: handwritten source stays at most 600 lines; a file that says
+    // in its first lines it is generated and not to be edited is exempt.
+    private static void AssertHandwrittenLineLimits( string root )
+    {
+        string[] extensions = [".cs", ".qml", ".js", ".sh"];
+        string[] directories = ["src", "qml", "scripts", "tests"];
+        foreach ( var path in directories
+            .SelectMany( directory => Directory.EnumerateFiles( Path.Combine( root, directory ), "*", SearchOption.AllDirectories ) )
+            .Where( path => extensions.Contains( Path.GetExtension( path ), StringComparer.Ordinal ) && IsProductionSource( path ) ) )
+        {
+            var lines = File.ReadAllLines( path );
+            var header = string.Join( '\n', lines.Take( 3 ) );
+            var generated = header.Contains( "Generated", StringComparison.OrdinalIgnoreCase ) &&
+                header.Contains( "do not edit", StringComparison.OrdinalIgnoreCase );
+            if ( lines.Length > 600 && !generated )
+            {
+                throw new InvalidOperationException(
+                    $"{Path.GetRelativePath( root, path )} has {lines.Length} lines; split it to at most 600." );
             }
         }
     }
