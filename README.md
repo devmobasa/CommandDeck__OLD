@@ -9,7 +9,7 @@ A keyboard-first command palette for **Omarchy and Hyprland**. Press
 **Ctrl+Space** to launch apps, find files and Hyprland config keys, switch
 windows, run Omarchy actions, and ask optional AI tools from one search field.
 
-[![CommandDeck: Home, typing gaps to find an Omarchy toggle and Hyprland keys, the action menu, a unit conversion, and the window list](docs/screenshots/demo.gif)](docs/gallery.md)
+[![CommandDeck: Home, typing gaps to find an Omarchy toggle and Hyprland keys, the action menu, browsing the Omarchy DNS submenu, filling a snippet's inputs inline, and the window list](docs/screenshots/demo.gif)](docs/gallery.md)
 
 > [!NOTE]
 > **Working preview.** Build from source; there are no packages yet. The desktop

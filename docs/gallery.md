@@ -13,10 +13,12 @@ regenerates them; the [capture notes](screenshots/README.md) explain how.
 
 Home, then `gaps` finds an Omarchy toggle and the Hyprland keys behind it.
 **Down** moves to `general.gaps_out` and **Ctrl+K** opens its actions. Next,
-`= 100 km to miles` converts units, and `win:` lists open windows.
-An [MP4 version](screenshots/demo.mp4) is also available.
+`dns` finds Omarchy's DNS submenu; **Enter** lists its entries under the menu
+path, with ✓ on the provider in use. `follow` finds a snippet whose inputs
+appear as pills in the search bar, filled in place, and `win:` lists open
+windows. An [MP4 version](screenshots/demo.mp4) is also available.
 
-![Animated demo of Home, a gaps search, the action menu, a unit conversion, and the window list](screenshots/demo.gif)
+![Animated demo of Home, a gaps search, the action menu, the Omarchy DNS submenu, snippet input pills, and the window list](screenshots/demo.gif)
 
 ## Search
 

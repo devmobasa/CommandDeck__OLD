@@ -1,12 +1,12 @@
 import QtQuick
 import Quickshell
 import "./components" as Deck
-import "./components/Protocol.js" as Protocol
 import "./DemoData.js" as Data
 
 // Frames for the animated demo: Home, typing `gaps`, moving to a Hyprland key,
-// its action menu, a unit conversion, and the window list. Each frame is named
-// frame-<index>-<hold ms>.png; scripts/capture-gallery.cs encodes them.
+// its action menu, browsing the Omarchy DNS submenu, filling a snippet's inputs
+// as pills, and the window list. Each frame is named frame-<index>-<hold ms>.png;
+// scripts/capture-gallery.cs encodes them.
 ShellRoot {
   id: root
   property bool actionsOpen: false
@@ -49,8 +49,14 @@ ShellRoot {
     add(1400, function() { stage.move(1) })
     add(2000, root.openActions)
     add(600, root.showHome)
-    type("= 100 km to miles", 70, root.showCalculator)
-    add(1400, function() { })
+    type("dns", 160, root.showSearch)
+    add(1300, root.openDnsMenu)
+    add(1700, function() { stage.move(1) })
+    add(600, root.showHome)
+    type("follow", 110, root.showSnippetSearch)
+    add(600, function() { root.fillPill("") })
+    type("Sam", 160, root.fillPill)
+    add(1200, function() { })
     add(600, root.showHome)
     type("win:", 140, root.showWindowSearch)
     add(450, function() { stage.move(1) })
@@ -68,12 +74,14 @@ ShellRoot {
 
   function showHome() {
     root.actionsOpen = false
+    stage.deck.part_navigation.clearOmarchyBrowse()
     stage.setResults("", Data.home(stage.icon), "Home")
+    stage.content.part_searchBar.inputControl.forceActiveFocus()
   }
 
   function showSearch(text) {
     const rows = Data.search(stage.icon, text)
-    stage.setResults(text, rows, rows.length + " results")
+    stage.setResults(text, rows, rows.length + " result" + (rows.length === 1 ? "" : "s"))
   }
 
   function openActions() {
@@ -81,21 +89,24 @@ ShellRoot {
     root.actionsOpen = true
   }
 
-  function showCalculator(text) {
-    const expression = text.replace(/^=\s*/, "")
-    if (expression === "100 km to miles") {
-      stage.setResults(text, Data.conversion(stage.icon), "1 result")
-      return
-    }
+  // Enter on the DNS row: the path bar opens and lists the submenu's entries.
+  function openDnsMenu() {
+    const row = stage.deck.part_navigation.selectedResult()
+    stage.deck.part_navigation.browseOmarchyMenu(row, row.actions[0])
+    stage.setResults("", Data.dnsMenu(stage.icon), "4 results")
+  }
 
-    const partial = expression.match(/^(\d+)(\s+km)?/)
-    const rows = partial ? [{
-      id: "calculator:" + expression, kind: Protocol.ResultKinds.Calculator, sourceId: "calculator",
-      icon: stage.icon("accessories-calculator"), title: partial[2] ? partial[1] + " km" : partial[1],
-      subtitle: expression,
-      actions: [{ id: "copy", title: "Copy Result", kind: Protocol.ActionKinds.CopyText, arguments: {} }]
-    }] : []
+  // A snippet is one more search source; its inputs show as pills.
+  function showSnippetSearch(text) {
+    const rows = Data.snippets(stage.icon, text).concat(Data.search(stage.icon, text))
     stage.setResults(text, rows, rows.length + " result" + (rows.length === 1 ? "" : "s"))
+  }
+
+  // Tab from the query reaches the first pill; typing fills it.
+  function fillPill(text) {
+    const field = stage.content.part_searchBar.pillsControl.fieldAt(0)
+    field.forceActiveFocus()
+    field.text = text
   }
 
   function showWindowSearch(text) {
