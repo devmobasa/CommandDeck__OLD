@@ -123,6 +123,9 @@ PanelWindow {
   }
   exclusionMode: ExclusionMode.Ignore
   WlrLayershell.layer: WlrLayer.Overlay
+  // Hyprland reports openlayer>>commanddeck when the launcher maps, which
+  // scripts/measure-toggle-latency.cs times; the picker and HUD use their own.
+  WlrLayershell.namespace: "commanddeck"
   WlrLayershell.keyboardFocus: launcherWindow.host.opened && !launcherWindow.host.part_extensionController.externalActionPending
     ? WlrKeyboardFocus.Exclusive
     : WlrKeyboardFocus.None

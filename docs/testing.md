@@ -303,6 +303,40 @@ build manually across:
 - long and Unicode results;
 - an AI response.
 
+### Hotkey-to-visible latency
+
+`scripts/measure-toggle-latency.cs` is a manual acceptance check for an
+installed build on a live Omarchy session. CI and the validation profiles do
+not run it.
+
+```bash
+dotnet scripts/measure-toggle-latency.cs --self-test
+dotnet scripts/measure-toggle-latency.cs --live --samples 20
+dotnet scripts/measure-toggle-latency.cs --live --samples 20 --path shell
+```
+
+Each sample sends `hl.dsp.global("commanddeck:toggle")` through Hyprland's
+request socket. This is the dispatcher that the hotkey binding calls. The script
+then measures the time until the event socket reports `openlayer>>commanddeck`.
+It toggles again and measures the time until `closelayer>>commanddeck`. It
+prints each sample, then the nearest-rank p50 and p95, the minimum, and the
+maximum. The script never types keys, so the result does not include the time
+for a key press to reach Hyprland's binding. `--path shell` starts
+`omarchy-shell shell toggle` for each toggle. This is the process-per-press path
+of the earlier binding, for comparison.
+
+The script refuses to run without `--live` or without a Hyprland session. It
+also refuses while `commanddeck:toggle` is not registered or CommandDeck is
+open. Close other overlays first: the launcher opens and closes on the focused
+monitor during the run. Record the machine, the monitor setup, and the build with
+the result, because latency depends on the machine.
+
+`--self-test` needs no session. Run it from the repository root. It checks event
+matching, layer and shortcut parsing, options, session refusal, and percentiles
+on recorded lines. It also checks that `CommandDeckWindow.qml` declares the
+`commanddeck` layer namespace that the script measures. The picker and the HUD
+use `commanddeck-picker` and `commanddeck-hud`.
+
 ## C# formatting
 
 Run `dotnet format CommandDeck.slnx --no-restore` to repair solution formatting
