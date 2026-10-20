@@ -18,7 +18,7 @@ public sealed partial class ClipboardHistoryStore
         lock ( _gate )
         {
             RequireHistoryConsent( );
-            _sequence = new( _time.GetUtcNow( ).ToUnixTimeSeconds( ) );
+            _sequence = new( );
         }
     }
 
@@ -34,7 +34,7 @@ public sealed partial class ClipboardHistoryStore
                 throw new InvalidOperationException( "Clipboard entry changed or expired; refresh before acting." );
             }
 
-            ClipboardSequence sequence = new( _time.GetUtcNow( ).ToUnixTimeSeconds( ) );
+            ClipboardSequence sequence = new( );
             foreach ( var row in order.Skip( start ) )
             {
                 sequence.Enqueue( row.Identity );
@@ -59,7 +59,7 @@ public sealed partial class ClipboardHistoryStore
             }
 
             var order = SequenceOrder( );
-            sequence.Refresh( order );
+            sequence.RemoveExpired( order );
             if ( sequence.Pending.Count == 0 )
             {
                 return null;
@@ -104,20 +104,38 @@ public sealed partial class ClipboardHistoryStore
     {
         Prune( );
         using var command = _connection.CreateCommand( );
-        command.CommandText = "SELECT id,incarnation,revision,copied FROM entries ORDER BY copied,rowid";
+        command.CommandText = "SELECT id,incarnation,revision FROM entries ORDER BY copied,rowid";
         using var reader = command.ExecuteReader( );
         List<SequenceRow> rows = [];
         while ( reader.Read( ) )
         {
-            rows.Add( new( new( reader.GetString( 0 ), reader.GetString( 1 ) ), reader.GetInt64( 2 ), reader.GetInt64( 3 ) ) );
+            rows.Add( new( new( reader.GetString( 0 ), reader.GetString( 1 ) ), reader.GetInt64( 2 ) ) );
         }
 
         return rows;
     }
 
-    private sealed record SequenceRow( ClipboardEntryIdentity Identity, long Revision, long Copied );
+    private sealed record SequenceRow( ClipboardEntryIdentity Identity, long Revision );
 
-    private sealed class ClipboardSequence( long startedAt )
+    // Called under _gate after a capture or explicit recopy commits. The entry
+    // may have been pruned during publication; only its current incarnation joins.
+    private void QueueSequenceCopy( string id )
+    {
+        if ( _sequence is null )
+        {
+            return;
+        }
+
+        var order = SequenceOrder( );
+        _sequence.RemoveExpired( order );
+        var entry = order.FirstOrDefault( row => row.Identity.Id == id );
+        if ( entry is not null )
+        {
+            _sequence.Enqueue( entry.Identity );
+        }
+    }
+
+    private sealed class ClipboardSequence
     {
         // Queued or already copied; copying an entry moves it to the newest
         // position, and this keeps it from joining the queue again.
@@ -134,16 +152,11 @@ public sealed partial class ClipboardHistoryStore
             }
         }
 
-        // Forget entries that left history, then queue entries copied since the sequence began.
-        public void Refresh( IReadOnlyList<SequenceRow> order )
+        public void RemoveExpired( IReadOnlyList<SequenceRow> order )
         {
             var live = order.Select( static row => row.Identity ).ToHashSet( );
             _seen.IntersectWith( live );
             Pending.RemoveAll( identity => !live.Contains( identity ) );
-            foreach ( var row in order.Where( row => row.Copied >= startedAt ) )
-            {
-                Enqueue( row.Identity );
-            }
         }
     }
 }

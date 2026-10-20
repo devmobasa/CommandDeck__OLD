@@ -122,6 +122,7 @@ public sealed partial class ClipboardHistoryStore
                     AdvanceRevision( );
                     PrunePolicy( ReadPolicy( ) );
                 } );
+            QueueSequenceCopy( id );
         }
     }
 

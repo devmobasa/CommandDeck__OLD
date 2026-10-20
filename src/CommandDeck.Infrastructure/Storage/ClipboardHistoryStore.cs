@@ -150,6 +150,7 @@ public sealed partial class ClipboardHistoryStore : IDisposable
                     return 0;
                 } );
 
+                QueueSequenceCopy( id );
                 return;
             }
 
@@ -163,6 +164,7 @@ public sealed partial class ClipboardHistoryStore : IDisposable
                 AdvanceRevision( );
                 PrunePolicy( ReadPolicy( ) );
             }, ( ) => Enabled && captureEpoch == _captureEpoch );
+            QueueSequenceCopy( id );
             _payloadLedger!.Cleanup( );
         }
     }

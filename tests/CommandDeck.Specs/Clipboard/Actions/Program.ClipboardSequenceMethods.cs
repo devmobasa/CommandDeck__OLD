@@ -25,13 +25,12 @@ public static partial class Program
 
                 // Restart begins with the next entry copied; earlier history is not replayed.
                 store.Capture( "before" );
-                clock.Tick( );
                 True( (await fixture.RunAsync( ClipboardSequenceCommands.RestartId )).Succeeded );
-                foreach ( var text in new[] { "one", "two", "three" } )
-                {
-                    clock.Tick( );
-                    store.Capture( text );
-                }
+                Equal( SequenceEnded, (await fixture.RunAsync( ClipboardSequenceCommands.NextId )).Message );
+                await FeedNativeAdmissionAsync( store, ["text/plain"], ["one"u8.ToArray( )] );
+                store.Capture( "two" );
+                EnableRichFixture( store );
+                await FeedRichAdmissionAsync( store, ["text/plain"], ["three"u8.ToArray( )] );
 
                 clock.Tick( );
                 Equal( "Copied clipboard sequence entry 1; 2 more queued.", (await fixture.RunAsync( ClipboardSequenceCommands.NextId )).Message );
@@ -94,8 +93,14 @@ public static partial class Program
             foreach ( var text in new[] { "a", "b", "c", "d" } )
             {
                 store.Capture( text );
-                clock.Tick( );
             }
+
+            ClipboardSequenceFixture fixture = new( store );
+            store.StartSequenceAt( store.Search( "d", 1 ).Single( ).Id );
+            await fixture.RunAsync( ClipboardSequenceCommands.NextId );
+            Equal( SequenceEnded, (await fixture.RunAsync( ClipboardSequenceCommands.NextId )).Message );
+            Equal( "d", string.Join( ',', fixture.Served ) );
+            fixture.Served.Clear( );
 
             // The browser starts at a snapshot entry: that entry, then every newer one by last copy.
             ClipboardHistoryService service = new( store );
@@ -108,7 +113,6 @@ public static partial class Program
             Throws<InvalidOperationException>( ( ) => service.Handle( "owner", SequenceStartRequest( request, b, 2, ClipboardSequenceCommands.NextAction ) ) );
 
             // Copying moves an entry to the newest position without copying it twice.
-            ClipboardSequenceFixture fixture = new( store );
             await fixture.RunAsync( ClipboardSequenceCommands.NextId );
             clock.Tick( );
             await fixture.RunAsync( ClipboardSequenceCommands.NextId );

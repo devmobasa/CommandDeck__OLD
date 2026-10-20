@@ -156,6 +156,7 @@ public sealed partial class ClipboardHistoryStore
                 AdvanceRevision( );
                 PrunePolicy( ReadPolicy( ) );
             } );
+        QueueSequenceCopy( id );
     }
 
     private string RichEntryId( IReadOnlyList<ClipboardCompletedPayload> retained, ClipboardSelectionContent content, string digest )

@@ -80,16 +80,21 @@ public sealed partial class ClipboardHistoryStore
     {
         lock ( _gate )
         {
-            Transaction( ( ) =>
+            var copied = Transaction( ( ) =>
             {
-                if ( Execute( "UPDATE entries SET copied=$time WHERE id=$id AND incarnation=$incarnation",
-                    ("$time", _time.GetUtcNow( ).ToUnixTimeSeconds( )), ("$id", id), ("$incarnation", incarnation) ) > 0 )
+                var changed = Execute( "UPDATE entries SET copied=$time WHERE id=$id AND incarnation=$incarnation",
+                    ("$time", _time.GetUtcNow( ).ToUnixTimeSeconds( )), ("$id", id), ("$incarnation", incarnation) );
+                if ( changed > 0 )
                 {
                     AdvanceRevision( );
                 }
 
-                return 0;
+                return changed;
             } );
+            if ( copied > 0 )
+            {
+                QueueSequenceCopy( id );
+            }
         }
     }
 }
