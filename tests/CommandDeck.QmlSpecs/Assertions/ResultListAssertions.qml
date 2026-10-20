@@ -95,6 +95,18 @@ QtObject {
     verifyTitleHighlighting()
     verifyCompactLayout()
     verifyOmarchyState()
+    verifyControlAndProcessCues()
+  }
+
+  // Desktop controls and processes name what they are.
+  function verifyControlAndProcessCues() {
+    show([Object.assign(result("control:volume-up", "Volume up", "Controls", "nine"), {
+        kind: Protocol.ResultKinds.CustomCommand, sourceId: Protocol.SourceIds.DesktopControls }),
+      Object.assign(result("process:42:7", "firefox", "Processes", "nine"), {
+        kind: Protocol.ResultKinds.Process, sourceId: Protocol.SourceIds.Processes })], true)
+    host.expect(loaded(1).kindCue === "Control" && loaded(3).kindCue === "Process",
+      "desktop control and process rows show their own type labels ("
+        + loaded(1).kindCue + ", " + loaded(3).kindCue + ")")
   }
 
   // An Omarchy row the daemon marks checked shows ✓, and one whose guard

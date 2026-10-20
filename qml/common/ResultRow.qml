@@ -11,7 +11,8 @@ Rectangle {
   readonly property var cueFamilies: Object.freeze({
     Calculator: "calc", Service: "service", Application: "app", File: "file",
     Configuration: "config", Window: "window", Command: "command", Ai: "ai",
-    Link: "link", System: "system", Search: "search", Herdr: "herdr"
+    Link: "link", System: "system", Search: "search", Herdr: "herdr", Control: "control",
+    Process: "process"
   })
 
   NumberAnimation on opacity {
@@ -88,6 +89,8 @@ Rectangle {
       case Protocol.SourceIds.SystemdUnits: return root.cueFamilies.Service
       case Protocol.SourceIds.Ai: return root.cueFamilies.Ai
       case Protocol.SourceIds.Herdr: return root.cueFamilies.Herdr
+      case Protocol.SourceIds.DesktopControls: return root.cueFamilies.Control
+      case Protocol.SourceIds.Processes: return root.cueFamilies.Process
     }
     switch (kind) {
       case Protocol.ResultKinds.Application: return root.cueFamilies.Application
@@ -121,6 +124,8 @@ Rectangle {
       case root.cueFamilies.System: return "System"
       case root.cueFamilies.Search: return "Search"
       case root.cueFamilies.Herdr: return "Herdr"
+      case root.cueFamilies.Control: return "Control"
+      case root.cueFamilies.Process: return "Process"
       default: return ""
     }
   }
