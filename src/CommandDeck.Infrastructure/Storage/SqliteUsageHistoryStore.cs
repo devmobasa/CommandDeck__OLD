@@ -375,6 +375,10 @@ internal sealed class SqliteUsageHistoryStore(
             return learned;
         }
 
+        // Entries past query-history retention never promote, even before
+        // the next write purges them.
+        var retained = timeProvider.GetUtcNow( ).ToUnixTimeMilliseconds( ) - checked(
+            ( long ) privacy.QueryHistoryRetentionDays * 24 * 60 * 60 * 1000);
         await initialize( cancellationToken ).ConfigureAwait( false );
         await using var connection = await open( cancellationToken ).ConfigureAwait( false );
         await using var command = connection.CreateCommand( );
@@ -385,7 +389,7 @@ internal sealed class SqliteUsageHistoryStore(
             GROUP BY stable_id, query_text
             LIMIT $limit;
             """;
-        command.Parameters.AddWithValue( "$since", sinceUnixMilliseconds );
+        command.Parameters.AddWithValue( "$since", Math.Max( sinceUnixMilliseconds, retained ) );
         command.Parameters.AddWithValue( "$limit", Math.Max( 1, privacy.MaximumQueryHistoryEntries ) );
         await using var reader = await command.ExecuteReaderAsync( cancellationToken ).ConfigureAwait( false );
         while ( await reader.ReadAsync( cancellationToken ).ConfigureAwait( false ) )

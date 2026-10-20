@@ -68,4 +68,44 @@ public static partial class Program
             Directory.Delete( root, recursive: true );
         }
     }
+
+    // A learned query older than query-history retention never promotes, even
+    // inside the 21-day window and before a write purges it.
+    private static async Task LearnedQueriesFollowHistoryRetentionAsync( )
+    {
+        var root = Directory.CreateTempSubdirectory( "commanddeck-learned-retention-" ).FullName;
+        try
+        {
+            SteppingTimeProvider clock = new( DateTimeOffset.UnixEpoch.AddDays( 20_000 ) );
+            var firefox = PromotionRow( "app:firefox", "Firefox", score: 0.4 );
+            var ffmpeg = PromotionRow( "app:ffmpeg", "FFmpeg Studio", score: 0.6 );
+            async Task<string?> TopMatchAsync( int retentionDays )
+            {
+                PrivacyOptions privacy = new( ) { StoreQueryHistory = true, QueryHistoryRetentionDays = retentionDays };
+                await using SqliteCatalog catalog = new( new StorageOptions { DatabasePath = Path.Combine( root, "catalog.db" ) },
+                    timeProvider: clock, privacy: privacy );
+                await catalog.InitializeAsync( default );
+                SearchCoordinator search = new( [new StaticSearchProvider( [firefox, ffmpeg] )], new SearchOptions( ),
+                    usageHistory: catalog.UsageHistory, timeProvider: clock, privacy: privacy );
+                var results = (await search.SearchWithOutcomeAsync( new SearchRequest { Query = "ff" },
+                    SearchPurpose.Interactive, default )).Results;
+                return results.FirstOrDefault( static value => value.Section?.Id == "top-match" )?.Id;
+            }
+
+            await using ( SqliteCatalog catalog = new( new StorageOptions { DatabasePath = Path.Combine( root, "catalog.db" ) },
+                timeProvider: clock, privacy: new PrivacyOptions { StoreQueryHistory = true } ) )
+            {
+                await catalog.InitializeAsync( default );
+                await catalog.UsageHistory.RecordInvocationAsync( firefox.Id, "open", "ff", default );
+            }
+
+            clock.Now = clock.Now.AddDays( 10 );
+            Equal( firefox.Id, await TopMatchAsync( retentionDays: 30 ) );
+            True( await TopMatchAsync( retentionDays: 7 ) != firefox.Id );
+        }
+        finally
+        {
+            Directory.Delete( root, recursive: true );
+        }
+    }
 }
