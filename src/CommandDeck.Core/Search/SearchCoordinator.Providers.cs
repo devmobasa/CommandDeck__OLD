@@ -8,6 +8,7 @@ public sealed partial class SearchCoordinator
 
     private static bool IsBareHome( ParsedQuery query, SearchRequest request ) =>
         request.HerdrWorkspaceId is null &&
+        request.OmarchyMenuId is null &&
         query.Text.Length == 0 &&
         !query.HasExplicitFilter &&
         !query.IsCalculator &&

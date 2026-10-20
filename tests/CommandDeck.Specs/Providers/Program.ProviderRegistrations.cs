@@ -129,6 +129,12 @@ public static partial class Program
         await RunAsync( "project checkouts have distinct paths and usable actions", ProjectCheckoutsAsync );
         await RunAsync( "omarchy menu state marks rows from one bounded batch", OmarchyMenuStateMarksRowsFromOneBatchAsync );
         Run( "omarchy menu state isolates each condition in the batch", OmarchyMenuStateScriptIsolatesEachCondition );
+        await RunAsync( "omarchy menu indexes submenu rows that open in the launcher", OmarchyMenuIndexesSubmenuRowsAsync );
+        await RunAsync( "omarchy menu browse lists one submenu in Omarchy order with catalog identities", OmarchyMenuBrowseListsChildrenInOmarchyOrderAsync );
+        await RunAsync( "omarchy menu browse marks live state without the typed text", OmarchyMenuBrowseMarksLiveStateAsync );
+        Run( "omarchy menu scope is validated at the protocol boundary", OmarchyMenuScopeIsValidated );
+        await RunAsync( "omarchy menu browse action is launcher owned", OmarchyMenuBrowseActionIsLauncherOwnedAsync );
+        await RunAsync( "omarchy menu source reparses only changed files", OmarchyMenuSourceReparsesChangedFilesAsync );
         await RunAsync(
             "systemd provider discovers services and timers without reading logs",
             SystemdProviderDiscoversUnitsAsync );

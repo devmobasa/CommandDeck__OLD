@@ -7,7 +7,8 @@ public static class ProviderEligibilityPolicy
         IReadOnlyList<ICommandProvider> providers,
         ParsedQuery query,
         LauncherPreferences preferences,
-        string? herdrWorkspaceId )
+        string? herdrWorkspaceId,
+        string? omarchyMenuId = null )
     {
         var liveSourcesEnabled = preferences.Sources.Any( static source =>
             source.SourceId == SourceIds.WindowsWorkspaces && source.EnabledInSearch );
@@ -24,7 +25,14 @@ public static class ProviderEligibilityPolicy
         var heyEnabled = preferences.Sources.Any( static source =>
             source.SourceId == SourceIds.Hey && source.EnabledInSearch );
         candidates = candidates.Where( provider => provider.Id != ProviderIds.Hey || (heyEnabled && (HeySearch.IsRequested( query ) || HeySearch.OffersFallback( query ))) );
-        candidates = candidates.Where( provider => herdrWorkspaceId is null || provider.Id == SearchCoordinator.HerdrProviderId );
+        candidates = candidates.Where( provider => ServesScope( provider, herdrWorkspaceId, omarchyMenuId ) );
+
+        // Within a submenu, source filters only narrow its rows; the
+        // coordinator's final gate applies them.
+        if ( omarchyMenuId is not null )
+        {
+            return candidates;
+        }
 
         var includedProviders = query.IncludedFilters
             .Select( static value => value.ProviderId )
@@ -56,6 +64,12 @@ public static class ProviderEligibilityPolicy
             (applicationsIncluded || provider.Id != SearchCoordinator.ApplicationFastPathProviderId) &&
             (query.HasExplicitFilter || liveSourcesEnabled || provider.Id != ProviderIds.Hyprland) );
     }
+
+    // A Herdr space is browsed by the Herdr provider alone. An Omarchy submenu
+    // is listed by its own provider alone, which never answers another search.
+    private static bool ServesScope( ICommandProvider provider, string? herdrWorkspaceId, string? omarchyMenuId ) =>
+        (herdrWorkspaceId is null || provider.Id == SearchCoordinator.HerdrProviderId) &&
+        (omarchyMenuId is null ? provider.Id != ProviderIds.OmarchyMenu : provider.Id == ProviderIds.OmarchyMenu);
 
     // A negative herdr: filter, or -hspace: together with -htab:, discards every
     // Herdr row, so the two list processes are not worth starting.

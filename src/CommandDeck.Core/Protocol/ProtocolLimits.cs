@@ -425,6 +425,18 @@ public static partial class ProtocolRequestValidator
             throw new InvalidOperationException( "HerdrWorkspaceId must be a valid Herdr identifier." );
         }
 
+        CheckLength( request.OmarchyMenuId, nameof( request.OmarchyMenuId ), 512 );
+        if ( request.OmarchyMenuId is not null &&
+            (request.OmarchyMenuId.Trim( ).Length == 0 || request.OmarchyMenuId.Any( char.IsControl )) )
+        {
+            throw new InvalidOperationException( "OmarchyMenuId must be a valid Omarchy menu identifier." );
+        }
+
+        if ( request.OmarchyMenuId is not null && (request.HerdrWorkspaceId is not null || request.BrowseDirectory is not null) )
+        {
+            throw new InvalidOperationException( "A search can browse only one Omarchy menu, Herdr space or folder." );
+        }
+
         CheckLength( request.BrowseDirectory, nameof( request.BrowseDirectory ), 4096 );
         if ( request.BrowseOffset is < 0 or > 50000 )
         {

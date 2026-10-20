@@ -71,7 +71,7 @@ public sealed partial class SearchCoordinator
             registry, providerLimit );
         var folderRequest = CreateProviderRequest( request, effectiveRequest, enabledSources,
             registry, request.Limit );
-        var selected = SelectProviders( parsed, preferences, request.HerdrWorkspaceId, purpose ).ToArray( );
+        var selected = SelectProviders( parsed, preferences, request, purpose ).ToArray( );
 
         return new SearchPlan( parsed, preferences, effectiveRequest, providerRequest,
             folderRequest, selected, enabledSources, limit, preferences.PreferenceRevision,
@@ -91,6 +91,7 @@ public sealed partial class SearchCoordinator
             ContributionSnapshot = registry,
             BrowseDirectory = request.BrowseDirectory,
             HerdrWorkspaceId = request.HerdrWorkspaceId,
+            OmarchyMenuId = request.OmarchyMenuId,
             BrowseOffset = request.BrowseOffset,
             Query = request.Query,
             Expression = request.Expression,

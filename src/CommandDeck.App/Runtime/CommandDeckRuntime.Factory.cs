@@ -113,6 +113,12 @@ public sealed partial class CommandDeckRuntime
                     providers.Add( clipboardProvider );
                 }
 
+                // Omarchy submenus are browsed only where their rows are indexed.
+                if ( options.Indexing.IndexOmarchyCommands )
+                {
+                    providers.Add( new OmarchyMenuProvider( new OmarchyMenuSource( ).LoadAsync, catalog, omarchyState ) );
+                }
+
                 SearchCoordinator search = new(
                     providers,
                     options.Search,

@@ -9,6 +9,7 @@ internal sealed class LauncherOwnedActionHandler : ILinuxActionHandler
         [ActionKinds.BrowseFolder] = "This action is handled by the launcher file browser.",
         [ActionKinds.CollectFile] = "This action is handled by the launcher file browser.",
         [ActionKinds.BrowseHerdrTabs] = "This action is handled by the launcher Herdr browser.",
+        [ActionKinds.BrowseOmarchyMenu] = "This action is handled by the launcher Omarchy menu browser.",
         [ActionKinds.ApplyQuery] = "This action is handled by the launcher search field.",
         [ActionKinds.ApplySavedSearch] = "This action is handled by the launcher search field.",
         [ActionKinds.OpenClipboardHistory] = "Open Clipboard History from the launcher.",

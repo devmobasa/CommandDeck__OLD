@@ -203,6 +203,7 @@ Generated from Core protocol constants and registries. Run `scripts/generate-pro
 - `LoginMethod`
 - `ModelId`
 - `Offset`
+- `OmarchyMenuId`
 - `Operation`
 - `OperationId`
 - `OutputAction`

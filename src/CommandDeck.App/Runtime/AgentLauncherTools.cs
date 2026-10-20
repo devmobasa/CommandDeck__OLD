@@ -64,7 +64,7 @@ public static class AgentLauncherTools
     {
         ArgumentNullException.ThrowIfNull( result );
         ArgumentNullException.ThrowIfNull( action );
-        if ( PrivateSources.IsPrivate( result ) || action.Kind is ActionKinds.ClipboardHistory or ActionKinds.AiPrompt or ActionKinds.AgentPrompt or ActionKinds.AgentOpen or ActionKinds.ApplySavedSearch or ActionKinds.ApplyQuery or ActionKinds.BrowseHerdrTabs )
+        if ( PrivateSources.IsPrivate( result ) || action.Kind is ActionKinds.ClipboardHistory or ActionKinds.AiPrompt or ActionKinds.AgentPrompt or ActionKinds.AgentOpen or ActionKinds.ApplySavedSearch or ActionKinds.ApplyQuery or ActionKinds.BrowseHerdrTabs or ActionKinds.BrowseOmarchyMenu )
         {
             return AgentActionRisks.Denied;
         }

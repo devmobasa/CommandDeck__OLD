@@ -4,6 +4,26 @@ namespace CommandDeck;
 
 public sealed partial class SqliteCatalog
 {
+    // The row a catalog search would return for this indexed item, for
+    // providers that list catalog items from their own source.
+    internal static SearchResult ProjectIndexedItem(
+        IndexedItem item,
+        double score,
+        CatalogItemState? state ) =>
+        CreateCatalogSearchResult(
+            item.StableId,
+            item.Kind,
+            item.Title,
+            item.Subtitle,
+            item.Path,
+            item.Icon,
+            item.PayloadJson,
+            item.ProviderId,
+            item.SourceId,
+            score,
+            state?.IsFavorite ?? false,
+            state is null ? [] : [.. state.Aliases] );
+
     private static SearchResult CreateCatalogSearchResult(
         string stableId,
         string kind,
@@ -85,6 +105,8 @@ public sealed partial class SqliteCatalog
                 break;
 
             case ResultKinds.Omarchy:
+                AddDetail( details, "Menu", metadata.GetValueOrDefault( ResultMetadataKeys.OmarchyMenuPath ) );
+                AddDetail( details, "Entries", metadata.GetValueOrDefault( ResultMetadataKeys.OmarchyMenuItems ) );
                 AddDetail( details, "Command", metadata.GetValueOrDefault( "command" ), true );
                 AddDetail( details, "Source", GetValueOrFallback( metadata, "source", path ), true );
                 break;
@@ -231,7 +253,15 @@ public sealed partial class SqliteCatalog
                 break;
 
             case ResultKinds.Omarchy:
-                if ( values.GetValueOrDefault( "nativeRoute" ) == "true" )
+                if ( !string.IsNullOrWhiteSpace( values.GetValueOrDefault( ResultMetadataKeys.OmarchyMenu ) ) )
+                {
+                    actions.Add( Action( "open-submenu", "Open Submenu", ActionKinds.BrowseOmarchyMenu, new( StringComparer.Ordinal )
+                    {
+                        [ResultMetadataKeys.OmarchyMenu] = values[ResultMetadataKeys.OmarchyMenu],
+                        [ResultMetadataKeys.OmarchyMenuPath] = values.GetValueOrDefault( ResultMetadataKeys.OmarchyMenuPath, title )
+                    } ) );
+                }
+                else if ( values.GetValueOrDefault( "nativeRoute" ) == "true" )
                 {
                     actions.Add( new CommandAction
                     {

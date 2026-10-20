@@ -24,6 +24,7 @@ public static class ProviderIds
     public const string Hey = "hey";
     public const string Hyprland = "hyprland";
     public const string Omarchy = "omarchy";
+    public const string OmarchyMenu = "omarchy-menu";
     public const string Processes = "processes";
     public const string Projects = "projects";
     public const string Quicklinks = "quicklinks";

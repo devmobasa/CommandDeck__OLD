@@ -227,6 +227,7 @@ var ProviderIds = Object.freeze({
   Hey: "hey",
   Hyprland: "hyprland",
   Omarchy: "omarchy",
+  OmarchyMenu: "omarchy-menu",
   Processes: "processes",
   Projects: "projects",
   Quicklinks: "quicklinks",
@@ -246,6 +247,7 @@ var ActionKinds = Object.freeze({
   ApplySavedSearch: "apply-saved-search",
   BrowseFolder: "browse-folder",
   BrowseHerdrTabs: "browse-herdr-tabs",
+  BrowseOmarchyMenu: "browse-omarchy-menu",
   ClipboardHistory: "clipboard-history",
   CollectFile: "collect-file",
   CopyText: "copy-text",
@@ -483,6 +485,10 @@ var ResultMetadataKeys = Object.freeze({
   CompletionText: "completionText",
   ExactAlias: "exactAlias",
   OmarchyChecked: "omarchyChecked",
+  OmarchyMenu: "omarchyMenu",
+  OmarchyMenuItems: "omarchyMenuItems",
+  OmarchyMenuPath: "omarchyMenuPath",
+  OmarchyParent: "omarchyParent",
   OmarchyUnavailable: "omarchyUnavailable"
 });
 

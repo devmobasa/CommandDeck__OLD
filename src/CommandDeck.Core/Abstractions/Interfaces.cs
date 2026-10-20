@@ -33,7 +33,19 @@ public interface ICatalogQueryStore
         IReadOnlyList<string> sourceIds,
         CancellationToken cancellationToken ) =>
         ValueTask.FromResult<IReadOnlySet<string>>( sourceIds.ToHashSet( StringComparer.Ordinal ) );
+
+    // Bookmark, alias and accepted-use state for rows of one kind that a
+    // provider builds from their own source under catalog stable IDs. Usage is
+    // scored as a catalog search scores that kind. IDs without state are absent.
+    ValueTask<IReadOnlyDictionary<string, CatalogItemState>> GetItemStatesAsync(
+        string kind,
+        IReadOnlyList<string> stableIds,
+        CancellationToken cancellationToken ) =>
+        ValueTask.FromResult<IReadOnlyDictionary<string, CatalogItemState>>(
+            new Dictionary<string, CatalogItemState>( StringComparer.Ordinal ) );
 }
+
+public sealed record CatalogItemState( bool IsFavorite, List<string> Aliases, double UsageScore );
 
 public interface ICatalogProjectionStore
 {

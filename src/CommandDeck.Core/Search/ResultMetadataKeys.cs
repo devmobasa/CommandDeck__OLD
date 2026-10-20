@@ -14,4 +14,12 @@ public static class ResultMetadataKeys
     // dimmed and scores lower) or its `checked` condition holds (it shows ✓).
     public const string OmarchyUnavailable = "omarchyUnavailable";
     public const string OmarchyChecked = "omarchyChecked";
+
+    // Omarchy menu rows: the menu an entry is listed in ("root" at the top);
+    // on a submenu row, the menu it opens, its label path ("Style › Theme") and
+    // how many entries it lists.
+    public const string OmarchyParent = "omarchyParent";
+    public const string OmarchyMenu = "omarchyMenu";
+    public const string OmarchyMenuPath = "omarchyMenuPath";
+    public const string OmarchyMenuItems = "omarchyMenuItems";
 }
