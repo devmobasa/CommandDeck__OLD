@@ -24,18 +24,23 @@ public sealed class OmarchyMenuState : IDisposable
     private readonly BoundedProcessRunner _run;
     private readonly TimeProvider _time;
     private readonly TimeSpan _wait;
+    private readonly Func<bool> _enabled;
     private readonly ConcurrentDictionary<string, Answer> _answers = new( StringComparer.Ordinal );
     private readonly ConcurrentDictionary<string, Task> _pending = new( StringComparer.Ordinal );
     private readonly CancellationTokenSource _shutdown = new( );
 
     private readonly record struct Answer( bool Holds, DateTimeOffset At );
 
-    public OmarchyMenuState( BoundedProcessRunner? run = null, TimeProvider? time = null, TimeSpan? wait = null )
+    // `enabled` is asked on every search, so turning the state off in Settings
+    // stops running conditions from the next search on.
+    public OmarchyMenuState( BoundedProcessRunner? run = null, TimeProvider? time = null, TimeSpan? wait = null,
+        Func<bool>? enabled = null )
     {
         _run = run ?? (( file, arguments, timeout, limits, token ) =>
             ProcessRunner.RunBoundedAsync( file, arguments, null, timeout, limits, token ));
         _time = time ?? TimeProvider.System;
         _wait = wait ?? TimeSpan.FromMilliseconds( 120 );
+        _enabled = enabled ?? (static ( ) => true);
     }
 
     public void Dispose( )
@@ -50,6 +55,11 @@ public sealed class OmarchyMenuState : IDisposable
         IReadOnlyList<SearchResult> results,
         CancellationToken cancellationToken )
     {
+        if ( !_enabled( ) )
+        {
+            return results;
+        }
+
         var rows = results.Where( static result => result.Kind == ResultKinds.Omarchy ).Take( MaximumRows ).ToArray( );
         var conditions = rows.SelectMany( static row => new[] { Condition( row, WhenKey ), Condition( row, CheckedKey ) } )
             .Where( static condition => condition is not null ).Select( static condition => condition! )

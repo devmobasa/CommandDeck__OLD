@@ -12,10 +12,10 @@ internal sealed class SqliteUsageHistoryStore(
     Func<ContributionRegistrySnapshot> contributions,
     TimeProvider timeProvider,
     RankingOptions ranking,
-    bool learnFromInvocations,
+    HistoryPolicy history,
     PrivacyOptions privacy ) : IUsageHistoryStore, ILearnedQueryStore
 {
-    private bool LearnsUsage => learnFromInvocations && ranking.Adaptive.Enabled && privacy.StoreUsageHistory;
+    private bool LearnsUsage => history.LearnFromUse && ranking.Adaptive.Enabled;
 
     // Usage older than the adaptive retention no longer counts. Catalog searches
     // that join `usage` for frecency apply the same cutoff.
@@ -30,7 +30,7 @@ internal sealed class SqliteUsageHistoryStore(
         CancellationToken cancellationToken )
     {
         var recordUsage = LearnsUsage;
-        var recordQuery = privacy.StoreQueryHistory &&
+        var recordQuery = history.RememberSearches &&
                           !string.IsNullOrWhiteSpace( query );
         if ( !recordUsage && !recordQuery )
         {
@@ -274,7 +274,7 @@ internal sealed class SqliteUsageHistoryStore(
         await transaction.CommitAsync( cancellationToken ).ConfigureAwait( false );
         return new QueryHistorySnapshot
         {
-            Enabled = privacy.StoreQueryHistory,
+            Enabled = history.RememberSearches,
             RetentionDays = privacy.QueryHistoryRetentionDays,
             MaximumEntries = privacy.MaximumQueryHistoryEntries,
             TotalEntries = total,
@@ -370,7 +370,7 @@ internal sealed class SqliteUsageHistoryStore(
     {
         var typed = LearnedQueries.Normalize( query );
         Dictionary<string, LearnedQuery> learned = new( StringComparer.Ordinal );
-        if ( typed.Length == 0 || !privacy.StoreQueryHistory )
+        if ( typed.Length == 0 || !history.RememberSearches )
         {
             return learned;
         }

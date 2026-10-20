@@ -235,7 +235,7 @@ public sealed partial class SqliteCatalog
         long useCount,
         long lastUsedUnixMilliseconds )
     {
-        if ( !_learnFromInvocations || !_privacyOptions.StoreUsageHistory || !_rankingOptions.Adaptive.Enabled ||
+        if ( !_history.LearnFromUse || !_rankingOptions.Adaptive.Enabled ||
             lastUsedUnixMilliseconds < AdaptiveCutoffUnixMilliseconds( ) )
         {
             return 0;

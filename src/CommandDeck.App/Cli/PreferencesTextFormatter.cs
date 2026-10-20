@@ -4,6 +4,11 @@ namespace CommandDeck;
 
 public static class PreferencesTextFormatter
 {
+    // A Settings choice, or the configuration's value while none is made.
+    private static string Choice( bool? chosen, bool configured ) => chosen is { } value
+        ? (value ? "on" : "off")
+        : (configured ? "on" : "off") + " (configuration)";
+
     public static IReadOnlyList<string> Format( PreferencesSnapshot snapshot )
     {
         ArgumentNullException.ThrowIfNull( snapshot );
@@ -18,6 +23,10 @@ public static class PreferencesTextFormatter
 
         lines.Add( $"Home folder only: {(snapshot.Preferences.SearchHomeOnly ? "on" : "off")}" );
         lines.Add( $"Reduce motion: {(snapshot.Preferences.ReduceMotion ? "on" : "off")}" );
+        var defaults = snapshot.Defaults ?? new PreferenceDefaults( );
+        lines.Add( $"Remember searches: {Choice( snapshot.Preferences.RememberSearches, defaults.RememberSearches )}" );
+        lines.Add( $"Learn from use: {Choice( snapshot.Preferences.LearnFromUse, defaults.LearnFromUse )}" );
+        lines.Add( $"Omarchy menu state: {Choice( snapshot.Preferences.OmarchyMenuState, defaults.OmarchyMenuState )}" );
         lines.Add(
             $"Web fallback: {EscapeTerminalText( snapshot.Preferences.WebFallbackQuicklinkId ?? "none" )}" );
         lines.Add( $"Preferred editor: {snapshot.Preferences.PreferredEditor}" );

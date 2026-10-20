@@ -42,6 +42,13 @@ public sealed partial class SearchCoordinator
             registry = _contributions?.Snapshot;
         }
 
+        // Settings choices about history apply from this search on, wherever
+        // they were saved from.
+        if ( _preferences is not null )
+        {
+            _history.Apply( preferences );
+        }
+
         var filterAliases = _preferences is null
             ? []
             : await _preferences.GetFilterAliasesAsync( cancellationToken ).ConfigureAwait( false );

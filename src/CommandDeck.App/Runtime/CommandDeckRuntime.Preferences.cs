@@ -3,12 +3,26 @@ namespace CommandDeck;
 public sealed partial class CommandDeckRuntime
 {
 
-    public ValueTask<PreferencesSnapshot> GetPreferencesAsync(
+    // The snapshot carries the configuration's defaults, so Settings can show
+    // what a choice it has not made means.
+    public async ValueTask<PreferencesSnapshot> GetPreferencesAsync(
         bool includeShortcuts,
-        CancellationToken cancellationToken ) =>
-        _preferences.GetSnapshotAsync( includeShortcuts, cancellationToken );
+        CancellationToken cancellationToken )
+    {
+        var snapshot = await _preferences.GetSnapshotAsync( includeShortcuts, cancellationToken ).ConfigureAwait( false );
+        _history.Apply( snapshot.Preferences );
+        return new PreferencesSnapshot
+        {
+            Preferences = snapshot.Preferences,
+            Defaults = _history.Defaults,
+            Customizations = snapshot.Customizations,
+            Shortcuts = snapshot.Shortcuts,
+            TotalCustomizationCount = snapshot.TotalCustomizationCount,
+            CustomizationsTruncated = snapshot.CustomizationsTruncated
+        };
+    }
 
-    public ValueTask<LauncherPreferences> UpdatePreferencesAsync(
+    public async ValueTask<LauncherPreferences> UpdatePreferencesAsync(
         LauncherPreferences preferences,
         CancellationToken cancellationToken )
     {
@@ -19,7 +33,9 @@ public sealed partial class CommandDeckRuntime
             throw new InvalidOperationException( "The selected fallback quicklink is not configured." );
         }
 
-        return _preferences.ReplacePreferencesAsync( preferences, cancellationToken );
+        var saved = await _preferences.ReplacePreferencesAsync( preferences, cancellationToken ).ConfigureAwait( false );
+        _history.Apply( saved );
+        return saved;
     }
 
     public ValueTask<CustomizationResult> SetFavoriteAsync(
@@ -144,6 +160,8 @@ public sealed partial class CommandDeckRuntime
         CancellationToken cancellationToken )
     {
         await Assistant.ResetAuthorityAsync( cancellationToken ).ConfigureAwait( false );
-        return await _preferences.ResetAsync( cancellationToken ).ConfigureAwait( false );
+        var reset = await _preferences.ResetAsync( cancellationToken ).ConfigureAwait( false );
+        _history.Apply( reset );
+        return reset;
     }
 }

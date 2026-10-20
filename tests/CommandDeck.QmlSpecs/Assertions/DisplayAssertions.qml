@@ -103,6 +103,31 @@ QtObject {
     host.expect(host.part_settings.behaviorChosen.keepSeconds === 600,
       "choosing how long to keep the last search emits it")
     host.part_settings.keepSearchSeconds = 0
+
+    // History and Omarchy state choices show the configuration's value until
+    // made, then the choice; a click saves it with the other preferences.
+    const settingsSnapshot = host.part_settings.snapshot
+    const withChoices = Object.assign({}, settingsSnapshot, {
+      preferences: Object.assign({}, settingsSnapshot.preferences, { learnFromUse: false }),
+      defaults: { rememberSearches: true, learnFromUse: true, omarchyMenuState: false }
+    })
+    host.part_settings.snapshot = withChoices
+    host.expect(host.part_settings.rememberSearchesControl.checked
+        && !host.part_settings.learnFromUseControl.checked
+        && !host.part_settings.omarchyMenuStateControl.checked,
+      "history toggles show the configuration until a choice is made, then the choice")
+    host.part_settings.changedPreferences = null
+    host.part_settings.rememberSearchesControl.click()
+    host.expect(host.part_settings.changedPreferences !== null
+        && host.part_settings.changedPreferences.rememberSearches === false
+        && host.part_settings.changedPreferences.learnFromUse === false,
+      "turning Remember searches off saves the choice with the other preferences")
+    host.part_settings.changedPreferences = null
+    host.part_settings.omarchyMenuStateControl.click()
+    host.expect(host.part_settings.changedPreferences !== null
+        && host.part_settings.changedPreferences.omarchyMenuState === true,
+      "turning Omarchy menu state on saves the choice")
+    host.part_settings.snapshot = settingsSnapshot
     host.part_settings.previewPaneVisible = true
     host.part_settings.previewPaneControl.click()
     host.expect(host.part_settings.previewPaneChosen === false,

@@ -9,6 +9,8 @@ ScrollView {
   readonly property alias part_displayCard: displayCard
   readonly property alias part_displaySizeChoice: displaySizeChoice
   readonly property alias part_layoutCard: layoutCard
+  readonly property alias part_rememberSearchesCheck: rememberSearchesCheck
+  readonly property alias part_learnFromUseCheck: learnFromUseCheck
   readonly property alias part_compactLayoutCheck: compactLayoutCheck
   readonly property alias part_previewPaneCheck: previewPaneCheck
   readonly property alias part_closingCard: closingCard
@@ -304,10 +306,34 @@ ScrollView {
     SettingsCard {
       id: dataCard
       searchQuery: customizationScroll.host.part_settingsSearch.text
-      searchTerms: "customization data query history export backup privacy"
+      searchTerms: "customization data query history remember searches learn ranking usage export backup privacy"
       theme: customizationScroll.host.theme
       title: "Data"
-      description: "Query history is stored locally and can be reviewed or cleared. Export writes every personalization to a file."
+      description: "History stays on this computer and can be reviewed or cleared here. Export writes every personalization to a file."
+
+      SettingsToggle {
+        id: rememberSearchesCheck
+        theme: customizationScroll.host.theme
+        Layout.fillWidth: true
+        text: "Remember searches"
+        help: "Keep the searches you run a result from, for Up-arrow recall and learned abbreviations such as ff for Firefox."
+        checked: customizationScroll.host.historyChoice("rememberSearches")
+        enabled: !customizationScroll.host.loading
+        Accessible.name: "Remember searches"
+        onClicked: customizationScroll.host.setHistoryChoice("rememberSearches", checked)
+      }
+
+      SettingsToggle {
+        id: learnFromUseCheck
+        theme: customizationScroll.host.theme
+        Layout.fillWidth: true
+        text: "Learn from what you open"
+        help: "Rank what you open often and recently higher. Turning it off keeps the history; Reset Ranking clears it."
+        checked: customizationScroll.host.historyChoice("learnFromUse")
+        enabled: !customizationScroll.host.loading
+        Accessible.name: "Learn from what you open"
+        onClicked: customizationScroll.host.setHistoryChoice("learnFromUse", checked)
+      }
 
       RowLayout {
         Layout.fillWidth: true

@@ -35,6 +35,10 @@ public sealed partial class CommandDeckRuntime
                     new ExtensionArtifactStore( PathExpansion.Expand( options.Storage.DatabasePath ) + ".extensions" ), cancellationToken ).ConfigureAwait( false );
                 resources.OwnDisposable( extensions );
                 catalog.Contributions = extensions;
+                // Settings choices about history apply before the first search,
+                // including in a CLI process that never searches.
+                catalog.History.Apply( await catalog.LauncherPreferences.GetPreferencesAsync( cancellationToken )
+                    .ConfigureAwait( false ) );
                 IExtensionLauncher extensionLauncher = new ExtensionSupervisor( executable, executablePrefix );
                 var extensionJournal = new FileRemoteEffectJournal( Path.Combine( extensions.ArtifactRoot, "effect-journal" ) );
                 resources.OwnDisposable( extensionJournal );
@@ -76,11 +80,9 @@ public sealed partial class CommandDeckRuntime
                 resources.Own( extensionSearch );
                 HerdrClient herdr = new( );
                 HeyClient hey = new( );
-                OmarchyMenuState? omarchyState = options.Search.OmarchyMenuState ? new( ) : null;
-                if ( omarchyState is not null )
-                {
-                    resources.OwnDisposable( omarchyState );
-                }
+                // Settings can turn the menu state on or off at run time.
+                OmarchyMenuState omarchyState = new( enabled: ( ) => catalog.History.OmarchyMenuState );
+                resources.OwnDisposable( omarchyState );
 
                 List<ICommandProvider> providers =
                 [
@@ -127,7 +129,8 @@ public sealed partial class CommandDeckRuntime
                     catalog.UsageHistory,
                     privacy: options.Privacy,
                     contributions: extensions,
-                    providerDiagnostic: SearchLogging.LogProviderDiagnostic );
+                    providerDiagnostic: SearchLogging.LogProviderDiagnostic,
+                    history: catalog.History );
 
                 // The managed provider document lives beside the effective configuration
                 // file; it overrides the JSONC AI section once a management write exists.
@@ -168,7 +171,7 @@ public sealed partial class CommandDeckRuntime
                     generations,
                     outputs,
                     previews,
-                    catalog.LauncherPreferences, catalog.AiPreferences, resources, constructionOptions );
+                    catalog.LauncherPreferences, catalog.AiPreferences, resources, constructionOptions, catalog.History );
                 runtime._extensions = extensions;
                 runtime._extensionSearch = extensionSearch;
                 runtime._extensionConnections = extensionConnections;

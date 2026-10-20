@@ -47,7 +47,7 @@ public static partial class Program
 
     private static CommandDeckRuntime InvocationFixture( CommandDeckOptions options, SqliteCatalog catalog,
         IUsageHistoryStore history, IActionExecutor executor, SearchCoordinator search,
-        RuntimeConstructionOptions? constructionOptions = null )
+        RuntimeConstructionOptions? constructionOptions = null, HistoryPolicy? historyPolicy = null )
     {
         AiProviderSettingsService providers = new(
             options.Ai,
@@ -68,7 +68,8 @@ public static partial class Program
         resources.OwnDisposable( outputs );
 
         return new CommandDeckRuntime( options, catalog, history, indexer, indexer, search,
-            executor, providers, preflight, generations, outputs, previews, catalog, catalog.AiPreferences, resources, constructionOptions );
+            executor, providers, preflight, generations, outputs, previews, catalog, catalog.AiPreferences, resources, constructionOptions,
+            historyPolicy );
     }
 
     private static async Task RuntimeAcceptedUsageSurvivesCancellationAndFailureAsync( )

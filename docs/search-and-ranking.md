@@ -201,7 +201,8 @@ tiers are:
 2. **Exact:** case-insensitive exact trimmed title or path basename.
 3. **Learned:** a strong title/basename match with at least two accepted uses and
    last use no more than 21 days ago, inclusive.
-   With query history on (`privacy.storeQueryHistory`), a result is also learned
+   With query history on (Settings > Customization > Data > Remember searches, or
+   `privacy.storeQueryHistory`), a result is also learned
    for a query the user typed before accepting it: the same query after one
    accepted use, or a longer learned query that this one begins (two or more
    characters) after two. Typing `ff` and accepting Firefox makes `ff` promote
@@ -287,7 +288,8 @@ holds shows ✓. Up to twelve Omarchy rows per search are checked in one bounded
 batch, cached by condition for twenty seconds. A search waits up to 120 ms for
 conditions it has never answered and otherwise uses the last answers while a
 refresh runs, so a row can briefly show the previous state. Actions are
-unchanged either way. Set `search.omarchyMenuState=false` to run no conditions.
+unchanged either way. Turn off Omarchy menu state in Settings > Search, or set
+`search.omarchyMenuState=false`, to run no conditions.
 
 ## Omarchy submenus
 
@@ -429,8 +431,9 @@ Moving the pointer over a result selects it without taking focus from search.
 A row that appears or scrolls under a resting pointer, including when the
 launcher opens, does not take the selection from the keyboard.
 
-With query history on (`privacy.storeQueryHistory`), Up from the first row of an
-empty search recalls the most recent query and searches it; Up again on the
+With query history on (Remember searches in Settings, or
+`privacy.storeQueryHistory`), Up from the first row of an empty search recalls
+the most recent query and searches it; Up again on the
 unchanged query recalls the next older one. Each query appears once. History is
 read when Up is first pressed after opening and forgotten when the launcher
 closes; with history off, Up there does nothing.

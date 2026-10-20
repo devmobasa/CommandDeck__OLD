@@ -23,6 +23,12 @@ public sealed class LauncherPreferences
     public string HeyOpenTarget { get; init; } = HeyOpenTargets.Web;
     public EditorAdapter GraphicalEditor { get; init; } = EditorAdapter.CreateGraphicalDefault( );
     public EditorAdapter TerminalEditor { get; init; } = EditorAdapter.CreateTerminalDefault( );
+    // Settings choices over the configuration's defaults; null follows the
+    // configuration (privacy.storeQueryHistory; search.learnFromInvocations
+    // with privacy.storeUsageHistory; search.omarchyMenuState).
+    public bool? RememberSearches { get; init; }
+    public bool? LearnFromUse { get; init; }
+    public bool? OmarchyMenuState { get; init; }
 
     public static LauncherPreferences CreateDefault( ) => new( )
     {
@@ -255,9 +261,19 @@ public sealed class CustomizationSummary
     public bool IsAvailable { get; init; }
 }
 
+// The configuration's values for the preferences that may follow it, so
+// Settings can show what an unset choice means.
+public sealed class PreferenceDefaults
+{
+    public bool RememberSearches { get; init; }
+    public bool LearnFromUse { get; init; }
+    public bool OmarchyMenuState { get; init; }
+}
+
 public sealed class PreferencesSnapshot
 {
     public required LauncherPreferences Preferences { get; init; }
+    public PreferenceDefaults? Defaults { get; init; }
     public List<CustomizationSummary> Customizations { get; init; } = [];
     public List<ShortcutBinding> Shortcuts { get; init; } = [];
     public int TotalCustomizationCount { get; init; }

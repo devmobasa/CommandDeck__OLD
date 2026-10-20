@@ -7,6 +7,7 @@ ScrollView {
   required property var host
   readonly property alias part_fileSearchCard: fileSearchCard
   readonly property alias part_homeFolderOnlyCheck: homeFolderOnlyCheck
+  readonly property alias part_omarchyMenuStateCheck: omarchyMenuStateCheck
   readonly property alias part_sourcesCard: sourcesCard
   readonly property alias part_manageExtensions: manageExtensions
   readonly property alias part_sourceRepeater: sourceList.repeater
@@ -157,6 +158,19 @@ ScrollView {
           preferences.reduceMotion = checked
           searchScroll.host.preferencesChanged(preferences)
         }
+      }
+
+      SettingsToggle {
+        id: omarchyMenuStateCheck
+        objectName: "omarchyMenuStateToggle"
+        theme: searchScroll.host.theme
+        Layout.fillWidth: true
+        text: "Omarchy menu state"
+        help: "Mark checked Omarchy menu items and dim unavailable ones, by running the menu's own conditions."
+        checked: searchScroll.host.historyChoice("omarchyMenuState")
+        enabled: !searchScroll.host.loading
+        Accessible.name: "Omarchy menu state"
+        onClicked: searchScroll.host.setHistoryChoice("omarchyMenuState", checked)
       }
 
       SettingsToggle {
