@@ -29,8 +29,8 @@ with `scripts/generate-reference-docs.sh`.
 
 The runtime never rewrites an existing JSONC file. `config init` refuses to
 overwrite unless you pass `--force`. Launcher personalization (bookmarks,
-aliases, source visibility, reduced motion, display-size, transparency, and
-color presets) lives outside JSONC: SQLite for daemon-owned preferences, and small
+aliases, source visibility, reduced motion, display-size, transparency, layout,
+closing behavior, and color presets) lives outside JSONC: SQLite for daemon-owned preferences, and small
 QML state files under `$XDG_STATE_HOME/commanddeck/` for overlay-only choices.
 There is no `config migrate` command yet; option renames will need one.
 
@@ -106,6 +106,7 @@ object. Detailed guidance remains in the hand-written sections that follow.
 | `search.maximumLimit` | `integer` | `200` |
 | `search.providerTimeoutMilliseconds` | `integer` | `350` |
 | `search.learnFromInvocations` | `boolean` | `true` |
+| `search.omarchyMenuState` | `boolean` | `true` |
 | `search.calculator` | `CalculatorOptions` | object |
 | `search.calculator.useQalc` | `string` | `auto` |
 | `search.ranking` | `RankingOptions` | object |

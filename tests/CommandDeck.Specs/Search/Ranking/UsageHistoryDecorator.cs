@@ -7,6 +7,8 @@ internal abstract class UsageHistoryDecorator( IUsageHistoryStore inner ) : IUsa
     public ValueTask<RankingLearningSnapshot> GetRankingLearningAsync( int limit, CancellationToken cancellationToken ) =>
         inner.GetRankingLearningAsync( limit, cancellationToken );
     public ValueTask ResetRankingLearningAsync( CancellationToken cancellationToken ) => inner.ResetRankingLearningAsync( cancellationToken );
+    public ValueTask<bool> ResetRankingForAsync( string stableId, CancellationToken cancellationToken ) =>
+        inner.ResetRankingForAsync( stableId, cancellationToken );
     public ValueTask<QueryHistorySnapshot> GetQueryHistoryAsync( int limit, CancellationToken cancellationToken ) => inner.GetQueryHistoryAsync( limit, cancellationToken );
     public ValueTask<bool> DeleteQueryHistoryAsync( long id, CancellationToken cancellationToken ) => inner.DeleteQueryHistoryAsync( id, cancellationToken );
     public ValueTask ResetQueryHistoryAsync( CancellationToken cancellationToken ) => inner.ResetQueryHistoryAsync( cancellationToken );

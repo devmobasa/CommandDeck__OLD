@@ -9,6 +9,8 @@ QtObject {
   id: spec
   required property var host
   property int repaints: 0
+  property bool compactLayout: false
+  property bool controlHeld: false
 
   property ListModel rowsFixture: ListModel {
     id: listRows
@@ -34,6 +36,8 @@ QtObject {
       width: resultList.width
       theme: spec.host.part_theme
       selected: !listRow.isHeader && listRow.index === listNavigation.selectedIndex
+      compactLayout: spec.compactLayout
+      controlHeld: spec.controlHeld
     }
   }
 
@@ -89,6 +93,71 @@ QtObject {
       "a header row that becomes a result shows the result again")
 
     verifyTitleHighlighting()
+    verifyCompactLayout()
+    verifyOmarchyState()
+    verifyControlAndProcessCues()
+  }
+
+  // Desktop controls and processes name what they are.
+  function verifyControlAndProcessCues() {
+    show([Object.assign(result("control:volume-up", "Volume up", "Controls", "nine"), {
+        kind: Protocol.ResultKinds.CustomCommand, sourceId: Protocol.SourceIds.DesktopControls }),
+      Object.assign(result("process:42:7", "firefox", "Processes", "nine"), {
+        kind: Protocol.ResultKinds.Process, sourceId: Protocol.SourceIds.Processes })], true)
+    host.expect(loaded(1).kindCue === "Control" && loaded(3).kindCue === "Process",
+      "desktop control and process rows show their own type labels ("
+        + loaded(1).kindCue + ", " + loaded(3).kindCue + ")")
+  }
+
+  // An Omarchy row the daemon marks checked shows ✓, and one whose guard
+  // failed is dimmed unless selected. A refresh that only changes that state
+  // still repaints the row.
+  function verifyOmarchyState() {
+    const omarchy = (id, metadata) => Object.assign(result(id, id, "Omarchy", "eight"), {
+      kind: Protocol.ResultKinds.Omarchy, metadata: metadata })
+    show([omarchy("dark", { omarchyChecked: "true" }), omarchy("stale", { omarchyUnavailable: "true" })], true)
+    listNavigation.selectedIndex = 1
+    const dark = loaded(1)
+    const stale = loaded(2)
+    host.expect(dark.checkedMarkControl.visible && dark.accessibilityName.indexOf(", checked") >= 0
+        && !stale.checkedMarkControl.visible && stale.accessibilityName.indexOf("unavailable here") >= 0,
+      "a checked Omarchy row shows a check mark and both states are announced")
+    host.expect(stale.contentOpacity === 0.5 && dark.contentOpacity === 1,
+      "an unavailable Omarchy row is dimmed")
+    listNavigation.selectedIndex = 2
+    host.expect(stale.contentOpacity === 1, "a selected unavailable row is shown in full")
+    show([omarchy("dark", {}), omarchy("stale", { omarchyUnavailable: "true" })], false)
+    host.expect(!loaded(1).checkedMarkControl.visible, "a refresh that clears the check repaints the row")
+
+    // A submenu row reads as a menu; an action row keeps its own label.
+    const submenu = { omarchyMenu: "style.theme", omarchyMenuPath: "Style › Theme", omarchyMenuItems: "3" }
+    show([omarchy("theme", submenu), omarchy("dark", {})], true)
+    const theme = loaded(1)
+    host.expect(theme.kindCue === "Menu" && theme.submenuChevronControl.visible
+        && theme.submenuChevronControl.text === "3 ›" && theme.accessibilityName.indexOf("opens 3 entries") >= 0,
+      "an Omarchy submenu row shows a Menu label and a chevron with its entry count (" + theme.kindCue + ")")
+    host.expect(loaded(2).kindCue === "System" && !loaded(2).submenuChevronControl.visible,
+      "an Omarchy action row keeps its label and shows no chevron")
+    show([omarchy("theme", Object.assign({}, submenu, { omarchyMenuItems: "4" })), omarchy("dark", {})], false)
+    host.expect(loaded(1).submenuChevronControl.text === "4 ›", "a refresh that changes the entry count repaints the row")
+  }
+
+  // The compact layout puts every row on one line and shows its Ctrl+number
+  // badge only while Ctrl is held; the default layout always shows it.
+  function verifyCompactLayout() {
+    show([result("file:a", "a.txt", "Files", "seven")], true)
+    const row = loaded(1)
+    const twoLines = row.implicitHeight
+    host.expect(!row.compact && row.ordinalBadgeControl.visible,
+      "a file row takes two lines and shows its badge in the default layout")
+    compactLayout = true
+    host.expect(row.compact && !row.ordinalBadgeControl.visible && row.implicitHeight < twoLines,
+      "the compact layout puts a file row on one line and hides its badge ("
+        + twoLines + " to " + row.implicitHeight + ")")
+    controlHeld = true
+    host.expect(row.ordinalBadgeControl.visible, "holding Ctrl shows the badge in the compact layout")
+    compactLayout = false
+    controlHeld = false
   }
 
   // Marks each highlighted run with brackets, whatever the accent colour.

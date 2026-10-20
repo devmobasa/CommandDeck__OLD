@@ -11,7 +11,8 @@ Rectangle {
   readonly property var cueFamilies: Object.freeze({
     Calculator: "calc", Service: "service", Application: "app", File: "file",
     Configuration: "config", Window: "window", Command: "command", Ai: "ai",
-    Link: "link", System: "system", Search: "search", Herdr: "herdr"
+    Link: "link", System: "system", Search: "search", Herdr: "herdr", Control: "control",
+    Process: "process", Menu: "menu"
   })
 
   NumberAnimation on opacity {
@@ -27,12 +28,18 @@ Rectangle {
   required property var theme
   required property bool selected
   property int ordinal: 0
+  // The compact layout: every row on one line, and the Ctrl+number badge only
+  // while Ctrl is held.
+  property bool compactLayout: false
+  property bool controlHeld: false
   // B5 - the launcher's computed action count for this result. It is only wired
   // for the highlighted row (0 elsewhere), so the affordance is naturally
   // absent from unselected rows.
   property int actionCount: 0
   signal activated()
   signal actionsRequested()
+  // The pointer's window position on every hover update over the row.
+  signal pointerMoved(real x, real y)
 
   readonly property string titleText: root.result && root.result.title
     ? root.result.title
@@ -49,7 +56,8 @@ Rectangle {
     ? String(root.result.kind)
     : ""
 
-  readonly property bool compact: root.kind === Protocol.ResultKinds.Application || root.kind === Protocol.ResultKinds.CustomCommand
+  readonly property bool compact: root.compactLayout
+    || root.kind === Protocol.ResultKinds.Application || root.kind === Protocol.ResultKinds.CustomCommand
   readonly property string herdrStatus: sourceId === Protocol.SourceIds.Herdr && result.metadata
     ? String(result.metadata.herdrAgentStatus || "") : ""
   readonly property string statusBadgeText: herdrStatus === "blocked" ? "Needs attention"
@@ -68,7 +76,14 @@ Rectangle {
   // signal (a service and a calculator both arrive from dedicated sources), so
   // it wins; otherwise the freedesktop-style `kind` decides. Everything folds
   // into a small family so the label and the tint stay in lock-step.
-  readonly property string cueFamily: root.familyFor(root.sourceId, root.kind)
+  readonly property string cueFamily: root.omarchySubmenu ? root.cueFamilies.Menu
+    : root.familyFor(root.sourceId, root.kind)
+  // An Omarchy submenu row opens its entries in the launcher, so it reads as a
+  // menu: a "Menu" tag and a chevron with its entry count, as in Omarchy's menu.
+  readonly property bool omarchySubmenu: root.kind === Protocol.ResultKinds.Omarchy && !!root.result.metadata
+    && !!root.result.metadata[Protocol.ResultMetadataKeys.OmarchyMenu]
+  readonly property string omarchyMenuItems: root.omarchySubmenu
+    ? String(root.result.metadata[Protocol.ResultMetadataKeys.OmarchyMenuItems] || "") : ""
   readonly property string kindCue: root.cueLabel(root.cueFamily)
   readonly property bool hasKindCue: root.kindCue.length > 0
   // A calculator row leads its value with `=` in the accent colour so the answer
@@ -81,6 +96,8 @@ Rectangle {
       case Protocol.SourceIds.SystemdUnits: return root.cueFamilies.Service
       case Protocol.SourceIds.Ai: return root.cueFamilies.Ai
       case Protocol.SourceIds.Herdr: return root.cueFamilies.Herdr
+      case Protocol.SourceIds.DesktopControls: return root.cueFamilies.Control
+      case Protocol.SourceIds.Processes: return root.cueFamilies.Process
     }
     switch (kind) {
       case Protocol.ResultKinds.Application: return root.cueFamilies.Application
@@ -114,6 +131,9 @@ Rectangle {
       case root.cueFamilies.System: return "System"
       case root.cueFamilies.Search: return "Search"
       case root.cueFamilies.Herdr: return "Herdr"
+      case root.cueFamilies.Control: return "Control"
+      case root.cueFamilies.Process: return "Process"
+      case root.cueFamilies.Menu: return "Menu"
       default: return ""
     }
   }
@@ -130,6 +150,7 @@ Rectangle {
       case root.cueFamilies.Command:
       case root.cueFamilies.Link:
       case root.cueFamilies.System:
+      case root.cueFamilies.Menu:
         return root.theme.withAlpha(root.theme.accent, 0.14)
       case root.cueFamilies.Window:
       case root.cueFamilies.Service:
@@ -148,9 +169,18 @@ Rectangle {
   readonly property string actionHintText: root.actionCount > 1
     ? root.actionCount + " actions"
     : ""
+  // Omarchy menu state from the daemon: a ✓ for a checked row, and a dimmed
+  // row whose guard failed. Both are presentation only; actions stay as they are.
+  readonly property bool omarchyChecked: !!root.result && !!root.result.metadata
+    && root.result.metadata[Protocol.ResultMetadataKeys.OmarchyChecked] === "true"
+  readonly property bool omarchyUnavailable: !!root.result && !!root.result.metadata
+    && root.result.metadata[Protocol.ResultMetadataKeys.OmarchyUnavailable] === "true"
   readonly property string accessibilityName:
     (root.ordinal > 0 ? root.ordinal + ", " : "")
       + root.titleText
+      + (root.omarchyChecked ? ", checked" : "")
+      + (root.omarchyUnavailable ? ", unavailable here" : "")
+      + (root.omarchySubmenu ? ", opens " + (root.omarchyMenuItems ? root.omarchyMenuItems + " entries" : "a submenu") : "")
       + (root.statusBadgeText ? ", " + root.statusBadgeText : "")
       + (root.subtitleText ? ", " + root.subtitleText : "")
       + (root.hasKindCue ? ", " + root.kindCue : "")
@@ -173,10 +203,12 @@ Rectangle {
   Accessible.selected: root.selected
 
   RowLayout {
+    id: content
     anchors.fill: parent
     anchors.leftMargin: root.theme.rowPaddingX
     anchors.rightMargin: root.theme.rowPaddingX
     spacing: root.theme.iconGap
+    opacity: root.omarchyUnavailable && !root.selected ? 0.5 : 1
 
     ResultIcon {
       theme: root.theme
@@ -328,9 +360,31 @@ Rectangle {
 
     // Rows one through nine advertise their Ctrl shortcut.
     KeyCap {
-      visible: root.ordinal > 0
+      id: ordinalBadge
+      visible: root.ordinal > 0 && (!root.compactLayout || root.controlHeld)
       theme: root.theme
       label: "Ctrl+" + root.ordinal
+    }
+
+    Text {
+      id: checkedMark
+      visible: root.omarchyChecked
+      text: "✓"
+      textFormat: Text.PlainText
+      color: root.theme.accent
+      font.family: root.theme.fontFamily
+      font.pixelSize: root.theme.fontBody
+      font.weight: Font.DemiBold
+    }
+
+    Text {
+      id: submenuChevron
+      visible: root.omarchySubmenu
+      text: (root.omarchyMenuItems ? root.omarchyMenuItems + " " : "") + "›"
+      textFormat: Text.PlainText
+      color: root.theme.textMuted
+      font.family: root.theme.fontFamily
+      font.pixelSize: root.theme.fontBody
     }
 
     Text {
@@ -343,6 +397,10 @@ Rectangle {
   }
 
   readonly property alias toolTipControl: rowToolTip
+  readonly property alias ordinalBadgeControl: ordinalBadge
+  readonly property alias checkedMarkControl: checkedMark
+  readonly property alias submenuChevronControl: submenuChevron
+  readonly property real contentOpacity: content.opacity
   ThemedToolTip {
     id: rowToolTip
     theme: root.theme
@@ -359,5 +417,9 @@ Rectangle {
     hoverEnabled: true
     onClicked: root.activated()
     onPressAndHold: root.actionsRequested()
+    onPositionChanged: mouse => {
+      const point = rowMouse.mapToItem(null, mouse.x, mouse.y)
+      root.pointerMoved(point.x, point.y)
+    }
   }
 }

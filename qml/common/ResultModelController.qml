@@ -132,6 +132,14 @@ QtObject {
       && previous.icon === next.icon && previous.isFavorite === next.isFavorite
       && previousSection.title === nextSection.title
       && previousMetadata.herdrAgentStatus === nextMetadata.herdrAgentStatus
+      && previousMetadata[Protocol.ResultMetadataKeys.OmarchyChecked]
+        === nextMetadata[Protocol.ResultMetadataKeys.OmarchyChecked]
+      && previousMetadata[Protocol.ResultMetadataKeys.OmarchyUnavailable]
+        === nextMetadata[Protocol.ResultMetadataKeys.OmarchyUnavailable]
+      && previousMetadata[Protocol.ResultMetadataKeys.OmarchyMenu]
+        === nextMetadata[Protocol.ResultMetadataKeys.OmarchyMenu]
+      && previousMetadata[Protocol.ResultMetadataKeys.OmarchyMenuItems]
+        === nextMetadata[Protocol.ResultMetadataKeys.OmarchyMenuItems]
       && sameList(previous.aliases, next.aliases, (left, right) => left === right)
       && sameList(previous.matchedRanges, next.matchedRanges,
         (left, right) => left.start === right.start && left.length === right.length)
@@ -190,6 +198,32 @@ QtObject {
 
   function rowAt(index) {
     return entryAt(index)
+  }
+
+  // The first result of the next section, or for a backward jump the first
+  // result of the current section, then of the one before it. A jump past
+  // either end stays on the current row.
+  function sectionJump(index, direction) {
+    if (rows.count === 0) return index
+    let start = index
+    while (start > 0 && !entryAt(start - 1).isHeader) start--
+
+    let header = -1
+    if (direction > 0) {
+      for (let candidate = index + 1; candidate < rows.count && header < 0; candidate++) {
+        if (entryAt(candidate).isHeader) header = candidate
+      }
+    } else if (start !== index) {
+      return start
+    } else {
+      for (let candidate = start - 2; candidate >= 0 && header < 0; candidate--) {
+        if (entryAt(candidate).isHeader) header = candidate
+      }
+    }
+
+    if (header < 0) return index
+    const next = moveSelection(header, 1)
+    return next !== header && !entryAt(next).isHeader ? next : index
   }
 
   function moveSelection(index, delta) {

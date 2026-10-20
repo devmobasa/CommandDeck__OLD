@@ -108,6 +108,196 @@ EventPathFixture {
       compare(fixture.part_controller.dismissCalls, previousDismissals + 1)
     }
 
+    // Ctrl+Down reaches the first result of the next section; Ctrl+Up returns
+    // to the start of the current section, then of the previous one. Neither
+    // moves past the ends, and plain arrows still move one row.
+    function test_control_arrows_jump_between_sections() {
+      const row = (id, section) => ({ id: id, kind: "application", title: id,
+        section: { id: section, title: section }, actions: [] })
+      fixture.part_controller.replaceResults([row("a1", "first"), row("a2", "first"), row("b1", "second"),
+        row("b2", "second"), row("b3", "second"), row("c1", "third")], true)
+      fixture.part_searchField.inputControl.forceActiveFocus()
+      compare(fixture.part_controller.selectedResult().id, "a1")
+
+      keyClick(Qt.Key_Down, Qt.ControlModifier)
+      compare(fixture.part_controller.selectedResult().id, "b1")
+      keyClick(Qt.Key_Down)
+      keyClick(Qt.Key_Down)
+      compare(fixture.part_controller.selectedResult().id, "b3")
+      keyClick(Qt.Key_Down, Qt.ControlModifier)
+      compare(fixture.part_controller.selectedResult().id, "c1")
+      keyClick(Qt.Key_Down, Qt.ControlModifier)
+      compare(fixture.part_controller.selectedResult().id, "c1", "the last section stays put")
+
+      keyClick(Qt.Key_Up)
+      compare(fixture.part_controller.selectedResult().id, "b3")
+      keyClick(Qt.Key_Up, Qt.ControlModifier)
+      compare(fixture.part_controller.selectedResult().id, "b1", "start of the current section first")
+      keyClick(Qt.Key_Up, Qt.ControlModifier)
+      compare(fixture.part_controller.selectedResult().id, "a1")
+      keyClick(Qt.Key_Up, Qt.ControlModifier)
+      compare(fixture.part_controller.selectedResult().id, "a1", "the first section stays put")
+      verify(fixture.part_searchField.inputControl.activeFocus)
+      compare(fixture.part_controller.primaryCalls, 0)
+    }
+
+    // Up from the first result of an empty search asks for the newest recent
+    // query; on a query left as recalled it asks for an older one. Anywhere
+    // else Up still moves the selection, and edited text never recalls.
+    function test_up_on_an_empty_or_recalled_search_recalls_history() {
+      fixture.part_controller.replaceResults([{ id: "a", kind: "file", title: "A", actions: [] },
+        { id: "b", kind: "file", title: "B", actions: [] }], true)
+      fixture.part_searchField.inputControl.forceActiveFocus()
+      keyClick(Qt.Key_Down)
+      keyClick(Qt.Key_Up)
+      compare(fixture.part_controller.selectedResult().id, "a", "Up below the first row moves")
+      compare(fixture.part_searchField.recallRequests, [])
+      keyClick(Qt.Key_Up)
+      compare(fixture.part_searchField.recallRequests, [true], "the first row of an empty search recalls")
+      compare(fixture.part_controller.selectedResult().id, "a")
+
+      fixture.part_controller.recalledText = "notes"
+      typeText("notes")
+      keyClick(Qt.Key_Up)
+      compare(fixture.part_searchField.recallRequests, [true, false], "a recalled query steps back")
+      typeText("x")
+      keyClick(Qt.Key_Up)
+      compare(fixture.part_searchField.recallRequests, [true, false], "an edited query does not recall")
+      keyClick(Qt.Key_Up, Qt.ShiftModifier)
+      compare(fixture.part_searchField.recallRequests.length, 2, "Shift+Up stays with the text field")
+      verify(fixture.part_searchField.inputControl.activeFocus)
+      fixture.part_searchField.inputControl.text = ""
+    }
+
+    // Ctrl+= and Ctrl++ zoom in, Ctrl+- zooms out and Ctrl+0 returns to the
+    // automatic size, from the main or keypad keys, and Ctrl+I toggles the
+    // preview pane; none of them types text.
+    function test_zoom_keys_ask_for_display_size_steps() {
+      fixture.part_searchField.inputControl.forceActiveFocus()
+      keyClick(Qt.Key_Equal, Qt.ControlModifier)
+      keyClick(Qt.Key_Plus, Qt.ControlModifier | Qt.ShiftModifier)
+      keyClick(Qt.Key_Minus, Qt.ControlModifier)
+      keyClick(Qt.Key_Plus, Qt.ControlModifier | Qt.KeypadModifier)
+      keyClick(Qt.Key_Minus, Qt.ControlModifier | Qt.KeypadModifier)
+      keyClick(Qt.Key_0, Qt.ControlModifier)
+      compare(fixture.part_searchField.zoomRequests, [1, 1, -1, 1, -1, 0])
+      keyClick(Qt.Key_I, Qt.ControlModifier)
+      compare(fixture.part_searchField.previewToggles, 1, "Ctrl+I shows or hides the preview pane")
+      keyClick(Qt.Key_Equal)
+      keyClick(Qt.Key_0)
+      compare(fixture.part_searchField.zoomRequests.length, 6, "plain keys type")
+      compare(fixture.part_searchField.inputControl.text, "=0")
+      compare(fixture.part_controller.primaryCalls, 0)
+      fixture.part_searchField.inputControl.text = ""
+    }
+
+    // With Escape set to clear first, Escape empties a typed search or filter
+    // and keeps the launcher open; the next Escape closes it. Shift+Escape
+    // always asks for Home.
+    function test_escape_can_clear_the_search_before_closing() {
+      fixture.part_controller.escapeClearsQuery = true
+      fixture.part_controller.activeFilters = [{ id: "files", excluded: false }]
+      fixture.part_searchField.inputControl.forceActiveFocus()
+      typeText("notes")
+      const dismissed = fixture.part_controller.dismissCalls
+      keyClick(Qt.Key_Escape)
+      compare(fixture.part_controller.queryText, "")
+      compare(fixture.part_searchField.inputControl.text, "")
+      compare(fixture.part_controller.activeFilters.length, 0)
+      compare(fixture.part_controller.dismissCalls, dismissed, "the first Escape clears")
+      verify(fixture.part_searchField.inputControl.activeFocus)
+      keyClick(Qt.Key_Escape)
+      compare(fixture.part_controller.dismissCalls, dismissed + 1, "Escape on an empty search closes")
+
+      typeText("x")
+      keyClick(Qt.Key_Escape, Qt.ShiftModifier)
+      compare(fixture.part_controller.rootCalls, 1)
+      compare(fixture.part_controller.dismissCalls, dismissed + 1, "Shift+Escape never closes")
+      fixture.part_controller.escapeClearsQuery = false
+      fixture.part_searchField.inputControl.text = ""
+    }
+
+    // Ctrl+Alt+Up and Down ask to move the selected bookmark; they leave the
+    // selection and the query alone, unlike Ctrl+Up and Down.
+    function test_control_alt_arrows_ask_to_move_a_bookmark() {
+      fixture.part_searchField.inputControl.forceActiveFocus()
+      const selected = fixture.part_controller.selectedIndex
+      keyClick(Qt.Key_Down, Qt.ControlModifier | Qt.AltModifier)
+      keyClick(Qt.Key_Up, Qt.ControlModifier | Qt.AltModifier)
+      compare(fixture.part_searchField.favoriteMoves, [1, -1])
+      compare(fixture.part_controller.selectedIndex, selected)
+      compare(fixture.part_searchField.inputControl.text, "")
+    }
+
+    // A primary action with inputs shows them as pills after the query. Tab
+    // enters them, Tab and Shift+Tab move between them, Escape returns to the
+    // query, Enter runs the action with their values or asks for a missing
+    // one, and a refresh of the same result keeps what was typed.
+    function test_argument_pills_take_inputs_inline() {
+      const target = () => ({ result: { id: "snippet:review" }, action: { id: "copy",
+        inputs: [{ name: "topic", defaultValue: "code" }, { name: "who" }] } })
+      const field = fixture.part_searchField
+      const pills = field.pillsControl
+      field.pillTarget = target()
+      field.inputControl.forceActiveFocus()
+      compare(pills.count, 2)
+      keyClick(Qt.Key_Tab)
+      verify(pills.fieldAt(0).activeFocus, "Tab enters the first pill")
+      compare(pills.fieldAt(0).text, "code", "a default prefills its pill")
+      keyClick(Qt.Key_Tab)
+      verify(pills.fieldAt(1).activeFocus)
+      keyClick(Qt.Key_Return)
+      compare(field.missingPill, "who", "Enter names a missing value")
+      verify(pills.fieldAt(1).activeFocus)
+      typeText("Ana")
+      field.pillTarget = target()
+      compare(pills.fieldAt(1).text, "Ana", "a refresh of the same result keeps typed values")
+      verify(pills.fieldAt(1).activeFocus)
+      keyClick(Qt.Key_Backtab)
+      verify(pills.fieldAt(0).activeFocus)
+      keyClick(Qt.Key_Backtab)
+      verify(field.inputControl.activeFocus, "Shift+Tab from the first pill returns to the query")
+      keyClick(Qt.Key_Return)
+      compare(field.pillSubmissions.length, 1)
+      compare(field.pillSubmissions[0].topic, "code")
+      compare(field.pillSubmissions[0].who, "Ana")
+      compare(fixture.part_controller.primaryCalls, 0, "Enter runs the action with its inputs")
+
+      keyClick(Qt.Key_Tab)
+      keyClick(Qt.Key_Escape)
+      verify(field.inputControl.activeFocus, "Escape returns to the query")
+      field.pillTarget = { result: { id: "snippet:other" }, action: { id: "copy", inputs: [{ name: "topic" }] } }
+      compare(pills.count, 1)
+      compare(pills.fieldAt(0).text, "", "another result starts empty")
+      field.pillTarget = null
+      compare(pills.count, 0)
+      keyClick(Qt.Key_Return)
+      compare(fixture.part_controller.primaryCalls, 1, "without pills Enter runs the primary action")
+    }
+
+    // Ctrl+U deletes from the start of the query to the caret, leaving the
+    // rest and any filter chip, and the field keeps focus for typing.
+    function test_control_u_deletes_the_query_before_the_caret() {
+      fixture.part_controller.activeFilters = [{ id: "files", excluded: false }]
+      fixture.part_searchField.inputControl.forceActiveFocus()
+      typeText("old notes")
+      compare(fixture.part_controller.queryText, "old notes")
+      for (let step = 0; step < 5; step++) keyClick(Qt.Key_Left)
+      keyClick(Qt.Key_U, Qt.ControlModifier)
+      compare(fixture.part_searchField.inputControl.text, "notes")
+      compare(fixture.part_controller.queryText, "notes")
+      compare(fixture.part_searchField.inputControl.cursorPosition, 0)
+
+      keyClick(Qt.Key_End)
+      keyClick(Qt.Key_U, Qt.ControlModifier)
+      compare(fixture.part_controller.queryText, "")
+      compare(fixture.part_controller.activeFilters.length, 1, "the filter chip stays")
+      typeText("new")
+      compare(fixture.part_controller.queryText, "new")
+      fixture.part_searchField.inputControl.text = ""
+      fixture.part_controller.activeFilters = []
+    }
+
     // A HEY refinement row names the whole query Tab produces; typing goes on
     // from there. Ordinary rows still complete to their title.
     function test_a_row_can_name_what_tab_completes() {

@@ -14,6 +14,7 @@ public static class ProviderIds
     public const string Clipboard = "clipboard";
     public const string Commands = "commands";
     public const string Config = "config";
+    public const string DesktopControls = "desktop-controls";
     public const string Emoji = "emoji";
     public const string Extensions = "extensions";
     public const string Fallback = "fallback";
@@ -23,6 +24,8 @@ public static class ProviderIds
     public const string Hey = "hey";
     public const string Hyprland = "hyprland";
     public const string Omarchy = "omarchy";
+    public const string OmarchyMenu = "omarchy-menu";
+    public const string Processes = "processes";
     public const string Projects = "projects";
     public const string Quicklinks = "quicklinks";
     public const string SavedSearch = "saved-search";

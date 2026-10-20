@@ -50,8 +50,242 @@ QtObject {
     verifyEmptyStatesWaitForTheReply(deck)
     verifyOnlyRunningSearchesAreCancelled(deck)
     verifyLocalEditsKeepFreshReferences(deck)
+    verifyUpRecallsRecentQueries(deck)
+    verifyHiddenPreviewPaneLoadsNothing(deck)
+    verifyClosedSearchIsKeptForReopen(deck)
+    verifyCopyMessageOutlivesTheLauncher(deck)
+    verifyResetRankingRefreshesInPlace(deck)
+    verifyHomeBookmarksMoveWithTheKeyboard(deck)
+    verifyArgumentPillsInvokeWithTheirValues(deck)
 
     if (!wasOpened) deck.close()
+  }
+
+  // A primary action with one to three inputs and no confirmation takes them
+  // as pills, and submitting them invokes it with those values and no form.
+  function verifyArgumentPillsInvokeWithTheirValues(deck) {
+    const withAction = (id, action) => Object.assign(result(id, id), { actions: [action] })
+    const copy = { id: "copy", title: "Copy", kind: Protocol.ActionKinds.SnippetCopy, inputs: [{ name: "topic" }] }
+    deck.queryText = "pills"
+    deck.requestSearch()
+    deliver(deck, [withAction("snippet:review", copy),
+      withAction("script:confirm", Object.assign({}, copy, { requiresConfirmation: true })),
+      withAction("snippet:many", Object.assign({}, copy, { inputs: [{ name: "a" }, { name: "b" }, { name: "c" }, { name: "d" }] }))])
+    deck.selectedIndex = deck.navigationController.indexOfResultId("script:confirm")
+    host.expect(deck.argumentPillTarget === null, "an action that asks for confirmation keeps its form")
+    deck.selectedIndex = deck.navigationController.indexOfResultId("snippet:many")
+    host.expect(deck.argumentPillTarget === null, "four inputs keep the form")
+    deck.selectedIndex = deck.navigationController.indexOfResultId("snippet:review")
+    host.expect(deck.argumentPillTarget !== null && deck.argumentPillTarget.action.id === "copy",
+      "one input shows as a pill")
+    const start = deck.sentRequests.length
+    deck.submitArgumentPills({ topic: "tests" })
+    const invoke = lastRequest(deck, start, Protocol.Operations.Invoke)
+    host.expect(invoke !== undefined && invoke.resultId === "snippet:review" && invoke.inputValues.topic === "tests"
+        && !deck.part_invocationController.actionInputOpen,
+      "submitting pills invokes the action with their values and no form")
+    deck.handleMessage({ type: Protocol.Messages.ActionResult, requestId: invoke.requestId,
+      actionResult: { succeeded: false, message: "Fixture snippet" } })
+  }
+
+  // Ctrl+Alt+Down on the first Home bookmark moves it to the second position
+  // and keeps it selected; the ends and non-bookmarks send nothing.
+  function verifyHomeBookmarksMoveWithTheKeyboard(deck) {
+    const bookmark = (id, title) => Object.assign(result(id, title), {
+      canCustomize: true, isFavorite: true, section: { id: "bookmarks", title: "Bookmarks", order: 1 } })
+    deck.queryText = ""
+    deck.requestSearch()
+    deliver(deck, [bookmark("file:first", "first.txt"), bookmark("file:second", "second.txt"),
+      Object.assign(result("file:recent", "recent.txt"), { canCustomize: true,
+        section: { id: "recent-frequent", title: "Recent & Frequent", order: 2 } })])
+    const moves = start => deck.sentRequests.slice(start)
+      .filter(request => request.operation === Protocol.Operations.FavoriteMove)
+    deck.selectedIndex = deck.navigationController.indexOfResultId("file:first")
+    let start = deck.sentRequests.length
+    deck.moveFavorite(-1)
+    host.expect(moves(start).length === 0, "the first bookmark cannot move up")
+    deck.moveFavorite(1)
+    const move = moves(start)[0]
+    host.expect(move !== undefined && move.resultId === "file:first" && move.offset === 1
+        && deck.navigationController.restoreSelectionId === "file:first",
+      "moving the first bookmark down sends its new position and keeps it selected")
+    deck.handleMessage({ type: Protocol.Messages.PreferencesResult, requestId: move.requestId,
+      preferences: preferencesSnapshot(deck.part_personalization.acknowledged) })
+    deliver(deck, [])
+    deck.requestSearch()
+    deliver(deck, [bookmark("file:first", "first.txt"), Object.assign(result("file:recent", "recent.txt"), {
+      section: { id: "recent-frequent", title: "Recent & Frequent", order: 2 } })])
+    deck.selectedIndex = deck.navigationController.indexOfResultId("file:recent")
+    start = deck.sentRequests.length
+    deck.moveFavorite(-1)
+    host.expect(moves(start).length === 0, "a row outside Bookmarks never moves")
+    deck.navigationController.restoreSelectionId = ""
+  }
+
+  // Reset Ranking keeps the launcher open and searches again so the result
+  // re-ranks without its history.
+  function verifyResetRankingRefreshesInPlace(deck) {
+    const reset = { id: "reset-ranking", title: "Reset Ranking", kind: Protocol.ActionKinds.ResetRanking }
+    deck.queryText = "rank"
+    deck.requestSearch()
+    deliver(deck, [Object.assign(result("file:ranked", "ranked.txt"), {
+      actions: [{ id: "open", title: "Open", kind: "open-path" }, reset] })])
+    const start = deck.sentRequests.length
+    deck.invokeAction(deck.currentResult, reset, false)
+    const invoke = lastRequest(deck, start, Protocol.Operations.Invoke)
+    deck.handleMessage({ type: Protocol.Messages.ActionResult, requestId: invoke.requestId,
+      actionResult: { succeeded: true, message: "Ranking reset for ranked.txt." } })
+    host.expect(invoke.actionId === "reset-ranking" && deck.opened && deck.hudText === ""
+        && deck.statusText === "Ranking reset for ranked.txt."
+        && operationsSince(deck, start).filter(operation => operation === Protocol.Operations.Search).length === 1,
+      "Reset Ranking keeps the launcher open and searches again")
+    deliver(deck, [])
+  }
+
+  // A copy that closes the launcher leaves its message for a moment; reopening
+  // clears it, and a launch that closes the launcher shows nothing.
+  function verifyCopyMessageOutlivesTheLauncher(deck) {
+    const runAndSucceed = (action, message) => {
+      deck.queryText = "hud"
+      deck.requestSearch()
+      deliver(deck, [Object.assign(result("file:hud", "hud.txt"), { actions: [action] })])
+      const start = deck.sentRequests.length
+      deck.invokeAction(deck.currentResult, action, false)
+      const invoke = lastRequest(deck, start, Protocol.Operations.Invoke)
+      deck.handleMessage({ type: Protocol.Messages.ActionResult, requestId: invoke.requestId,
+        actionResult: { succeeded: true, message: message } })
+    }
+    runAndSucceed({ id: "copy-path", title: "Copy Path", kind: Protocol.ActionKinds.CopyText }, "Copied.")
+    host.expect(!deck.opened && deck.hudText === "Copied." && deck.part_hudTimer.running,
+      "a copy that closes the launcher leaves its message on screen")
+    deck.open("{}")
+    host.expect(deck.hudText === "", "reopening the launcher clears the message")
+    deliver(deck, [])
+    runAndSucceed({ id: "open", title: "Open", kind: Protocol.ActionKinds.OpenPath }, "Opened.")
+    host.expect(!deck.opened && deck.hudText === "", "an open that closes the launcher shows no message")
+    deck.open("{}")
+    deliver(deck, [])
+  }
+
+  // With a kept-search time, closing keeps the search and reopening soon
+  // shows it with its selection. A search an action ran from, an expired or
+  // private one, and an explicit open query are not restored. Shift+Escape
+  // returns to an empty Home search from any filter or folder.
+  function verifyClosedSearchIsKeptForReopen(deck) {
+    const rows = () => [result("file:k1", "k1.txt"), result("file:k2", "k2.txt")]
+    const searchFor = query => {
+      deck.queryText = query
+      deck.requestSearch()
+      deliver(deck, rows())
+    }
+    deck.applyLauncherBehavior(false, 30)
+    searchFor("kept")
+    deck.selectedIndex = deck.navigationController.indexOfResultId("file:k2")
+    deck.close()
+    host.expect(!deck.opened && deck.lastSearch !== null && deck.lastSearch.query === "kept",
+      "closing keeps the search the user closed")
+    const start = deck.sentRequests.length
+    deck.open("{}")
+    const search = lastRequest(deck, start, Protocol.Operations.Search)
+    host.expect(deck.queryText === "kept" && search !== undefined && search.query === "kept",
+      "reopening soon shows and searches the kept query")
+    deliver(deck, rows())
+    host.expect(deck.currentResult !== null && deck.currentResult.id === "file:k2",
+      "the reopened search selects the result that was selected")
+
+    deck.forgetSearchOnClose = true
+    deck.close()
+    deck.open("{}")
+    host.expect(deck.queryText === "", "a search an action ran from is not kept")
+    deliver(deck, [])
+
+    searchFor("stale")
+    deck.close()
+    deck.lastSearch.closedAt -= 31000
+    deck.open("{}")
+    host.expect(deck.queryText === "", "a kept search expires after its time")
+    deliver(deck, [])
+
+    searchFor("kept")
+    deck.close()
+    deck.open(JSON.stringify({ query: "explicit" }))
+    host.expect(deck.queryText === "explicit", "an explicit open query wins over the kept search")
+    deliver(deck, [])
+
+    deck.activeFilters = [{ id: Protocol.SourceIds.Hey, excluded: false }]
+    deck.queryText = "invoice"
+    deck.close()
+    host.expect(deck.lastSearch === null, "a private source search is never kept")
+    deck.open("{}")
+    deliver(deck, [])
+
+    deck.activeFilters = [{ id: Protocol.SourceIds.Files, excluded: false }]
+    deck.queryText = "x"
+    deck.browseDirectory = "/tmp"
+    const rootStart = deck.sentRequests.length
+    deck.backToRoot()
+    host.expect(deck.queryText === "" && deck.activeFilters.length === 0 && deck.browseDirectory === ""
+        && lastRequest(deck, rootStart, Protocol.Operations.Search) !== undefined,
+      "Shift+Escape returns to an empty Home search")
+    deliver(deck, [])
+    deck.applyLauncherBehavior(false, 0)
+  }
+
+  // A hidden preview pane requests no file preview as the selection moves;
+  // showing it again (Ctrl+I) previews the selected file.
+  function verifyHiddenPreviewPaneLoadsNothing(deck) {
+    deck.queryText = "preview"
+    deck.requestSearch()
+    deliver(deck, [result("file:p1", "p1.txt"), result("file:p2", "p2.txt")])
+    const start = deck.sentRequests.length
+    deck.applyPreviewPane(false)
+    deck.selectedIndex = deck.navigationController.indexOfResultId("file:p2")
+    host.expect(!deck.previewPaneVisible && lastRequest(deck, start, Protocol.Operations.Preview) === undefined,
+      "a hidden preview pane requests no file preview")
+    deck.togglePreviewPane()
+    const shown = lastRequest(deck, start, Protocol.Operations.Preview)
+    host.expect(deck.previewPaneVisible && shown !== undefined && shown.resultId === "file:p2"
+        && deck.statusText === "Preview pane shown",
+      "showing the preview pane again previews the selected file")
+    deck.cancelPreview()
+    deck.queryText = ""
+  }
+
+  // Up on an empty search reads the opt-in history once, applies the newest
+  // query and searches it; Up again on that query applies the next older one.
+  // Closing forgets what was read.
+  function verifyUpRecallsRecentQueries(deck) {
+    deck.queryText = ""
+    deck.activeFilters = []
+    deck.requestSearch()
+    deliver(deck, [result("file:home", "home.txt")])
+    const start = deck.sentRequests.length
+    const want = deck.part_navigation.recallWanted()
+    deck.part_queryRecall.step(want === "restart")
+    const historyRequest = lastRequest(deck, start, Protocol.Operations.QueryHistoryGet)
+    host.expect(want === "restart" && historyRequest !== undefined,
+      "Up on an empty search reads query history")
+    deck.handleMessage({ type: Protocol.Messages.QueryHistoryResult, requestId: historyRequest.requestId,
+      queryHistory: { enabled: true, entries: [
+        { id: 2, query: "roadmap", stableId: "file:roadmap", actionId: "open" },
+        { id: 1, query: "gaps", stableId: "config:gaps", actionId: "edit" }] } })
+    const search = lastRequest(deck, start, Protocol.Operations.Search)
+    host.expect(deck.queryText === "roadmap" && search !== undefined && JSON.stringify(search).indexOf("roadmap") >= 0
+        && deck.part_navigation.recallWanted() === "continue",
+      "the newest recalled query is shown and searched")
+    deliver(deck, [result("file:roadmap", "roadmap.md")])
+
+    const older = deck.sentRequests.length
+    deck.part_queryRecall.step(false)
+    host.expect(deck.queryText === "gaps" && lastRequest(deck, older, Protocol.Operations.Search) !== undefined
+        && lastRequest(deck, older, Protocol.Operations.QueryHistoryGet) === undefined,
+      "Up again recalls the older query without reading history again")
+    deliver(deck, [result("file:gaps", "gaps.conf")])
+
+    deck.clearModalState()
+    host.expect(!deck.part_queryRecall.loaded && deck.part_navigation.recalledText === "",
+      "closing forgets the recalled queries")
+    deck.queryText = ""
   }
 
   // A refresh that changes only invocation references leaves the model rows

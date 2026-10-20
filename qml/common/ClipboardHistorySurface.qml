@@ -34,10 +34,12 @@ Rectangle {
   readonly property alias toastControl: toast
   readonly property Item copyControl: actionBar.copyControl
   readonly property Item pinControl: actionBar.pinControl
+  readonly property Item sequenceControl: actionBar.sequenceControl
   readonly property Item openControl: actionBar.openControl
   readonly property Item keywordsControl: actionBar.keywordsControl
   readonly property Item deleteControl: actionBar.deleteControl
-  readonly property Item captureControl: actionBar.captureControl
+  readonly property Item captureControl: captureStatus.captureControl
+  readonly property Item captureLabelControl: captureStatus.labelControl
   readonly property Item previewControl: preview.textControl
   readonly property Item previewImageControl: preview.imageControl
   readonly property Item previewHighlightControl: preview.highlightControl
@@ -176,6 +178,8 @@ Rectangle {
       surface.cycleFocus(event.key === Qt.Key_Tab && !(event.modifiers & Qt.ShiftModifier))
     } else if (control && event.key === Qt.Key_P) {
       surface.pinSelected()
+    } else if (control && event.key === Qt.Key_S && actionBar.sequenceControl.enabled) {
+      controller.startSequence()
     } else if (control && event.key === Qt.Key_E && actionBar.keywordsControl.enabled) {
       dialog.show(Ui.ClipboardDialogPurpose.Keywords, search)
     } else if (control && event.key === Qt.Key_K && actionBar.openControl.enabled) {
@@ -218,6 +222,14 @@ Rectangle {
         Accessible.name: text
       }
       Item { Layout.fillWidth: true }
+      ClipboardCaptureStatus {
+        id: captureStatus
+        Layout.fillWidth: true
+        Layout.maximumWidth: implicitWidth
+        theme: surface.theme
+        controller: surface.controller
+        onCaptureRequested: invoker => surface.toggleCapture(invoker || search)
+      }
       ClipboardActionButton {
         id: migrationReview
         theme: surface.theme
@@ -504,13 +516,13 @@ Rectangle {
         if (!invoker) search.forceActiveFocus()
       }
       onPinRequested: surface.pinSelected()
+      onSequenceRequested: surface.controller.startSequence()
       onOpenRequested: invoker => {
         surface.openInvoker = invoker || search
         surface.controller.prepareOpen()
       }
       onKeywordsRequested: invoker => dialog.show(Ui.ClipboardDialogPurpose.Keywords, invoker || search)
       onDeleteRequested: surface.controller.mutate(Protocol.ClipboardActionIds.Delete)
-      onCaptureRequested: invoker => surface.toggleCapture(invoker || search)
     }
   }
   Timer { id: debounce; interval: 80; onTriggered: surface.controller.refresh(false) }

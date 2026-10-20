@@ -24,22 +24,65 @@ during discovery. Git status excludes untracked files to keep searches quick.
 ## Snippets and templates
 
 Search `snip: review`. Enter copies a snippet, asking for any named inputs first.
-The action menu also offers an expanded preview. `{date}` uses the local date
-(`yyyy-MM-dd`), `{time}` uses local `HH:mm`, and `{clipboard}` reads current text
-only when you copy or preview. Other placeholders, such as `{topic}`, become
-required form fields. Values are inserted literally, without recursive expansion.
-Paste copied text into your destination with its normal paste shortcut.
+When the selected result's primary action takes one to three inputs and needs no
+confirmation, they appear as pills after the query: Tab moves into them, Tab and
+Shift+Tab move between them, Escape returns to the query, and Enter runs the action
+with their values (or moves to the first empty one). Other actions keep the form.
+The action menu also offers an expanded preview. Paste copied text into your
+destination with its normal paste shortcut.
 
 ```json
 "snippets": [
-  { "id": "review", "title": "Review prompt", "text": "Review {topic} on {date}: {clipboard}" }
+  { "id": "review", "title": "Review prompt",
+    "text": "Review {topic default=\"code\"} by {date offset=\"+2d\"}: {clipboard | trim}" }
 ]
 ```
 
-Up to 1000 snippets and 16 inputs per snippet are supported. Inputs and expanded
-text are not added to query/usage history. Clipboard placeholders need `wl-paste`;
-copying needs `wl-copy`. The launcher does not synthesize keystrokes or perform
-automatic text expansion.
+A placeholder is a name, then optional `key=value` options, then optional
+`| modifier` steps: `{date format="dd.MM.yyyy" offset="+1d"}`, `{topic | uppercase}`.
+
+| Placeholder | Inserts | Options |
+|---|---|---|
+| `{date}` / `{time}` | Local `yyyy-MM-dd` / `HH:mm` | `format`, `offset`, `locale` |
+| `{datetime}` / `{day}` | Local `yyyy-MM-dd HH:mm` / weekday name (`dddd`) | `format`, `offset`, `locale` |
+| `{uuid}` | A new random (version 4) UUID for each occurrence | None |
+| `{clipboard}` | Current clipboard text, read only when you copy or preview | `offset=N` (0–999) |
+| Any other, such as `{topic}` | A required form field | `default` prefills the field |
+
+| Modifier | Effect |
+|---|---|
+| `uppercase`, `lowercase` | Culture-invariant case mapping |
+| `trim` | Removes leading and trailing whitespace |
+| `percent-encode` | Percent-encodes UTF-8, keeping only RFC 3986 unreserved characters |
+| `json-stringify` | A JSON string literal, quotes included |
+
+- `format` is a .NET custom date and time format string. Output uses the invariant
+  culture unless `locale` names a culture from the system ICU data, such as `"de-DE"`.
+- `offset` lists signed steps applied in order, such as `"+1d -2h"`. Units are `m`
+  (minutes), `h` (hours), `d` (days), `M` (months) and `y` (years). Days, months and
+  years keep the local wall-clock time across daylight-saving changes.
+- Values can be bare (`offset=+1d`) or quoted with `"…"` or `'…'`; a backslash makes
+  the next character literal. Modifiers apply from left to right.
+- A repeated name, such as `{topic}` and `{topic | uppercase}`, is one form field.
+  Values are inserted literally, without recursive expansion.
+- Braces that do not form a complete placeholder on one line stay literal, so JSON
+  and code pass through and `{{date}}` becomes `{2026-09-06}`. A line break inside
+  a placeholder also leaves it literal.
+- An unknown option or modifier, an invalid format, offset or locale, or two
+  defaults for one input stop configuration loading. The message names the snippet
+  and the placeholder.
+
+`{clipboard offset=N}` with N of 1 or more inserts the plain-text history entry N
+places before the newest one, ordered by last copy; pins do not change the order.
+Image, file and rich entries are skipped. It needs clipboard capture consent and
+fails while consent is off. A snippet that reads history is a private clipboard
+row: it is never shown on Home or in suggestions, attached to AI requests, or
+offered to assistant tools.
+
+Up to 1000 snippets and 16 inputs per snippet are supported. Expanded text is
+limited to 128 KiB. Inputs and expanded text are not added to query/usage history.
+Clipboard placeholders need `wl-paste`; copying needs `wl-copy`. The launcher does
+not synthesize keystrokes or perform automatic text expansion.
 
 The v3 `invoke` request accepts optional `inputValues` (name/value object).
 Actions advertise their required `inputs`; only those names are accepted.
@@ -97,7 +140,8 @@ The browser offers focused search, a **Pinned only** toggle, a kind filter (All/
 Images/Files), bounded pages, exact plain-text previews with match navigation, isolated PNG
 thumbnails, pin/unpin, keywords, delete, pause/resume, limits and Clear. Pinned entries are
 listed first under their own label. Enter or a double-click copies the selected entry;
-Ctrl+P pins, Ctrl+E edits keywords, Ctrl+Tab and Ctrl+Shift+Tab switch the kind filter, and
+Ctrl+P pins, Ctrl+S starts a sequence at the selected entry (see below), Ctrl+E edits
+keywords, Ctrl+Tab and Ctrl+Shift+Tab switch the kind filter, and
 Ctrl+G and Ctrl+Shift+G step through text matches. Up/Down, PageUp/PageDown and
 Ctrl+Home/Ctrl+End move the selection; Down on the last loaded entry loads the next page.
 File entries show references, never referenced contents; previews never fetch URLs. For a single copied
@@ -105,6 +149,18 @@ URL, **Open…** (Ctrl+K) lists the registered desktop handlers; launching from 
 disabled until the release-acknowledgement and managed-launch gates pass. Escape clears
 the query, then resets filters, then returns to the invoking result. These actions do
 not alter the current system clipboard except when you explicitly copy an entry again.
+
+To paste several entries in order, select the first one and choose **Start sequence**
+(Ctrl+S in the browser, or the action on a `clip:` row). Each run of the query-free
+**Copy next clipboard entry** command then copies the next entry by last-copy time,
+oldest first, and reports how many remain queued. **Restart clipboard sequence**
+instead begins with the next entry you copy. Entries copied later join the end; a
+copied entry moves to the newest position but is not copied twice; deleted or expired
+entries are skipped, and a failed copy does not advance. Both commands need capture
+consent. They are private clipboard rows: they cannot be bookmarked, never appear on
+Home, and are not recorded, suggested, attached to AI requests or offered to assistant
+tools. The position lives only in daemon memory and is never exported; Clear, turning
+capture off, or restarting the daemon ends it, while pausing keeps it.
 
 ```json
 "clipboardHistory": { "maximumEntries": 200, "retentionHours": 168 }
@@ -196,6 +252,110 @@ strings. Globs and invalid unit names are rejected. Search and action processes
 have timeout, output, and memory bounds. Logs are on-demand action output, not
 indexed content. These controls neither enable/disable boot activation nor act
 on system-wide services.
+
+## Desktop controls
+
+Type what you want to change: `volume`, `mute`, `next track`, `wifi`,
+`bluetooth`, `color`, or `left half`. Matching desktop commands appear beside your other results, and
+`ctl:` (also `control:`) lists all of them. Enter runs the command; on success
+the launcher closes like other launches, as set by **Hide after opening an
+item**. A failure, such as no media player for `playerctl`, stays visible with
+the tool's error output.
+
+| Commands | Literal argv |
+|---|---|
+| Volume Up / Volume Down | `wpctl set-volume -l 1.0 @DEFAULT_AUDIO_SINK@ 5%+` / `5%-` |
+| Toggle Mute | `wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle` |
+| Set Volume to 0%, 25%, 50%, 75%, 100% | `wpctl set-volume @DEFAULT_AUDIO_SINK@ 50%` |
+| Toggle Microphone Mute | `wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle` |
+| Play / Pause Media, Next Track, Previous Track | `playerctl play-pause`, `next`, `previous` |
+| Toggle Wi-Fi / Toggle Bluetooth | `rfkill toggle wlan` / `rfkill toggle bluetooth` |
+
+Each command is one literal argument vector, never a shell string. A command
+whose tool is not on the daemon's `PATH` is left out of the results instead of
+showing an error. Wi-Fi and Bluetooth use the rfkill soft block, the same switch
+that Omarchy's Bluetooth power script uses, so NetworkManager, iwd, and BlueZ
+follow it. Search needs at least two characters and does no work on bare Home.
+Turn the **Desktop controls** source off in Settings to remove these rows.
+
+### Color picker
+
+Type `color` or `pick color` and press Enter on **Pick Color**. The launcher
+closes, and `hyprpicker --autocopy` starts so you can click any pixel; the color
+is copied to the clipboard as hex. Press Escape in the picker to cancel.
+hyprpicker freezes the screen when it starts, so it must not start while the
+launcher is still visible. CommandDeck runs this literal argv, which returns
+once a one-shot user timer exists:
+
+```text
+systemd-run --user --quiet --collect --on-active=300ms --timer-property=AccuracySec=10ms -- hyprpicker --autocopy
+```
+
+The timer starts the picker 300 ms later in your user session. Copying needs
+`wl-copy`, as for hyprpicker itself. If `hyprpicker` or `systemd-run` is
+missing, the **Pick Color** row stays visible as an inert row that names the
+tool to install.
+
+### Window commands
+
+Window commands act on the window that was focused when you opened the
+launcher. Type `left half`, `center third`, `maximize`, `tile`, `fullscreen`,
+`next monitor`, or `workspace 3`. Each row names its window in the subtitle.
+
+| Commands | Effect |
+|---|---|
+| Left Half, Right Half, Top Half, Bottom Half | Half of the monitor's work area |
+| First Third, Center Third, Last Third | One column of three |
+| First Two Thirds, Last Two Thirds | Two columns of three |
+| Center Window | Keeps the window's size and centers it |
+| Maximize Window / Almost Maximize Window | The whole work area / 90% of it, centered |
+| Toggle Floating / Tile Window | Floats or tiles the window |
+| Toggle Fullscreen | Hyprland fullscreen |
+| Move Window to Next / Previous Monitor | The neighbouring enabled monitor, in monitor ID order |
+| Move Window to Workspace 1–10 | Moves the window and follows it |
+
+The launcher is a layer-shell overlay, so opening it does not change
+Hyprland's active window. When a window command matches your search, the daemon
+reads `hyprctl -j activewindow` and binds that window's literal address to the
+row. At invocation it checks that the address is still a client, then dispatches
+only to that address. It never acts on whatever has focus at dispatch time. A
+closed window reports an error; search again.
+
+Hyprland tiles windows, so a placement floats the window first and leaves
+fullscreen if needed. **Tile Window** returns it to the layout. Placements use
+the work area of the window's monitor from `hyprctl -j monitors`: the logical
+size after scale and rotation, minus the space that bars reserve. Halves and
+thirds share edges, so adjacent placements do not overlap. Gaps are not added.
+Every dispatch must answer `ok`. A Lua warning stops the sequence and is shown
+as a failure, even when `hyprctl` exits with status zero. Without `hyprctl`, a
+focused window, or a second monitor, the affected rows are not shown.
+
+## Kill process
+
+Type `kill:` (also `proc:` or `process:`) to list your own processes, largest
+resident memory first, with PID, memory, and CPU time. Add a name or an exact PID
+to filter: `kill: firefox` or `kill: 4242`. In plain search, `kill`, `force
+quit`, or `kill firefox` offers one **Kill Process** row that opens this list;
+ordinary typing never reads `/proc`.
+
+The list shows at most 100 rows from at most 8,192 process entries. It contains
+only processes whose real, effective, and saved user IDs are all yours, so other
+users' processes and setuid programs such as `sudo` are left out. Kernel threads,
+zombies, and the CommandDeck daemon are also left out, and so is an installed
+daemon's bridge, because it runs the same executable. Names are read from `/proc/<pid>/stat`
+with control characters replaced; full command lines are not read.
+
+The action menu offers **Terminate PID …** (SIGTERM, the primary action),
+**Force kill PID …** (SIGKILL), and **Copy PID**. Both signals ask for
+confirmation that names the PID and the process, for example
+`Terminate PID 4242 “firefox”?`. Each row carries the PID, its start time from
+field 22 of `/proc/<pid>/stat`, and your user ID. On confirmation, CommandDeck
+pins the process that holds the PID with a pidfd, then reads `/proc` again. The
+start time must match, and the process must still be yours, live, and not
+CommandDeck. Only then is the signal sent through the pidfd. A PID that was
+reused after the search fails the check, so nothing is signalled; search again.
+A signal is not recorded in usage history. On success the launcher closes like
+other actions.
 
 ## Verification
 

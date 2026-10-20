@@ -353,6 +353,82 @@ Item {
       compare(surface.searchControl.text, "")
     }
 
+    function test_start_sequence_follows_ctrl_s_tab_and_mouse_without_losing_search() {
+      openBrowser([entry(0), entry(1)])
+      compare(surface.sequenceControl.keyHint, "Ctrl+S")
+      keyClick(Qt.Key_Down)
+      keyClick(Qt.Key_S, Qt.ControlModifier)
+
+      const request = lastOf(Protocol.Operations.ClipboardAction)
+      compare(request.clipboard.action, Protocol.ClipboardActionIds.SequenceStart)
+      compare(request.clipboard.entryId, "entry1")
+      compare(request.clipboard.incarnation, "inc1")
+      compare(request.clipboard.entryRevision, 1)
+      compare(request.clipboard.queryGeneration, controller.queryGeneration)
+      const count = sentOf(Protocol.Operations.ClipboardAction).length
+      keyClick(Qt.Key_S, Qt.ControlModifier)
+      compare(sentOf(Protocol.Operations.ClipboardAction).length, count, "one start request at a time")
+      reply("sequence", {action: {succeeded: true, message: "Clipboard sequence starts here with 1 entry."}})
+      verify(surface.toastControl.shown)
+      compare(surface.toastControl.message, "Clipboard sequence starts here with 1 entry.")
+      verify(!controller.pending.query, "starting a sequence keeps the current page")
+      compare(surface.searchControl.activeFocus, true)
+
+      tabTo(surface.sequenceControl)
+      keyClick(Qt.Key_Space)
+      compare(lastOf(Protocol.Operations.ClipboardAction).clipboard.entryId, "entry1")
+      controller.handleMessage({requestId: controller.pending.sequence, type: Protocol.Messages.Error,
+        error: "Enable clipboard capture before using clipboard history here."})
+      compare(controller.error, "Enable clipboard capture before using clipboard history here.")
+      compare(surface.sequenceControl.activeFocus, true, "the focused button keeps focus across the reply")
+
+      mouseClick(surface.listControl.itemAtIndex(0), 20, 20)
+      mouseClick(surface.sequenceControl)
+      compare(lastOf(Protocol.Operations.ClipboardAction).clipboard.entryId, "entry0")
+      compare(surface.searchControl.activeFocus, true)
+      typeText("q")
+      compare(controller.query, "q")
+    }
+
+    // Capture controls sit in the header, so long statuses and the sequence action never widen the browser.
+    function test_controls_stay_inside_the_default_palette_in_every_capture_state() {
+      const original = scene.width
+      scene.width = theme.paletteWidth
+      try {
+        openBrowser([entry(0)])
+        const states = [
+          {consent: "Rich", status: "Capturing text and rich content"},
+          {consent: "Rich", status: "Capture unavailable: native helper stopped; no wl-paste fallback was started", long: true},
+          {consent: "Text", status: "MigrationReviewRequired", migration: true},
+          {consent: "Text", status: "Paused"},
+          {consent: "None", status: "Disabled"}
+        ]
+        for (const state of states) {
+          const value = settings({consent: state.consent})
+          value.status = state.status
+          value.migration.required = state.migration === true
+          controller.settings = value
+          wait(0)
+          for (const control of [surface.backControl, surface.captureControl, surface.deleteControl, surface.sequenceControl, surface.refreshControl]) {
+            verify(control.visible && control.mapToItem(surface, control.width, 0).x <= surface.width, state.status + ": " + control.text)
+          }
+          compare(surface.captureLabelControl.truncated, state.long === true, state.status + " label elides only past its cap")
+        }
+      } finally {
+        scene.width = original
+      }
+    }
+
+    function test_start_sequence_needs_capture_consent() {
+      openBrowser([entry(0)], "", {consent: "None"})
+      compare(surface.sequenceControl.enabled, false)
+      const count = sentOf(Protocol.Operations.ClipboardAction).length
+      keyClick(Qt.Key_S, Qt.ControlModifier)
+      mouseClick(surface.sequenceControl)
+      compare(sentOf(Protocol.Operations.ClipboardAction).length, count)
+      compare(surface.searchControl.activeFocus, true)
+    }
+
     function test_pinned_and_recent_labels_appear_only_for_a_split_page() {
       openBrowser([entry(0, {pinned: true}), entry(1), entry(2)])
       verify(surface.listControl.itemAtIndex(0).sectionControl.visible)

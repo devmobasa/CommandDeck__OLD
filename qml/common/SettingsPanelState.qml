@@ -93,6 +93,12 @@ FocusScope {
   readonly property var part_settingsSearch: parts.settingsSearch
   readonly property var part_displayCard: parts.customizationScroll.part_displayCard
   readonly property var part_displaySizeChoice: parts.customizationScroll.part_displaySizeChoice
+  readonly property var part_layoutCard: parts.customizationScroll.part_layoutCard
+  readonly property var part_compactLayoutCheck: parts.customizationScroll.part_compactLayoutCheck
+  readonly property var part_previewPaneCheck: parts.customizationScroll.part_previewPaneCheck
+  readonly property var part_closingCard: parts.customizationScroll.part_closingCard
+  readonly property var part_escapeClearsCheck: parts.customizationScroll.part_escapeClearsCheck
+  readonly property var part_keepSearchChoice: parts.customizationScroll.part_keepSearchChoice
   readonly property var part_transparencyCard: parts.customizationScroll.part_transparencyCard
   readonly property var part_colorsCard: parts.customizationScroll.part_colorsCard
   readonly property var part_panelTransparencyCheck: parts.customizationScroll.part_panelTransparencyCheck
@@ -229,6 +235,22 @@ FocusScope {
     }
     return 0
   }
+  // Compact layout (QML-only, persisted outside the daemon snapshot).
+  property bool compactLayout: false
+  property bool previewPaneVisible: true
+  // Closing and reopening (QML-only, persisted outside the daemon snapshot).
+  property bool escapeClearsSearch: false
+  property int keepSearchSeconds: 0
+  readonly property var keepSearchOptions: [
+    { id: 0, title: "Off", description: "Reopening always starts on Home." },
+    { id: 30, title: "30 seconds", description: "Reopening within 30 seconds shows the same search." },
+    { id: 120, title: "2 minutes", description: "Reopening within 2 minutes shows the same search." },
+    { id: 600, title: "10 minutes", description: "Reopening within 10 minutes shows the same search." }
+  ]
+  function keepSearchIndex(seconds) {
+    const index = settingsState.owner.keepSearchOptions.findIndex(option => option.id === seconds)
+    return index >= 0 ? index : 0
+  }
   // Panel transparency (QML-only, persisted outside the daemon snapshot).
   property bool panelTransparencyEnabled: false
   property int panelTransparencyPercent: 20
@@ -259,7 +281,7 @@ FocusScope {
       settingsState.owner.part_diagnosticsCard, settingsState.owner.part_aiManagementCard,
       settingsState.owner.part_aiProvidersCard, settingsState.owner.part_templatesCard],
     shortcuts: [settingsState.owner.part_shortcutsCard],
-    customization: [settingsState.owner.part_displayCard, settingsState.owner.part_colorsCard, settingsState.owner.part_transparencyCard, settingsState.owner.part_favoritesCard, settingsState.owner.part_hiddenItemsCard, settingsState.owner.part_dataCard, settingsState.owner.part_resetCard]
+    customization: [settingsState.owner.part_displayCard, settingsState.owner.part_layoutCard, settingsState.owner.part_closingCard, settingsState.owner.part_colorsCard, settingsState.owner.part_transparencyCard, settingsState.owner.part_favoritesCard, settingsState.owner.part_hiddenItemsCard, settingsState.owner.part_dataCard, settingsState.owner.part_resetCard]
   })
   readonly property var filteredPages: owner.pages.filter(page =>
     page.id === Ui.SettingsPage.Ai && !settingsState.owner.aiFeaturesEnabled
@@ -291,6 +313,9 @@ FocusScope {
   signal preferencesChanged(var preferences)
   signal displaySizeSelected(string preset)
   signal panelTransparencyChanged(bool enabled, int percent)
+  signal compactLayoutSelected(bool enabled)
+  signal previewPaneSelected(bool visible)
+  signal launcherBehaviorSelected(bool escapeClears, int keepSeconds)
   signal colorThemeChanged(var change)
   signal colorThemeResetRequested()
   signal resetRequested()

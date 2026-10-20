@@ -50,6 +50,7 @@ Rectangle {
       case Protocol.ResultKinds.Omarchy: return ["applications-system", "system-run"]
       case Protocol.ResultKinds.Quicklink: return ["internet-web-browser"]
       case Protocol.ResultKinds.CustomCommand: return ["utilities-terminal", "system-run"]
+      case Protocol.ResultKinds.Process: return ["utilities-system-monitor", "system-run"]
       default: return []
     }
   }
@@ -87,6 +88,7 @@ Rectangle {
       case Protocol.ResultKinds.Calculator: return "="
       case Protocol.ResultKinds.AiCommand: return "✦"
       case Protocol.ResultKinds.Omarchy: return "O"
+      case Protocol.ResultKinds.Process: return "◉"
       default: return "•"
     }
   }

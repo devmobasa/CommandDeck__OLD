@@ -255,6 +255,7 @@ public sealed partial class ClipboardHistoryStore : IDisposable
                 AdvanceRevision( );
                 return 0;
             } );
+            _sequence = null;
             AdvanceCaptureEpoch( );
             Interlocked.Increment( ref _clearEpoch );
             _payloadLedger!.Cleanup( );

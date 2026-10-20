@@ -47,6 +47,7 @@ ShellRoot {
   AgentSurfaceAssertions { id: verifyAgentSurfacePart; host: root }
   AgentControllerAssertions { id: verifyAgentControllerPart; host: root }
   HerdrLiveUpdatesAssertions { id: verifyHerdrLiveUpdatesPart; host: root }
+  OmarchyMenuBrowseAssertions { id: verifyOmarchyMenuBrowsePart; host: root }
   HeyMailAssertions { id: verifyHeyMailPart; host: root }
   readonly property alias part_agentSettingsPanel: agentSettingsPanel
   readonly property alias part_agentSpecController: agentSpecController
@@ -122,6 +123,7 @@ ShellRoot {
   }
 
   function verifyHerdrLiveUpdates() { verifyHerdrLiveUpdatesPart.run() }
+  function verifyOmarchyMenuBrowse() { verifyOmarchyMenuBrowsePart.run() }
   function verifyHeyMail() { verifyHeyMailPart.run() }
   function openHeyUndoKeys() { verifyHeyMailPart.openForUndoKeys() }
   function verifyHeyUndoKeys() { verifyHeyMailPart.verifyUndoKeys() }

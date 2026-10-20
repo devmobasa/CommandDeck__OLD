@@ -35,9 +35,16 @@ QtObject {
       "direct file shortcuts use the same result and action invocation as the menu")
     host.part_integratedDeck.handleMessage({ type: Protocol.Messages.ActionResult, requestId: invocations[1].requestId,
       actionResult: { succeeded: false, message: "Copy failed" } })
-    host.expect(host.part_integratedDeck.directActions.map(action => action.id).join(",") === "reveal,copy-path,favorite"
+    host.expect(host.part_integratedDeck.directActions.map(action => action.slot + ":" + action.id).join(",")
+          === "secondary:reveal,tertiary:copy-path,copy:copy-path,favorite:favorite,alias:alias,hide:hide"
         && host.part_integratedDeck.shortcutActions({ canCustomize: true, isFavorite: true, actions: [] })[0].title === "Unbookmark",
       "contextual shortcuts follow supported actions and current bookmark state")
+    host.part_integratedDeck.invokeShortcut(Ui.ResultAction.Alias)
+    host.expect(host.part_integratedDeck.aliasDialogOpen && host.part_integratedDeck.aliasTarget !== null
+        && host.part_integratedDeck.aliasTarget.id === shortcutFile.id,
+      "the alias chord opens the alias editor for the selected result")
+    host.part_integratedDeck.aliasDialogOpen = false
+    host.part_integratedDeck.aliasTarget = null
     host.part_integratedDeck.daemonAvailable = false
     host.part_integratedDeck.invokeShortcut("reveal")
     host.expect(host.part_integratedDeck.sentRequests.filter(request => request.resultId === shortcutFile.id && request.operation === Protocol.Operations.Invoke).length === 2,

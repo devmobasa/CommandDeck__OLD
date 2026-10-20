@@ -18,9 +18,16 @@ Loader {
   // B5 - the launcher's computed action count, wired only for the highlighted
   // row so the "N actions" affordance appears there.
   property int actionCount: 0
+  property bool compactLayout: false
+  property bool controlHeld: false
+
+  // Set by the list: a hover over a row selects it only after a real pointer
+  // move, never because the row moved under a resting pointer.
+  property PointerMoveGate pointerGate: null
 
   signal activated()
   signal actionsRequested()
+  signal hoverSelected()
 
   sourceComponent: root.isHeader ? headerComponent : resultComponent
 
@@ -43,8 +50,13 @@ Loader {
       ordinal: root.ordinal
       selected: root.selected
       actionCount: root.actionCount
+      compactLayout: root.compactLayout
+      controlHeld: root.controlHeld
       onActivated: root.activated()
       onActionsRequested: root.actionsRequested()
+      onPointerMoved: (x, y) => {
+        if (root.pointerGate && root.pointerGate.moved(x, y)) root.hoverSelected()
+      }
     }
   }
 }

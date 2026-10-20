@@ -69,6 +69,7 @@ var Operations = Object.freeze({
   ExtensionOpen: "extension.open",
   ExtensionPresent: "extension.present",
   ExtensionsManage: "extensions.manage",
+  FavoriteMove: "favorite.move",
   FavoriteRemoveOrphan: "favorite.remove-orphan",
   FavoriteReorder: "favorite.reorder",
   FavoriteSet: "favorite.set",
@@ -168,6 +169,7 @@ var ResultKinds = Object.freeze({
   File: "file",
   Mail: "mail",
   Omarchy: "omarchy",
+  Process: "process",
   Quicklink: "quicklink",
   SavedSearch: "saved-search",
   Status: "status",
@@ -185,6 +187,7 @@ var SourceIds = Object.freeze({
   Clipboard: "clipboard",
   CommandsQuicklinks: "commands-quicklinks",
   Configuration: "configuration",
+  DesktopControls: "desktop-controls",
   Emoji: "emoji",
   Files: "files",
   Folders: "folders",
@@ -192,6 +195,7 @@ var SourceIds = Object.freeze({
   Hey: "hey",
   OmarchyControl: "omarchy-control",
   OmarchySystem: "omarchy-system",
+  Processes: "processes",
   Projects: "projects",
   Scripts: "scripts",
   Snippets: "snippets",
@@ -213,6 +217,7 @@ var ProviderIds = Object.freeze({
   Clipboard: "clipboard",
   Commands: "commands",
   Config: "config",
+  DesktopControls: "desktop-controls",
   Emoji: "emoji",
   Extensions: "extensions",
   Fallback: "fallback",
@@ -222,6 +227,8 @@ var ProviderIds = Object.freeze({
   Hey: "hey",
   Hyprland: "hyprland",
   Omarchy: "omarchy",
+  OmarchyMenu: "omarchy-menu",
+  Processes: "processes",
   Projects: "projects",
   Quicklinks: "quicklinks",
   SavedSearch: "saved-search",
@@ -240,6 +247,7 @@ var ActionKinds = Object.freeze({
   ApplySavedSearch: "apply-saved-search",
   BrowseFolder: "browse-folder",
   BrowseHerdrTabs: "browse-herdr-tabs",
+  BrowseOmarchyMenu: "browse-omarchy-menu",
   ClipboardHistory: "clipboard-history",
   CollectFile: "collect-file",
   CopyText: "copy-text",
@@ -260,6 +268,8 @@ var ActionKinds = Object.freeze({
   OpenClipboardHistory: "open-clipboard-history",
   OpenPath: "open-path",
   OpenUrl: "open-url",
+  ProcessSignal: "process-signal",
+  ResetRanking: "reset-ranking",
   RevealPath: "reveal-path",
   RunArgv: "run-argv",
   RunScript: "run-script",
@@ -310,6 +320,7 @@ var ClipboardActionIds = Object.freeze({
   Keywords: "keywords",
   Open: "open",
   Pin: "pin",
+  SequenceStart: "sequence-start",
   Unpin: "unpin"
 });
 
@@ -472,7 +483,13 @@ var UndoActions = Object.freeze({
 var ResultMetadataKeys = Object.freeze({
   CatalogResultId: "catalogResultId",
   CompletionText: "completionText",
-  ExactAlias: "exactAlias"
+  ExactAlias: "exactAlias",
+  OmarchyChecked: "omarchyChecked",
+  OmarchyMenu: "omarchyMenu",
+  OmarchyMenuItems: "omarchyMenuItems",
+  OmarchyMenuPath: "omarchyMenuPath",
+  OmarchyParent: "omarchyParent",
+  OmarchyUnavailable: "omarchyUnavailable"
 });
 
 var ShortcutStatuses = Object.freeze({

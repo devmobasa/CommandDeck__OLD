@@ -1,11 +1,18 @@
-using System.Globalization;
-
 namespace CommandDeck;
 
-// Switching workspaces and focusing or closing windows through one Hyprland
-// dispatch that must be acknowledged.
-internal sealed class HyprlandActionHandler( ExternalProcessRunner? hyprlandRunner ) : ILinuxActionHandler
+// Switching workspaces, focusing or closing windows, and the window commands,
+// each through Hyprland dispatches that must be acknowledged.
+internal sealed class HyprlandActionHandler : ILinuxActionHandler
 {
+    private readonly ExternalProcessRunner _run;
+    private readonly HyprlandWindowCommands _windowCommands;
+
+    public HyprlandActionHandler( ExternalProcessRunner? hyprlandRunner )
+    {
+        _run = hyprlandRunner ?? DefaultRunAsync;
+        _windowCommands = new HyprlandWindowCommands( _run );
+    }
+
     public IReadOnlyList<string> Kinds { get; } = [ActionKinds.HyprlandDispatch];
 
     public ValueTask<ActionExecutionResult> ExecuteAsync(
@@ -23,6 +30,15 @@ internal sealed class HyprlandActionHandler( ExternalProcessRunner? hyprlandRunn
     {
         var operation = LinuxActionArguments.Require( action, HyprlandActionOperations.OperationKey );
         var argument = LinuxActionArguments.Require( action, HyprlandActionOperations.ArgumentKey );
+        if ( HyprlandActionOperations.IsWindowCommand( operation ) )
+        {
+            return await _windowCommands.ExecuteAsync(
+                operation,
+                argument,
+                action.Arguments.GetValueOrDefault( HyprlandActionOperations.ParameterKey ),
+                cancellationToken ).ConfigureAwait( false );
+        }
+
         var target = HyprlandDispatch.QuoteLuaString( argument );
         var lua = operation switch
         {
@@ -32,33 +48,17 @@ internal sealed class HyprlandActionHandler( ExternalProcessRunner? hyprlandRunn
             _ => throw new InvalidOperationException( $"Unsupported Hyprland operation '{operation}'." )
         };
 
-        var result = await RunHyprlandAsync( [HyprlandDispatch.Command, lua], cancellationToken )
-            .ConfigureAwait( false );
-        if ( HyprlandDispatch.WasAccepted( result ) )
-        {
-            return ActionExecutionResult.Success( );
-        }
-
-        var message = result.TimedOut
-            ? "Hyprland dispatch timed out."
-            : result.ExitCode == 0
-                ? "Hyprland did not acknowledge the action."
-                : $"'hyprctl' exited with code {result.ExitCode.ToString( CultureInfo.InvariantCulture )}.";
-        var diagnostic = string.IsNullOrWhiteSpace( result.StandardError )
-            ? result.StandardOutput.Trim( )
-            : result.StandardError.Trim( );
-        return ActionExecutionResult.Failure(
-            message,
-            string.IsNullOrWhiteSpace( diagnostic )
-                ? null
-                : $"```\n{diagnostic}\n```" );
+        var result = await _run( HyprlandDispatch.Executable, [HyprlandDispatch.Command, lua],
+            HyprlandDispatch.Timeout, cancellationToken ).ConfigureAwait( false );
+        return HyprlandDispatch.WasAccepted( result )
+            ? ActionExecutionResult.Success( )
+            : HyprlandDispatch.Failure( result );
     }
 
-    private ValueTask<ProcessResult> RunHyprlandAsync(
+    private static ValueTask<ProcessResult> DefaultRunAsync(
+        string fileName,
         IReadOnlyList<string> arguments,
+        TimeSpan timeout,
         CancellationToken cancellationToken ) =>
-        hyprlandRunner is not null
-            ? hyprlandRunner( HyprlandDispatch.Executable, arguments, TimeSpan.FromSeconds( 3 ), cancellationToken )
-            : ProcessRunner.RunAsync( HyprlandDispatch.Executable, arguments, null, null,
-                TimeSpan.FromSeconds( 3 ), cancellationToken );
+        ProcessRunner.RunAsync( fileName, arguments, null, null, timeout, cancellationToken );
 }

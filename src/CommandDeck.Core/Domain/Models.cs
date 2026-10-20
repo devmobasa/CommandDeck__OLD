@@ -23,6 +23,7 @@ public static class ResultKinds
     public const string ExtensionCommand = "extension-command";
     public const string Tab = "tab";
     public const string Mail = "mail";
+    public const string Process = "process";
 }
 
 public static class SourceIds
@@ -48,6 +49,8 @@ public static class SourceIds
     public const string Emoji = "emoji";
     public const string Herdr = "herdr";
     public const string Hey = "hey";
+    public const string DesktopControls = "desktop-controls";
+    public const string Processes = "processes";
 
     public static readonly IReadOnlySet<string> All = new HashSet<string>( StringComparer.Ordinal )
     {
@@ -71,7 +74,9 @@ public static class SourceIds
         WebSearch,
         Emoji,
         Herdr,
-        Hey
+        Hey,
+        DesktopControls,
+        Processes
     };
 }
 
@@ -97,6 +102,8 @@ public static class ActionKinds
     public const string HyprlandDispatch = "hyprland-dispatch";
     public const string HerdrFocus = "herdr-focus";
     public const string BrowseHerdrTabs = "browse-herdr-tabs";
+    // Handled by the launcher: lists one Omarchy submenu in the search.
+    public const string BrowseOmarchyMenu = "browse-omarchy-menu";
     public const string HerdrCreateTab = "herdr-create-tab";
     public const string HerdrRenameTab = "herdr-rename-tab";
     public const string HerdrOpenProject = "herdr-open-project";
@@ -110,6 +117,9 @@ public static class ActionKinds
     public const string HeyOpenPage = "hey-open-page";
     public const string HeyReadThread = "hey-read-thread";
     public const string HeyTriage = "hey-triage";
+    public const string ProcessSignal = "process-signal";
+    // Handled by the invocation workflow: forgets one result's accepted uses.
+    public const string ResetRanking = "reset-ranking";
     // Handled by the launcher: replaces the query (and its filter chip) and searches.
     public const string ApplyQuery = "apply-query";
 }
@@ -257,6 +267,8 @@ public sealed class SearchRequest
     [System.Text.Json.Serialization.JsonIgnore]
     public ContributionRegistrySnapshot? ContributionSnapshot { get; init; }
     public string? HerdrWorkspaceId { get; init; }
+    // Lists this Omarchy submenu's entries instead of searching everything.
+    public string? OmarchyMenuId { get; init; }
     public string? BrowseDirectory { get; init; }
     public int BrowseOffset { get; init; }
     public string Query { get; init; } = string.Empty;

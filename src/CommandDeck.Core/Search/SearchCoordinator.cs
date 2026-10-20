@@ -74,7 +74,7 @@ public sealed partial class SearchCoordinator
             var home = await BuildHomeAsync( effectiveRequest, preferences, limit, cancellationToken )
                 .ConfigureAwait( false );
             return new SearchOutcome(
-                home.Results.Where( static result => !PrivateSources.IsPrivate( result ) ).ToArray( ),
+                OfferRankingReset( home.Results.Where( static result => !PrivateSources.IsPrivate( result ) ), purpose ),
                 home.IncompleteProviderCount );
         }
 
@@ -103,10 +103,14 @@ public sealed partial class SearchCoordinator
         var hidden = await HiddenStableIdsAsync( cancellationToken ).ConfigureAwait( false );
         var candidates = collection.Batches.SelectMany( static batch => batch )
             .Where( result => purpose == SearchPurpose.Interactive || !PrivateSources.IsPrivate( result ) )
-            .Where( result => IsAllowedResult( result, parsed, plan.EnabledSources, request.HerdrWorkspaceId ) )
+            .Where( result => IsAllowedResult( result, parsed, plan.EnabledSources, request ) )
             .Where( result => !hidden.Contains( UsageId( result ) ) ).ToArray( );
-        var liveUsage =
-            await ReadSearchUsageAsync( candidates, parsed, IsFolderBrowsing( request, parsed ), cancellationToken ).ConfigureAwait( false );
+        var learnedQueries = UseTopMatches( request, parsed )
+            ? await ReadLearnedQueriesAsync( effectiveRequest, purpose, now, cancellationToken ).ConfigureAwait( false )
+            : new Dictionary<string, LearnedQuery>( StringComparer.Ordinal );
+        var liveUsage = await ReadSearchUsageAsync( candidates, parsed,
+            IsFolderBrowsing( request, parsed ) || request.OmarchyMenuId is not null,
+            learnedQueries, cancellationToken ).ConfigureAwait( false );
         Dictionary<string, SearchResult> deduplicated = new( StringComparer.Ordinal );
         foreach ( var rawResult in candidates )
         {
@@ -129,10 +133,12 @@ public sealed partial class SearchCoordinator
         // take no Top Match or first-page slot.
         var trailing = collapsed.Where( ResultPlacements.IsTrailing ).Take( ResultPlacements.MaximumTrailing ).ToArray( );
         var ordinary = collapsed.Where( static result => !ResultPlacements.IsTrailing( result ) ).ToArray( );
-        var results = UseTopMatches( request, parsed )
-            ? AssembleTopMatches( ordinary, parsed, preferences, limit, liveUsage, now )
+        var results = request.OmarchyMenuId is not null
+            ? AssembleOmarchyMenu( ordinary, limit )
+            : UseTopMatches( request, parsed )
+            ? AssembleTopMatches( ordinary, parsed, preferences, limit, liveUsage, learnedQueries, now )
             : AssembleSections( ordinary, parsed, preferences, limit );
-        return new SearchOutcome( [.. results, .. trailing], collection.IncompleteProviderCount );
+        return new SearchOutcome( OfferRankingReset( [.. results, .. trailing], purpose ), collection.IncompleteProviderCount );
     }
 
     // Duplicate stable IDs arrive from the application-only and full catalog paths. A
@@ -144,7 +150,14 @@ public sealed partial class SearchCoordinator
             candidate.Metadata.ContainsKey( ResultMetadataKeys.ExactAlias ) &&
             !existing.Metadata.ContainsKey( ResultMetadataKeys.ExactAlias ));
 
-    private static bool IsAllowedResult( SearchResult result, ParsedQuery query, HashSet<string> enabledSources, string? herdrWorkspaceId )
+    // An Omarchy submenu keeps the provider's order in one section, without Top
+    // Matches or the per-source cap, so a long menu is listed whole.
+    private static SearchResult[] AssembleOmarchyMenu( IReadOnlyList<SearchResult> results, int limit ) =>
+        [.. results.Take( limit ).Select( static result => result.Section is null
+            ? WithSection( result, new ResultSection { Id = OmarchyMenuSearch.SectionId, Title = "Omarchy", Order = 0 } )
+            : result )];
+
+    private static bool IsAllowedResult( SearchResult result, ParsedQuery query, HashSet<string> enabledSources, SearchRequest request )
     {
         // These sources have their own switches and are not listed in source preferences.
         if ( result.SourceId is not SourceIds.Calculator and not SourceIds.Status and not SourceIds.Ai &&
@@ -157,7 +170,8 @@ public sealed partial class SearchCoordinator
         {
             return false;
         }
-        return HerdrSearch.MatchesScope( result, herdrWorkspaceId ) &&
+        return HerdrSearch.MatchesScope( result, request.HerdrWorkspaceId ) &&
+                    OmarchyMenuSearch.MatchesScope( result, request.OmarchyMenuId ) &&
                     !query.ExcludedFilters.Any( filter => FilterMatches( filter, result ) ) &&
                     ClausesMatch( query.Expression.Clauses, result );
     }
@@ -168,12 +182,13 @@ public sealed partial class SearchCoordinator
             : await _preferences.GetHiddenStableIdsAsync( cancellationToken ).ConfigureAwait( false );
 
     private IEnumerable<ICommandProvider> SelectProviders(
-        ParsedQuery query, LauncherPreferences preferences, string? herdrWorkspaceId, SearchPurpose purpose ) =>
-        ProviderEligibilityPolicy.Select( _providers, query, preferences, herdrWorkspaceId )
+        ParsedQuery query, LauncherPreferences preferences, SearchRequest request, SearchPurpose purpose ) =>
+        ProviderEligibilityPolicy.Select( _providers, query, preferences, request.HerdrWorkspaceId, request.OmarchyMenuId )
             .Where( provider => purpose == SearchPurpose.Interactive || !PrivateSources.ReadsPrivateContent( provider.Id ) );
 
     private bool UseTopMatches( SearchRequest request, ParsedQuery query ) =>
         _options.Ranking.TopMatches.Enabled && !IsFolderBrowsing( request, query ) && !HeySearch.IsRequested( query ) &&
+        request.OmarchyMenuId is null &&
         query.Text.Length > 0;
 
     private static bool IsFolderBrowsing( SearchRequest request, ParsedQuery query ) =>
@@ -185,6 +200,7 @@ public sealed partial class SearchCoordinator
         Query = request.Query,
         Expression = request.Expression,
         HerdrWorkspaceId = request.HerdrWorkspaceId,
+        OmarchyMenuId = request.OmarchyMenuId,
         Limit = request.Limit,
         ActiveApplication = _options.Ranking.Context.Enabled ? request.ActiveApplication : null,
         ActiveWorkspace = _options.Ranking.Context.Enabled ? request.ActiveWorkspace : null,

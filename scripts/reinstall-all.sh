@@ -14,12 +14,13 @@ esac
 
 if [[ ${1:-} == "-h" || ${1:-} == "--help" ]]; then
   cat <<'EOF'
-Usage: ./scripts/reinstall-all.sh [linux-x64|linux-arm64] [--reset-config]
+Usage: ./scripts/reinstall-all.sh [linux-x64|linux-arm64] [--reset-config] [--hotkey=CHORD]
 
 Validates, publishes, and reinstalls CommandDeck from this local working tree
 for the current user, including uncommitted changes. This includes the Native
-AOT binary, systemd user service, catalog, Omarchy plugin, Ctrl+Space binding,
-and all required reloads. It does not fetch or pull remote changes.
+AOT binary, systemd user service, catalog, Omarchy plugin, Hyprland hotkey
+(Ctrl+Space unless --hotkey="SUPER + SPACE" or similar is given), and all
+required reloads. It does not fetch or pull remote changes.
 
 By default, an existing CommandDeck configuration is preserved. Pass
 --reset-config to permanently delete the complete CommandDeck configuration
@@ -32,6 +33,7 @@ fi
 
 rid=$host_rid
 reset_config=0
+hotkey="CTRL + SPACE"
 for argument in "$@"; do
   case "$argument" in
     linux-x64|linux-arm64)
@@ -39,6 +41,9 @@ for argument in "$@"; do
       ;;
     --reset-config)
       reset_config=1
+      ;;
+    --hotkey=*)
+      hotkey=${argument#--hotkey=}
       ;;
     *)
       echo "Unknown argument: $argument" >&2
@@ -55,13 +60,10 @@ fi
 
 config_home=${XDG_CONFIG_HOME:-$HOME/.config}
 data_home=${XDG_DATA_HOME:-$HOME/.local/share}
-state_home=${XDG_STATE_HOME:-$HOME/.local/state}
 service_dir="$config_home/systemd/user"
 service_file="$service_dir/commanddeck.service"
 config_file="$config_home/commanddeck/commanddeck.jsonc"
 installed_binary="$data_home/commanddeck/commanddeck"
-bindings_file="$config_home/hypr/bindings.lua"
-binding_backup_dir="$state_home/commanddeck/binding-backups"
 daemon_needs_recovery=0
 reindex_degraded=0
 
@@ -112,42 +114,17 @@ require_command() {
   fi
 }
 
-ensure_ctrl_space_binding() {
-  mkdir -p "$(dirname -- "$bindings_file")"
-  touch "$bindings_file"
-
-  if grep -Fq -- "-- BEGIN COMMANDDECK CTRL SPACE" "$bindings_file"; then
-    echo "Ctrl+Space CommandDeck binding already managed in $bindings_file"
-    return
-  fi
-
-  if awk '
-    /CTRL[[:space:]]*\+[[:space:]]*SPACE/ { remaining = 6 }
-    remaining > 0 && /local\.commanddeck/ { found = 1 }
-    remaining > 0 { remaining-- }
-    END { exit(found ? 0 : 1) }
-  ' "$bindings_file"; then
-    echo "Ctrl+Space CommandDeck binding already present in $bindings_file"
-    return
-  fi
-
-  mkdir -p "$binding_backup_dir"
-  binding_backup="$binding_backup_dir/bindings.lua.$(date +%Y%m%d%H%M%S)"
-  cp -a -- "$bindings_file" "$binding_backup"
-
-  cat >>"$bindings_file" <<'EOF'
-
--- BEGIN COMMANDDECK CTRL SPACE
-hl.unbind("CTRL + SPACE")
-hl.bind(
-  "CTRL + SPACE",
-  hl.dsp.exec_cmd([[omarchy-shell shell toggle local.commanddeck '{}']]),
-  { description = "CommandDeck" }
-)
--- END COMMANDDECK CTRL SPACE
-EOF
-
-  echo "Installed Ctrl+Space binding; backup: $binding_backup"
+# The plugin registers commanddeck:toggle when the shell loads it. Until then
+# the hotkey has nothing to reach, so wait for the registration like shell_call.
+wait_for_global_shortcut() {
+  local deadline=$((SECONDS + shell_ready_seconds))
+  until hyprctl -j globalshortcuts | jq -e 'any(.[]; .name == "commanddeck:toggle")' >/dev/null; do
+    if (( SECONDS >= deadline )); then
+      echo "The CommandDeck plugin did not register commanddeck:toggle within ${shell_ready_seconds}s." >&2
+      return 1
+    fi
+    sleep 1
+  done
 }
 
 for required in dotnet systemctl omarchy omarchy-shell hyprctl jq; do
@@ -205,8 +182,8 @@ if ! "$installed_binary" reindex --quiet; then
   echo "Reindex reported unavailable or failed inputs; continuing with its usable catalog." >&2
 fi
 
-step "Ensure Ctrl+Space binding"
-ensure_ctrl_space_binding
+step "Install the $hotkey hotkey"
+"$installed_binary" hotkey install --chord "$hotkey"
 
 step "Import desktop session environment and start daemon"
 session_variables=()
@@ -244,6 +221,7 @@ shell_call omarchy-shell shell ping >/dev/null
 shell_call omarchy plugin list --json | jq -e '
   any(.[]; .id == "local.commanddeck" and .enabled == true)
 ' >/dev/null
+wait_for_global_shortcut
 "$installed_binary" doctor
 "$installed_binary" search "= 2 + 2" --json | jq -e '
   any(.[]; .kind == "calculator" and .title == "4")
@@ -253,4 +231,4 @@ if (( reindex_degraded )); then
   echo "Warning: reindex reported unavailable or failed inputs; inspect commanddeck index status." >&2
 fi
 
-printf '\nCommandDeck reinstall complete. Press Ctrl+Space to open it.\n'
+printf '\nCommandDeck reinstall complete. Press %s to open it.\n' "$hotkey"

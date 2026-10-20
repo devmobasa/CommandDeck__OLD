@@ -1,4 +1,5 @@
 module CommandDeck.Common
+ActionIcon 1.0 ActionIcon.qml
 ActionInputDialog 1.0 ActionInputDialog.qml
 ActionMatcher 1.0 ActionMatcher.qml
 ActionPanel 1.0 ActionPanel.qml
@@ -24,10 +25,12 @@ AiProviderSettingsController 1.0 AiProviderSettingsController.qml
 AiStreamingSurface 1.0 AiStreamingSurface.qml
 AliasDialog 1.0 AliasDialog.qml
 AnnouncementCoalescer 1.0 AnnouncementCoalescer.qml
+ArgumentPills 1.0 ArgumentPills.qml
 CalculatorResultView 1.0 CalculatorResultView.qml
 ClipboardActionBar 1.0 ClipboardActionBar.qml
 ClipboardActionButton 1.0 ClipboardActionButton.qml
 ClipboardBrowserDialogs 1.0 ClipboardBrowserDialogs.qml
+ClipboardCaptureStatus 1.0 ClipboardCaptureStatus.qml
 ClipboardEmptyState 1.0 ClipboardEmptyState.qml
 ClipboardEntryRow 1.0 ClipboardEntryRow.qml
 ClipboardHistoryController 1.0 ClipboardHistoryController.qml
@@ -84,22 +87,28 @@ IndexInspector 1.0 IndexInspector.qml
 InvocationController 1.0 InvocationController.qml
 KeyCap 1.0 KeyCap.qml
 KeyboardButton 1.0 KeyboardButton.qml
+LauncherBehaviorStore 1.0 LauncherBehaviorStore.qml
+LauncherHud 1.0 LauncherHud.qml
 LauncherLifecycleController 1.0 LauncherLifecycleController.qml
 LauncherProtocolController 1.0 LauncherProtocolController.qml
+LayoutStore 1.0 LayoutStore.qml
 LiteralButton 1.0 LiteralButton.qml
 MatchedFieldList 1.0 MatchedFieldList.qml
 NoResultsView 1.0 NoResultsView.qml
+OmarchyMenuBar 1.0 OmarchyMenuBar.qml
 OnDemandSurface 1.0 OnDemandSurface.qml
 PersonalizationController 1.0 PersonalizationController.qml
 PersonalizationMutationQueue 1.0 PersonalizationMutationQueue.qml
 Picker 1.0 Picker.qml
 PickerView 1.0 PickerView.qml
+PointerMoveGate 1.0 PointerMoveGate.qml
 PreferenceUpdateQueue 1.0 PreferenceUpdateQueue.qml
 ProtocolClient 1.0 ProtocolClient.qml
 ProtocolRequestTracker 1.0 ProtocolRequestTracker.qml
 QueryHistoryController 1.0 QueryHistoryController.qml
 SearchSessionController 1.0 SearchSessionController.qml
 QueryHistorySurface 1.0 QueryHistorySurface.qml
+QueryRecallController 1.0 QueryRecallController.qml
 ResultIcon 1.0 ResultIcon.qml
 ResultListDelegate 1.0 ResultListDelegate.qml
 ResultModelController 1.0 ResultModelController.qml

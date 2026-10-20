@@ -21,6 +21,7 @@ PanelWindow {
   readonly property alias part_runtimeStatusSurface: launcherContent.part_runtimeStatusSurface
   readonly property alias part_footerActions: launcherContent.part_footerActions
   readonly property alias part_detailPane: launcherContent.part_detailPane
+  readonly property alias part_hud: launcherHud
 
   required property var modelData
   screen: modelData
@@ -122,6 +123,9 @@ PanelWindow {
   }
   exclusionMode: ExclusionMode.Ignore
   WlrLayershell.layer: WlrLayer.Overlay
+  // Hyprland reports openlayer>>commanddeck when the launcher maps, which
+  // scripts/measure-toggle-latency.cs times; the picker and HUD use their own.
+  WlrLayershell.namespace: "commanddeck"
   WlrLayershell.keyboardFocus: launcherWindow.host.opened && !launcherWindow.host.part_extensionController.externalActionPending
     ? WlrKeyboardFocus.Exclusive
     : WlrKeyboardFocus.None
@@ -267,6 +271,7 @@ PanelWindow {
     ActionPanel {
       id: actionPanel
       theme: launcherWindow.host.part_appTheme
+      shortcuts: launcherWindow.host.shortcutActions(actionPanel.result)
       width: Math.min(Math.round(360 * launcherWindow.host.part_appTheme.scale), palettePanel.width * 0.45)
       // Size to the action list's natural height, capped to fit inside the
       // palette (the panel clips and scrolls beyond that), so a result with
@@ -444,5 +449,14 @@ PanelWindow {
         launcherWindow.host.focusRevision++
       }
     }
+  }
+
+  // A copy that closes the launcher leaves its message on this screen.
+  LauncherHud {
+    id: launcherHud
+    host: launcherWindow.host
+    screen: launcherWindow.modelData
+    onLauncherScreen: launcherWindow.host.openedScreenName.length === 0
+      || launcherWindow.host.openedScreenName === launcherWindow.modelData.name
   }
 }

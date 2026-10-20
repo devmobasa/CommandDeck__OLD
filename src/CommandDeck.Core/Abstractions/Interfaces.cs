@@ -33,7 +33,19 @@ public interface ICatalogQueryStore
         IReadOnlyList<string> sourceIds,
         CancellationToken cancellationToken ) =>
         ValueTask.FromResult<IReadOnlySet<string>>( sourceIds.ToHashSet( StringComparer.Ordinal ) );
+
+    // Bookmark, alias and accepted-use state for rows of one kind that a
+    // provider builds from their own source under catalog stable IDs. Usage is
+    // scored as a catalog search scores that kind. IDs without state are absent.
+    ValueTask<IReadOnlyDictionary<string, CatalogItemState>> GetItemStatesAsync(
+        string kind,
+        IReadOnlyList<string> stableIds,
+        CancellationToken cancellationToken ) =>
+        ValueTask.FromResult<IReadOnlyDictionary<string, CatalogItemState>>(
+            new Dictionary<string, CatalogItemState>( StringComparer.Ordinal ) );
 }
+
+public sealed record CatalogItemState( bool IsFavorite, List<string> Aliases, double UsageScore );
 
 public interface ICatalogProjectionStore
 {
@@ -81,6 +93,14 @@ public interface IUsageSignalStore
         IReadOnlyList<string> stableIds, CancellationToken cancellationToken );
 }
 
+public interface ILearnedQueryStore
+{
+    // Stable IDs accepted after a search matching this query since the given
+    // time, with the best match for each; empty while query history is off.
+    ValueTask<IReadOnlyDictionary<string, LearnedQuery>> GetLearnedQueriesAsync(
+        string query, long sinceUnixMilliseconds, CancellationToken cancellationToken );
+}
+
 public interface IQueryHistoryStore
 {
     ValueTask<QueryHistorySnapshot> GetQueryHistoryAsync( int limit, CancellationToken cancellationToken );
@@ -99,6 +119,8 @@ public interface IUsageHistoryStore : IUsageSignalStore, IQueryHistoryStore
         int limit,
         CancellationToken cancellationToken );
     ValueTask ResetRankingLearningAsync( CancellationToken cancellationToken );
+    // Forgets one stable ID's accepted uses; false when it had none.
+    ValueTask<bool> ResetRankingForAsync( string stableId, CancellationToken cancellationToken );
 }
 
 public interface ISearchCatalog :
@@ -160,6 +182,12 @@ public interface ILauncherPreferenceStore : ILauncherSearchPreferences
         CancellationToken cancellationToken );
     ValueTask ReorderFavoritesAsync(
         IReadOnlyList<string> stableIds,
+        CancellationToken cancellationToken );
+    // Moves one bookmarked result to a zero-based position among bookmarks,
+    // clamped to the list; the others keep their order.
+    ValueTask MoveFavoriteAsync(
+        SearchResult result,
+        int position,
         CancellationToken cancellationToken );
     ValueTask<CustomizationResult> RemoveOrphanAsync(
         string customizationId,

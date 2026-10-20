@@ -25,6 +25,7 @@ public sealed partial class CommandDeckRuntime
             CurrentDirectory = request.CurrentDirectory,
             SelectedProject = request.SelectedProject,
             HerdrWorkspaceId = request.HerdrWorkspaceId,
+            OmarchyMenuId = request.OmarchyMenuId,
             BrowseDirectory = request.BrowseDirectory,
             BrowseOffset = request.BrowseOffset,
             EnabledSearchSources = request.EnabledSearchSources,

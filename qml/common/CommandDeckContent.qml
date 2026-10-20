@@ -16,8 +16,19 @@ ColumnLayout {
   readonly property alias part_footerActions: footerActions
   readonly property alias part_detailPane: detailPane
   readonly property alias part_statusLine: statusLine
+  readonly property alias part_pointerGate: resultPointerGate
 
   id: launcherContent
+  // The Herdr or Omarchy menu bar under the search field, first in Tab order
+  // after it; null when neither view is open.
+  readonly property var scopeBar: herdrNavigation.visible ? herdrNavigation
+    : omarchyNavigation.visible ? omarchyNavigation : null
+
+  PointerMoveGate { id: resultPointerGate }
+  Connections {
+    target: launcherContent.host
+    function onVisibleChanged() { resultPointerGate.reset() }
+  }
   visible: !launcherContent.host.host.part_extensionController.opened && !launcherContent.host.host.part_clipboardController.opened
   anchors.fill: parent
   anchors.margins: launcherContent.host.host.part_appTheme.panelPadding
@@ -32,13 +43,20 @@ ColumnLayout {
     filterDescriptors: launcherContent.host.host.filterDescriptors
     surfaceVisible: launcherContent.host.visible
     loading: launcherContent.host.host.part_searchSession.pending
-    additionalTabStop: herdrNavigation.visible ? herdrNavigation.firstControl : fileSelectionBar.visible ? fileSelectionBar.firstControl : runtimeStatusSurface.visible ? runtimeStatusSurface : footerActions.firstControl
+    additionalTabStop: launcherContent.scopeBar ? launcherContent.scopeBar.firstControl : fileSelectionBar.visible ? fileSelectionBar.firstControl : runtimeStatusSurface.visible ? runtimeStatusSurface : footerActions.firstControl
     precedingTabStop: detailPane.lastPreviewControl || footerActions.lastControl
       || (runtimeStatusSurface.visible ? runtimeStatusSurface : null)
   onSearchEdited: { if (!launcherContent.host.host.applyingBrowseNavigation) launcherContent.host.host.browseOffset = 0; launcherContent.host.host.part_searchSession.schedule() }
   directActions: launcherContent.host.host.directActions
   onShortcutRequested: actionId => launcherContent.host.host.invokeShortcut(actionId)
   onActionsRequested: launcherContent.host.openActionPanel()
+  onHistoryRecallRequested: restart => launcherContent.host.host.part_queryRecall.step(restart)
+  onZoomRequested: direction => launcherContent.host.host.stepDisplaySize(direction)
+  onFavoriteMoveRequested: direction => launcherContent.host.host.moveFavorite(direction)
+  pillTarget: launcherContent.host.host.argumentPillTarget
+  onPillsSubmitted: values => launcherContent.host.host.submitArgumentPills(values)
+  onPillValueMissing: name => launcherContent.host.host.statusText = "Enter a value for " + name
+  onPreviewToggleRequested: launcherContent.host.host.togglePreviewPane()
   undoAvailable: launcherContent.host.host.lastHidden !== null || launcherContent.host.host.lastUndo !== null
   onUndoRequested: launcherContent.host.host.undoLast()
   }
@@ -54,9 +72,20 @@ ColumnLayout {
     nextTabStop: fileSelectionBar.visible ? fileSelectionBar.firstControl : runtimeStatusSurface.visible ? runtimeStatusSurface : footerActions.firstControl
   }
 
+  OmarchyMenuBar {
+    id: omarchyNavigation
+    Layout.fillWidth: true
+    visible: launcherContent.host.host.omarchyMenuOpen && !herdrNavigation.visible
+    theme: launcherContent.host.host.part_appTheme
+    controller: launcherContent.host.host.part_navigation
+    searchInput: searchBar.inputControl
+    previousTabStop: searchBar.settingsControl
+    nextTabStop: fileSelectionBar.visible ? fileSelectionBar.firstControl : runtimeStatusSurface.visible ? runtimeStatusSurface : footerActions.firstControl
+  }
+
   FileSelectionBar {
     id: fileSelectionBar
-    previousTabStop: herdrNavigation.visible ? herdrNavigation.lastControl : searchBar.settingsControl
+    previousTabStop: launcherContent.scopeBar ? launcherContent.scopeBar.lastControl : searchBar.settingsControl
     nextTabStop: runtimeStatusSurface.visible ? runtimeStatusSurface : footerActions.firstControl
     Layout.fillWidth: true
     visible: launcherContent.host.host.fileSelection.length > 0
@@ -105,6 +134,10 @@ ColumnLayout {
           launcherContent.host.host.selectedIndex = listRow.index
           launcherContent.host.openActionPanel()
         }
+        pointerGate: resultPointerGate
+        compactLayout: launcherContent.host.host.compactLayout
+        controlHeld: searchBar.controlHeld
+        onHoverSelected: launcherContent.host.host.selectedIndex = listRow.index
       }
     }
 
@@ -172,6 +205,7 @@ ColumnLayout {
       onPreviewMatchRequested: index => launcherContent.host.host.requestPreview(launcherContent.host.host.currentResult, index)
       onPreviewOpenRequested: launcherContent.host.host.openPreviewMatch()
       visible: !launcherContent.host.host.answerOpen && hasContent
+        && (launcherContent.host.host.previewPaneVisible || launcherContent.host.host.calculatorOnly)
     }
 
     AiAnswerPane {
@@ -225,7 +259,7 @@ ColumnLayout {
     reconciliationPending: launcherContent.host.host.reconciliationPending
     reconciliationWarning: launcherContent.host.host.reconciliationWarning
     KeyNavigation.tab: footerActions.firstControl || searchBar.filterChipControl || searchBar.inputControl
-    KeyNavigation.backtab: fileSelectionBar.visible ? fileSelectionBar.lastControl : herdrNavigation.visible ? herdrNavigation.lastControl : searchBar.settingsControl
+    KeyNavigation.backtab: fileSelectionBar.visible ? fileSelectionBar.lastControl : launcherContent.scopeBar ? launcherContent.scopeBar.lastControl : searchBar.settingsControl
     onInspectorRequested: launcherContent.host.host.indexInspectorOpen = true
   }
 
@@ -266,6 +300,7 @@ ColumnLayout {
     FooterHintBar {
       id: footerActions
       objectName: "footerHintBar"
+      compact: launcherContent.host.host.compactLayout
       Layout.alignment: Qt.AlignVCenter
       theme: launcherContent.host.host.part_appTheme
       primaryActionTitle: launcherContent.host.host.primaryActionTitle
@@ -275,7 +310,7 @@ ColumnLayout {
       actionsEnabled: launcherContent.host.host.daemonAvailable && !launcherContent.host.host.reconciliationPending
       onPrefixesRequested: () => launcherContent.host.host.openFilterPalette(Ui.FocusReturnControl.FooterPrefixes)
       onHelpRequested: () => launcherContent.host.host.toggleHelp(Ui.FocusReturnControl.FooterHelp)
-      previousTabStop: runtimeStatusSurface.visible ? runtimeStatusSurface : fileSelectionBar.visible ? fileSelectionBar.lastControl : herdrNavigation.visible ? herdrNavigation.lastControl : searchBar.settingsControl
+      previousTabStop: runtimeStatusSurface.visible ? runtimeStatusSurface : fileSelectionBar.visible ? fileSelectionBar.lastControl : launcherContent.scopeBar ? launcherContent.scopeBar.lastControl : searchBar.settingsControl
       nextTabStop: detailPane.firstPreviewControl || searchBar.filterChipControl || searchBar.inputControl
       shortcutTarget: searchBar.inputControl
       shortcutHandler: searchBar.handleActionShortcut

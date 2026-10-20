@@ -51,6 +51,9 @@ public sealed partial class UnixProtocolServer
             ProtocolOperations.FavoriteReorder => await ReorderFavoritesAsync(
                 request,
                 cancellationToken ).ConfigureAwait( false ),
+            ProtocolOperations.FavoriteMove => await MoveFavoriteAsync(
+                request,
+                cancellationToken ).ConfigureAwait( false ),
             ProtocolOperations.CustomizationsExport => new ProtocolMessage
             {
                 RequestId = request.RequestId,
@@ -283,6 +286,21 @@ public sealed partial class UnixProtocolServer
         }
 
         await _runtime.ResetCustomizationsAsync( cancellationToken ).ConfigureAwait( false );
+        return new ProtocolMessage
+        {
+            RequestId = request.RequestId,
+            Type = ProtocolMessageTypes.PreferencesResult,
+            Preferences = LimitCustomizationSummaries(
+                await _runtime.GetPreferencesAsync( false, cancellationToken ).ConfigureAwait( false ) )
+        };
+    }
+
+    private async ValueTask<ProtocolMessage> MoveFavoriteAsync(
+        ProtocolRequest request,
+        CancellationToken cancellationToken )
+    {
+        var resultId = RequireValue( request.ResultId, "favorite.move requires resultId." );
+        await _runtime.MoveFavoriteAsync( resultId, request.Offset, cancellationToken ).ConfigureAwait( false );
         return new ProtocolMessage
         {
             RequestId = request.RequestId,

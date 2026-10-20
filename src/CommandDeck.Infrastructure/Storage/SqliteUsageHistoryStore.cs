@@ -13,7 +13,7 @@ internal sealed class SqliteUsageHistoryStore(
     TimeProvider timeProvider,
     RankingOptions ranking,
     bool learnFromInvocations,
-    PrivacyOptions privacy ) : IUsageHistoryStore
+    PrivacyOptions privacy ) : IUsageHistoryStore, ILearnedQueryStore
 {
     private bool LearnsUsage => learnFromInvocations && ranking.Adaptive.Enabled && privacy.StoreUsageHistory;
 
@@ -359,6 +359,73 @@ internal sealed class SqliteUsageHistoryStore(
             await command.ExecuteNonQueryAsync( cancellationToken ).ConfigureAwait( false );
         }
         await transaction.CommitAsync( cancellationToken ).ConfigureAwait( false );
+    }
+
+    // Query history is bounded by its maximum entry count, so every distinct
+    // query and result pair since the cutoff is read and matched here.
+    public async ValueTask<IReadOnlyDictionary<string, LearnedQuery>> GetLearnedQueriesAsync(
+        string query,
+        long sinceUnixMilliseconds,
+        CancellationToken cancellationToken )
+    {
+        var typed = LearnedQueries.Normalize( query );
+        Dictionary<string, LearnedQuery> learned = new( StringComparer.Ordinal );
+        if ( typed.Length == 0 || !privacy.StoreQueryHistory )
+        {
+            return learned;
+        }
+
+        await initialize( cancellationToken ).ConfigureAwait( false );
+        await using var connection = await open( cancellationToken ).ConfigureAwait( false );
+        await using var command = connection.CreateCommand( );
+        command.CommandText = """
+            SELECT stable_id, query_text, MAX(invoked_unix_ms)
+            FROM query_history
+            WHERE invoked_unix_ms >= $since
+            GROUP BY stable_id, query_text
+            LIMIT $limit;
+            """;
+        command.Parameters.AddWithValue( "$since", sinceUnixMilliseconds );
+        command.Parameters.AddWithValue( "$limit", Math.Max( 1, privacy.MaximumQueryHistoryEntries ) );
+        await using var reader = await command.ExecuteReaderAsync( cancellationToken ).ConfigureAwait( false );
+        while ( await reader.ReadAsync( cancellationToken ).ConfigureAwait( false ) )
+        {
+            var kind = LearnedQueries.Match( LearnedQueries.Normalize( reader.GetString( 1 ) ), typed );
+            if ( kind is null )
+            {
+                continue;
+            }
+
+            LearnedQuery candidate = new( kind.Value, reader.GetInt64( 2 ) );
+            var stableId = reader.GetString( 0 );
+            if ( !learned.TryGetValue( stableId, out var existing ) || LearnedQueries.Outranks( candidate, existing ) )
+            {
+                learned[stableId] = candidate;
+            }
+        }
+
+        return learned;
+    }
+
+    public async ValueTask<bool> ResetRankingForAsync( string stableId, CancellationToken cancellationToken )
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace( stableId );
+
+        await initialize( cancellationToken ).ConfigureAwait( false );
+        await using var connection = await open( cancellationToken ).ConfigureAwait( false );
+        await using var transaction =
+            ( SqliteTransaction ) await connection.BeginTransactionAsync( cancellationToken )
+                .ConfigureAwait( false );
+        await using var command = connection.CreateCommand( );
+        command.Transaction = transaction;
+        command.CommandText = """
+            DELETE FROM invocation_events WHERE stable_id = $stable_id;
+            DELETE FROM usage WHERE stable_id = $stable_id;
+            """;
+        command.Parameters.AddWithValue( "$stable_id", stableId );
+        var removed = await command.ExecuteNonQueryAsync( cancellationToken ).ConfigureAwait( false );
+        await transaction.CommitAsync( cancellationToken ).ConfigureAwait( false );
+        return removed > 0;
     }
 
     private async ValueTask PurgeExpiredLearningAsync(

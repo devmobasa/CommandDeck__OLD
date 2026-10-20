@@ -17,6 +17,12 @@ public sealed partial class SearchCoordinator
     private static string UsageId( SearchResult result ) =>
         result.Metadata.GetValueOrDefault( ResultMetadataKeys.CatalogResultId, result.Id );
 
+    // Exact aliases, calculator results, and rows a provider places explicitly
+    // (a typed URL) answer the query itself rather than match it.
+    private static bool IsExplicitIntent( SearchResult result ) =>
+        result.Metadata.ContainsKey( ResultMetadataKeys.ExactAlias ) || result.Kind == ResultKinds.Calculator ||
+        ResultPlacements.IsExplicit( result );
+
     private static bool StrongTitleMatch( SearchResult result, ParsedQuery query )
     {
         var positive = query.Expression.Clauses.Where( static clause => !clause.Excluded ).ToArray( );
@@ -40,12 +46,45 @@ public sealed partial class SearchCoordinator
     }
 
     private bool Learnable( SearchResult result, ParsedQuery query ) =>
+        LearnableAction( result, query ) && StrongTitleMatch( result, query );
+
+    private bool LearnableAction( SearchResult result, ParsedQuery query ) =>
         LearningAvailable && !query.IsAiMode && !query.IsCalculator &&
         result.ProviderId != ProviderIds.Fallback && result.SourceId != SourceIds.Folders &&
         TimeAwareRankingPolicy.Multiplier( result.Kind, _options.Ranking.TimeAware ) > 0 &&
         result.Actions.Count > 0 &&
-        IsLearningAction( result.Actions[0] ) &&
-        StrongTitleMatch( result, query );
+        IsLearningAction( result.Actions[0] );
+
+    // Learned queries need opt-in query history on top of every learning gate,
+    // and apply only to the user's own interactive searches.
+    private async ValueTask<IReadOnlyDictionary<string, LearnedQuery>> ReadLearnedQueriesAsync(
+        SearchRequest request, SearchPurpose purpose, DateTimeOffset now, CancellationToken cancellationToken )
+    {
+        if ( purpose != SearchPurpose.Interactive || !LearningAvailable || !_privacy.StoreQueryHistory ||
+            _usageHistory is not ILearnedQueryStore store )
+        {
+            return new Dictionary<string, LearnedQuery>( StringComparer.Ordinal );
+        }
+
+        try
+        {
+            var since = now.ToUnixTimeMilliseconds( ) - PromotionRecencyDays * 86_400_000L;
+            return await store.GetLearnedQueriesAsync( request.Query ?? string.Empty, since, cancellationToken )
+                .ConfigureAwait( false );
+        }
+        catch ( OperationCanceledException ) when ( cancellationToken.IsCancellationRequested )
+        {
+            throw;
+        }
+        catch ( Exception )
+        {
+            return new Dictionary<string, LearnedQuery>( StringComparer.Ordinal );
+        } // Unavailable history learns nothing, like missing usage.
+    }
+
+    private bool LearnedFromQuery( SearchResult result, ParsedQuery query,
+        IReadOnlyDictionary<string, LearnedQuery> learnedQueries ) =>
+        learnedQueries.ContainsKey( UsageId( result ) ) && LearnableAction( result, query );
 
     private static bool IsLearningAction( CommandAction action ) => action.Kind is
         ActionKinds.LaunchDesktop or ActionKinds.OpenPath or ActionKinds.OpenUrl or
@@ -55,7 +94,7 @@ public sealed partial class SearchCoordinator
 
     private async ValueTask<IReadOnlyDictionary<string, UsageSignal>> ReadSearchUsageAsync(
         IReadOnlyList<SearchResult> results, ParsedQuery query, bool browsing,
-        CancellationToken cancellationToken )
+        IReadOnlyDictionary<string, LearnedQuery> learnedQueries, CancellationToken cancellationToken )
     {
         Dictionary<string, UsageSignal> usage = new( StringComparer.Ordinal );
         if ( !LearningAvailable )
@@ -64,7 +103,8 @@ public sealed partial class SearchCoordinator
         }
         var ids = results.Where( result =>
                         result.Kind is ResultKinds.Window or ResultKinds.Workspace or ResultKinds.Tab ||
-                        (_options.Ranking.TopMatches.Enabled && !browsing && Learnable( result, query )) )
+                        (_options.Ranking.TopMatches.Enabled && !browsing &&
+                         (Learnable( result, query ) || LearnedFromQuery( result, query, learnedQueries ))) )
                     .Select( UsageId ).Distinct( StringComparer.Ordinal ).Order( StringComparer.Ordinal ).ToArray( );
         try
         {
@@ -90,7 +130,8 @@ public sealed partial class SearchCoordinator
     private sealed record PromotionCandidate( SearchResult Result, PromotionTier Tier, string Reason, double Tie, double Age );
 
     private PromotionCandidate ClassifyPromotion( SearchResult result, ParsedQuery query,
-        IReadOnlyDictionary<string, UsageSignal> usage, DateTimeOffset now )
+        IReadOnlyDictionary<string, UsageSignal> usage, IReadOnlyDictionary<string, LearnedQuery> learnedQueries,
+        DateTimeOffset now )
     {
         var tier = PromotionTier.Grouped;
         var reason = "No strong title match or learning disabled";
@@ -98,7 +139,7 @@ public sealed partial class SearchCoordinator
         var age = signal.LastUsedUnixMilliseconds > 0
             ? Math.Max( 0, (now.ToUnixTimeMilliseconds( ) - signal.LastUsedUnixMilliseconds) / 86_400_000d )
             : double.PositiveInfinity;
-        if ( result.Metadata.ContainsKey( ResultMetadataKeys.ExactAlias ) || result.Kind == ResultKinds.Calculator )
+        if ( IsExplicitIntent( result ) )
         {
             tier = PromotionTier.Explicit;
             reason = "Explicit intent";
@@ -107,6 +148,16 @@ public sealed partial class SearchCoordinator
         {
             tier = PromotionTier.Exact;
             reason = "Exact title or basename";
+        }
+        // The learned query itself is private history, so the reason never quotes it.
+        else if ( LearnedFromQuery( result, query, learnedQueries ) &&
+            signal.UseCount >= (learnedQueries[UsageId( result )].Kind == LearnedQueryKind.Exact ? 1 : MinimumPromotionUses) &&
+            age <= PromotionRecencyDays )
+        {
+            tier = PromotionTier.Learned;
+            reason = learnedQueries[UsageId( result )].Kind == LearnedQueryKind.Exact
+                ? "Accepted after this same search"
+                : "Accepted after a longer search that starts with this one";
         }
         else if ( Learnable( result, query ) )
         {
@@ -124,15 +175,19 @@ public sealed partial class SearchCoordinator
 
     private SearchResult[] AssembleTopMatches(
         IReadOnlyList<SearchResult> results, ParsedQuery query, LauncherPreferences preferences,
-        int limit, IReadOnlyDictionary<string, UsageSignal> usage, DateTimeOffset now )
+        int limit, IReadOnlyDictionary<string, UsageSignal> usage, IReadOnlyDictionary<string, LearnedQuery> learnedQueries,
+        DateTimeOffset now )
     {
         var positions = preferences.Sources.ToDictionary( static source => source.SourceId, static source => source.Position );
         var sourceCap = _options.Ranking.MaximumResultsPerSource;
         var pageSize = Math.Min( limit, _options.Ranking.FirstPageSize );
         var target = Math.Min( pageSize, Math.Min( _options.Ranking.MinimumSourcesOnFirstPage,
             results.Select( static result => result.SourceId ).Distinct( ).Count( ) ) );
-        var entries = results.Select( result => ClassifyPromotion( result, query, usage, now ) ).ToArray( );
+        var entries = results.Select( result => ClassifyPromotion( result, query, usage, learnedQueries, now ) ).ToArray( );
+        // An exact alias leads the explicit tier even when a source weight lifts
+        // another explicit row, such as a typed URL, to the same capped score.
         var ordered = entries.OrderBy( static entry => entry.Tier )
+            .ThenByDescending( static entry => entry.Result.Metadata.ContainsKey( ResultMetadataKeys.ExactAlias ) )
             .ThenByDescending( static entry => entry.Result.Score ).ThenByDescending( static entry => entry.Tie )
             .ThenBy( static entry => ResultTitleOrderKey( entry.Result ), StringComparer.OrdinalIgnoreCase )
             .ThenBy( static entry => entry.Result.Id, StringComparer.Ordinal ).ToArray( );

@@ -6,6 +6,9 @@ public static partial class Program
     {
         await RunAsync( "workspace provider preserves identity and orders recent use occupied workspaces and numeric IDs", WorkspacePreviewProviderIdentityAsync );
         await RunAsync( "Hyprland workspace and window actions use Lua dispatch acknowledgements", HyprlandActionDispatchAsync );
+        Run( "window placement geometry matches the golden table", WindowPlacementGeometryMatchesGoldenTable );
+        await RunAsync( "window commands bind the window focused before the launcher opened", WindowCommandsBindTheWindowFocusedBeforeTheLauncherAsync );
+        await RunAsync( "window commands dispatch only to the bound window address", WindowCommandsDispatchToTheBoundAddressAsync );
         await RunAsync( "workspace preview preferences persist export reset and reject invalid writes", WorkspacePreviewPreferencesAsync );
         await RunAsync( "spec selection lists filters and reports failures without running unrelated fixtures", SpecSelectionReportsAsync );
         Run( "result cache bounds bursts refreshes and deterministic expiry", ResultCacheBoundsAndExpiry );

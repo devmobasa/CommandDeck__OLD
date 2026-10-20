@@ -77,6 +77,14 @@ SettingsPanel {
   snapshotMutationBusy: settingsPanel.host.host.part_personalization.preferenceInFlight || settingsPanel.host.host.part_personalization.busy
   displaySizePreset: settingsPanel.host.host.displaySizePreset
   onDisplaySizeSelected: preset => settingsPanel.host.host.applyDisplaySizePreset(preset)
+  compactLayout: settingsPanel.host.host.compactLayout
+  onCompactLayoutSelected: enabled => settingsPanel.host.host.applyCompactLayout(enabled)
+  previewPaneVisible: settingsPanel.host.host.previewPaneVisible
+  onPreviewPaneSelected: visible => settingsPanel.host.host.applyPreviewPane(visible)
+  escapeClearsSearch: settingsPanel.host.host.escapeClearsSearch
+  keepSearchSeconds: settingsPanel.host.host.keepSearchSeconds
+  onLauncherBehaviorSelected: (escapeClears, keepSeconds) =>
+    settingsPanel.host.host.applyLauncherBehavior(escapeClears, keepSeconds)
   panelTransparencyEnabled: settingsPanel.host.host.panelTransparencyEnabled
   panelTransparencyPercent: settingsPanel.host.host.panelTransparencyPercent
   onPanelTransparencyChanged: (enabled, percent) =>

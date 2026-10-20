@@ -6,6 +6,9 @@ internal static class LinuxConstants
 {
     // Linux's unified syscall table uses 437 for openat2 on x86_64 and aarch64.
     public const long OpenAt2 = 437;
+    // The same table numbers pidfd_send_signal 424 and pidfd_open 434.
+    public const long PidfdSendSignal = 424;
+    public const long PidfdOpen = 434;
     public const int AtCurrentDirectory = -100;
     public const int OPath = 0x200000;
     // asm-generic/fcntl.h supplies x64; arm64 overrides O_DIRECTORY in asm/fcntl.h.

@@ -50,6 +50,9 @@ public static partial class Program
         await RunAsync( "clipboard transport dies with its parent", ClipboardTransportDiesWithParentAsync );
         await RunAsync( "clipboard copy binds entry owner and generation", ClipboardCopyBindsEntryOwnerAndGenerationAsync );
         await RunAsync( "clipboard copy rejects payload damage after browser open", ClipboardCopyRejectsPayloadDamageAfterBrowserOpenAsync );
+        await RunAsync( "clipboard sequence restart copies later entries in order", ClipboardSequenceRestartCopiesLaterEntriesInOrderAsync );
+        await RunAsync( "clipboard sequence starts at browser and search entries", ClipboardSequenceStartsAtBrowserAndSearchEntriesAsync );
+        await RunAsync( "clipboard sequence commands are private rows", ClipboardSequenceCommandsArePrivateRowsAsync );
         await RunAsync( "clipboard copy process cancels and reaps without changing the real clipboard", ClipboardCopyProcessCancelsAndReapsAsync );
         await RunAsync( "clipboard copy cancellation retains busy slot until completion", ClipboardCopyCancellationRetainsBusySlotUntilCompletionAsync );
         Run( "clipboard digests preserve names bytes and order independence", ClipboardDigestsPreserveNamesBytesAndOrderIndependence );
@@ -116,7 +119,22 @@ public static partial class Program
         await RunAsync( "script commands keep inputs literal and bound execution", ScriptCommandsRespectInputsAndBoundsAsync );
         await RunAsync( "snippets bind named inputs and expand placeholders once", SnippetInputsAndExpansionAsync );
         await RunAsync( "snippet clipboard reads enforce a 64 KiB capture budget", SnippetClipboardReadIsBoundedAsync );
+        Run( "snippet syntax keeps malformed placeholders literal", SnippetSyntaxKeepsMalformedPlaceholdersLiteral );
+        await RunAsync( "snippet placeholder errors reject configuration with a diagnostic", SnippetPlaceholderErrorsRejectConfigurationAsync );
+        Run( "snippet modifiers transform each value in order", SnippetModifiersTransformEachValueInOrder );
+        Run( "snippet dates use the clock formats locales and offsets", SnippetDatesUseTheClockFormatsLocalesAndOffsets );
+        Run( "snippet uuids are fresh version 4 values", SnippetUuidsAreFreshVersionFourValues );
+        await RunAsync( "snippet input defaults reach preview and copy", SnippetInputDefaultsReachPreviewAndCopyAsync );
+        await RunAsync( "snippet clipboard history offsets are private and need consent", SnippetClipboardHistoryOffsetsArePrivateAndNeedConsentAsync );
         await RunAsync( "project checkouts have distinct paths and usable actions", ProjectCheckoutsAsync );
+        await RunAsync( "omarchy menu state marks rows from one bounded batch", OmarchyMenuStateMarksRowsFromOneBatchAsync );
+        Run( "omarchy menu state isolates each condition in the batch", OmarchyMenuStateScriptIsolatesEachCondition );
+        await RunAsync( "omarchy menu indexes submenu rows that open in the launcher", OmarchyMenuIndexesSubmenuRowsAsync );
+        await RunAsync( "omarchy menu browse lists one submenu in Omarchy order with catalog identities", OmarchyMenuBrowseListsChildrenInOmarchyOrderAsync );
+        await RunAsync( "omarchy menu browse marks live state without the typed text", OmarchyMenuBrowseMarksLiveStateAsync );
+        Run( "omarchy menu scope is validated at the protocol boundary", OmarchyMenuScopeIsValidated );
+        await RunAsync( "omarchy menu browse action is launcher owned", OmarchyMenuBrowseActionIsLauncherOwnedAsync );
+        await RunAsync( "omarchy menu source reparses only changed files", OmarchyMenuSourceReparsesChangedFilesAsync );
         await RunAsync(
             "systemd provider discovers services and timers without reading logs",
             SystemdProviderDiscoversUnitsAsync );
@@ -165,8 +183,40 @@ public static partial class Program
         await RunAsync(
             "web-search stays off bare Home and wires its base filter",
             WebSearchProviderStaysOffHomeAndWiresFilterAsync );
+        Run( "typed URL detection accepts web addresses and rejects files versions emails and paths",
+            TypedUrlDetectionAcceptsAddressesAndRejectsLookalikes );
+        await RunAsync(
+            "typed URL row opens and copies the address from the web-search source",
+            TypedUrlRowOpensAndCopiesTheAddressAsync );
+        await RunAsync(
+            "typed URL ranks first in Top Matches but never above an exact alias",
+            TypedUrlRanksFirstButNeverAboveAnExactAliasAsync );
+        await RunAsync(
+            "typed URL follows the web-search source switch and explicit filters",
+            TypedUrlFollowsTheWebSourceAndExplicitFiltersAsync );
+        await RunAsync(
+            "typed URL invocation records usage under a fixed id without the address",
+            TypedUrlInvocationStoresNoAddressAsync );
         await RunAsync(
             "emoji provider matches by name and keyword and copies the glyph",
             EmojiProviderMatchesByNameAndKeywordAndCopiesGlyphAsync );
+        await RunAsync(
+            "desktop controls match plain search and hide commands whose tool is missing",
+            DesktopControlsMatchPlainSearchAndHideMissingToolsAsync );
+        await RunAsync(
+            "desktop controls run literal argv and report tool failures",
+            DesktopControlsRunLiteralArgvThroughRunArgvAsync );
+        await RunAsync(
+            "color picker starts hyprpicker after the launcher closes and reports a missing tool",
+            ColorPickerStartsAfterTheLauncherAndReportsAMissingToolAsync );
+        await RunAsync(
+            "process list shows only the user's own live processes",
+            ProcessListShowsOnlyTheUsersOwnLiveProcessesAsync );
+        await RunAsync(
+            "process signals require confirmation and recheck PID start time and owner",
+            ProcessSignalsRequireConfirmationAndRecheckIdentityAsync );
+        await RunAsync(
+            "process terminate reaches only the verified child through a pidfd",
+            ProcessTerminateReachesARealChildThroughAPidfdAsync );
     }
 }

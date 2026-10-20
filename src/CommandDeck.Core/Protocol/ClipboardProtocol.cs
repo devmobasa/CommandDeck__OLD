@@ -9,6 +9,7 @@ public static class ClipboardActionIds
     public const string Keywords = "keywords";
     public const string Clear = "clear";
     public const string Open = "open";
+    public const string SequenceStart = "sequence-start";
 }
 
 public static partial class ProtocolOperations

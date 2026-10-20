@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 import QtQuick
 import "ListKeys.js" as ListKeys
+import "ShortcutSlots.js" as ShortcutSlots
 import "UiConstants.js" as Ui
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -23,6 +24,8 @@ Rectangle {
     }
   }
   property bool surfaceVisible: false
+  // True while Ctrl is down in the field, for badges that show only then.
+  readonly property bool controlHeld: searchInput.controlDown && searchInput.activeFocus
   property bool loading: false
   property Item additionalTabStop: null
   property Item precedingTabStop: additionalTabStop
@@ -37,6 +40,37 @@ Rectangle {
   }
   signal searchEdited()
   signal actionsRequested()
+  // Up with nothing to move to on an empty or recalled query; restart is true
+  // when the query is empty, so the newest entry comes first again.
+  signal historyRecallRequested(bool restart)
+  // Ctrl+= (or Ctrl++) is 1, Ctrl+- is -1, Ctrl+0 is 0 for the automatic size.
+  signal zoomRequested(int direction)
+  // Ctrl+Alt+Up is -1 and Ctrl+Alt+Down is 1: move the selected Home bookmark.
+  signal favoriteMoveRequested(int direction)
+  // Ctrl+I shows or hides the details and preview pane.
+  signal previewToggleRequested()
+
+  // The selected result's primary action when it takes one to three inputs,
+  // as { result, action }; its inputs show as pills after the query. The pills
+  // are rebuilt only when the result, action or inputs change.
+  property var pillTarget: null
+  readonly property string pillKey: pillTarget
+    ? pillTarget.result.id + "\u001f" + pillTarget.action.id + "\u001f" + JSON.stringify(pillTarget.action.inputs)
+    : ""
+  readonly property alias pillsControl: argumentPills
+  signal pillsSubmitted(var values)
+  signal pillValueMissing(string name)
+  onPillKeyChanged: argumentPills.inputs = pillTarget
+    ? pillTarget.action.inputs.map(input => ({ name: input.name, defaultValue: input.defaultValue || "" }))
+    : []
+
+  function zoomDirection(key, modifiers) {
+    if ((modifiers & ~(Qt.KeypadModifier | Qt.ShiftModifier)) !== Qt.ControlModifier) return null
+    if (key === Qt.Key_Equal || key === Qt.Key_Plus) return 1
+    if (key === Qt.Key_Minus) return -1
+    if (key === Qt.Key_0 && (modifiers & Qt.ShiftModifier) === 0) return 0
+    return null
+  }
   signal shortcutRequested(string actionId)
   // Ctrl+Z restores the last hidden item while its undo strip is visible;
   // otherwise the field keeps its ordinary text undo.
@@ -44,22 +78,35 @@ Rectangle {
   signal undoRequested()
   property var directActions: []
 
-  function requestShortcut(id) {
-    if (!directActions.some(action => action.id === id)) return false
-    shortcutRequested(id)
-    return true
-  }
+  // Ctrl+Enter and Ctrl+Shift+Enter open the action menu when the row has no
+  // second or third action to run; other chords stay with the text field.
   function handleActionShortcut(key, modifiers) {
-    const enter = key === Qt.Key_Return || key === Qt.Key_Enter
-    if (modifiers === Qt.ControlModifier && enter && requestShortcut(Ui.SearchShortcut.Reveal)) return true
-    if (modifiers === (Qt.ControlModifier | Qt.ShiftModifier) && key === Qt.Key_C)
-      return requestShortcut(Ui.SearchShortcut.CopyPath)
-    if (modifiers === Qt.ControlModifier && key === Qt.Key_D) return requestShortcut(Ui.SearchShortcut.Favorite)
-    if (modifiers === Qt.ControlModifier && (key === Qt.Key_K || enter)) {
+    const slot = ShortcutSlots.slotForKey(key, modifiers)
+    const action = ShortcutSlots.entryForSlot(directActions, slot)
+    if (action) {
+      shortcutRequested(action.id)
+      return true
+    }
+
+    const control = (modifiers & ~Qt.KeypadModifier) === Qt.ControlModifier
+    if ((control && key === Qt.Key_K)
+        || slot === Ui.ShortcutSlot.Secondary || slot === Ui.ShortcutSlot.Tertiary) {
       actionsRequested()
       return true
     }
     return false
+  }
+  function handleFavoriteMove(key, modifiers) {
+    if ((modifiers & ~Qt.KeypadModifier) !== (Qt.ControlModifier | Qt.AltModifier)) return false
+    if (key !== Qt.Key_Up && key !== Qt.Key_Down) return false
+    favoriteMoveRequested(key === Qt.Key_Down ? 1 : -1)
+    return true
+  }
+  function handleSectionJump(key, modifiers) {
+    if ((modifiers & ~Qt.KeypadModifier) !== Qt.ControlModifier) return false
+    if (key !== Qt.Key_Up && key !== Qt.Key_Down) return false
+    controller.jumpSection(key === Qt.Key_Down ? 1 : -1)
+    return true
   }
   function setInputText(value) {
     searchInput.text = value || ""
@@ -233,7 +280,22 @@ Rectangle {
         if (root.surfaceVisible) root.searchEdited()
       }
 
+      property bool controlDown: false
+      onActiveFocusChanged: if (!activeFocus) controlDown = false
+      Keys.onReleased: event => {
+        if (event.key === Qt.Key_Control) controlDown = false
+      }
+
       Keys.onPressed: event => {
+        if (event.key === Qt.Key_Control) controlDown = true
+        const recall = event.key === Qt.Key_Up && (event.modifiers & ~Qt.KeypadModifier) === Qt.NoModifier
+          ? root.controller.recallWanted()
+          : ""
+        if (recall.length > 0) {
+          root.historyRecallRequested(recall === "restart")
+          event.accepted = true
+          return
+        }
         // The field drives the result list with the keys every list answers.
         if (ListKeys.handle(event, root.resultKeys, 8, true)) return
 
@@ -245,6 +307,9 @@ Rectangle {
         if (root.controller.handleHelpShortcut(event.key, event.modifiers)) {
           event.accepted = true
         } else if (root.controller.handleSettingsShortcut(event.key, event.modifiers)) {
+          event.accepted = true
+        } else if (event.key === Qt.Key_Tab && !control && !alt && !shift && argumentPills.count > 0) {
+          argumentPills.focusFirst()
           event.accepted = true
         } else if (event.key === Qt.Key_Tab && !control && !alt && !shift) {
           const completion = root.prefixHint !== null
@@ -262,10 +327,26 @@ Rectangle {
         } else if (event.modifiers === Qt.ControlModifier && event.key >= Qt.Key_1 && event.key <= Qt.Key_9) {
           root.controller.invokeOrdinal(event.key - Qt.Key_0)
           event.accepted = true
+        } else if (root.handleSectionJump(event.key, event.modifiers)
+                   || root.handleFavoriteMove(event.key, event.modifiers)) {
+          event.accepted = true
+        } else if ((event.modifiers & ~Qt.KeypadModifier) === Qt.ControlModifier && event.key === Qt.Key_I) {
+          root.previewToggleRequested()
+          event.accepted = true
+        } else if (root.zoomDirection(event.key, event.modifiers) !== null) {
+          root.zoomRequested(root.zoomDirection(event.key, event.modifiers))
+          event.accepted = true
+        } else if (event.modifiers === Qt.ControlModifier && event.key === Qt.Key_U) {
+          // Readline's Ctrl+U: delete from the start of the query to the caret.
+          searchInput.remove(0, searchInput.cursorPosition)
+          event.accepted = true
         } else if (control && event.key === Qt.Key_Z && root.undoAvailable) {
           root.undoRequested()
           event.accepted = true
         } else if (root.handleActionShortcut(event.key, event.modifiers)) {
+          event.accepted = true
+        } else if (enter && event.modifiers === Qt.NoModifier && argumentPills.count > 0) {
+          argumentPills.submit()
           event.accepted = true
         } else if (enter && event.modifiers === Qt.NoModifier) {
           root.controller.invokePrimary()
@@ -275,10 +356,26 @@ Rectangle {
                    && root.controller.selectedResult()) {
           root.actionsRequested()
           event.accepted = true
+        } else if (event.key === Qt.Key_Escape && shift) {
+          root.controller.rootRequested()
+          event.accepted = true
         } else if (event.key === Qt.Key_Escape) {
           root.controller.dismiss()
           event.accepted = true
         }
+      }
+    }
+
+    ArgumentPills {
+      id: argumentPills
+      Layout.alignment: Qt.AlignVCenter
+      Layout.maximumWidth: Math.round(root.width * 0.45)
+      theme: root.theme
+      onSubmitted: values => root.pillsSubmitted(values)
+      onMissingValue: name => root.pillValueMissing(name)
+      onExitRequested: forward => {
+        if (forward) settingsButton.forceActiveFocus()
+        else searchInput.forceActiveFocus()
       }
     }
 

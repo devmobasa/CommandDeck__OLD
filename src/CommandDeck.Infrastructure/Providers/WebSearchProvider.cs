@@ -5,7 +5,7 @@ namespace CommandDeck;
 /// that opens its <c>urlTemplate</c> with the query percent-encoded, reusing the
 /// same <see cref="ActionKinds.OpenUrl"/> plumbing (xdg-open) as quicklinks and
 /// the web fallback - the URL is substituted here so no open machinery is
-/// duplicated. Three shapes are understood:
+/// duplicated. Four shapes are understood:
 /// <list type="bullet">
 ///   <item><c>&lt;alias&gt;: &lt;text&gt;</c> - routes to that one engine as an
 ///   exact-alias top match (e.g. <c>g: rust traits</c> opens Google).</item>
@@ -14,6 +14,10 @@ namespace CommandDeck;
 ///   web engines alongside catalog matches.</item>
 ///   <item><c>web: &lt;text&gt;</c> - one result per configured engine, including
 ///   engines kept out of global searches.</item>
+///   <item>a bare or <c>web:</c> query that is one typed URL (see
+///   <see cref="TypedUrl"/>) - an "Open &lt;url&gt;" row placed in the explicit Top
+///   Match tier, ahead of the engines, with Copy URL as its second action. Its
+///   id is fixed, so accepted use never stores the address.</item>
 /// </list>
 /// The engine alias is recovered from the raw query, so routing is identical
 /// whether or not the alias was registered as a dynamic filter for the parser.
@@ -22,7 +26,9 @@ namespace CommandDeck;
 /// </summary>
 public sealed class WebSearchProvider : ICommandProvider
 {
+    public const string TypedUrlResultId = "web-search:url";
     private const string PlaceholderToken = "{query}";
+    private static readonly ResultSection WebSection = new( ) { Id = "web-search", Title = "Web Search", Order = 10 };
 
     private readonly IReadOnlyList<WebEngineOptions> _engines;
     private readonly Dictionary<string, WebEngineOptions> _byAlias;
@@ -52,11 +58,6 @@ public sealed class WebSearchProvider : ICommandProvider
         ArgumentNullException.ThrowIfNull( request );
         cancellationToken.ThrowIfCancellationRequested( );
 
-        if ( _engines.Count == 0 )
-        {
-            return Empty;
-        }
-
         // 1. Explicit engine prefix: "<alias>: <text>" targets exactly one engine.
         if ( TrySplitAlias( query.Original, out var alias, out var remainder ) &&
             _byAlias.TryGetValue( alias, out var engine ) )
@@ -81,7 +82,13 @@ public sealed class WebSearchProvider : ICommandProvider
             return Empty;
         }
 
+        // 3. A typed URL opens directly, whether or not any engine is configured.
         List<SearchResult> results = [];
+        if ( TypedUrl.TryParse( text, out var url ) )
+        {
+            results.Add( BuildTypedUrlResult( url ) );
+        }
+
         foreach ( var candidate in _engines )
         {
             if ( candidate.IncludeInGlobal || query.IncludesFilter( SearchFilterRegistry.WebSearchFilterId ) )
@@ -127,7 +134,7 @@ public sealed class WebSearchProvider : ICommandProvider
             SourceId = SourceIds.WebSearch,
             Score = exact ? 1 : 0.1,
             CanCustomize = false,
-            Section = new ResultSection { Id = "web-search", Title = "Web Search", Order = 10 },
+            Section = WebSection,
             Details =
             [
                 new DetailField("Engine", engine.Name),
@@ -149,6 +156,47 @@ public sealed class WebSearchProvider : ICommandProvider
             ]
         };
     }
+
+    // The explicit placement ranks the row with exact aliases rather than through
+    // a pinned score, so a real exact alias stays ahead of it. One fixed id keeps
+    // the address out of usage history; query history follows its own setting.
+    private static SearchResult BuildTypedUrlResult( string url ) => new( )
+    {
+        Id = TypedUrlResultId,
+        Kind = ResultKinds.WebSearch,
+        Title = $"Open {url}",
+        Subtitle = "Typed URL · default browser",
+        Icon = "internet-web-browser",
+        ProviderId = ProviderIds.WebSearch,
+        SourceId = SourceIds.WebSearch,
+        Score = 1,
+        CanCustomize = false,
+        Section = WebSection,
+        Details = [new DetailField( "URL", url, Monospace: true )],
+        Metadata = new Dictionary<string, string>( StringComparer.Ordinal )
+        {
+            ["url"] = url,
+            [ResultMetadataKeys.CatalogResultId] = TypedUrlResultId,
+            [ResultPlacements.MetadataKey] = ResultPlacements.Explicit
+        },
+        Actions =
+        [
+            new CommandAction
+            {
+                Id = "open",
+                Title = "Open URL",
+                Kind = ActionKinds.OpenUrl,
+                Arguments = new UrlActionPayload( url ).ToArguments( )
+            },
+            new CommandAction
+            {
+                Id = "copy-url",
+                Title = "Copy URL",
+                Kind = ActionKinds.CopyText,
+                Arguments = new TextActionPayload( url ).ToArguments( )
+            }
+        ]
+    };
 
     // Recover a leading "<token>:" prefix from the raw query. The token must be a
     // single whitespace-free run before the first colon; the remainder is the

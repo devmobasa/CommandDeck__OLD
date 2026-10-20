@@ -104,6 +104,15 @@ function applySavedSearch(root, search) {
   root.requestSearch()
 }
 
+// A recalled query is typed as it was, so a leading filter prefix becomes a
+// chip again; Up keeps stepping back while the query is left as recalled.
+function applyRecalledQuery(root, query) {
+  root.part_navigation.applySuggestion({ text: query, expression: {} })
+  root.queryInputRequested(query)
+  root.part_navigation.recalledText = root.part_navigation.queryText
+  root.requestSearch()
+}
+
 function savedSearchText(root, expression) {
   if (expression && typeof expression.literalQuery === "string") return expression.literalQuery
   const clauses = expression && expression.clauses ? expression.clauses : []
@@ -128,13 +137,33 @@ function dismiss(root) {
   }
 }
 
+// A search the user closed, kept for a reopen within keepSearchSeconds. Folder,
+// Herdr and Omarchy menu views, private sources, and a search an action just
+// ran from are not kept.
+function keptSearch(root) {
+  const forget = root.forgetSearchOnClose
+  root.forgetSearchOnClose = false
+  const filters = root.activeFilters || []
+  if (forget || root.keepSearchSeconds <= 0 || root.browseDirectory.length > 0
+      || root.part_navigation.herdrWorkspaceId.length > 0
+      || root.part_navigation.omarchyMenuId.length > 0
+      || (root.queryText.length === 0 && filters.length === 0)
+      || filters.some(value => value.id === Protocol.SourceIds.Clipboard || value.id === Protocol.SourceIds.Hey)) {
+    return null
+  }
+  return { query: root.queryText, filters: filters.slice(),
+    selectedId: root.currentResult && root.currentResult.id ? root.currentResult.id : "", closedAt: Date.now() }
+}
+
 function close(root) {
+  root.lastSearch = keptSearch(root)
   root.extensionManagementOpen = false
   root.part_extensionController.close()
   if (root.fileSelection.length > 0 || root.activeFileSelectionRequestId > 0) root.clearFileSelection()
   root.activeFileSelectionRequestId = 0
   root.browseDirectory = ""
   root.part_navigation.clearHerdrBrowse()
+  root.part_navigation.clearOmarchyBrowse()
   root.browseOffset = 0
   root.cancelPreview()
   root.opened = false
@@ -175,10 +204,18 @@ function open(root, payloadJson) {
     : ""
   root.openWorkspaceMruIds = root.workspaceMruIds.slice()
   root.part_navigation.clearHerdrBrowse()
-  root.queryText = payload.query || ""
+  root.part_navigation.clearOmarchyBrowse()
+  root.showHud("")
+  const kept = root.lastSearch
+  root.lastSearch = null
+  const restore = kept !== null && !payload.query && !payload.filterId
+    && Date.now() - kept.closedAt <= root.keepSearchSeconds * 1000
+  root.queryText = restore ? kept.query : payload.query || ""
   root.currentDirectoryContext = payload.currentDirectory || ""
   root.selectedProjectContext = payload.selectedProject || ""
-  root.activeFilters = payload.filterId ? [{ id: payload.filterId, label: payload.filterLabel || "", excluded: false }] : []
+  root.activeFilters = restore ? kept.filters
+    : payload.filterId ? [{ id: payload.filterId, label: payload.filterLabel || "", excluded: false }] : []
+  if (restore) root.part_navigation.restoreSelectionId = kept.selectedId
   root.opened = true
   root.clearModalState()
   root.part_invocationController.clear()
@@ -220,11 +257,27 @@ function clearModalState(root) {
   root.detailContent = ""
   root.dialogTitle = "AI response"
   root.part_queryHistoryController.clear()
+  root.part_queryRecall.clear()
+  root.part_navigation.recalledText = ""
   root.clearAiState()
   // Deliberately not `agentController.clear()`: the daemon keeps the turn
   // and the transcript, so closing the palette must be resumable.
   root.agentOpen = false
   root.agentChallenge = null
+}
+
+// Shift+Escape: an empty search on Home, leaving any filter, folder, Herdr or
+// Omarchy menu view.
+function backToRoot(root) {
+  root.browseDirectory = ""
+  root.browseOffset = 0
+  root.part_navigation.clearHerdrBrowse()
+  root.part_navigation.clearOmarchyBrowse()
+  root.activeFilters = []
+  root.queryText = ""
+  root.queryInputRequested("")
+  root.requestSearch()
+  root.focusRevision++
 }
 
 function toggle(root, payload) {
@@ -243,7 +296,7 @@ function requestPreview(root, result, matchIndex) {
   root.cancelPreview()
   if (matchIndex === undefined) root.filePreview = null
   root.previewError = ""
-  if (!root.opened || !result || result.kind !== Protocol.ResultKinds.File) {
+  if (!root.opened || !root.previewPaneVisible || !result || result.kind !== Protocol.ResultKinds.File) {
     return
   }
 

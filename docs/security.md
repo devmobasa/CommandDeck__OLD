@@ -35,6 +35,23 @@ use literal vectors, not arbitrary renderer-supplied shell text. Result/session
 identity and confirmation are checked at admission; a displayed label is not
 authority. Command/script definitions remain trusted user configuration.
 
+Omarchy menu rows can carry `when` and `checked` bash conditions from Omarchy's
+own menu files and your menu extension file, the same trust as the row's action.
+With `search.omarchyMenuState` on (the default), the conditions of the first
+Omarchy rows a search returns run as one login bash batch: each in its own
+subshell with stdin from `/dev/null` and output discarded, the batch limited to
+five seconds, 256 MiB and bounded output, and cancelled on shutdown. The query is
+never part of the batch. Answers are cached for twenty seconds; they only dim a
+row or mark it checked.
+
+Process signals (`kill:`) are limited to processes whose real, effective, and
+saved user IDs are the user's own, and never reach CommandDeck itself. Each
+signal needs a confirmation that names the PID and process. The daemon pins the
+process with a pidfd and checks its start time and owner again before it sends
+SIGTERM or SIGKILL, so a reused PID is not signalled. Assistant tools see the same
+confirmation requirement. A confirmed signal can still lose that process's
+unsaved work.
+
 Extensions are disabled by default and execute in separate restricted processes.
 Package features negotiate compatibility; permission declarations and grants
 control effects. Files, HTTP, credentials, clipboard, and URL actions are brokered

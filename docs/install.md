@@ -71,9 +71,11 @@ Run inside your graphical session:
 
 The script validates, publishes, installs under `~/.local/share/commanddeck`,
 links `~/.local/bin/commanddeck`, installs/enables the user service and plugin,
-reindexes, ensures Ctrl+Space, imports the session environment, and reloads the
-desktop. Existing configuration is preserved. Plugin and binding backups are
-kept under `$XDG_STATE_HOME/commanddeck/`.
+reindexes, installs the Ctrl+Space hotkey, imports the session environment, and
+reloads the desktop. It finishes when the plugin has registered the hotkey's
+global shortcut. Pass `--hotkey="SUPER + SPACE"` (or another chord) to bind a
+different chord. Existing configuration is preserved. Plugin and binding backups
+are kept under `$XDG_STATE_HOME/commanddeck/`.
 
 Add `~/.local/bin` to PATH if it is absent. The installer requires a working
 Omarchy session; it does not install a compositor or Omarchy itself.
@@ -118,21 +120,44 @@ omarchy-shell shell toggle local.commanddeck '{}'
 ```
 
 The manual plugin installer backs up an existing plugin but does not add a
-binding or enable it. The complete installer manages this Lua block in
-`~/.config/hypr/bindings.lua`:
+binding or enable it. Add the hotkey with the installed binary:
+
+```bash
+commanddeck hotkey install                          # Ctrl+Space
+commanddeck hotkey install --chord "SUPER + SPACE"  # or another chord
+hyprctl reload
+hyprctl configerrors
+```
+
+The command writes CommandDeck's own generated module,
+`~/.config/hypr/commanddeck.lua`:
 
 ```lua
 hl.unbind("CTRL + SPACE")
-hl.bind(
-  "CTRL + SPACE",
-  hl.dsp.exec_cmd([[omarchy-shell shell toggle local.commanddeck '{}']]),
-  { description = "CommandDeck" }
-)
+hl.bind("CTRL + SPACE", hl.dsp.global("commanddeck:toggle"), { description = "CommandDeck" })
 ```
 
-Back up bindings before manual edits, then run `hyprctl reload` and
-`hyprctl configerrors`. Validate Ctrl+Space before choosing a replacement for
-your desktop's existing Super+Space binding.
+It also adds one line to `~/.config/hypr/hyprland.lua`, directly after
+`require("hypr.bindings")`, so the chord replaces a personal binding of the same
+keys:
+
+```lua
+if package.searchpath("hypr.commanddeck", package.path) then require("hypr.commanddeck") end -- CommandDeck hotkey
+```
+
+The guard keeps the rest of `hyprland.lua` loading if the module is deleted.
+Hyprland's global dispatcher sends `commanddeck:toggle` to the shortcut the
+plugin registers inside `omarchy-shell`, so a key press starts no process. The
+standalone host does not register the shortcut.
+
+Rerunning the command changes nothing when the module and line are current; it
+never adds a second require line. A changed chord rewrites only the module. An
+edited file is first copied to `$XDG_STATE_HOME/commanddeck/binding-backups/`.
+The command also removes the `-- BEGIN COMMANDDECK CTRL SPACE` block that earlier
+installers appended to `~/.config/hypr/bindings.lua`. If `bindings.lua` already
+binds the chord to CommandDeck itself, the command leaves your binding in place
+and writes nothing. Validate Ctrl+Space before choosing a replacement for your
+desktop's existing Super+Space binding.
 
 ## Check and troubleshoot
 
@@ -145,6 +170,13 @@ journalctl --user -u commanddeck.service -n 100 --no-pager
 omarchy plugin validate ./qml
 ```
 
+`commanddeck doctor` also reads the desktop wiring without changing it. It
+checks that the plugin is installed and enabled in `~/.config/omarchy/shell.json`,
+and that `commanddeck.lua` exists and `hyprland.lua` requires it once. In a
+Hyprland session, it also checks that `hyprctl -j binds` shows the CommandDeck
+chord and `hyprctl -j globalshortcuts` lists `commanddeck:toggle`. These checks
+only warn or skip, so they never fail `doctor`. Each warning prints a `Fix:` line.
+
 - No files: check roots/exclusions, run `commanddeck reindex`, and inspect
   `commanddeck index status`.
 - No windows/workspaces: import the graphical session environment and restart
@@ -152,6 +184,10 @@ omarchy plugin validate ./qml
 - No copy: check `command -v wl-copy` and the Wayland session.
 - No overlay: inspect plugin validation and shell diagnostics; check that the
   daemon and `commanddeck` on the shell PATH match the installed frontend.
+- Hotkey does nothing: run `commanddeck doctor` and follow its `Fix:` lines.
+  Usually `commanddeck hotkey install` and `hyprctl reload` repair the binding.
+  If `hyprctl globalshortcuts` does not list `commanddeck:toggle`, the shell has
+  not loaded the plugin; run `omarchy restart shell`.
 - AI failure: review [AI prerequisites](ai.md). Never print a key
   while checking systemd credential/environment setup.
 
@@ -163,14 +199,19 @@ do not prove them.
 ## Disable or roll back
 
 ```bash
+commanddeck hotkey remove
+hyprctl reload
 omarchy plugin disable local.commanddeck
 omarchy restart shell
 systemctl --user disable --now commanddeck.service
 ```
 
-Restore the previous binding/plugin from the recorded backups, then reload
-Hyprland and rescan/restart the shell. Do not erase user config, catalog, private
-stores, or credentials as part of a binary/plugin rollback.
+`commanddeck hotkey remove` deletes the require line and the generated
+`commanddeck.lua`, after backing up `hyprland.lua`. It leaves a `commanddeck.lua`
+that it did not generate. To restore a previous plugin or binding file instead,
+copy it from the recorded backups, then reload Hyprland and rescan/restart the
+shell. Do not erase user config, catalog, private stores, or credentials as part
+of a binary/plugin rollback.
 
 ## Standalone host and ARM64
 

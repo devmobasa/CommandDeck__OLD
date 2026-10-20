@@ -26,7 +26,7 @@ var ClipboardDialogPurpose = Object.freeze({
 var ClipboardPendingKey = Object.freeze({
   Open: "open", Close: "close", Query: "query", More: "more", Preview: "preview",
   Action: "action", Prepare: "prepare", Abort: "abort", Copy: "copy", Clear: "clear",
-  Settings: "settings", SettingsSet: "settingsSet", Migration: "migration"
+  Settings: "settings", SettingsSet: "settingsSet", Migration: "migration", Sequence: "sequence"
 });
 var ExtensionManagementPage = Object.freeze({
   List: "list", Detail: "detail", Confirm: "confirm", Logs: "logs",
@@ -40,6 +40,11 @@ var ResultAction = Object.freeze({
   FavoriteToggle: "favorite-toggle", AliasEdit: "alias-edit", Hide: "hide", HideResult: "hide-result"
 });
 var SearchShortcut = Object.freeze({ Reveal: "reveal", CopyPath: "copy-path", Favorite: "favorite" });
+var HomeSection = Object.freeze({ Bookmarks: "bookmarks" });
+var ShortcutSlot = Object.freeze({
+  Secondary: "secondary", Tertiary: "tertiary", Copy: "copy", Favorite: "favorite", Alias: "alias", Hide: "hide",
+  ResetRanking: "reset-ranking"
+});
 var MutationKind = Object.freeze({
   Preferences: "preferences", Favorite: "favorite", Alias: "alias", FilterAlias: "filter-alias",
   SavedSearch: "saved-search", Reorder: "reorder", Orphan: "orphan", Reset: "reset", Export: "export",

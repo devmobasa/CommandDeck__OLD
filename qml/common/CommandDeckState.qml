@@ -28,6 +28,7 @@ Item {
     browseDirectory: sessionState.browseDirectory
     browseOffset: sessionState.browseOffset
     herdrWorkspaceId: sessionState.owner.part_navigation.herdrWorkspaceId
+    omarchyMenuId: sessionState.owner.part_navigation.omarchyMenuId
     activeWorkspace: sessionState.compositor.activeWorkspace && sessionState.compositor.activeWorkspace.name
       ? sessionState.compositor.activeWorkspace.name : ""
     currentDirectory: sessionState.currentDirectoryContext
@@ -55,6 +56,15 @@ Item {
     onUpdated: sessionState.statusText = "Query history updated"
   }
 
+  readonly property alias part_queryRecall: queryRecall
+  QueryRecallController {
+    id: queryRecall
+    nextRequestId: function() { return ++sessionState.owner.requestSequence }
+    available: sessionState.daemonAvailable
+    onRequest: message => sessionState.owner.part_protocol.send(message)
+    onRecalled: query => DeckSearchActions.applyRecalledQuery(sessionState.owner, query)
+  }
+
   // Hidden items: the last hide feeds the undo strip; the settings list is
   // loaded on demand in bounded pages, never as part of the preferences snapshot.
   property var lastHidden: null
@@ -79,6 +89,31 @@ Item {
   function requestHiddenItems(query, offset) { return hiddenItemsController.refresh(query, offset) }
   // Durable display and AI choices, plus the inline answer presentation sessionState.
   property bool panelTransparencyEnabled: false
+  // Compact layout (QML-only): one-line rows, number badges only while Ctrl
+  // is held, and a lighter footer.
+  property bool compactLayout: false
+  // The details and file preview pane beside the results (QML-only).
+  property bool previewPaneVisible: true
+  // Closing and reopening (QML-only): Escape may clear the search first, and a
+  // search the user closed is kept this long. lastSearch holds it meanwhile; an
+  // action that ran and closed the launcher sets forgetSearchOnClose instead.
+  property bool escapeClearsSearch: false
+  property int keepSearchSeconds: 0
+  property var lastSearch: null
+  property bool forgetSearchOnClose: false
+  // A short message left on screen after an action closes the launcher.
+  property string hudText: ""
+  readonly property alias part_hudTimer: hudTimer
+  Timer {
+    id: hudTimer
+    interval: 1600
+    onTriggered: sessionState.hudText = ""
+  }
+  function showHud(text) {
+    sessionState.hudText = text || ""
+    if (sessionState.hudText.length > 0) hudTimer.restart()
+    else hudTimer.stop()
+  }
   property bool aiFeaturesEnabled: true
   readonly property string aiSaveDirectory: {
     const home = Quickshell.env("HOME")
@@ -133,6 +168,7 @@ Item {
   property int herdrRefreshInterval: 2000
   readonly property bool herdrViewOpen: sessionState.owner.part_navigation.herdrWorkspaceId.length > 0
     || sessionState.owner.activeFilters.some(value => !value.excluded && value.id.indexOf("herdr") === 0)
+  readonly property bool omarchyMenuOpen: sessionState.owner.part_navigation.omarchyMenuId.length > 0
   readonly property bool herdrLiveUpdatesEnabled: opened && herdrViewOpen && daemonAvailable
     && !reconciliationPending && !sessionState.owner.anyBlockingSurface && !sessionState.owner.part_extensionController.opened
     && !extensionManagementOpen && !sessionState.owner.part_invocationController.busy && !searchSession.searching
@@ -248,5 +284,7 @@ Item {
       ? sessionState.owner.currentResult.actions[0].title
       : ""
   readonly property var directActions: sessionState.owner.shortcutActions(sessionState.owner.currentResult)
+  readonly property var argumentPillTarget: DeckInvocationActions.pillTarget(sessionState.owner, sessionState.owner.currentResult)
+  function submitArgumentPills(values) { return DeckInvocationActions.submitPills(sessionState.owner, values) }
 
 }

@@ -39,6 +39,9 @@ shows a conflict warning if one already uses the clipboard chord.
 - `omarchy/CommandDeck.qml`: Omarchy host that injects Hyprland and theme
   integrations into the shared launcher.
 - `omarchy/ThemeTokens.qml`: tokens read from the running Omarchy shell.
+- `omarchy/hotkey/LauncherShortcut.qml`: the `commanddeck:toggle` Hyprland
+  global shortcut that the Omarchy host creates at run time; the hotkey toggles
+  the launcher in-process. Its `.qmllint.ini` explains the one lint setting.
 - `quickshell-standalone/`: direct Quickshell host and usage guide.
 - `common/CommandDeck.qml`: overlay lifecycle, focused-screen surface, and
   result model.

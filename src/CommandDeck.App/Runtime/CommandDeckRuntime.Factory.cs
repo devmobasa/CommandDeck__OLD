@@ -67,7 +67,8 @@ public sealed partial class CommandDeckRuntime
                     resources.OwnDisposable( clipboardActions );
                     clipboardCapture = new( clipboardStore, clipboardProjections );
                     resources.Own( clipboardCapture );
-                    clipboardProvider = new( clipboardStore, ( ) => clipboardCapture.Status );
+                    clipboardProvider = new( clipboardStore, ( ) => clipboardCapture.Status,
+                        ( offers, token ) => clipboardCapture.ServeAsync( offers, token ) );
                 }
 
                 CommandDeckRuntime? runtime = null;
@@ -75,6 +76,12 @@ public sealed partial class CommandDeckRuntime
                 resources.Own( extensionSearch );
                 HerdrClient herdr = new( );
                 HeyClient hey = new( );
+                OmarchyMenuState? omarchyState = options.Search.OmarchyMenuState ? new( ) : null;
+                if ( omarchyState is not null )
+                {
+                    resources.OwnDisposable( omarchyState );
+                }
+
                 List<ICommandProvider> providers =
                 [
                     new CalculatorProvider(
@@ -82,7 +89,7 @@ public sealed partial class CommandDeckRuntime
                 available: null,
                 options: options.Search.Calculator),
             new ApplicationSearchProvider(catalog),
-            new CatalogSearchProvider(catalog, catalog.LauncherPreferences),
+            new CatalogSearchProvider(catalog, catalog.LauncherPreferences, omarchyState),
             new ExtensionCommandProvider(extensions, catalog.LauncherPreferences),
             extensionSearch,
             new HyprlandProvider(catalog),
@@ -97,11 +104,19 @@ public sealed partial class CommandDeckRuntime
             new SystemdUserServiceProvider(),
             new TimezoneProvider(),
             new WebSearchProvider(options.Search.WebEngines),
-            new EmojiProvider()
+            new EmojiProvider(),
+            new DesktopControlsProvider(),
+            new ProcessProvider()
                 ];
                 if ( clipboardProvider is not null )
                 {
                     providers.Add( clipboardProvider );
+                }
+
+                // Omarchy submenus are browsed only where their rows are indexed.
+                if ( options.Indexing.IndexOmarchyCommands )
+                {
+                    providers.Add( new OmarchyMenuProvider( new OmarchyMenuSource( ).LoadAsync, catalog, omarchyState ) );
                 }
 
                 SearchCoordinator search = new(

@@ -213,7 +213,7 @@ Item {
       const ignored = {handleMessage: function() { return false }}
       const host = {
         activeBootstrapRequestId: 42,
-        part_searchSession: ignored, part_clipboardController: ignored, part_queryHistoryController: ignored,
+        part_searchSession: ignored, part_clipboardController: ignored, part_queryHistoryController: ignored, part_queryRecall: ignored,
         part_hiddenItemsController: ignored,
         part_extensionManagementController: ignored, part_extensionController: ignored,
         part_aiController: ignored, part_agentController: ignored, part_aiSettingsController: ignored,

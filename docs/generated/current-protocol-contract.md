@@ -70,6 +70,7 @@ Generated from Core protocol constants and registries. Run `scripts/generate-pro
 - `extension.open`
 - `extension.present`
 - `extensions.manage`
+- `favorite.move`
 - `favorite.remove-orphan`
 - `favorite.reorder`
 - `favorite.set`
@@ -202,6 +203,7 @@ Generated from Core protocol constants and registries. Run `scripts/generate-pro
 - `LoginMethod`
 - `ModelId`
 - `Offset`
+- `OmarchyMenuId`
 - `Operation`
 - `OperationId`
 - `OutputAction`
@@ -343,6 +345,8 @@ Generated from Core protocol constants and registries. Run `scripts/generate-pro
 | `timezone` | `tz:` | `time:` |
 | `web-search` | `web:` | — |
 | `emoji` | `emoji:` | `e:` |
+| `desktop-controls` | `ctl:` | `control:`, `controls:` |
+| `processes` | `kill:` | `proc:`, `process:`, `processes:` |
 
 ## Configurable sources
 
@@ -364,3 +368,5 @@ Generated from Core protocol constants and registries. Run `scripts/generate-pro
 - `timezone` — Timezone
 - `web-search` — Web Search
 - `emoji` — Emoji
+- `desktop-controls` — Desktop controls
+- `processes` — Processes

@@ -15,14 +15,26 @@ TestCase {
 
   function init() {
     fixture.part_controller.clearHerdrBrowse()
+    fixture.part_controller.clearOmarchyBrowse()
     fixture.width = 900
     fixture.part_theme.background = "#090909"
     fixture.part_searchLoading.loading = false
     fixture.part_theme.reduceMotion = false
     fixture.part_searchField.directActions = []
     fixture.part_searchField.shortcutId = ""
+    fixture.part_searchField.recallRequests = []
+    fixture.part_searchField.zoomRequests = []
+    fixture.part_searchField.previewToggles = 0
+    fixture.part_searchField.favoriteMoves = []
+    fixture.part_searchField.pillTarget = null
+    fixture.part_searchField.pillSubmissions = []
+    fixture.part_searchField.missingPill = ""
+    fixture.part_controller.recalledText = ""
+    fixture.part_controller.escapeClearsQuery = false
+    fixture.part_controller.rootCalls = 0
     fixture.part_footerActions.availableWidth = 100000
     fixture.part_footerActions.directActions = []
+    fixture.part_footerActions.compact = false
     fixture.part_footerActions.shortcutId = ""
     fixture.part_footerActions.primaryActionTitle = "Open"
     fixture.part_footerActions.actionCount = 2
@@ -35,6 +47,7 @@ TestCase {
     fixture.part_aliasDialog.saved = ""
     fixture.part_aliasDialog.localError = ""
     fixture.part_actionPanel.result = null
+    fixture.part_actionPanel.shortcuts = []
     fixture.part_actionPanel.chosen = ""
     fixture.part_actionPanel.dismissals = 0
     fixture.part_aiPreflightSurface.acceptCount = 0

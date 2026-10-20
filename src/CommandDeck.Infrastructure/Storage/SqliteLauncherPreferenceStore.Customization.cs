@@ -204,6 +204,37 @@ internal sealed partial class SqliteLauncherPreferenceStore
         await transaction.CommitAsync( cancellationToken ).ConfigureAwait( false );
     }
 
+    public async ValueTask MoveFavoriteAsync(
+        SearchResult result,
+        int position,
+        CancellationToken cancellationToken )
+    {
+        EnsureCustomizable( result );
+        var stableId = StableCustomizationId( result );
+
+        List<string> order = [];
+        await using ( var connection = await OpenAsync( cancellationToken ).ConfigureAwait( false ) )
+        {
+            await using var command = connection.CreateCommand( );
+            command.CommandText = "SELECT stable_id FROM favorites ORDER BY position;";
+            await using var reader = await command.ExecuteReaderAsync( cancellationToken ).ConfigureAwait( false );
+            while ( await reader.ReadAsync( cancellationToken ).ConfigureAwait( false ) )
+            {
+                order.Add( reader.GetString( 0 ) );
+            }
+        }
+
+        var index = order.IndexOf( stableId );
+        if ( index < 0 )
+        {
+            throw new InvalidOperationException( "This result is not bookmarked." );
+        }
+
+        order.RemoveAt( index );
+        order.Insert( Math.Clamp( position, 0, order.Count ), stableId );
+        await ReorderFavoritesAsync( order, cancellationToken ).ConfigureAwait( false );
+    }
+
     public async ValueTask<SearchResult?> FindAliasAsync(
         string aliasValue,
         CancellationToken cancellationToken )

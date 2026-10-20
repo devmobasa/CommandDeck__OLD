@@ -106,6 +106,9 @@
         "learnFromInvocations": {
           "type": "boolean"
         },
+        "omarchyMenuState": {
+          "type": "boolean"
+        },
         "calculator": {
           "type": "object",
           "additionalProperties": false,

@@ -112,6 +112,8 @@ Item {
     onHelpRequested: helpCalls++
     onPrimaryRequested: { primaryCalls++; invokedId = selectedResult() ? selectedResult().id : "" }
     onDismissRequested: dismissCalls++
+    property int rootCalls: 0
+    onRootRequested: rootCalls++
   }
 
   CommandDeck.CommandDeckSearchField {
@@ -122,8 +124,20 @@ Item {
     surfaceVisible: true
     property int actionRequests: 0
     property string shortcutId: ""
+    property var recallRequests: []
     onShortcutRequested: actionId => shortcutId = actionId
     onActionsRequested: actionRequests++
+    onHistoryRecallRequested: restart => recallRequests = recallRequests.concat([restart])
+    property var zoomRequests: []
+    onZoomRequested: direction => zoomRequests = zoomRequests.concat([direction])
+    property int previewToggles: 0
+    property var favoriteMoves: []
+    property var pillSubmissions: []
+    property string missingPill: ""
+    onPillsSubmitted: values => pillSubmissions = pillSubmissions.concat([values])
+    onPillValueMissing: name => missingPill = name
+    onFavoriteMoveRequested: direction => favoriteMoves = favoriteMoves.concat([direction])
+    onPreviewToggleRequested: previewToggles++
   }
 
   CommandDeck.SearchLoadingIndicator {

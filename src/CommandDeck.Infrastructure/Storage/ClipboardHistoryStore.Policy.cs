@@ -168,6 +168,7 @@ public sealed partial class ClipboardHistoryStore
     private void AdvanceCaptureEpoch( )
     {
         Interlocked.Increment( ref _captureEpoch );
+        EndSequenceWithoutConsent( );
         SignalCaptureChange( );
     }
 

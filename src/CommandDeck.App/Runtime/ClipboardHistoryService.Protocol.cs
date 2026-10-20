@@ -51,6 +51,10 @@ public sealed partial class ClipboardHistoryService
                     {
                         Clear( ownerId, value.StoreRevision );
                     }
+                    else if ( value.Action == ClipboardActionIds.SequenceStart )
+                    {
+                        return StartSequence( ownerId, value );
+                    }
                     else
                     {
                         Mutate( ownerId, value.SessionId!, value.EntryId!, value.Incarnation!, value.EntryRevision, value.Action!, value.Keywords );
@@ -76,6 +80,23 @@ public sealed partial class ClipboardHistoryService
                     throw new InvalidOperationException( "Clipboard operation is unavailable." );
             }
         }
+    }
+
+    // Callers hold _gate. The entry must belong to this browser snapshot at its current revision.
+    private ClipboardResponse StartSequence( string ownerId, ClipboardRequest value )
+    {
+        var session = GetSession( ownerId, value.SessionId! );
+        if ( session.QueryGeneration != value.QueryGeneration )
+        {
+            throw new InvalidOperationException( "Clipboard sequence start belongs to a previous query." );
+        }
+
+        Resolve( session, value.EntryId!, value.Incarnation!, value.EntryRevision );
+        var count = store.StartSequenceAt( value.EntryId!, value.Incarnation );
+        return new( )
+        {
+            Action = ActionExecutionResult.Success( ClipboardSequenceCommands.Started( count ) )
+        };
     }
 
     private static void ValidateActionGeneration( Owner owner, ProtocolRequest request, ClipboardRequest value )

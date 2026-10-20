@@ -44,6 +44,18 @@ QtObject {
       "selecting Small applies a 0.9 multiplier")
     host.part_integratedDeck.applyDisplaySizePreset("auto")
 
+    // Zoom keys step through the same presets, hold at each end, and reset to Auto.
+    const zoomed = []
+    for (const direction of [1, 1, 1, 0, -1, -1, -1]) {
+      host.part_integratedDeck.stepDisplaySize(direction)
+      zoomed.push(host.part_integratedDeck.displaySizePreset)
+    }
+    host.expect(zoomed.join(",") === "large,xlarge,xlarge,auto,small,small,small"
+        && Math.abs(host.part_integratedDeck.displaySizeMultiplier - 0.9) < 0.001
+        && host.part_integratedDeck.statusText === "Display size: Small",
+      "zoom steps through the display-size presets and names the result (" + zoomed.join(",") + ")")
+    host.part_integratedDeck.stepDisplaySize(0)
+
     // D13 - the settings control offers the presets and emits the choice.
     host.expect(host.part_settings.displaySizeControl.count === 5,
       "settings offers five display-size presets")
@@ -55,6 +67,47 @@ QtObject {
     host.expect(host.part_settings.displaySizeChosen === "small",
       "choosing a display-size preset emits it for QML-only persistence")
     host.part_settings.displaySizePreset = "auto"
+
+    // The compact layout: a QML-only store, the host flag, and its Settings toggle.
+    const layout = host.part_integratedDeck.part_layoutStore
+    host.expect(!layout.parse("").compact && layout.parse("compact=on\n").compact
+        && !layout.parse("compact=maybe").compact && layout.parse(" Compact = ON ").compact,
+      "the layout file reads as the default layout unless compact is on")
+    host.part_integratedDeck.applyCompactLayout(true)
+    host.expect(host.part_integratedDeck.compactLayout && layout.serialize() === "compact=on\npreview=on\n",
+      "choosing the compact layout applies it to the launcher at once")
+    host.part_integratedDeck.applyCompactLayout(false)
+    host.expect(!host.part_integratedDeck.compactLayout, "turning it off restores the default layout")
+    host.part_settings.compactLayout = false
+    host.part_settings.compactLayoutControl.click()
+    host.expect(host.part_settings.compactLayoutChosen === true,
+      "the Settings toggle emits the compact layout choice")
+    host.part_settings.compactLayout = false
+    host.expect(layout.parse("").preview && !layout.parse("preview=off").preview
+        && layout.parse("preview=maybe").preview,
+      "the layout file shows the preview pane unless it is off")
+    const behavior = host.part_integratedDeck.part_behaviorStore
+    const parsed = behavior.parse("escape=clear\nkeep=120\n")
+    host.expect(parsed.escapeClears && parsed.keepSeconds === 120
+        && !behavior.parse("").escapeClears && behavior.parse("").keepSeconds === 0
+        && behavior.parse("keep=45").keepSeconds === 0 && !behavior.parse("escape=maybe").escapeClears,
+      "the behaviour file reads only the offered choices, else closes at once and keeps nothing")
+    host.part_settings.escapeClearsSearch = false
+    host.part_settings.keepSearchSeconds = 30
+    host.part_settings.behaviorChosen = null
+    host.part_settings.escapeClearsControl.click()
+    host.expect(host.part_settings.behaviorChosen !== null && host.part_settings.behaviorChosen.escapeClears === true
+        && host.part_settings.behaviorChosen.keepSeconds === 30,
+      "the Escape toggle emits its choice with the kept-search time")
+    host.part_settings.keepSearchControl.activated(3)
+    host.expect(host.part_settings.behaviorChosen.keepSeconds === 600,
+      "choosing how long to keep the last search emits it")
+    host.part_settings.keepSearchSeconds = 0
+    host.part_settings.previewPaneVisible = true
+    host.part_settings.previewPaneControl.click()
+    host.expect(host.part_settings.previewPaneChosen === false,
+      "the Settings toggle emits hiding the preview pane")
+    host.part_settings.previewPaneVisible = true
 
     // Panel transparency: theme, live launcher color, and settings controls.
     host.expect(!host.part_motionTheme.panelTransparencyEnabled

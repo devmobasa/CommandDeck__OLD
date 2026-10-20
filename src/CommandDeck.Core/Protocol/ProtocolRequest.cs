@@ -6,6 +6,7 @@ public sealed class ProtocolRequest
 {
     public ClipboardRequest? Clipboard { get; init; }
     public string? HerdrWorkspaceId { get; init; }
+    public string? OmarchyMenuId { get; init; }
     public string? BrowseDirectory { get; init; }
     public int BrowseOffset { get; init; }
     public int Version { get; init; } = ProtocolLimits.CurrentVersion;

@@ -72,4 +72,23 @@ TestCase {
     verify(invocation.begin(63, false, false))
     verify(invocation.complete(63, { succeeded: true }, true).dismiss)
   }
+
+  // Only a copy that closes the launcher leaves its message on screen; other
+  // actions, refreshes, output, failures and a kept-open launcher do not.
+  function test_a_copy_that_closes_the_launcher_names_its_message() {
+    const hudFor = (kind, outcome, hide, refresh) => {
+      verify(invocation.begin(60, refresh === true, false, kind))
+      return invocation.complete(60, outcome, hide).hud
+    }
+    compare(hudFor("copy-text", { succeeded: true, message: "Copied." }, true), "Copied.")
+    compare(hudFor("snippet-copy", { succeeded: true }, true), "Done")
+    compare(hudFor("launch-desktop", { succeeded: true, message: "Started" }, true), "")
+    compare(hudFor("copy-text", { succeeded: true, message: "Copied." }, false), "", "the launcher stays open")
+    compare(hudFor("copy-text", { succeeded: false, message: "Copy failed" }, true), "")
+    compare(hudFor("copy-text", { succeeded: true, message: "Copied.", detailMarkdown: "x" }, true), "")
+    compare(hudFor("copy-text", { succeeded: true, message: "Copied." }, true, true), "", "a refresh keeps it open")
+    verify(invocation.begin(61, false, false, "copy-text"))
+    invocation.clear()
+    compare(invocation.actionKind, "")
+  }
 }

@@ -67,6 +67,7 @@
     "extension.open",
     "extension.present",
     "extensions.manage",
+    "favorite.move",
     "favorite.remove-orphan",
     "favorite.reorder",
     "favorite.set",
@@ -197,6 +198,7 @@
     "LoginMethod",
     "ModelId",
     "Offset",
+    "OmarchyMenuId",
     "Operation",
     "OperationId",
     "OutputAction",
@@ -555,6 +557,31 @@
       "providerId": "emoji",
       "sourceId": "emoji",
       "kind": "emoji"
+    },
+    {
+      "id": "desktop-controls",
+      "label": "Desktop controls",
+      "token": "ctl:",
+      "aliases": [
+        "control:",
+        "controls:"
+      ],
+      "providerId": "desktop-controls",
+      "sourceId": "desktop-controls",
+      "kind": null
+    },
+    {
+      "id": "processes",
+      "label": "Processes",
+      "token": "kill:",
+      "aliases": [
+        "proc:",
+        "process:",
+        "processes:"
+      ],
+      "providerId": "processes",
+      "sourceId": "processes",
+      "kind": "process"
     }
   ],
   "sources": [
@@ -664,6 +691,18 @@
       "id": "emoji",
       "label": "Emoji",
       "icon": "face-smile",
+      "homeAvailable": true
+    },
+    {
+      "id": "desktop-controls",
+      "label": "Desktop controls",
+      "icon": "preferences-desktop",
+      "homeAvailable": true
+    },
+    {
+      "id": "processes",
+      "label": "Processes",
+      "icon": "utilities-system-monitor",
       "homeAvailable": true
     }
   ]

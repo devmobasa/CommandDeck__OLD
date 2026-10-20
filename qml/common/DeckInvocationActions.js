@@ -38,6 +38,11 @@ function invokeAction(root, result, action, confirmed, inputValues, fromUndo) {
     root.part_navigation.browseHerdrSpace(result)
     return
   }
+  if (action.kind === Protocol.ActionKinds.BrowseOmarchyMenu) {
+    root.actionPanelOpen = false
+    root.part_navigation.browseOmarchyMenu(result, action)
+    return
+  }
   // A row that changes the search (a HEY box, "Search again") replaces the
   // query and its filter chip, searches, and leaves the search field ready.
   if (action.kind === Protocol.ActionKinds.ApplyQuery) {
@@ -130,14 +135,14 @@ function invokeAction(root, result, action, confirmed, inputValues, fromUndo) {
 
   const refreshAfterAction = (action.kind === Protocol.ActionKinds.ClipboardHistory && action.id !== Ui.OutputAction.Copy)
     || action.kind === Protocol.ActionKinds.HerdrCreateTab || action.kind === Protocol.ActionKinds.HerdrRenameTab
-    || action.kind === Protocol.ActionKinds.HeyTriage
+    || action.kind === Protocol.ActionKinds.HeyTriage || action.kind === Protocol.ActionKinds.ResetRanking
     || (action.kind === Protocol.ActionKinds.SystemdUnit
       && [Protocol.SystemdUnitActionIds.Start, Protocol.SystemdUnitActionIds.Stop,
         Protocol.SystemdUnitActionIds.Restart].indexOf(action.id) >= 0)
   const herdrEditPending = action.kind === Protocol.ActionKinds.HerdrCreateTab || action.kind === Protocol.ActionKinds.HerdrRenameTab
     || action.kind === Protocol.ActionKinds.HerdrOpenProject
   const requestId = ++root.requestSequence
-  if (!root.part_invocationController.begin(requestId, refreshAfterAction, herdrEditPending)) return
+  if (!root.part_invocationController.begin(requestId, refreshAfterAction, herdrEditPending, action.kind)) return
   // A change whose row carries its hidden undo is offered for undo once it succeeds.
   const undo = fromUndo !== true && result && result.actions
     ? result.actions.find(value => value.hidden === true && value.id === Protocol.UndoActions.Prefix + action.id)
@@ -162,7 +167,8 @@ function runFileSelection(root, actionId) {
   }
   if (root.activeFileSelectionRequestId > 0 || !root.fileSelection.length) return
   const requestId = ++root.requestSequence
-  if (!root.part_invocationController.begin(requestId, false, false)) return
+  const copying = actionId === Protocol.FileSelectionActionIds.CopyPaths ? Protocol.ActionKinds.CopyText : ""
+  if (!root.part_invocationController.begin(requestId, false, false, copying)) return
   root.part_protocol.send({ version: Protocol.Version, requestId: requestId,
     operation: Protocol.Operations.FilesBatch, actionId: actionId })
 }
@@ -178,6 +184,22 @@ function selectFile(root, result, enabled) {
   root.activeFileSelectionRequestId = ++root.requestSequence
   root.part_protocol.send({ version: Protocol.Version, requestId: root.activeFileSelectionRequestId,
     operation: Protocol.Operations.FilesSelect, resultId: result.id, enabled: enabled })
+}
+
+// The primary action that takes its inputs inline: one to three of them, and
+// no confirmation, which would ask again without the entered values.
+function pillTarget(root, result) {
+  const action = result && result.actions && result.actions.length > 0 ? result.actions[0] : null
+  if (!action || action.requiresConfirmation === true || result.kind === Protocol.ResultKinds.ExtensionCommand) return null
+  const inputs = action.inputs || []
+  return inputs.length >= 1 && inputs.length <= 3 ? { result: result, action: action } : null
+}
+
+function submitPills(root, values) {
+  const target = pillTarget(root, root.part_navigation.selectedResult())
+  if (!target) return
+  root.focusRevision++
+  root.invokeAction(target.result, target.action, false, values)
 }
 
 function invokeSelectedPrimary(root) {

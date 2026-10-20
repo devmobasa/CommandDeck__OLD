@@ -25,6 +25,7 @@ QtObject {
   property string browseDirectory: ""
   property int browseOffset: 0
   property string herdrWorkspaceId: ""
+  property string omarchyMenuId: ""
   property string activeWorkspace: ""
   property string currentDirectory: ""
   property string selectedProject: ""
@@ -80,7 +81,7 @@ QtObject {
   // Two searches with the same identity answer the same question: a refresh
   // keeps the selection, and a row it shows may still run.
   function currentIdentity() {
-    return JSON.stringify([query, expression(), browseDirectory, browseOffset, herdrWorkspaceId])
+    return JSON.stringify([query, expression(), browseDirectory, browseOffset, herdrWorkspaceId, omarchyMenuId])
   }
 
   // A row shown for an older query must not run once the query has changed:
@@ -115,9 +116,11 @@ QtObject {
       query: query,
       browseDirectory: browseDirectory || null,
       herdrWorkspaceId: herdrWorkspaceId || null,
+      omarchyMenuId: omarchyMenuId || null,
       browseOffset: browseOffset,
       expression: expression(),
-      limit: 50,
+      // A submenu is listed whole, up to the daemon's default maximum.
+      limit: omarchyMenuId ? 200 : 50,
       activeWorkspace: activeWorkspace,
       currentDirectory: currentDirectory.length > 0 ? currentDirectory : undefined,
       selectedProject: selectedProject.length > 0 ? selectedProject : undefined

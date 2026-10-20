@@ -76,7 +76,8 @@ get a 5 s provider deadline, and their rows keep HEY's order.
 
 Trusted callers select an in-process search purpose: Interactive, Suggestion or
 AssistantTool. It is not a wire field. Clipboard history and HEY mail are
-private sources (`PrivateSources`). Noninteractive searches never schedule their
+private sources (`PrivateSources`); snippet rows that read clipboard history and
+the clipboard sequence commands count as clipboard rows. Noninteractive searches never schedule their
 providers and remove private output from other providers too. Suggestions
 reject private filters, including aliases, exclusions and mixed queries;
 historical private queries are omitted from completion results. Invocations
@@ -130,6 +131,8 @@ a query preserves its expression; clipboard and HEY privacy checks still apply.
 | `hspace:` / `hspaces:` / `herdr-space:` | Herdr spaces only |
 | `htab:` / `htabs:` / `herdr-tab:` | Herdr tabs only |
 | `hattention:` / `herdr-attention:` | Herdr tabs whose agent status is blocked |
+| `ctl:` / `control:` / `controls:` | built-in desktop controls; they also match plain search |
+| `kill:` / `proc:` / `process:` / `processes:` | the user's own processes; plain search offers only a row that opens this list |
 | `=` | calculator |
 | `>` | command-oriented providers |
 | `@provider` | explicit provider ID |
@@ -140,6 +143,21 @@ Catalog queries use parameterized FTS5 prefix phrases and bounded fuzzy
 retrieval. Fuzzy matching supports exact, prefix, word-boundary, acronym, typo,
 and subsequence matches, including Latin diacritic folding. These weaker matches
 can remain useful in groups without qualifying for learned promotion.
+
+### Typed URLs
+
+When a plain or `web:` search is one web address, the Web Search source offers
+**Open <url>** as an explicit Top Match, with **Copy URL** in its actions.
+Only `http://` and `https://` count. Text without a scheme gets `https://` and
+needs a port, a path, or a `www.` host: `github.com/devmobasa` and
+`localhost:8080` open, while `notes.md`, `1.5`, and `example.com` stay searches.
+The host must parse unchanged as a dotted name ending in letters, `localhost`,
+or a four-part IPv4 address. Text with spaces, user info, non-ASCII characters,
+or another scheme is never a URL. Type `http://` for a server without TLS.
+Turning off Web Search or using another filter removes the row. Nothing is
+fetched. Accepted use is recorded under one fixed ID, never the address; query
+history keeps the typed text only when it is on. Quicklinks stay JSONC
+configuration, so a typed URL cannot be saved as one.
 
 ## Final score and frequency
 
@@ -178,10 +196,23 @@ The `top-match` section is titled **Top Matches** and holds at most three result
 bounded further by the request limit and each source's allowance. Its ordered
 tiers are:
 
-1. **Explicit:** exact aliases and calculator results supplied in valid modes.
+1. **Explicit:** exact aliases, calculator results supplied in valid modes, and
+   [typed URLs](#typed-urls). An exact alias comes first in this tier.
 2. **Exact:** case-insensitive exact trimmed title or path basename.
 3. **Learned:** a strong title/basename match with at least two accepted uses and
    last use no more than 21 days ago, inclusive.
+   With query history on (`privacy.storeQueryHistory`), a result is also learned
+   for a query the user typed before accepting it: the same query after one
+   accepted use, or a longer learned query that this one begins (two or more
+   characters) after two. Typing `ff` and accepting Firefox makes `ff` promote
+   Firefox, though `ff` is no word prefix of its title. The query must have been
+   searched within 21 days, and the result's last use must fall within them too.
+
+Learned queries come from the opt-in query history table, apply only to interactive
+searches, and still need a retrieved candidate: they reorder results, they do not
+add any. The placement reason names the kind of match, never the query. Because
+they also need recent usage, a ranking reset or a per-result Reset Ranking ends
+them as well.
 
 Learned eligibility requires at least two positive text elements after matcher
 normalization. Every positive unqualified clause must be a whole-title or
@@ -243,7 +274,47 @@ removes aggregates whose last use is too old.
 
 Turning learning off does not delete history. `commanddeck ranking reset --yes`
 clears usage and invocation events; promotion disappears on the next search
-without a daemon restart. Query history has its own reset operation.
+without a daemon restart. A result ranked by accepted use also offers **Reset Ranking**
+(Alt+Shift+R) in its actions: it forgets that result's usage and invocation
+events under its canonical ID only, records no use itself, and searches again.
+Assistant tools are never offered it. Query history has its own reset operation.
+
+## Omarchy menu state
+
+Omarchy menu rows show the state Omarchy's own menu shows. A row whose `when`
+guard fails is dimmed and scores half as much; a row whose `checked` condition
+holds shows ✓. Up to twelve Omarchy rows per search are checked in one bounded
+batch, cached by condition for twenty seconds. A search waits up to 120 ms for
+conditions it has never answered and otherwise uses the last answers while a
+refresh runs, so a row can briefly show the previous state. Actions are
+unchanged either way. Set `search.omarchyMenuState=false` to run no conditions.
+
+## Omarchy submenus
+
+An Omarchy menu entry without an action is indexed as a submenu row when it
+lists at least one row, directly or through a `target` link. It shows a
+**Menu** label and a chevron with its entry count. Its subtitle is its path,
+and typing `theme` can find a Theme submenu. The Apps and System menus keep
+their own rows, and menus that Omarchy fills at runtime through a `provider`
+are not listed. **Open Submenu** (Enter) is a launcher action; the daemon
+refuses to run it.
+
+An open submenu sends its ID as the search's `omarchyMenuId` scope. The
+Omarchy menu provider answers only that scope. It reads the parsed menu files
+again only after one of them changes, so a long menu is never cut short by
+catalog candidate limits. Entries follow Omarchy's order: a later file that
+reuses an ID replaces the entry in its place, and new IDs follow. Rows use the
+catalog's stable IDs, actions, bookmarks, aliases, and hidden items, and get
+the same Omarchy menu state. Typing filters the entries by label, last ID
+segment, Omarchy aliases, and your aliases; accepted use ranks the matches.
+The scoped list has one section with no Top Matches. The launcher asks for up
+to 200 rows.
+
+A bar under the search field shows the path, such as `Omarchy › Style ›
+Theme`, and **Back · Esc**. Escape clears the typed text first and then goes
+back one level, which restores the previous query and selection. A nested
+submenu adds a level. Shift+Escape returns to Home, and a closed submenu
+search is not kept for reopening.
 
 ## Home and keyboard behavior
 
@@ -251,6 +322,10 @@ Home uses existing Saved Searches, Bookmarks, Recent & Frequent,
 Windows & Workspaces, Herdr (only when the Herdr source is enabled on Home), and
 Omarchy sections according to preferences and available results. Learned
 typed-search promotion does not change Home's formula.
+
+On Home, Ctrl+Alt+Up and Ctrl+Alt+Down move the selected bookmark one place
+among the bookmarks shown, through `favorite.move` (the daemon-cached result and
+its new position, clamped to the list), and the selection follows it.
 
 Hidden items ("Don't show this" in a result's actions) are excluded on every
 catalog path inside the shared candidate-scoping clause, before any `LIMIT`,
@@ -342,6 +417,23 @@ ID even when its section changes. Navigation while waiting remains effective; a 
 query or disappearing selection chooses the first result. Action menus retain
 their opening result identity, and stale query responses cannot replace results.
 Space in the search input continues to type text.
+Escape closes the launcher. In Settings > Customization, Escape can clear a typed
+search or filter first, and a search you close can be kept for 30 seconds to
+10 minutes so reopening shows it with its selection. A search an action ran
+from, a private-source search, and an explicit open query are never restored.
+Shift+Escape returns to an empty search on Home from any filter or folder.
+A copy that closes the launcher shows its message, such as "Copied.", for a
+moment near the bottom of that screen; it takes no input and reopening clears it.
+
+Moving the pointer over a result selects it without taking focus from search.
+A row that appears or scrolls under a resting pointer, including when the
+launcher opens, does not take the selection from the keyboard.
+
+With query history on (`privacy.storeQueryHistory`), Up from the first row of an
+empty search recalls the most recent query and searches it; Up again on the
+unchanged query recalls the next older one. Each query appears once. History is
+read when Up is first pressed after opening and forgotten when the launcher
+closes; with history off, Up there does nothing.
 
 ## Explanations and validation
 

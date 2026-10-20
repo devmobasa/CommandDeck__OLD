@@ -28,7 +28,9 @@ Rectangle {
         { keys: ["↑", "↓"], text: "Move selection" },
         { keys: ["Ctrl+P", "Ctrl+N"], text: "Move selection" },
         { keys: ["PgUp", "PgDn"], text: "Move by eight" },
-        { keys: ["Ctrl+Home", "Ctrl+End"], text: "First or last result" }
+        { keys: ["Ctrl+Home", "Ctrl+End"], text: "First or last result" },
+        { keys: ["Ctrl+↑", "Ctrl+↓"], text: "Previous or next section" },
+        { keys: ["↑"], text: "From an empty search, recall recent searches (with query history on)" }
       ]
     },
     {
@@ -36,7 +38,7 @@ Rectangle {
       items: [
         { keys: ["↵"], text: "Run the primary action" },
         { keys: ["Ctrl+1", "Ctrl+9"], text: "Run the numbered result" },
-        { keys: ["Tab"], text: "Complete a filter hint or the selected result" }
+        { keys: ["Tab"], text: "Complete a filter hint or the selected result, or fill its inputs" }
       ]
     },
     {
@@ -44,25 +46,35 @@ Rectangle {
       items: [
         { keys: ["→"], text: "Open actions, caret at end of query" },
         { keys: ["Ctrl+K"], text: "Open actions" },
-        { keys: ["Ctrl+↵"], text: "Reveal selected file (otherwise open actions)" },
-        { keys: ["Ctrl+Shift+C"], text: "Copy selected file path" },
+        { keys: ["Ctrl+↵"], text: "Run the second action, or Reveal for files" },
+        { keys: ["Ctrl+Shift+↵"], text: "Run the third action" },
+        { keys: ["Ctrl+Shift+C"], text: "Copy the file path, or the result's first Copy action" },
         { keys: ["Ctrl+D"], text: "Toggle bookmark for a customizable result" },
+        { keys: ["Ctrl+Alt+↑", "Ctrl+Alt+↓"], text: "Move the selected bookmark on Home" },
+        { keys: ["Alt+Shift+A"], text: "Set or edit the result's alias" },
+        { keys: ["Alt+Shift+D"], text: "Don't show this result" },
+        { keys: ["Alt+Shift+R"], text: "Reset the result's ranking" },
         { keys: ["←", "Esc"], text: "Close the action panel" }
       ]
     },
     {
       title: "Filters",
       items: [
-        { keys: ["⌫"], text: "Remove the filter on an empty query" }
+        { keys: ["⌫"], text: "Remove the filter on an empty query" },
+        { keys: ["Ctrl+U"], text: "Delete the query before the caret" }
       ]
     },
     {
       title: "General",
       items: [
         { keys: ["Ctrl+,"], text: "Settings" },
+        { keys: ["Ctrl+=", "Ctrl+-"], text: "Larger or smaller display size" },
+        { keys: ["Ctrl+0"], text: "Automatic display size" },
+        { keys: ["Ctrl+I"], text: "Show or hide the preview pane" },
         { keys: clipboardShortcut ? [root.chordLabel(clipboardShortcut)] : [], text: clipboardShortcut ? "Clipboard History" : "Clipboard History shortcut disabled" },
         { keys: ["F1", "Ctrl+/"], text: "This sheet" },
-        { keys: ["Esc"], text: "Close CommandDeck" }
+        { keys: ["Esc"], text: "Close CommandDeck (or clear the search first, in Settings)" },
+        { keys: ["Shift+Esc"], text: "Back to an empty search on Home" }
       ]
     }
   ]

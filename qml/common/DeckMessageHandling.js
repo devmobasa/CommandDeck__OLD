@@ -8,6 +8,7 @@ function handleMessage(root, message) {
   if (root.part_searchSession.handleMessage(message)) return
   if (root.part_clipboardController.handleMessage(message)) return
   if (root.part_queryHistoryController.handleMessage(message)) return
+  if (root.part_queryRecall.handleMessage(message)) return
   if (root.part_extensionManagementController.handleMessage(message)) return
   if (root.part_extensionController.handleMessage(message)) return
   if (root.part_hiddenItemsController.handleMessage(message)) return
@@ -225,7 +226,9 @@ function handleMessage(root, message) {
     } else if (transition.refresh) {
       root.requestSearch()
     } else if (transition.dismiss) {
+      root.forgetSearchOnClose = true
       root.dismiss()
+      root.showHud(transition.hud)
     }
     return
   }

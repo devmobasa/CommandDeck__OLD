@@ -274,6 +274,7 @@ public sealed partial class UnixProtocolServer
             ActiveWorkspace = request.ActiveWorkspace,
             BrowseDirectory = request.BrowseDirectory,
             HerdrWorkspaceId = request.HerdrWorkspaceId,
+            OmarchyMenuId = request.OmarchyMenuId,
             BrowseOffset = request.BrowseOffset,
             CurrentDirectory = request.CurrentDirectory,
             SelectedProject = request.SelectedProject,

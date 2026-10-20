@@ -42,6 +42,8 @@ public static partial class ProtocolOperations
     public const string FavoriteSet = "favorite.set";
     public const string FavoriteRemoveOrphan = "favorite.remove-orphan";
     public const string FavoriteReorder = "favorite.reorder";
+    // Moves one bookmarked, daemon-cached result to `offset` among bookmarks.
+    public const string FavoriteMove = "favorite.move";
     public const string AliasSet = "alias.set";
     public const string FilterAliasSet = "filter-alias.set";
     public const string CustomizationsExport = "customizations.export";

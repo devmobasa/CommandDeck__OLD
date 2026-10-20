@@ -20,12 +20,24 @@ QtObject {
   property string herdrWorkspaceId: ""
   property string herdrWorkspaceTitle: ""
   property var herdrParentSearch: null
+  // The Omarchy submenu the search lists, its label path, and the views it was
+  // opened from, newest last: each keeps its menu, query, filters and selection.
+  property string omarchyMenuId: ""
+  property string omarchyMenuPath: ""
+  property var omarchyParents: []
   property string restoreSelectionId: ""
+  // The query text the last recall produced; Up keeps stepping back through
+  // history while the query still reads exactly this.
+  property string recalledText: ""
+  // Escape clears a non-empty search before it closes the launcher.
+  property bool escapeClearsQuery: false
 
   signal searchRequested()
   signal settingsRequested()
   signal helpRequested()
   signal dismissRequested()
+  // Shift+Escape: back to an empty search on Home from any filter or view.
+  signal rootRequested()
   signal primaryRequested()
   signal selectionIdentityChanged(var result)
 
@@ -76,6 +88,25 @@ QtObject {
   }
 
   function dismiss() {
+    if (escapeClearsQuery && herdrWorkspaceId.length === 0 && omarchyMenuId.length === 0
+        && (queryText.length > 0 || activeFilters.length > 0)) {
+      activeFilters = []
+      queryText = ""
+      searchRequested()
+      focusRevision++
+      return
+    }
+    if (omarchyMenuId.length > 0) {
+      if (queryText.length > 0 || activeFilters.length > 0) {
+        activeFilters = []
+        queryText = ""
+        searchRequested()
+        focusRevision++
+      } else {
+        backFromOmarchyMenu()
+      }
+      return
+    }
     if (herdrWorkspaceId.length > 0) {
       if (queryText.length > 0) {
         queryText = ""
@@ -120,6 +151,49 @@ QtObject {
     herdrWorkspaceTitle = ""
     herdrParentSearch = null
     restoreSelectionId = ""
+  }
+
+  // Lists a submenu row's entries; Escape and Back return to this view with
+  // its query and selection.
+  function browseOmarchyMenu(result, action) {
+    const args = action && action.arguments ? action.arguments : ({})
+    const metadata = result && result.metadata ? result.metadata : ({})
+    const keys = Protocol.ResultMetadataKeys
+    const menuId = String(args[keys.OmarchyMenu] || metadata[keys.OmarchyMenu] || "")
+    if (!result || menuId.length === 0) return
+    omarchyParents = omarchyParents.concat([{ menuId: omarchyMenuId, path: omarchyMenuPath,
+      query: queryText, filters: activeFilters.slice(), selectedId: result.id || "" }])
+    omarchyMenuId = menuId
+    omarchyMenuPath = String(args[keys.OmarchyMenuPath] || metadata[keys.OmarchyMenuPath] || result.title || "")
+    activeFilters = []
+    queryText = ""
+    restoreSelectionId = ""
+    searchRequested()
+    focusRevision++
+  }
+
+  function backFromOmarchyMenu() {
+    if (omarchyParents.length === 0) {
+      clearOmarchyBrowse()
+      searchRequested()
+      focusRevision++
+      return
+    }
+    const previous = omarchyParents[omarchyParents.length - 1]
+    omarchyParents = omarchyParents.slice(0, -1)
+    omarchyMenuId = previous.menuId
+    omarchyMenuPath = previous.path
+    activeFilters = previous.filters
+    queryText = previous.query
+    restoreSelectionId = previous.selectedId
+    searchRequested()
+    focusRevision++
+  }
+
+  function clearOmarchyBrowse() {
+    omarchyMenuId = ""
+    omarchyMenuPath = ""
+    omarchyParents = []
   }
 
   function showHerdrAttention() {
@@ -234,6 +308,10 @@ QtObject {
     selectedIndex = resultModel.moveSelection(selectedIndex, delta)
   }
 
+  function jumpSection(direction) {
+    selectedIndex = resultModel.sectionJump(selectedIndex, direction)
+  }
+
   function invokeOrdinal(number) {
     const index = resultModel.indexOfOrdinal(number)
     if (index < 0) return
@@ -253,8 +331,18 @@ QtObject {
     if (previousId !== nextId) selectionIdentityChanged(next)
   }
 
+  // Up from the first result asks for an older query when the search is empty
+  // or still shows a recalled one; anywhere else it moves the selection.
+  function recallWanted() {
+    if (selectedIndex > firstSelectableIndex()) return ""
+    if (queryText.length === 0 && activeFilters.length === 0) return "restart"
+    return recalledText.length > 0 && queryText === recalledText ? "continue" : ""
+  }
+
   function clear() {
     clearHerdrBrowse()
+    clearOmarchyBrowse()
+    recalledText = ""
     activeFilters = []
     queryText = ""
     selectedIndex = 0

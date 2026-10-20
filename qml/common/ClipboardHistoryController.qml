@@ -188,6 +188,16 @@ QtObject {
     send(Ui.ClipboardPendingKey.Action, Protocol.Operations.ClipboardAction, fields)
   }
 
+  // The daemon keeps the sequence position; Copy next clipboard entry continues from here.
+  function startSequence() {
+    const fields = entryFields()
+    if (!fields || !mutationReady || pending[Ui.ClipboardPendingKey.Sequence]) return
+    fields.action = Protocol.ClipboardActionIds.SequenceStart
+    error = ""
+    notice = ""
+    send(Ui.ClipboardPendingKey.Sequence, Protocol.Operations.ClipboardAction, fields)
+  }
+
   function prepareOpen() {
     const fields = entryFields()
     if (!fields || !canInspectOpenHandlers || pending[Ui.ClipboardPendingKey.Prepare] || loading || query !== requestedQuery || !opened) return
@@ -276,6 +286,10 @@ QtObject {
       const result = response.action || {}
       if (result.succeeded) notice = "Copied"
       else error = result.message || "Clipboard copy failed"
+    } else if (key === Ui.ClipboardPendingKey.Sequence) {
+      const result = response.action || {}
+      if (result.succeeded) notice = result.message || "Clipboard sequence starts here"
+      else error = result.message || "Could not start the clipboard sequence"
     } else if (key === Ui.ClipboardPendingKey.Prepare) {
       const binding = preparingOpen
       preparingOpen = null

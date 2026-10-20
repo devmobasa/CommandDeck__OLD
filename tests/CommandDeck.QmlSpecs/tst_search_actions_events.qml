@@ -3,6 +3,7 @@ import QtTest
 import "../../qml/common" as CommandDeck
 import "../../qml/common/Protocol.js" as Protocol
 import "../../qml/common/UiConstants.js" as Ui
+import "../../qml/common/DeckDisplayActions.js" as DeckDisplayActions
 
 EventPathFixture {
   id: scene
@@ -126,13 +127,16 @@ EventPathFixture {
 
     function test_direct_shortcuts_do_not_open_menu_or_replace_text_editing() {
       fixture.part_searchField.directActions = [
-        { id: "reveal" }, { id: "copy-path" }, { id: "favorite" }
+        { id: "reveal", slot: Ui.ShortcutSlot.Secondary }, { id: "open-with", slot: Ui.ShortcutSlot.Tertiary },
+        { id: "copy-path", slot: Ui.ShortcutSlot.Copy }, { id: "favorite", slot: Ui.ShortcutSlot.Favorite }
       ]
       fixture.part_searchField.inputControl.forceActiveFocus()
       const menus = fixture.part_searchField.actionRequests
       const primaries = fixture.part_controller.primaryCalls
       keyClick(Qt.Key_Return, Qt.ControlModifier)
       compare(fixture.part_searchField.shortcutId, "reveal")
+      keyClick(Qt.Key_Return, Qt.ControlModifier | Qt.ShiftModifier)
+      compare(fixture.part_searchField.shortcutId, "open-with")
       keyClick(Qt.Key_C, Qt.ControlModifier | Qt.ShiftModifier)
       compare(fixture.part_searchField.shortcutId, "copy-path")
       keyClick(Qt.Key_D, Qt.ControlModifier)
@@ -147,12 +151,132 @@ EventPathFixture {
       fixture.part_searchField.directActions = []
       keyClick(Qt.Key_D, Qt.ControlModifier)
       compare(fixture.part_searchField.shortcutId, "")
+      // Without a second or third action, either chord opens the action menu.
+      keyClick(Qt.Key_Return, Qt.ControlModifier)
+      keyClick(Qt.Key_Return, Qt.ControlModifier | Qt.ShiftModifier)
+      compare(fixture.part_searchField.actionRequests, menus + 3)
+      compare(fixture.part_searchField.shortcutId, "")
+    }
+
+    // Ctrl+Enter prefers Reveal and otherwise takes the second listed action;
+    // Ctrl+Shift+Enter takes the next one. Hidden actions are never chosen.
+    function test_second_and_third_actions_follow_the_listed_order() {
+      const slots = result => DeckDisplayActions.shortcutActions(null, result)
+        .filter(value => value.slot === Ui.ShortcutSlot.Secondary || value.slot === Ui.ShortcutSlot.Tertiary)
+        .map(value => value.slot + ":" + value.id + ":" + value.keyLabel)
+      compare(slots({ actions: [{ id: "open" }, { id: "copy" }, { id: "edit" }, { id: "delete" }] }),
+        ["secondary:copy:Ctrl+↵", "tertiary:edit:Ctrl+Shift+↵"])
+      compare(slots({ actions: [{ id: "open" }, { id: "copy-path" }, { id: "reveal" }] }),
+        ["secondary:reveal:Ctrl+↵", "tertiary:copy-path:Ctrl+Shift+↵"])
+      compare(slots({ actions: [{ id: "open" }, { id: "undo:open", hidden: true }, { id: "copy" }] }),
+        ["secondary:copy:Ctrl+↵"])
+      compare(slots({ actions: [{ id: "open" }] }), [])
+      compare(slots(null), [])
+      compare(slots({ actions: [{ id: "open" }, { id: "reset-ranking", kind: "reset-ranking" }] }), [],
+        "Reset Ranking is never the second or third action")
+    }
+
+    // Reset Ranking keeps Alt+Shift+R on every result that offers it, from the
+    // list and from the action menu.
+    function test_reset_ranking_has_its_own_chord() {
+      const target = { id: "app:signal", title: "Signal", actions: [{ id: "launch", title: "Launch", kind: "launch-desktop" },
+        { id: "reset-ranking", title: "Reset Ranking", kind: "reset-ranking" }] }
+      const shortcuts = DeckDisplayActions.shortcutActions(null, target)
+      compare(shortcuts.map(value => value.slot + ":" + value.id), ["reset-ranking:reset-ranking"])
+      fixture.part_searchField.directActions = shortcuts
+      fixture.part_searchField.inputControl.forceActiveFocus()
+      keyClick(Qt.Key_R, Qt.AltModifier | Qt.ShiftModifier)
+      compare(fixture.part_searchField.shortcutId, "reset-ranking")
+      fixture.part_actionPanel.shortcuts = shortcuts
+      fixture.part_actionPanel.openFor(target)
+      compare(fixture.part_actionPanel.shortcutLabel(fixture.part_actionPanel.filteredActions[1], 1), "Alt+Shift+R")
+      tryVerify(function() { return fixture.part_actionPanel.filterControl.activeFocus })
+      keyClick(Qt.Key_R, Qt.AltModifier | Qt.ShiftModifier)
+      compare(fixture.part_actionPanel.chosen, "reset-ranking")
+    }
+
+    // Copy, bookmark, alias and hide keep one chord on every result. The same
+    // chords run from the result list and from the action menu, whose rows
+    // show them, even while the menu's filter hides the row.
+    function test_fixed_shortcuts_mean_the_same_from_the_list_and_the_menu() {
+      const target = { id: "config:gaps", title: "general.gaps_out", canCustomize: true, aliases: [],
+        actions: [{ id: "edit", title: "Edit at Key", kind: "edit-at-line" },
+          { id: "copy-value", title: "Copy Value", kind: "copy-text" },
+          { id: "copy-key", title: "Copy Key", kind: "copy-text" },
+          { id: "reveal-file", title: "Reveal", kind: "reveal-path" }] }
+      const shortcuts = DeckDisplayActions.shortcutActions(null, target)
+      compare(shortcuts.map(value => value.slot + ":" + value.id).join(","),
+        "secondary:copy-value,tertiary:copy-key,copy:copy-value,favorite:favorite,alias:alias,hide:hide")
+
+      fixture.part_searchField.directActions = shortcuts
+      fixture.part_searchField.inputControl.forceActiveFocus()
+      keyClick(Qt.Key_C, Qt.ControlModifier | Qt.ShiftModifier)
+      compare(fixture.part_searchField.shortcutId, "copy-value")
+      keyClick(Qt.Key_A, Qt.AltModifier | Qt.ShiftModifier)
+      compare(fixture.part_searchField.shortcutId, "alias")
+      keyClick(Qt.Key_D, Qt.AltModifier | Qt.ShiftModifier)
+      compare(fixture.part_searchField.shortcutId, "hide")
+      compare(fixture.part_searchField.inputControl.text, "", "no chord types into the query")
+
+      fixture.part_actionPanel.shortcuts = shortcuts
+      fixture.part_actionPanel.openFor(target)
+      tryVerify(function() { return fixture.part_actionPanel.filterControl.activeFocus })
+      const labels = fixture.part_actionPanel.filteredActions.map((action, index) =>
+        action.id + "=" + fixture.part_actionPanel.shortcutLabel(action, index))
+      compare(labels.join(","), "edit=Ctrl+1,copy-value=Ctrl+Shift+C,copy-key=Ctrl+Shift+↵,"
+        + "reveal-file=Ctrl+4,favorite=Ctrl+D,alias=Alt+Shift+A,hide=Alt+Shift+D")
+      verify(fixture.part_actionPanel.startsGroup(1), "the primary action stands apart")
+      verify(!fixture.part_actionPanel.startsGroup(2))
+      verify(fixture.part_actionPanel.startsGroup(4), "the launcher's own actions start a group")
+
+      typeText("zzz")
+      compare(fixture.part_actionPanel.visibleActionCount, 0)
+      keyClick(Qt.Key_D, Qt.AltModifier | Qt.ShiftModifier)
+      compare(fixture.part_actionPanel.chosen, "hide")
+      keyClick(Qt.Key_Return, Qt.ControlModifier)
+      compare(fixture.part_actionPanel.chosen, "copy-value")
+      fixture.part_actionPanel.chosen = ""
+      keyClick(Qt.Key_X, Qt.AltModifier | Qt.ShiftModifier)
+      compare(fixture.part_actionPanel.chosen, "", "other chords choose nothing")
+    }
+
+    // The compact footer keeps the primary action, Actions and Help; Tab skips
+    // the hidden buttons. Holding Ctrl in search is what shows row badges then.
+    function test_compact_footer_and_held_control() {
+      fixture.part_footerActions.directActions = [
+        { id: "reveal", title: "Reveal", keyLabel: "Ctrl+↵", slot: Ui.ShortcutSlot.Secondary },
+        { id: "copy-path", title: "Copy Path", keyLabel: "Ctrl+Shift+↵", slot: Ui.ShortcutSlot.Tertiary }
+      ]
+      fixture.part_footerActions.compact = true
+      wait(30)
+      verify(fixture.part_footerActions.primaryControl.visible)
+      verify(fixture.part_footerActions.actionsControl.visible)
+      verify(fixture.part_footerActions.helpControl.visible)
+      verify(!fixture.part_footerActions.firstShortcutControl.visible)
+      verify(!fixture.part_footerActions.secondShortcutControl.visible)
+      verify(!fixture.part_footerActions.prefixesControl.visible)
+      fixture.part_footerActions.primaryControl.forceActiveFocus()
+      keyClick(Qt.Key_Tab)
+      verify(fixture.part_footerActions.actionsControl.activeFocus, "Tab goes from the primary action to Actions")
+      keyClick(Qt.Key_Tab)
+      verify(fixture.part_footerActions.helpControl.activeFocus, "and then to Help")
+
+      fixture.part_searchField.inputControl.forceActiveFocus()
+      verify(!fixture.part_searchField.controlHeld)
+      keyPress(Qt.Key_Control, Qt.ControlModifier)
+      verify(fixture.part_searchField.controlHeld, "pressing Ctrl in search holds it")
+      keyRelease(Qt.Key_Control)
+      verify(!fixture.part_searchField.controlHeld, "releasing Ctrl lets go")
+      keyPress(Qt.Key_Control, Qt.ControlModifier)
+      fixture.part_footerActions.primaryControl.forceActiveFocus()
+      verify(!fixture.part_searchField.controlHeld, "leaving search lets go of Ctrl")
+      keyRelease(Qt.Key_Control)
     }
 
     function test_footer_direct_actions_click_tab_and_forward_shortcuts() {
       const actions = [
-        { id: "reveal", title: "Reveal", keyLabel: "Ctrl+↵" },
-        { id: "copy-path", title: "Copy Path", keyLabel: "Ctrl+Shift+C" }
+        { id: "reveal", title: "Reveal", keyLabel: "Ctrl+↵", slot: Ui.ShortcutSlot.Secondary },
+        { id: "copy-path", title: "Copy Path", keyLabel: "Ctrl+Shift+↵", slot: Ui.ShortcutSlot.Tertiary }
       ]
       fixture.part_footerActions.directActions = actions
       fixture.part_searchField.directActions = actions

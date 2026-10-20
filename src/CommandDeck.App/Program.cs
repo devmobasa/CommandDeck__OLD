@@ -49,6 +49,7 @@ public static partial class Program
                 "clipboard-action-worker" => ClipboardActionWorker.RunChild( ),
                 "pick" => await RunPickerAsync( arguments, shutdown.Token ).ConfigureAwait( false ),
                 "config" => await RunConfigAsync( arguments, shutdown.Token ).ConfigureAwait( false ),
+                "hotkey" => RunHotkey( arguments ),
                 "bridge" => await StdioBridge.RunAsync(
                     arguments.GetOption( "--socket" ),
                     shutdown.Token ).ConfigureAwait( false ),
