@@ -53,14 +53,17 @@ Item {
     available: sessionState.daemonAvailable
     onRequest: message => sessionState.owner.part_protocol.send(message)
     onDismissed: sessionState.owner.focusRevision++
-    onUpdated: sessionState.statusText = "Query history updated"
+    onUpdated: {
+      queryRecall.clear()
+      sessionState.statusText = "Query history updated"
+    }
   }
 
   readonly property alias part_queryRecall: queryRecall
   QueryRecallController {
     id: queryRecall
     nextRequestId: function() { return ++sessionState.owner.requestSequence }
-    available: sessionState.daemonAvailable
+    available: sessionState.daemonAvailable && sessionState.rememberSearches
     onRequest: message => sessionState.owner.part_protocol.send(message)
     onRecalled: query => DeckSearchActions.applyRecalledQuery(sessionState.owner, query)
   }
@@ -177,6 +180,9 @@ Item {
   property bool previewLoading: false
   property string previewError: ""
   property var launcherPreferences: null
+  readonly property bool rememberSearches: launcherPreferences && typeof launcherPreferences.rememberSearches === "boolean"
+    ? launcherPreferences.rememberSearches
+    : !!preferencesSnapshot && !!preferencesSnapshot.defaults && preferencesSnapshot.defaults.rememberSearches === true
   readonly property var desktopCapabilities: desktopIntegration.capabilities
   readonly property var workspacePreviewBackend: desktopIntegration.workspacePreviewBackend
   readonly property var workspaceSnapshotLifecycle: desktopIntegration.workspaceSnapshotLifecycle

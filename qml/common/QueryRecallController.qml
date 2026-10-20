@@ -20,6 +20,7 @@ QtObject {
   readonly property string current: position >= 0 && position < queries.length ? queries[position] : ""
 
   function step(restart) {
+    if (!available) return
     if (restart === true) position = -1
     if (!loaded) {
       stepPending = true
@@ -58,12 +59,7 @@ QtObject {
     return values
   }
 
-  onAvailableChanged: {
-    if (!available) {
-      activeRequestId = 0
-      stepPending = false
-    }
-  }
+  onAvailableChanged: if (!available) clear()
 
   function handleMessage(message) {
     if (!activeRequestId || message.requestId !== activeRequestId) return false

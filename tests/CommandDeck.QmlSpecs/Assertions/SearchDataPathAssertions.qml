@@ -255,6 +255,8 @@ QtObject {
   // query and searches it; Up again on that query applies the next older one.
   // Closing forgets what was read.
   function verifyUpRecallsRecentQueries(deck) {
+    const originalPreferences = deck.part_personalization.acknowledged
+    deck.part_personalization.resetPreferences(Object.assign({}, originalPreferences, { rememberSearches: true }))
     deck.queryText = ""
     deck.activeFilters = []
     deck.requestSearch()
@@ -282,10 +284,18 @@ QtObject {
       "Up again recalls the older query without reading history again")
     deliver(deck, [result("file:gaps", "gaps.conf")])
 
+    deck.part_personalization.resetPreferences(Object.assign({}, originalPreferences, { rememberSearches: false }))
+    const disabled = deck.sentRequests.length
+    deck.part_queryRecall.step(true)
+    host.expect(!deck.part_queryRecall.loaded && deck.part_queryRecall.queries.length === 0
+        && deck.queryText === "gaps" && deck.sentRequests.length === disabled,
+      "turning Remember searches off clears recall and Up does nothing until it is enabled again")
+
     deck.clearModalState()
     host.expect(!deck.part_queryRecall.loaded && deck.part_navigation.recalledText === "",
       "closing forgets the recalled queries")
     deck.queryText = ""
+    deck.part_personalization.resetPreferences(originalPreferences)
   }
 
   // A refresh that changes only invocation references leaves the model rows

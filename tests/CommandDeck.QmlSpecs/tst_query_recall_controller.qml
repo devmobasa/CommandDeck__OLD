@@ -85,4 +85,26 @@ TestCase {
     verify(!controller.loaded)
     compare(controller.queries.length, 0, "closing forgets the recalled queries")
   }
+
+  function test_disabling_recall_discards_cached_queries_and_late_replies() {
+    controller.step(true)
+    verify(reply({ enabled: true, entries: [entry(1, "old query")] }))
+    compare(applied, ["old query"])
+
+    controller.available = false
+    controller.step(true)
+    compare(applied, ["old query"], "disabled recall never replays its cache")
+    compare(controller.queries, [])
+
+    controller.available = true
+    controller.step(true)
+    const pending = sent[sent.length - 1].requestId
+    controller.available = false
+    verify(!controller.handleMessage({ requestId: pending, type: Protocol.Messages.QueryHistoryResult,
+      queryHistory: { enabled: true, entries: [entry(2, "late query")] } }))
+    controller.available = true
+    controller.step(true)
+    verify(reply({ enabled: true, entries: [entry(3, "current query")] }))
+    compare(applied, ["old query", "current query"])
+  }
 }
