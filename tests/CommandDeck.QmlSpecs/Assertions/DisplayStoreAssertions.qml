@@ -24,6 +24,8 @@ QtObject {
     property int displaySizePercent: 100
     property bool panelTransparencyEnabled: false
     property int panelTransparencyPercent: 20
+    property int launcherWidthPercent: 100
+    property int launcherHeightPercent: 100
     property bool compactLayout: false
     property bool previewPaneVisible: true
     property bool escapeClearsSearch: false
@@ -129,7 +131,16 @@ QtObject {
         } },
       { name: "explicit Recommended can replace an unknown profile",
         ready: () => !store.legacy && store.percent === 100 && store.profile.text() === "logical-v1\n",
-        run: () => {} }
+        run: () => { preferences.layoutStore.setSize(123, 137) } },
+      { name: "layout dimensions persist alongside the old layout choices",
+        ready: () => preferences.layoutStore.file.text() === "compact=off\npreview=on\nwidth=125\nheight=135\n",
+        run: () => {
+          preferences.layoutStore.widthPercent = 100
+          preferences.layoutStore.heightPercent = 100
+          preferences.layoutStore.load()
+          host.expect(frontend.launcherWidthPercent === 125 && frontend.launcherHeightPercent === 135,
+            "reloading layout preferences restores the durable panel choices")
+        } }
     ]
     deadline = Date.now() + 4000
     percentWriter.setText(" LARGE \n")

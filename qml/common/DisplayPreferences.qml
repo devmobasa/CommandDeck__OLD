@@ -37,6 +37,8 @@ QtObject {
     active: !preferences.host.testMode
     stateDir: preferences.host.coachStateDir
     onChanged: {
+      preferences.host.launcherWidthPercent = preferences.layoutStore.widthPercent
+      preferences.host.launcherHeightPercent = preferences.layoutStore.heightPercent
       preferences.host.compactLayout = preferences.layoutStore.compact
       preferences.host.previewPaneVisible = preferences.layoutStore.preview
     }

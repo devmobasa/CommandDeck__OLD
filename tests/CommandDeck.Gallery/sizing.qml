@@ -9,7 +9,8 @@ ShellRoot {
 
   function show(name) {
     root.surface = name
-    stage.deck.settingsOpen = name === "settings"
+    stage.deck.settingsOpen = name === "settings" || name === "layout"
+    settings.searchControl.text = name === "layout" ? "panel percent" : ""
     stage.setResults("files", Data.corpus(stage.icon), "Sizing acceptance · long labels and preview content")
     if (name === "actions") actions.openFor(Data.gaps(stage.icon)[0])
   }
@@ -38,6 +39,7 @@ ShellRoot {
 
   function surfaceControls() {
     switch (root.surface) {
+    case "layout": return [settings.layoutWidthControl, settings.layoutWidthResetControl]
     case "settings": return [settings.searchControl, settings.closeControl]
     case "help": return [namedItems(help, "helpHeading")[0], namedItems(help, "helpDismissHint")[0],
       namedItems(help, "helpViewport")[0], namedItems(help, "helpShortcutRow")[0]]
@@ -52,7 +54,7 @@ ShellRoot {
     }
     case "confirmation": return [confirmation.cancelControl, confirmation.confirmControl]
     case "extension": return [extension.inputControl, extension.backControl]
-    default: return [content.part_searchBar, content.part_footerActions]
+    default: return [stage.content.part_searchBar, stage.content.part_footerActions]
     }
   }
 
@@ -63,6 +65,7 @@ ShellRoot {
     shots: [
       { name: "launcher.png", settle: 250, show: function() { root.show("launcher") } },
       { name: "settings.png", settle: 250, show: function() { root.show("settings") } },
+      { name: "layout.png", settle: 250, show: function() { root.show("layout") } },
       { name: "help.png", settle: 250, show: function() { root.show("help") } },
       { name: "actions.png", settle: 250, show: function() { root.show("actions") } },
       { name: "confirmation.png", settle: 250, show: function() { root.show("confirmation") } },
@@ -71,6 +74,35 @@ ShellRoot {
     onShotSaved: name => {
       console.log("Saved sizing proof", name, stage.view.width, stage.view.height,
         stage.panel.width, stage.panel.height, stage.deck.displaySizePercent, stage.theme.fontBody)
+      if (name === "launcher.png") {
+        const list = stage.content.part_resultList
+        console.log("Saved launcher layout", JSON.stringify({
+          text: stage.theme.fontBody, row: stage.theme.rowHeight,
+          rows: Math.floor(list.height / (stage.theme.rowHeight + stage.theme.rowGap)),
+          preview: stage.content.part_detailPane.width,
+          panelWidth: stage.panel.width, panelHeight: stage.panel.height
+        }))
+      }
+      if (name === "settings.png") {
+        const maximum = settings.maximumFittingPercent
+        const slider = settings.displaySizeControl.sliderControl
+        const marker = root.namedItems(slider.background, "displaySizeLimitMarker")[0]
+        const expected = maximum === 0 ? "no percentage fits this screen"
+          : "maximum that fits this screen: " + maximum + "%"
+        const defaultLaptop = stage.view.width === 1280 && stage.view.height === 720
+          && (stage.sizingOptions["font-scale"] || 1) === 1
+          && (stage.sizingOptions["panel-width"] || 100) === 100
+          && (stage.sizingOptions["panel-height"] || 100) === 100
+        const fraction = 1 - Math.max(0, (maximum - 75) / 75)
+        if ((defaultLaptop && maximum !== 105) || !marker
+            || marker.visible !== (maximum < 150)
+            || Math.abs(marker.width - marker.parent.width * fraction) > 1
+            || slider.Accessible.description.indexOf(expected) < 0) {
+          console.error("Gallery fitting maximum, rendered marker or accessible description failed: " + maximum)
+          Qt.exit(1)
+        }
+        console.log("Saved fitting feedback", maximum, marker.width, slider.Accessible.description)
+      }
       const controls = root.surfaceControls()
       if (controls.some(control => !root.contained(control))) {
         console.error("Sizing containment failed: " + name)
@@ -81,7 +113,7 @@ ShellRoot {
       Deck.CommandDeckWindowSettings {
         id: settings
         host: stage.content.host
-        presented: root.surface === "settings"
+        presented: root.surface === "settings" || root.surface === "layout"
         anchors.fill: parent
         Component.onCompleted: showPage("customization")
       },

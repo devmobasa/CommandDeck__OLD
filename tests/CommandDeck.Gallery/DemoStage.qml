@@ -155,6 +155,7 @@ Scope {
         part_appTheme.tokens = tokens
       }
       applyDisplaySizePercent(stage.sizingOptions.percent || 100)
+      part_layoutStore.setSize(stage.sizingOptions["panel-width"] || 100, stage.sizingOptions["panel-height"] || 100)
     }
   }
 
@@ -164,6 +165,7 @@ Scope {
     readonly property var host: deck
     readonly property var part_appTheme: display.theme
     readonly property var part_settingsTheme: display.theme
+    readonly property int maximumFittingPercent: display.maximumFittingPercent
     readonly property string displayDescription: display.description
     readonly property bool narrow: display.sizing.narrow
     readonly property var part_palette: panel

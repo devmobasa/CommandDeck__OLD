@@ -6,8 +6,10 @@ SettingsSlider {
   id: root
 
   readonly property bool dragging: pointer.pressed
+  property bool legacy: false
   property int maximumFittingPercent: 150
-  Accessible.description: "75 to 150 percent; 100 is Recommended; "
+  Accessible.description: "75 to 150 percent; "
+    + (legacy ? "100 keeps Previous sizing; Recommended switches to workspace sizing; " : "100 is Recommended; ")
     + (maximumFittingPercent === 0 ? "no percentage fits this screen without limiting or scrolling"
       : "maximum that fits this screen: " + maximumFittingPercent + "%")
 

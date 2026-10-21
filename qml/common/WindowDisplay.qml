@@ -21,6 +21,7 @@ QtObject {
     const store = host.part_displayScaleStore
     return { width: configuredSize.width, height: configuredSize.height,
       fontScale: source.fontScale, bodyPixels: source.tokens ? source.tokens.fontBody : 12,
+      widthPercent: host.launcherWidthPercent, heightPercent: host.launcherHeightPercent,
       percent: percent === undefined ? host.displaySizePercent : percent, settings: settings,
       legacy: store.legacy, legacyPercent: store.legacyPercent, legacyHeight: legacyHeight }
   }

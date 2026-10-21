@@ -23,6 +23,8 @@ Item {
       property bool legacy: false
       property int legacyPercent: 100
     }
+    property int launcherWidthPercent: 100
+    property int launcherHeightPercent: 100
     property int displaySizePercent: scene.part_settingsPanel.displaySizePercent
     property bool settingsOpen: scene.part_settingsPanel.visible
     property bool extensionManagementOpen: false
@@ -200,10 +202,16 @@ Item {
       keyClick(Qt.Key_Return)
       keyClick(Qt.Key_Tab)
       tryCompare(panel.displaySizeControl.sliderControl, "activeFocus", true)
+      verify(panel.displaySizeControl.sliderControl.Accessible.description.indexOf("100 keeps Previous sizing") >= 0)
+      verify(panel.displaySizeControl.sliderControl.Accessible.description.indexOf("100 is Recommended") < 0)
+      keyClick(Qt.Key_Right)
+      keyClick(Qt.Key_Left)
+      verify(panel.displaySizeLegacy, "returning to 100 percent keeps the profile")
       keyClick(Qt.Key_Tab)
       tryCompare(panel.displaySizeResetControl, "activeFocus", true)
       keyClick(Qt.Key_Space)
       verify(!panel.displaySizeLegacy)
+      verify(panel.displaySizeControl.sliderControl.Accessible.description.indexOf("100 is Recommended") >= 0)
       verify(!panel.displaySizeResetControl.enabled)
       verify(panel.displaySizeControl.sliderControl.activeFocus)
       keyClick(Qt.Key_Right)

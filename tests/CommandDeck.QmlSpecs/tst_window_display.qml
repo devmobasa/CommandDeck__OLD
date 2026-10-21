@@ -10,6 +10,8 @@ Item {
     id: host
     property var part_appTheme: source
     property var part_displayScaleStore: store
+    property int launcherWidthPercent: 100
+    property int launcherHeightPercent: 100
     property int displaySizePercent: 100
     property bool settingsOpen: false
     property bool extensionManagementOpen: false
@@ -28,6 +30,8 @@ Item {
     name: "WindowDisplay"
 
     function init() {
+      host.launcherWidthPercent = 100
+      host.launcherHeightPercent = 100
       host.settingsOpen = false
       host.extensionManagementOpen = false
       store.legacy = false
@@ -38,6 +42,24 @@ Item {
       laptop.height = 900
       tryCompare(primary, "configuredSize", Qt.size(2304, 1296))
       tryCompare(laptop, "configuredSize", Qt.size(1440, 900))
+    }
+
+    function test_layout_choices_resize_only_the_launcher_and_update_its_limit() {
+      const text = laptop.theme.fontBody
+      const row = laptop.theme.rowHeight
+      const settings = laptop.settings
+      compare(laptop.maximumFittingPercent, 135)
+      host.launcherWidthPercent = 140
+      host.launcherHeightPercent = 140
+      verify(laptop.launcher.panelWidth > 900)
+      verify(laptop.launcher.panelHeight > 600)
+      compare(laptop.theme.fontBody, text)
+      compare(laptop.theme.rowHeight, row)
+      compare(laptop.settings.panelWidth, settings.panelWidth)
+      compare(laptop.settings.panelHeight, settings.panelHeight)
+      compare(laptop.maximumFittingPercent, 95)
+      host.settingsOpen = true
+      compare(laptop.maximumFittingPercent, 95)
     }
 
     function test_metrics_use_each_windows_logical_geometry() {

@@ -9,6 +9,8 @@ ScrollView {
   readonly property alias part_displayCard: displayCard
   readonly property alias part_displaySizeSlider: displaySizeSlider
   readonly property alias part_displaySizeReset: displaySizeReset
+  readonly property alias part_layoutWidth: layoutWidth
+  readonly property alias part_layoutHeight: layoutHeight
   readonly property alias part_layoutCard: layoutCard
   readonly property alias part_rememberSearchesCheck: rememberSearchesCheck
   readonly property alias part_learnFromUseCheck: learnFromUseCheck
@@ -56,6 +58,7 @@ ScrollView {
           from: Ui.DisplaySizePercent.Minimum
           to: Ui.DisplaySizePercent.Maximum
           stepSize: Ui.DisplaySizePercent.Step
+          legacy: customizationScroll.host.displaySizeLegacy
           maximumFittingPercent: customizationScroll.host.maximumFittingPercent
           Accessible.name: "Launcher display size"
           Component.onCompleted: value = customizationScroll.host.displaySizePercent
@@ -100,10 +103,30 @@ ScrollView {
     SettingsCard {
       id: layoutCard
       searchQuery: customizationScroll.host.part_settingsSearch.text
-      searchTerms: "customization layout compact dense rows one line badges footer shortcuts preview pane details"
+      searchTerms: "customization layout width height panel percent reset compact dense rows one line badges footer shortcuts preview pane details"
       theme: customizationScroll.host.theme
       title: "Layout"
-      description: "How much each result row and the footer show. Applies immediately."
+      description: "Panel space and result details, without changing text or control size. Applies immediately."
+
+      LayoutSizeRow {
+        id: layoutWidth
+        theme: customizationScroll.host.theme
+        label: "Width"
+        help: "Give the preview more room. The panel shrinks to fit your screen."
+        searchControl: customizationScroll.host.part_settingsSearch
+        percent: customizationScroll.host.launcherWidthPercent
+        onSelected: percent => customizationScroll.host.launcherSizeSelected(percent, customizationScroll.host.launcherHeightPercent)
+      }
+
+      LayoutSizeRow {
+        id: layoutHeight
+        theme: customizationScroll.host.theme
+        label: "Height"
+        help: "Show more result rows. The panel shrinks to fit your screen."
+        searchControl: customizationScroll.host.part_settingsSearch
+        percent: customizationScroll.host.launcherHeightPercent
+        onSelected: percent => customizationScroll.host.launcherSizeSelected(customizationScroll.host.launcherWidthPercent, percent)
+      }
 
       SettingsToggle {
         id: compactLayoutCheck

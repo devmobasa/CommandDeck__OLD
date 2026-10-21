@@ -12,30 +12,71 @@ TestCase {
     [1280, 720, 1], [1080, 1920, 1], [720, 1280, 1], [600, 800, 1], [320, 240, 1]
   ]
 
-  function test_screen_matrix() {
-    for (const screen of screens) {
-      for (const fontScale of [0.8, 1, 1.25, 1.5, 2]) {
-        for (const settings of [false, true]) {
-          let previous = null
-          for (let percent = 75; percent <= 150; percent += 5) {
-            const input = { width: screen[0] / screen[2], height: screen[1] / screen[2],
-              percent: percent, fontScale: fontScale, bodyPixels: 12 * fontScale, settings: settings }
-            const size = Sizing.calculate(input)
-            verify(Number.isFinite(size.effective) && size.effective > 0)
-            verify(size.panelWidth > 0 && size.panelWidth <= size.availableWidth)
-            verify(size.panelHeight > 0 && size.panelHeight <= size.availableHeight)
-            verify(12 * fontScale * size.textScale >= Math.min(12 * fontScale * size.requested, 11) - 0.001)
-            if (previous) {
-              verify(size.textScale >= previous.textScale - 0.001, "zoom must not shrink text")
-              // A responsive layout can change its footprint; its metrics must
-              // keep growing or plateau at the screen's fit limit.
-              verify(size.effective >= previous.effective - 0.001, "zoom must not shrink controls")
+  function test_screen_matrix_data() {
+    return screens.map((screen, index) => ({ tag: "screen-" + index, screen: screen }))
+  }
+
+  function test_screen_matrix(data) {
+    const screen = data.screen
+    for (const fontScale of [0.8, 1, 1.25, 1.5, 2]) {
+      for (const settings of [false, true]) {
+        for (let width = 80; width <= 140; width += 5) {
+          for (let height = 80; height <= 140; height += 5) {
+            let previous = null
+            for (let percent = 75; percent <= 150; percent += 5) {
+              const input = { width: screen[0] / screen[2], height: screen[1] / screen[2],
+                percent: percent, fontScale: fontScale, bodyPixels: 12 * fontScale, settings: settings }
+              const baseline = Sizing.calculate(input)
+              const size = Sizing.calculate(Object.assign({}, input, { widthPercent: width, heightPercent: height }))
+              verify(Number.isFinite(size.effective) && size.effective > 0)
+              verify(size.panelWidth > 0 && size.panelWidth <= size.availableWidth)
+              verify(size.panelHeight > 0 && size.panelHeight <= size.availableHeight)
+              compare(size.textScale, baseline.textScale, "panel choices never change text")
+              compare(size.effective, baseline.effective, "panel choices never change controls")
+              verify(12 * fontScale * size.textScale >= Math.min(12 * fontScale * size.requested, 11) - 0.001)
+              if (previous) {
+                verify(size.textScale >= previous.textScale - 0.001, "zoom must not shrink text")
+                verify(size.effective >= previous.effective - 0.001, "zoom must not shrink controls")
+              }
+              previous = size
             }
-            previous = size
           }
         }
       }
     }
+  }
+
+  function test_layout_dimensions_are_independent_and_monotonic() {
+    for (const screen of screens) {
+      for (let percent = 75; percent <= 150; percent += 5) {
+        for (const legacy of [false, true]) {
+          const input = { width: screen[0] / screen[2], height: screen[1] / screen[2],
+            percent: percent, legacy: legacy }
+          const baseline = Sizing.calculate(input)
+          for (const axis of ["widthPercent", "heightPercent"]) {
+            let previous = 0
+            let maximum = 150
+            for (let value = 80; value <= 140; value += 5) {
+              const choice = Object.assign({}, input)
+              choice[axis] = value
+              const size = Sizing.calculate(choice)
+              const dimension = axis === "widthPercent" ? size.panelWidth : size.panelHeight
+              verify(dimension >= previous, "increasing a layout choice cannot shrink the panel")
+              compare(size.textScale, baseline.textScale)
+              compare(size.effective, baseline.effective)
+              const fitting = Sizing.maximumFittingPercent(choice)
+              verify(fitting <= maximum, "a larger panel cannot raise its fitting maximum")
+              maximum = fitting
+              previous = dimension
+            }
+          }
+        }
+      }
+    }
+    const normal = Sizing.calculate({ width: 3840, height: 2160 })
+    const roomy = Sizing.calculate({ width: 3840, height: 2160, widthPercent: 140, heightPercent: 140 })
+    fuzzyCompare(roomy.panelWidth / normal.panelWidth, 1.4, 0.002)
+    fuzzyCompare(roomy.panelHeight / normal.panelHeight, 1.4, 0.002)
   }
 
   function test_recommended_typography() {
@@ -48,26 +89,119 @@ TestCase {
     compare(Sizing.calculate({ width: 5120, height: 1080, percent: 100 }).automatic, 1)
   }
 
+  function test_layout_reference_dimensions_data() {
+    // Hand-calculated 900x600 footprints at 80/100/140%, before viewport
+    // clamps. Logical 4K uses 1.25x; legacy 4K uses 1.5x and 1.25x text.
+    // Fitting limits use 5% steps, logical inset floors (43/29/32/86),
+    // or fixed legacy insets (130/86/96/259), plus the text-scale floor.
+    const cases = [
+      { tag: "logical-1080p", width: 1920, height: 1080, percent: 100, legacy: false,
+        widths: [720, 900, 1260], heights: [480, 600, 840], text: 1, effective: 1,
+        maxima: [[150, 150, 115], [150, 150, 115], [145, 145, 115]] },
+      { tag: "legacy-1080p", width: 1920, height: 1080, percent: 100, legacy: true,
+        widths: [720, 900, 1260], heights: [480, 600, 840], text: 1, effective: 1,
+        maxima: [[150, 145, 105], [150, 145, 105], [145, 145, 105]] },
+      { tag: "logical-720p", width: 1280, height: 720, percent: 100, legacy: false,
+        widths: [720, 900, 1200], heights: [480, 600, 651], text: 1, effective: 1,
+        maxima: [[105, 105, 75], [105, 105, 75], [95, 95, 75]] },
+      { tag: "legacy-720p", width: 1280, height: 720, percent: 100, legacy: true,
+        widths: [720, 900, 1200], heights: [480, 594, 594], text: 1, effective: 1,
+        maxima: [[120, 95, 0], [120, 95, 0], [95, 95, 0]] },
+      { tag: "logical-constrained", width: 600, height: 800, percent: 90, legacy: false,
+        widths: [460, 520, 520], heights: [302, 378, 529], text: 0.9, effective: 0.9,
+        maxima: [[90, 90, 90], [80, 80, 80], [0, 0, 0]] },
+      { tag: "legacy-constrained", width: 600, height: 800, percent: 90, legacy: true,
+        widths: [520, 520, 520], heights: [432, 540, 664], text: 0.9, effective: 0.9,
+        maxima: [[0, 0, 0], [0, 0, 0], [0, 0, 0]] },
+      { tag: "logical-4k", width: 3840, height: 2160, percent: 100, legacy: false,
+        widths: [900, 1125, 1575], heights: [600, 750, 1050], text: 1.25, effective: 1.25,
+        maxima: [[150, 150, 150], [150, 150, 150], [150, 150, 150]] },
+      { tag: "legacy-4k", width: 3840, height: 2160, percent: 100, legacy: true,
+        widths: [1080, 1350, 1890], heights: [720, 900, 1260], text: 1.25, effective: 1.5,
+        maxima: [[150, 150, 140], [150, 150, 140], [150, 150, 140]] }
+    ]
+    const choices = [80, 100, 140]
+    const rows = []
+    for (const sample of cases) {
+      for (let width = 0; width < choices.length; width++) {
+        for (let height = 0; height < choices.length; height++) {
+          rows.push({ tag: sample.tag + "-" + choices[width] + "x" + choices[height],
+            input: { width: sample.width, height: sample.height, percent: sample.percent,
+              legacy: sample.legacy, legacyPercent: 100,
+              widthPercent: choices[width], heightPercent: choices[height] },
+            width: sample.widths[width], height: sample.heights[height],
+            text: sample.text, effective: sample.effective, maximum: sample.maxima[width][height] })
+        }
+      }
+    }
+    return rows
+  }
+
+  function test_layout_reference_dimensions(data) {
+    const size = Sizing.calculate(data.input)
+
+    compare(size.panelWidth, data.width)
+    compare(size.panelHeight, data.height)
+    fuzzyCompare(size.textScale, data.text, 0.000001)
+    fuzzyCompare(size.effective, data.effective, 0.000001)
+    compare(Sizing.maximumFittingPercent(data.input), data.maximum)
+  }
+
+  function test_shrinking_layout_removes_scrolling_data() {
+    return [
+      { tag: "width", width: 600, height: 800, widthPercent: 80, heightPercent: 100,
+        panelWidth: 460, panelHeight: 378 },
+      { tag: "height", width: 1280, height: 400, widthPercent: 100, heightPercent: 80,
+        panelWidth: 576, panelHeight: 302 }
+    ]
+  }
+
+  function test_shrinking_layout_removes_scrolling(data) {
+    const input = { width: data.width, height: data.height, percent: 90,
+      widthPercent: data.widthPercent, heightPercent: data.heightPercent }
+    const size = Sizing.calculate(input)
+    const maximum = Sizing.maximumFittingPercent(input)
+
+    compare(size.panelWidth, data.panelWidth)
+    compare(size.panelHeight, data.panelHeight)
+    compare(size.contentWidth, data.panelWidth)
+    compare(size.contentHeight, data.panelHeight)
+    compare(size.textScale, 0.9)
+    compare(size.effective, 0.9)
+    compare(size.fit, 1)
+    verify(!size.limited)
+    verify(!size.scroll)
+    compare(maximum, 90)
+    const description = Sizing.fitDescription(size, maximum)
+    verify(description.indexOf("scroll to view") < 0)
+    verify(description.indexOf("limited to fit") < 0)
+  }
+
   function test_maximum_fitting_percent_matrix() {
     for (const screen of screens) {
-      let previous = 150
-      for (const fontScale of [0.8, 1, 1.25, 1.5, 2]) {
-        const input = { width: screen[0] / screen[2], height: screen[1] / screen[2],
-          fontScale: fontScale, bodyPixels: 12 * fontScale, settings: true }
-        const maximum = Sizing.maximumFittingPercent(input)
-        verify(maximum === 0 || (maximum >= 75 && maximum <= 150 && maximum % 5 === 0))
-        verify(maximum <= previous, "larger fonts cannot raise the fitting maximum")
+      for (const widthPercent of [80, 100, 140]) {
+        for (const heightPercent of [80, 100, 140]) {
+          let previous = 150
+          for (const fontScale of [0.8, 1, 1.25, 1.5, 2]) {
+            const input = { width: screen[0] / screen[2], height: screen[1] / screen[2],
+              fontScale: fontScale, bodyPixels: 12 * fontScale, settings: true,
+              widthPercent: widthPercent, heightPercent: heightPercent }
+            const maximum = Sizing.maximumFittingPercent(input)
+            verify(maximum === 0 || (maximum >= 75 && maximum <= 150 && maximum % 5 === 0))
+            verify(maximum <= previous, "larger fonts cannot raise the fitting maximum")
 
-        const launcher = Object.assign({}, input, { settings: false })
-        for (let percent = 75; percent <= 150; percent += 5) {
-          const size = Sizing.calculate(Object.assign({}, launcher, { percent: percent }))
-          const fits = !size.limited && !size.scroll
-            && size.contentWidth <= size.availableWidth && size.contentHeight <= size.availableHeight
-          if (percent === maximum) verify(fits, "the announced maximum must fit without scrolling")
-          if (percent > maximum) verify(!fits, "no step above the maximum can fit")
+            const launcher = Object.assign({}, input, { settings: false })
+            for (let percent = 75; percent <= 150; percent += 5) {
+              const size = Sizing.calculate(Object.assign({}, launcher, { percent: percent }))
+              const fits = !size.limited && !size.scroll
+                && size.contentWidth <= size.availableWidth && size.contentHeight <= size.availableHeight
+              if (percent === maximum) verify(fits, "the announced maximum must fit without scrolling")
+              if (percent > maximum) verify(!fits, "no step above the maximum can fit")
+            }
+            compare(input.settings, true, "the launcher calculation must not mutate the input")
+            previous = maximum
+          }
         }
-        compare(input.settings, true, "the launcher calculation must not mutate the input")
-        previous = maximum
       }
     }
   }
