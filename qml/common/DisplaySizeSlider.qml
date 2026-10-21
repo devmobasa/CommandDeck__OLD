@@ -7,13 +7,14 @@ SettingsSlider {
 
   readonly property bool dragging: pointer.pressed
   property int maximumFittingPercent: 150
-  Accessible.description: "75 to 150 percent; 100 is Recommended; maximum that fits this screen: "
-    + maximumFittingPercent + "%"
+  Accessible.description: "75 to 150 percent; 100 is Recommended; "
+    + (maximumFittingPercent === 0 ? "no percentage fits this screen without limiting or scrolling"
+      : "maximum that fits this screen: " + maximumFittingPercent + "%")
 
   Rectangle {
     objectName: "displaySizeLimitMarker"
     parent: root.sliderControl.background
-    readonly property real fittingPosition: (root.maximumFittingPercent - root.from) / (root.to - root.from)
+    readonly property real fittingPosition: Math.max(0, (root.maximumFittingPercent - root.from) / (root.to - root.from))
     visible: root.maximumFittingPercent < root.to
     x: root.sliderControl.mirrored ? 0 : parent.width * fittingPosition
     width: parent.width * (1 - fittingPosition)

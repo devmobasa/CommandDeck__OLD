@@ -71,6 +71,36 @@ Item {
       display.height = 900
     }
 
+    function test_no_fitting_percentage_feedback() {
+      const panel = fixture.part_settingsPanel
+      panel.displaySizeDescription = Qt.binding(function() { return display.description })
+      panel.maximumFittingPercent = Qt.binding(function() { return display.maximumFittingPercent })
+      display.width = 320
+      display.height = 240
+      panel.visible = true
+      tryCompare(panel.searchControl, "activeFocus", true)
+      typeText("display size")
+      keyClick(Qt.Key_Return)
+      keyClick(Qt.Key_Tab)
+
+      const slider = panel.displaySizeControl.sliderControl
+      const marker = findChild(panel, "displaySizeLimitMarker")
+      tryCompare(slider, "activeFocus", true)
+      tryCompare(panel, "maximumFittingPercent", 0)
+      verify(marker.visible)
+      fuzzyCompare(marker.width, marker.parent.width, 0.1, "the entire track is constrained")
+      verify(slider.Accessible.description.indexOf("no percentage fits this screen") >= 0)
+      verify(findChild(panel, "displaySizeRow").help.indexOf("no percentage fits on this screen") >= 0)
+      verify(slider.Accessible.description.indexOf("maximum that fits") < 0)
+      keyClick(Qt.Key_Right)
+      verify(slider.activeFocus)
+
+      panel.maximumFittingPercent = 150
+      panel.displaySizeDescription = ""
+      display.width = 1440
+      display.height = 900
+    }
+
     function test_display_size_keyboard_data() {
       return [
         { tag: "Space", resetKey: Qt.Key_Space },

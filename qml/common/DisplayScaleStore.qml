@@ -6,7 +6,7 @@ import Quickshell.Io
 //
 // Mirrors FirstRunStore: a tiny file under $XDG_STATE_HOME/commanddeck/ records
 // the chosen display-size percentage so users can fix launcher sizing themselves,
-// with no C# backend preference involved. Reads are synchronous (blockLoading);
+// with no C# backend preference involved. Completed reads apply asynchronously;
 // a missing percentage reads as 100%. The versioned profile preserves existing
 // users' sizing; Recommended opts into logical workspace sizing. The daemon creates the
 // state directory, so the write needs no mkdir and a failed write is non-fatal.
@@ -25,6 +25,15 @@ QtObject {
   property bool legacy: false
   property int legacyPercent: Ui.DisplaySizePercent.Default
   property bool loaded: false
+
+  // A completed read may trail a local write; keep the session choice until
+  // a read observes its bytes, including after an explicit refresh.
+  property bool percentReady: false
+  property bool profileReady: false
+  property string percentText: ""
+  property string profileText: ""
+  property int pendingPercent: -1
+  property string pendingProfile: ""
 
   signal changed()
 
@@ -48,14 +57,27 @@ QtObject {
       root.changed()
       return
     }
-    let existing = ""
-    try {
-      existing = file.text()
-    } catch (error) {
-      existing = ""
+    root.percentReady = false
+    root.profileReady = false
+    file.reload()
+    profile.reload()
+  }
+
+  function applyReads() {
+    if (!root.active || !root.percentReady || !root.profileReady) return
+
+    const next = root.normalize(root.percentText)
+    if (root.pendingPercent < 0 || next === root.pendingPercent) {
+      root.percent = next
+      root.pendingPercent = -1
     }
-    root.percent = root.normalize(existing)
-    root.loadProfile()
+    if (root.pendingProfile.length === 0 || root.profileText === root.pendingProfile) {
+      root.pendingProfile = ""
+      root.legacy = root.profileText !== "logical-v1"
+      root.legacyPercent = root.profileText.startsWith("legacy-v1:")
+        ? root.normalize(root.profileText.slice("legacy-v1:".length)) : root.percent
+      if (root.profileText === "legacy-v1") root.persistProfile()
+    }
     root.loaded = true
     root.changed()
   }
@@ -68,6 +90,7 @@ QtObject {
     root.percent = next
     root.changed()
     if (!root.active || root.filePath.length === 0) return
+    root.pendingPercent = next
     try {
       file.setText(String(root.percent) + "\n")
     } catch (error) {
@@ -76,26 +99,15 @@ QtObject {
     }
   }
 
-  function loadProfile() {
-    let existing = ""
-    try { existing = profile.text().trim() } catch (error) { existing = "" }
-    root.legacy = existing !== "logical-v1"
-    root.legacyPercent = existing.startsWith("legacy-v1:")
-      ? root.normalize(existing.slice("legacy-v1:".length)) : root.percent
-    // Upgrade only the known legacy marker; absent/unknown markers fail safe
-    // without racing a daemon that is still initializing a fresh installation.
-    if (existing === "legacy-v1") root.persistProfile()
-  }
-
   function persistProfile(replaceUnknown = false) {
     if (!root.active || root.filePath.length === 0) return
-    let existing = ""
-    try { existing = profile.text().trim() } catch (error) { existing = "" }
+    const existing = root.profileText
     if (!replaceUnknown && existing.length > 0 && existing !== "logical-v1"
         && !/^legacy-v1(?::\d+)?$/.test(existing)) return
 
+    root.pendingProfile = root.legacy ? "legacy-v1:" + root.legacyPercent : "logical-v1"
     try {
-      profile.setText(root.legacy ? "legacy-v1:" + root.legacyPercent + "\n" : "logical-v1\n")
+      profile.setText(root.pendingProfile + "\n")
     } catch (error) {
       // As with the percentage, a read-only state directory applies in-session.
     }
@@ -110,17 +122,25 @@ QtObject {
 
   property FileView file: FileView {
     path: root.active && root.filePath.length > 0 ? root.filePath : ""
-    blockLoading: true
+    blockLoading: false
     printErrors: false
     atomicWrites: true
+    watchChanges: true
+    onFileChanged: reload()
+    onLoaded: { root.percentText = text(); root.percentReady = true; root.applyReads() }
+    onLoadFailed: { root.percentText = ""; root.percentReady = true; root.applyReads() }
+    onSaved: reload()
   }
 
   property FileView profile: FileView {
     path: root.active && root.stateDir.length > 0 ? root.stateDir + "/display-sizing" : ""
-    blockLoading: true
+    blockLoading: false
     printErrors: false
     atomicWrites: true
     watchChanges: true
-    onFileChanged: { reload(); root.load() }
+    onFileChanged: reload()
+    onLoaded: { root.profileText = text().trim(); root.profileReady = true; root.applyReads() }
+    onLoadFailed: { root.profileText = ""; root.profileReady = true; root.applyReads() }
+    onSaved: reload()
   }
 }

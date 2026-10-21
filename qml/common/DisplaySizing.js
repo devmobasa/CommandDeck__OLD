@@ -5,7 +5,8 @@ function positive(value, fallback) {
 }
 
 function fitDescription(sizing, maximum, location) {
-  return (sizing.limited ? "; limited to fit (max " + maximum + "% " + (location || "here") + ")" : "")
+  return (maximum === 0 ? "; no percentage fits " + (location || "here") : "")
+    + (sizing.limited && maximum > 0 ? "; limited to fit (max " + maximum + "% " + (location || "here") + ")" : "")
     + (sizing.narrow ? "; narrow layout" : "")
     + (sizing.scroll ? "; scroll to view" : "")
 }
@@ -13,14 +14,18 @@ function fitDescription(sizing, maximum, location) {
 // Settings has a different footprint; the percentage always controls the launcher.
 function maximumFittingPercent(input) {
   for (let percent = 150; percent >= 75; percent -= 5) {
-    if (!calculate(Object.assign({}, input, { percent: percent, settings: false })).limited) return percent
+    const size = calculate(Object.assign({}, input, { percent: percent, settings: false }))
+    if (!size.limited && !size.scroll
+        && size.contentWidth <= size.availableWidth && size.contentHeight <= size.availableHeight) return percent
   }
-  return 75
+  return 0
 }
 
 // All geometry is in the presenting window's logical pixels. Mode pixels are
 // accepted only by the versioned compatibility profile, never by Recommended.
 function calculate(input) {
+  if (input.legacy === true) return calculateLegacy(input)
+
   const width = positive(input.width, 1920)
   const height = positive(input.height, 1080)
   const fontScale = positive(input.fontScale, 1)
@@ -29,20 +34,11 @@ function calculate(input) {
   let top = Math.min(height / 3, Math.max(54, Math.round(height * 0.12)))
   const bottom = Math.min(height / 3, Math.max(40, Math.round(height * 0.05)))
   const availableWidth = Math.max(1, width - Math.min(80, width / 4))
-  const legacy = input.legacy === true
-  const automatic = legacy
-    ? Math.max(1, Math.min(2, 1 + (positive(input.legacyHeight, height) - 1080) / 2160))
-    : Math.max(1, Math.min(1.25, Math.sqrt(Math.min(width / 1920, height / 1080))))
-  const density = legacy && input.settings ? 0.75 : 1
-  const referenceUser = positive(input.legacyPercent, input.percent || 100) / 100
-  const requested = automatic * user * density
-  // A legacy reference preserves the original appearance; further zoom is full
-  // strength for fonts as well as layout, including after a restart.
-  const requestedText = legacy
-    ? (1 + (automatic * referenceUser - 1) * 0.5) * user / referenceUser * density
-    : requested
-  let baseWidth = input.settings ? (legacy ? 1170 : 1050) : 900
-  let baseHeight = input.settings ? (legacy ? 810 : 700) : 600
+  const automatic = Math.max(1, Math.min(1.25, Math.sqrt(Math.min(width / 1920, height / 1080))))
+  const requested = automatic * user
+  const requestedText = requested
+  let baseWidth = input.settings ? 1050 : 900
+  let baseHeight = input.settings ? 700 : 600
   const minimumText = Math.min(body * requestedText, 11)
   const standardHeight = Math.max(1, height - top - bottom)
   const standardFit = Math.min(1, availableWidth / (baseWidth * fontScale * requested),
@@ -75,5 +71,39 @@ function calculate(input) {
     contentWidth: contentWidth, contentHeight: contentHeight,
     panelWidth: Math.min(contentWidth, Math.floor(availableWidth)),
     panelHeight: Math.min(contentHeight, Math.floor(availableHeight))
+  }
+}
+
+// Baseline a1b1ec8 clamps the panel, never its metrics. Keep its inset and
+// two-stage Settings rounding even when the logical workspace is constrained.
+function calculateLegacy(input) {
+  const width = positive(input.width, 1920)
+  const height = positive(input.height, 1080)
+  const fontScale = positive(input.fontScale, 1)
+  const user = Math.max(75, Math.min(150, positive(input.percent, 100))) / 100
+  const reference = positive(input.legacyPercent, input.percent || 100) / 100
+  const automatic = Math.max(1, Math.min(2, 1 + (positive(input.legacyHeight, height) - 1080) / 1080 * 0.5))
+  const density = input.settings ? 0.75 : 1
+  const displayScale = automatic * user
+  const effective = displayScale * density
+  const scale = fontScale * displayScale * density
+  const textScale = (1 + (automatic * reference - 1) * 0.5) * (user / reference) * density
+  const top = Math.max(54, Math.round(height * 0.12))
+  const bottom = Math.max(40, Math.round(height * 0.05))
+  const availableWidth = Math.max(1, width - 80)
+  const availableHeight = Math.max(1, height - top - bottom)
+  const desiredWidth = input.settings ? Math.round(Math.round(900 * scale) * 1.3)
+    : Math.round(900 * scale)
+  const desiredHeight = input.settings ? Math.round(Math.round(600 * scale) * 1.35)
+    : Math.round(600 * scale)
+  const panelWidth = Math.min(desiredWidth, availableWidth)
+  const panelHeight = Math.min(desiredHeight, availableHeight)
+  return {
+    displayScale: displayScale, densityScale: density,
+    automatic: automatic, requested: effective, effective: effective, textScale: textScale,
+    fit: 1, limited: panelWidth < desiredWidth || panelHeight < desiredHeight,
+    narrow: false, scroll: false, topInset: top, bottomInset: bottom,
+    availableWidth: availableWidth, availableHeight: availableHeight,
+    contentWidth: panelWidth, contentHeight: panelHeight, panelWidth: panelWidth, panelHeight: panelHeight
   }
 }

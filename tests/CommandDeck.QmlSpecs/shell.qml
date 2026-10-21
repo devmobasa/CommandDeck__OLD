@@ -18,6 +18,7 @@ ShellRoot {
   SearchDataPathAssertions { id: stage7; host: root }
   ResultListAssertions { id: resultListAssertions; host: root }
   BridgeBackoffAssertions { id: bridgeBackoff; host: root }
+  DisplayStoreAssertions { id: displayStoreAssertions; host: root }
   readonly property alias part_accessibleResult: accessibleResult
   readonly property alias part_actions: actions
   readonly property alias part_aiMarkdown: aiMarkdown
@@ -591,5 +592,6 @@ ShellRoot {
     stage7.run(context)
     resultListAssertions.run()
     bridgeBackoff.start()
+    displayStoreAssertions.start()
   })
 }

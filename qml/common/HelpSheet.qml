@@ -181,6 +181,7 @@ Rectangle {
 
         Text {
           Layout.fillWidth: true
+          objectName: "helpHeading"
           text: "Keyboard & filters"
           color: root.theme.text
           font.family: root.theme.fontFamily
@@ -190,6 +191,7 @@ Rectangle {
 
         KeyCap {
           theme: root.theme
+          objectName: "helpDismissHint"
           label: "Esc"
         }
       }
@@ -202,6 +204,7 @@ Rectangle {
 
       ScrollView {
         id: helpScroll
+        objectName: "helpViewport"
 
         Layout.fillWidth: true
         Layout.fillHeight: true
@@ -245,6 +248,7 @@ Rectangle {
 
                   delegate: RowLayout {
                     id: shortcutRow
+                    objectName: "helpShortcutRow"
 
                     required property var modelData
 

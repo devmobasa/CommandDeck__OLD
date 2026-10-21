@@ -8,7 +8,7 @@ TestCase {
     [1920, 1080, 1], [2560, 1664, 1.6], [1920, 1200, 1.25],
     [2880, 1800, 2], [3840, 2160, 2], [2560, 1600, 1.5], [3200, 2000, 2],
     [2560, 1440, 1], [3840, 2160, 1.5], [5120, 2880, 2],
-    [3840, 2160, 1], [3840, 2160, 1.666667], [3440, 1440, 1], [5120, 1440, 1],
+    [3840, 2160, 1], [3840, 2160, 1.666667], [2304, 1296, 1], [3440, 1440, 1], [5120, 1440, 1],
     [1280, 720, 1], [1080, 1920, 1], [720, 1280, 1], [600, 800, 1], [320, 240, 1]
   ]
 
@@ -55,15 +55,16 @@ TestCase {
         const input = { width: screen[0] / screen[2], height: screen[1] / screen[2],
           fontScale: fontScale, bodyPixels: 12 * fontScale, settings: true }
         const maximum = Sizing.maximumFittingPercent(input)
-        verify(maximum >= 75 && maximum <= 150 && maximum % 5 === 0)
+        verify(maximum === 0 || (maximum >= 75 && maximum <= 150 && maximum % 5 === 0))
         verify(maximum <= previous, "larger fonts cannot raise the fitting maximum")
 
-        const launcher = Object.assign({}, input, { percent: maximum, settings: false })
-        verify(!Sizing.calculate(launcher).limited || maximum === 75,
-          "the maximum must fit unless even the minimum is limited")
-        if (maximum < 150) {
-          verify(Sizing.calculate(Object.assign({}, launcher, { percent: maximum + 5 })).limited,
-            "the next grid step must exceed the fitting maximum")
+        const launcher = Object.assign({}, input, { settings: false })
+        for (let percent = 75; percent <= 150; percent += 5) {
+          const size = Sizing.calculate(Object.assign({}, launcher, { percent: percent }))
+          const fits = !size.limited && !size.scroll
+            && size.contentWidth <= size.availableWidth && size.contentHeight <= size.availableHeight
+          if (percent === maximum) verify(fits, "the announced maximum must fit without scrolling")
+          if (percent > maximum) verify(!fits, "no step above the maximum can fit")
         }
         compare(input.settings, true, "the launcher calculation must not mutate the input")
         previous = maximum
@@ -71,10 +72,27 @@ TestCase {
     }
   }
 
-  function test_maximum_falls_back_to_minimum_when_nothing_fits() {
-    const input = { width: 320, height: 240, fontScale: 2, bodyPixels: 24, percent: 75 }
-    verify(Sizing.calculate(input).limited)
-    compare(Sizing.maximumFittingPercent(input), 75)
+  function test_fitting_maximum_excludes_limited_and_scrolling_data() {
+    return [
+      { tag: "limited", width: 1280, height: 720, fontScale: 2, maximum: 0 },
+      { tag: "scrolling", width: 600, height: 800, fontScale: 1, maximum: 80 }
+    ]
+  }
+
+  function test_fitting_maximum_excludes_limited_and_scrolling(data) {
+    const input = { width: data.width, height: data.height, fontScale: data.fontScale,
+      bodyPixels: 12 * data.fontScale }
+    compare(Sizing.maximumFittingPercent(input), data.maximum)
+    const size = Sizing.calculate(Object.assign({}, input, { percent: 90 }))
+    verify(size.limited || size.scroll)
+    const description = Sizing.fitDescription(size, data.maximum)
+    if (data.maximum === 0) {
+      verify(description.indexOf("no percentage fits here") >= 0)
+      verify(description.indexOf("max 75%") < 0)
+    } else {
+      verify(size.scroll && size.contentWidth > size.availableWidth)
+      verify(description.indexOf("scroll to view") >= 0)
+    }
   }
 
   function test_insets_use_height_before_scaling_down() {
@@ -101,32 +119,52 @@ TestCase {
     }
   }
 
-  function test_owner_legacy_workspace() {
-    const input = { width: 2304, height: 1296, fontScale: 14 / 12, bodyPixels: 14,
-      legacy: true, legacyPercent: 120, legacyHeight: 2160 }
-    compare(Sizing.maximumFittingPercent(input), 110)
-    const normal = Sizing.calculate(Object.assign({}, input, { percent: 100 }))
-    compare(normal.topInset, 156)
-    compare(normal.bottomInset, 65)
-    compare(normal.availableHeight, 1075)
-    compare(normal.panelWidth, 1575)
-    compare(normal.panelHeight, 1050)
-    compare(normal.fit, 1)
-    compare(normal.textScale, 7 / 6)
+  function test_legacy_baseline_parity_data() {
+    return [
+      { tag: "auto", percent: 100 }, { tag: "small", percent: 90 },
+      { tag: "default", percent: 100 }, { tag: "large", percent: 115 },
+      { tag: "xlarge", percent: 130 }
+    ]
+  }
 
-    const intermediate = Sizing.calculate(Object.assign({}, input, { percent: 105 }))
-    verify(!intermediate.limited)
-    fuzzyCompare(intermediate.topInset, 128.5, 0.001)
-    fuzzyCompare(intermediate.availableHeight, 1102.5, 0.001)
-    const fitting = Sizing.calculate(Object.assign({}, input, { percent: 110 }))
-    verify(!fitting.limited)
-    fuzzyCompare(fitting.topInset, 76, 0.001)
-    fuzzyCompare(fitting.availableHeight, 1155, 0.001)
-    const limited = Sizing.calculate(Object.assign({}, input, { percent: 115 }))
-    verify(limited.limited)
-    compare(limited.topInset, 52)
-    compare(limited.bottomInset, 65)
-    compare(limited.availableHeight, 1179)
+  function test_legacy_baseline_parity(data) {
+    // Independent a1b1ec8 CommandDeck/Theme/CommandDeckWindow formulas.
+    for (const screen of screens) {
+      for (const fontScale of [0.8, 1, 14 / 12, 1.25, 1.5, 2]) {
+        for (const settings of [false, true]) {
+          const width = screen[0] / screen[2]
+          const height = screen[1] / screen[2]
+          const modeHeight = screen[0] === 2304 ? 2160 : screen[1]
+          const automatic = Math.max(1, Math.min(2, 1 + (modeHeight - 1080) / 1080 * 0.5))
+          const displayScale = automatic * (data.percent / 100)
+          const density = settings ? 0.75 : 1
+          const scale = fontScale * displayScale * density
+          const top = Math.max(54, Math.round(height * 0.12))
+          const bottom = Math.max(40, Math.round(height * 0.05))
+          const paletteWidth = Math.round(900 * scale)
+          const paletteHeight = Math.round(600 * scale)
+          const size = Sizing.calculate({ width: width, height: height, legacyHeight: modeHeight,
+            fontScale: fontScale, bodyPixels: 12 * fontScale, legacy: true,
+            legacyPercent: data.percent, percent: data.percent, settings: settings })
+
+          for (const base of [10, 11, 12, 13, 14, 16]) {
+            const pixels = Math.round(base * fontScale)
+            compare(Math.round(pixels * size.textScale),
+              Math.round(pixels * ((1 + (displayScale - 1) * 0.5) * density)))
+          }
+          const actualScale = fontScale * (size.displayScale === undefined ? size.effective : size.displayScale)
+            * (size.densityScale === undefined ? 1 : size.densityScale)
+          compare(Math.round(46 * actualScale), Math.round(46 * scale))
+          compare(size.panelWidth, Math.min(settings ? Math.round(paletteWidth * 1.3) : paletteWidth, width - 80))
+          compare(size.panelHeight, Math.min(settings ? Math.round(paletteHeight * 1.35) : paletteHeight, height - top - bottom))
+          compare(size.topInset, top)
+          compare(size.bottomInset, bottom)
+          compare(size.contentWidth, size.panelWidth, "legacy content keeps the clamped panel layout")
+          compare(size.contentHeight, size.panelHeight)
+          verify(!size.narrow && !size.scroll)
+        }
+      }
+    }
   }
 
   function test_fitting_narrow_layout_keeps_standard_geometry() {
@@ -155,7 +193,7 @@ TestCase {
       legacy: true, legacyPercent: 100, percent: 100 })
     compare(initial.effective, 1.5)
     compare(initial.textScale, 1.25)
-    const zoom = Sizing.calculate({ width: 3840, height: 2160, legacyHeight: 2160,
+    const zoom = Sizing.calculate({ width: 2304, height: 1296, legacyHeight: 2160,
       legacy: true, legacyPercent: 100, percent: 150 })
     compare(zoom.effective / 1.5, 1.5)
     compare(zoom.textScale / 1.25, 1.5)

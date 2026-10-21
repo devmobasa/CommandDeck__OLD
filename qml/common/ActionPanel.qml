@@ -277,6 +277,7 @@ Rectangle {
 
     Flickable {
       id: actionsFlick
+      objectName: "actionsViewport"
       Layout.fillWidth: true
       Layout.fillHeight: true
       clip: true

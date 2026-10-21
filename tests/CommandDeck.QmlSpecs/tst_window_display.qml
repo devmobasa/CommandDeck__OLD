@@ -116,6 +116,16 @@ Item {
       laptop.height = 900
     }
 
+    function test_zoom_status_when_no_percentage_fits() {
+      laptop.width = 320
+      laptop.height = 240
+      tryCompare(laptop, "maximumFittingPercent", 0)
+      DisplayActions.stepDisplaySize(host, 1)
+      verify(host.statusText.indexOf("no percentage fits here") >= 0)
+      verify(host.statusText.indexOf("max 75%") < 0)
+      verify(host.statusText.indexOf("scroll to view") >= 0)
+    }
+
     function test_zoom_status_reports_launcher_limit_while_settings_is_open() {
       host.settingsOpen = true
       host.displaySizePercent = 120

@@ -208,9 +208,16 @@ every 5% zoom step, font scales 0.8–2, laptops/desktops, equivalent logical
 workspaces, ultrawide, portrait, 720p, and constrained fallbacks. It checks the
 maximum fitting 5% step, font-size monotonicity, and top-inset adaptation before
 scaling down, preserving fitting standard and narrow layouts unchanged. The
-2304×1296 legacy case with a 14-pixel Omarchy font fits through 110%: the top inset
-can shrink from 156 to 52 pixels, increasing available height from 1075 to 1179
-pixels; the bottom inset stays at 65 pixels.
+legacy profile has independent parity cases for every old preset across that
+matrix, including constrained layouts. It keeps the a1b1ec8 text/control metrics,
+fixed insets, panel clamps and Settings rounding; only Recommended adapts its
+top inset and fits its metrics. At 2304×1296 with a 2160-pixel mode and a 14-pixel
+shell font, legacy xlarge retains 21-pixel body text and 105-pixel rows. A fitting
+maximum excludes scrolling; zero means no offered percentage fits.
+
+An asynchronous FileView fixture covers frontend startup before daemon migration,
+completed external reads and pending local writes. The viewport event regression
+keeps footer Help focused while resizing into and within scrolling mode.
 
 Window/theme tests cover full-strength text zoom, requested values surviving
 geometry changes, and launcher descriptions/maximums while Settings is open.
@@ -231,8 +238,9 @@ dotnet scripts/capture-gallery.cs sizing --width 2304 --height 1296 --dpr 1.6666
 
 The matrix writes 20 configurations and 120 PNGs under
 `build/display-sizing-matrix/`, with containment checks on launcher, Settings,
-help, actions, confirmation and extension surfaces. It compares rendered layout
-and text measurements across DPRs and checks PNG pixel dimensions to confirm Qt
+help, actions, confirmation and extension surfaces. Help and Actions checks use
+their own visible controls and include ancestor clipping viewports. It compares
+rendered layout and text measurements across DPRs and checks PNG pixel dimensions to confirm Qt
 applied each raster density. A DPR changes raster density, not logical geometry.
 The production-host journey also checks full-screen backdrop coverage with a
 real top-bar exclusive zone and Ctrl+0 preserving the legacy sizing profile.

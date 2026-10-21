@@ -8,7 +8,8 @@ Theme {
 
   loadShellTokens: false
   tokens: source.tokens
-  displayScale: sizing.effective
+  displayScale: sizing.displayScale === undefined ? sizing.effective : sizing.displayScale
+  densityScale: sizing.densityScale === undefined ? 1 : sizing.densityScale
   textScale: sizing.textScale
   reduceMotion: source.reduceMotion
   scrimStrength: source.scrimStrength

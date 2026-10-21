@@ -9,6 +9,12 @@ Rectangle {
   property real requestedHeight: height
   default property alias content: canvas.data
 
+  property bool revealPending: false
+  function scheduleReveal() { revealPending = true }
+  function revealCurrentFocus() {
+    if (root.Window.window) root.reveal(root.Window.window.activeFocusItem)
+  }
+
   function reveal(item) {
     if (!viewport.interactive || !item || !item.activeFocus) return
     let ancestor = item
@@ -35,8 +41,13 @@ Rectangle {
     contentHeight: Math.max(height, root.requestedHeight)
     boundsBehavior: Flickable.StopAtBounds
     interactive: contentWidth > width || contentHeight > height
+    onWidthChanged: root.scheduleReveal()
+    onHeightChanged: root.scheduleReveal()
+    onContentWidthChanged: root.scheduleReveal()
+    onContentHeightChanged: root.scheduleReveal()
     onInteractiveChanged: {
       if (!interactive) { contentX = 0; contentY = 0 }
+      root.scheduleReveal()
     }
 
     Item {
@@ -49,5 +60,10 @@ Rectangle {
   property Connections focusEvents: Connections {
     target: root.Window.window
     function onActiveFocusItemChanged() { root.reveal(root.Window.window.activeFocusItem) }
+    function onAfterAnimating() {
+      if (!root.revealPending) return
+      root.revealPending = false
+      Qt.callLater(root.revealCurrentFocus)
+    }
   }
 }

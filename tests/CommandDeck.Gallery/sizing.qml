@@ -14,11 +14,46 @@ ShellRoot {
     if (name === "actions") actions.openFor(Data.gaps(stage.icon)[0])
   }
 
-  function contained(control) {
-    const point = control.mapToItem(stage.panel, 0, 0)
+  function namedItems(parent, name) {
+    let found = parent.objectName === name ? [parent] : []
+    for (const child of parent.children) found = found.concat(namedItems(child, name))
+    return found
+  }
+
+  function inside(control, bounds) {
+    const point = control.mapToItem(bounds, 0, 0)
     return point.x >= -1 && point.y >= -1
-      && point.x + control.width <= stage.panel.width + 1
-      && point.y + control.height <= stage.panel.height + 1
+      && point.x + control.width <= bounds.width + 1
+      && point.y + control.height <= bounds.height + 1
+  }
+
+  function contained(control) {
+    if (!control || !control.visible || control.width <= 0 || control.height <= 0) return false
+    if (!inside(control, stage.panel)) return false
+    for (let parent = control.parent; parent; parent = parent.parent) {
+      if (parent.clip && !inside(control, parent)) return false
+    }
+    return true
+  }
+
+  function surfaceControls() {
+    switch (root.surface) {
+    case "settings": return [settings.searchControl, settings.closeControl]
+    case "help": return [namedItems(help, "helpHeading")[0], namedItems(help, "helpDismissHint")[0],
+      namedItems(help, "helpViewport")[0], namedItems(help, "helpShortcutRow")[0]]
+    case "actions": {
+      const viewport = namedItems(actions, "actionsViewport")[0]
+      const controls = [actions.filterControl, viewport, actions.actionItemAt(0)]
+      for (let index = 1; index < actions.visibleActionCount; index++) {
+        const row = actions.actionItemAt(index)
+        if ((index + 1) * (row.height + 4) <= viewport.height + 4) controls.push(row)
+      }
+      return controls
+    }
+    case "confirmation": return [confirmation.cancelControl, confirmation.confirmControl]
+    case "extension": return [extension.inputControl, extension.backControl]
+    default: return [content.part_searchBar, content.part_footerActions]
+    }
   }
 
   DemoStage {
@@ -36,10 +71,7 @@ ShellRoot {
     onShotSaved: name => {
       console.log("Saved sizing proof", name, stage.view.width, stage.view.height,
         stage.panel.width, stage.panel.height, stage.deck.displaySizePercent, stage.theme.fontBody)
-      const controls = root.surface === "settings" ? [settings.searchControl, settings.closeControl]
-        : root.surface === "confirmation" ? [confirmation.cancelControl, confirmation.confirmControl]
-        : root.surface === "extension" ? [extension.inputControl, extension.backControl]
-        : [content.part_searchBar, content.part_footerActions]
+      const controls = root.surfaceControls()
       if (controls.some(control => !root.contained(control))) {
         console.error("Sizing containment failed: " + name)
         Qt.exit(1)
@@ -54,6 +86,7 @@ ShellRoot {
         Component.onCompleted: showPage("customization")
       },
       Deck.HelpSheet {
+        id: help
         anchors.fill: parent
         theme: stage.theme
         opened: root.surface === "help"

@@ -16,18 +16,18 @@ QtObject {
   onWidthChanged: configure.restart()
   onHeightChanged: configure.restart()
 
-  function input(settings) {
+  function input(settings, percent) {
     const source = host.part_appTheme
     const store = host.part_displayScaleStore
     return { width: configuredSize.width, height: configuredSize.height,
       fontScale: source.fontScale, bodyPixels: source.tokens ? source.tokens.fontBody : 12,
-      percent: host.displaySizePercent, settings: settings,
+      percent: percent === undefined ? host.displaySizePercent : percent, settings: settings,
       legacy: store.legacy, legacyPercent: store.legacyPercent, legacyHeight: legacyHeight }
   }
 
   readonly property var launcher: Sizing.calculate(input(false))
   readonly property var settings: Sizing.calculate(input(true))
-  readonly property int maximumFittingPercent: Sizing.maximumFittingPercent(input(false))
+  readonly property int maximumFittingPercent: Sizing.maximumFittingPercent(input(false, 100))
   readonly property var sizing: host.settingsOpen || host.extensionManagementOpen ? settings : launcher
   readonly property Theme theme: WindowTheme { source: root.host.part_appTheme; sizing: root.sizing }
   readonly property string description: host.displaySizePercent + "% requested"

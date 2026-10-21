@@ -151,48 +151,6 @@ QtObject {
         "display-size file value " + JSON.stringify(value) + " normalizes to " + expected)
     }
 
-    // The harness is copied into a fresh temporary directory for every run.
-    // Exercise durable bytes there without touching the user's state file.
-    const displayStore = host.part_displayStoreSpec
-    const originalStateDir = displayStore.stateDir
-    displayStore.stateDir = decodeURIComponent(Qt.resolvedUrl(".").toString().replace(/^file:\/\//, ""))
-    displayStore.file.blockWrites = true
-    displayStore.profile.blockWrites = true
-    displayStore.active = true
-    displayStore.load()
-    host.expect(displayStore.percent === 100, "an absent on-disk display-size file reads as 100 percent")
-    displayStore.file.setText(" LARGE \n")
-    displayStore.load()
-    host.expect(displayStore.percent === 115 && displayStore.file.text() === " LARGE \n",
-      "loading a legacy preset preserves its size without rewriting the file")
-    displayStore.setPercent(115)
-    host.expect(displayStore.file.text() === " LARGE \n",
-      "choosing the unchanged percentage leaves the legacy file untouched")
-    displayStore.setPercent(120)
-    host.expect(displayStore.file.text() === "120\n", "changing the size writes an integer and newline")
-    displayStore.percent = 100
-    displayStore.load()
-    host.expect(displayStore.percent === 120, "loading the saved percentage restores the chosen size")
-    host.expect(displayStore.legacy && displayStore.legacyPercent === 115,
-      "legacy sizing retains its original reference percentage across changes and reloads ("
-        + displayStore.legacy + ", " + displayStore.legacyPercent + ", " + displayStore.profile.text() + ")")
-    displayStore.useRecommended()
-    displayStore.load()
-    host.expect(!displayStore.legacy && displayStore.percent === 100
-        && displayStore.profile.text() === "logical-v1\n",
-      "Recommended persists the new model and percentage across reloads ("
-        + displayStore.legacy + ", " + displayStore.percent + ", " + displayStore.profile.text() + ")")
-    displayStore.profile.setText("future-profile\n")
-    displayStore.load()
-    displayStore.setPercent(125)
-    host.expect(displayStore.legacy && displayStore.profile.text() === "future-profile\n",
-      "adjusting a fallback percentage never overwrites an unknown future sizing profile")
-    displayStore.useRecommended()
-    host.expect(displayStore.profile.text() === "logical-v1\n" && displayStore.percent === 100,
-      "an explicit Recommended reset can replace an unknown profile")
-    displayStore.active = false
-    displayStore.stateDir = originalStateDir
-
     host.expect(host.part_transparencyStoreSpec.filePath
         === "/home/example/.local/state/commanddeck/panel-transparency",
       "the transparency store targets a file under $XDG_STATE_HOME/commanddeck")
