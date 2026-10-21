@@ -97,6 +97,7 @@ public static partial class Program
         }
 
         await RunCoreRegistrationsAsync( );
+        await RunCalculatorRegistrationsAsync( );
         await RunCatalogRegistrationsAsync( );
         await RunIncrementalIndexRegistrationsAsync( );
         await RunIndexPolicyRegistrationsAsync( );

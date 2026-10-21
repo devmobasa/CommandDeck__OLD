@@ -93,6 +93,7 @@ Source files are grouped by feature under the project directory:
 | Folder | Scope |
 |---|---|
 | `Core/`, `Harness/` | Core contracts, architecture/generated-reference checks, test selection/reporting |
+| `Calculator/` | Calculator engine and exchange rates |
 | `Search/`, `Catalog/`, `Indexing/` | Queries, ranking/corpora, personalization, SQLite, filesystem/index policies |
 | `Actions/`, `Workflows/` | Typed actions, desktop launches, projects, snippets, picker and previews |
 | `Ai/`, `Agents/` | Direct AI, assistant authority/lifecycle, Codex and CLI backends |
