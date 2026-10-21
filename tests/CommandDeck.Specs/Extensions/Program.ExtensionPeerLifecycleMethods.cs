@@ -12,6 +12,19 @@ public static partial class Program
         await ThrowsAsync<InvalidOperationException>( async ( ) => await peer.CallAsync( "initialize", null, deadline.Token ) );
         Throws<InvalidOperationException>( ( ) => peer.Notify( "initialized" ) );
     }
+
+    private static async Task ExtensionPeerCallsAfterDisposalReportCancellationAsync( )
+    {
+        await using var pipes = await ExtensionTestPipes.CreateAsync( );
+        ExtensionPeer peer = new( pipes.Host, pipes.Host, true, [], ( _, _ ) => throw new InvalidOperationException( ) );
+        peer.Start( );
+
+        // Revocation disposes the peer before a handler's linked token observes the asynchronous cancellation.
+        await peer.DisposeAsync( );
+
+        await ThrowsAsync<OperationCanceledException>( async ( ) => await peer.CallAsync( "command.data", null, CancellationToken.None ) );
+        peer.Notify( "initialized" );
+    }
 }
 
 public static partial class Program
