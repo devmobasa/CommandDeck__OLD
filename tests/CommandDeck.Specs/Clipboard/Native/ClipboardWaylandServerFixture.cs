@@ -12,7 +12,9 @@ internal sealed unsafe partial class ClipboardWaylandServerFixture : IDisposable
     private const string Server = "libwayland-server.so.0";
     private readonly ConcurrentQueue<string> _commands = new( );
     private readonly Dictionary<nint, string> _resources = [];
-    private readonly Dictionary<nint, string> _scenarios = [];
+    private readonly Dictionary<nint, OfferScenario> _scenarios = [];
+    private OfferScenario? _latestOffer;
+    private OfferScenario? _awaitedReceive;
     private readonly Dictionary<nint, List<string>> _sources = [];
     private nint _selectionSource;
     private int _cancelled;
@@ -79,11 +81,21 @@ internal sealed unsafe partial class ClipboardWaylandServerFixture : IDisposable
                 {
                     Console.WriteLine( Volatile.Read( ref _finishedReceives ) );
                 }
+                else if ( command == "wait-receive" )
+                {
+                    _awaitedReceive = _latestOffer;
+                }
                 else
                 {
                     Announce( command );
                     Console.WriteLine( "sent" );
                 }
+            }
+
+            if ( _awaitedReceive is { } receive && Volatile.Read( ref receive.Finished ) )
+            {
+                _awaitedReceive = null;
+                Console.WriteLine( "finished" );
             }
 
             FlushClients( _display );
@@ -235,7 +247,8 @@ internal sealed unsafe partial class ClipboardWaylandServerFixture : IDisposable
         }
 
         var offer = Resource( "ext_data_control_offer_v1", 0 );
-        _scenarios.Add( offer, scenario );
+        _latestOffer = new( scenario );
+        _scenarios.Add( offer, _latestOffer );
         WaylandArgument argument = new( )
         {
             Pointer = offer
@@ -346,8 +359,9 @@ internal sealed unsafe partial class ClipboardWaylandServerFixture : IDisposable
     [LibraryImport( "libc", EntryPoint = "close" )]
     private static partial int ClosePipe( int descriptor );
 
-    private void WriteOffer( string scenario, string mime, int descriptor )
+    private void WriteOffer( OfferScenario offer, string mime, int descriptor )
     {
+        var scenario = offer.Name;
         var handle = new SafeFileHandle( descriptor, ownsHandle: true );
         _ = Task.Run( ( ) =>
         {
@@ -359,6 +373,18 @@ internal sealed unsafe partial class ClipboardWaylandServerFixture : IDisposable
                     if ( scenario == "stall" )
                     {
                         _writers.Token.WaitHandle.WaitOne( );
+                        return;
+                    }
+
+                    if ( scenario == "trickle" )
+                    {
+                        using PeriodicTimer cadence = new( TimeSpan.FromMilliseconds( 250 ) );
+                        while ( cadence.WaitForNextTickAsync( _writers.Token ).AsTask( ).GetAwaiter( ).GetResult( ) )
+                        {
+                            stream.WriteByte( ( byte ) 'x' );
+                            stream.Flush( );
+                        }
+
                         return;
                     }
 
@@ -377,11 +403,19 @@ internal sealed unsafe partial class ClipboardWaylandServerFixture : IDisposable
                     stream.Flush( );
                 }
                 catch ( IOException ) { }
+                catch ( OperationCanceledException ) when ( _writers.IsCancellationRequested ) { }
                 finally
                 {
                     Interlocked.Increment( ref _finishedReceives );
+                    Volatile.Write( ref offer.Finished, true );
                 }
             }
         } );
+    }
+
+    private sealed class OfferScenario( string name )
+    {
+        internal string Name { get; } = name;
+        internal bool Finished;
     }
 }

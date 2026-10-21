@@ -161,6 +161,16 @@ pipes open, including an incomplete frame and a full output pipe; successful exi
 must come from the control request. The same journey runs against the published
 binary through `--clipboard-native-aot` during AOT validation.
 
+The helper expires a source after two seconds without readable content, with a
+separate 60-second total transfer bound that also applies under output
+backpressure. Ready bytes and EOF are handled before inactivity expiry, and full
+event queues wait for capacity or control without an inactivity timer. The
+five-second offer deadline bounds waiting for admission and the next offer
+request; an active receive uses the two receive deadlines instead.
+The native journeys require the full 16 MiB transfer to complete, including under
+CPU contention, while stalled and continuously trickling sources must still be
+cancelled.
+
 Separate child fixtures measure idle capture while disabled, paused and active,
 and bounded process execution with finite kernel limits and unlimited memory.
 The limits fixture reads the child's real soft and hard limits. A Bubblewrap

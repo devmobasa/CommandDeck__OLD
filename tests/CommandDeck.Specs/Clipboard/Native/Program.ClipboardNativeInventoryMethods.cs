@@ -43,7 +43,7 @@ public static partial class Program
             throw new IOException( "Synthetic compositor did not start." );
         }
 
-        using CancellationTokenSource timeout = new( TimeSpan.FromSeconds( 30 ) );
+        using CancellationTokenSource timeout = new( TimeSpan.FromSeconds( 120 ) );
         var errors = server.StandardError.ReadToEndAsync( timeout.Token );
         try
         {
@@ -113,6 +113,7 @@ public static partial class Program
             await Send( "many" );
             first = await helper.Events.ReadAsync( timeout.Token );
             Equal( 512, ClipboardCaptureProtocol.ReadSelectionStart( first ) );
+            inventory = new( 17, first.Header.SelectionId, 512 );
             // Stop reading a large inventory once the bounded incoming queue
             // fills. Cancellation must still use the independent control pipe.
             True( await WaitUntilAsync( ( ) => Task.FromResult( helper.Events.Count == ClipboardHelperFraming.MaximumQueuedFrames ),
@@ -120,8 +121,18 @@ public static partial class Program
             True( await helper.CancelAsync( first.Header.SelectionId, timeout.Token ), "native cancellation bypasses inventory backpressure" );
             await server.StandardInput.WriteLineAsync( "count" );
             Equal( "0", await server.StandardOutput.ReadLineAsync( timeout.Token ) );
-            while ( (await helper.Events.ReadAsync( timeout.Token )).Header.Type != ClipboardHelperFrameType.Status )
+            while ( true )
             {
+                var frame = await helper.Events.ReadAsync( timeout.Token );
+                if ( frame.Header.Type == ClipboardHelperFrameType.Status )
+                {
+                    Equal( 17UL, frame.Header.HostEpoch );
+                    Equal( first.Header.SelectionId, frame.Header.SelectionId );
+                    Equal( ClipboardCaptureStatus.SelectionCancelled, ClipboardCaptureProtocol.ReadStatus( frame ).Status );
+                    break;
+                }
+
+                inventory.Accept( frame );
             }
             await ExerciseClipboardNativeReceiveAsync( helper, server, timeout.Token );
             await helper.DisposeAsync( );

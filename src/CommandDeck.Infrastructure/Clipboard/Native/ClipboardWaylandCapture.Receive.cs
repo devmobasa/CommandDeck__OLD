@@ -67,12 +67,6 @@ internal sealed unsafe partial class ClipboardWaylandCapture
             return;
         }
 
-        if ( Stopwatch.GetElapsedTime( receive.Started ) >= ReceiveLifetime )
-        {
-            RemoveOffer( receive.Owner, notify: true );
-            return;
-        }
-
         if ( events.Reader.Count >= ClipboardHelperFraming.MaximumQueuedFrames )
         {
             return;
@@ -90,8 +84,20 @@ internal sealed unsafe partial class ClipboardWaylandCapture
             Events = 1
         };
         var result = WaylandNative.Poll( &descriptor, 1, 0 );
-        if ( result < 0 && Marshal.GetLastPInvokeError( ) == 4 || result == 0 )
+        if ( result < 0 && Marshal.GetLastPInvokeError( ) == 4 )
         {
+            return;
+        }
+
+        // Expire a stalled source, not a progressing transfer or our own output backpressure.
+        // Check readiness first so scheduling delays cannot discard bytes already waiting.
+        if ( result == 0 )
+        {
+            if ( Stopwatch.GetElapsedTime( receive.LastProgress ) >= ReceiveIdleTimeout )
+            {
+                RemoveOffer( receive.Owner, notify: true );
+            }
+
             return;
         }
 
@@ -148,6 +154,7 @@ internal sealed unsafe partial class ClipboardWaylandCapture
             return;
         }
 
+        receive.LastProgress = Stopwatch.GetTimestamp( );
         receive.Bytes += ( int ) read;
         if ( !receive.HeaderValidated )
         {
@@ -209,6 +216,7 @@ internal sealed unsafe partial class ClipboardWaylandCapture
             receive.Owner.ReceivedOffers++;
             if ( receive.Owner.ReceivedOffers < receive.OfferCount )
             {
+                receive.Owner.Started = Stopwatch.GetTimestamp( );
                 CloseReceive( );
             }
 
@@ -247,6 +255,7 @@ internal sealed unsafe partial class ClipboardWaylandCapture
         internal int Fd { get; set; } = fd;
         internal int OfferCount { get; } = offerCount;
         internal long Started { get; } = Stopwatch.GetTimestamp( );
+        internal long LastProgress { get; set; } = Stopwatch.GetTimestamp( );
         internal int Bytes { get; set; }
         internal byte[] Header { get; } = new byte[8];
         internal bool HeaderValidated { get; set; } = plan.Kind != ClipboardOfferKind.GnomeCopiedFiles;
