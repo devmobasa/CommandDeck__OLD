@@ -14,7 +14,7 @@ public static partial class Program
 
         string[] prefix = Path.GetFileNameWithoutExtension( executable ) == "dotnet"
             ? [typeof( Program ).Assembly.Location] : [];
-        var directory = Path.Combine( Path.GetTempPath( ), $"commanddeck-spec-selection-{Guid.NewGuid( ):N}" );
+        var directory = SpecTemporaryFiles.PathFor( $"commanddeck-spec-selection-{Guid.NewGuid( ):N}" );
         Directory.CreateDirectory( directory );
         var originalRequirement = Environment.GetEnvironmentVariable( "COMMANDDECK_REQUIRE_NO_SKIPS" );
         var originalPath = Environment.GetEnvironmentVariable( "PATH" );
@@ -48,6 +48,20 @@ public static partial class Program
                 Equal( 0, json.RootElement.GetProperty( "executed" ).GetInt32( ) );
             }
             Equal( 2, (await Invoke( root, "--filter" )).ExitCode );
+
+            var storage = await Invoke( root, "--spec-storage-fixture", "--results", output );
+            Equal( 1, storage.ExitCode );
+            var temporary = storage.StandardOutput.Split( '\n' ).Single( line => line.StartsWith( "SPEC_TEMP path=", StringComparison.Ordinal ) );
+            var paths = temporary["SPEC_TEMP path=".Length..].Split( " physical=", StringSplitOptions.None );
+            True( paths[1].StartsWith( Path.Combine( root, "tmp" ) + Path.DirectorySeparatorChar, StringComparison.Ordinal ) );
+            True( !Directory.Exists( paths[0] ) && !Directory.Exists( paths[1].Trim( ) ) );
+            var diagnostics = storage.StandardError.Split( '\n' ).Where( line => line.StartsWith( "SPEC_STORAGE ", StringComparison.Ordinal ) ).ToArray( );
+            Equal( 6, diagnostics.Length );
+            True( diagnostics.All( line => line.Contains( "freeBytes=", StringComparison.Ordinal ) && line.Contains( "totalBytes=", StringComparison.Ordinal ) ) );
+            using ( var json = JsonDocument.Parse( await File.ReadAllTextAsync( output ) ) )
+            {
+                Equal( 2, json.RootElement.GetProperty( "failed" ).GetInt32( ) );
+            }
 
             var skipped = await Invoke( root, "--spec-reporting-fixture", "--results", output );
             Equal( 0, skipped.ExitCode );

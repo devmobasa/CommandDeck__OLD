@@ -9,9 +9,7 @@ public static partial class Program
             throw new SpecSkippedException( "This fixture requires Linux." );
         }
 
-        var sandbox = Path.Combine(
-            Path.GetTempPath( ),
-            $"commanddeck-canonical-index-spec-{Guid.NewGuid( ):N}" );
+        var sandbox = SpecTemporaryFiles.PathFor( $"commanddeck-canonical-index-spec-{Guid.NewGuid( ):N}" );
         var root = Path.Combine( sandbox, "root" );
         var inside = Path.Combine( root, "inside" );
         var outside = Path.Combine( sandbox, "outside" );
@@ -112,9 +110,7 @@ public static partial class Program
             throw new SpecSkippedException( "This fixture requires Linux." );
         }
 
-        var sandbox = Path.Combine(
-            Path.GetTempPath( ),
-            $"commanddeck-symlink-root-spec-{Guid.NewGuid( ):N}" );
+        var sandbox = SpecTemporaryFiles.PathFor( $"commanddeck-symlink-root-spec-{Guid.NewGuid( ):N}" );
         var canonicalRoot = Path.Combine( sandbox, "canonical" );
         var lexicalRoot = Path.Combine( sandbox, "configured" );
         Directory.CreateDirectory( canonicalRoot );
@@ -175,9 +171,7 @@ public static partial class Program
             throw new SpecSkippedException( "This fixture requires Linux." );
         }
 
-        var sandbox = Path.Combine(
-            Path.GetTempPath( ),
-            $"commanddeck-canonical-policy-spec-{Guid.NewGuid( ):N}" );
+        var sandbox = SpecTemporaryFiles.PathFor( $"commanddeck-canonical-policy-spec-{Guid.NewGuid( ):N}" );
         var root = Path.Combine( sandbox, "root" );
         var target = Path.Combine( root, "target" );
         var hiddenAlias = Path.Combine( root, ".hidden-link" );

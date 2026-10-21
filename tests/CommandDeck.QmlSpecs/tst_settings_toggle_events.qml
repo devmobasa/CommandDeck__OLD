@@ -36,7 +36,7 @@ EventPathFixture {
         defaults: { [data.field]: data.initial }
       })
       panel.visible = true
-      tryCompare(panel.searchControl, "activeFocus", true)
+      waitForValue(panel.searchControl, "activeFocus", true)
       typeText(data.label.toLowerCase())
       compare(panel.currentPage, data.page)
       const toggle = data.field === "topMatches"
@@ -46,7 +46,7 @@ EventPathFixture {
       compare(toggle.Accessible.name, data.label)
 
       keyClick(Qt.Key_Return)
-      tryCompare(panel.navigationControl, "activeFocus", true)
+      waitForValue(panel.navigationControl, "activeFocus", true)
       for (let index = 0; index < 10 && !toggle.activeFocus; index++) keyClick(Qt.Key_Tab)
       verify(toggle.activeFocus, data.label + " is reachable in the tab order")
       changes.clear()
@@ -61,16 +61,16 @@ EventPathFixture {
       keyClick(Qt.Key_Tab, Qt.ShiftModifier)
       verify(!toggle.activeFocus)
       keyClick(Qt.Key_Tab)
-      tryCompare(toggle, "activeFocus", true)
+      waitForValue(toggle, "activeFocus", true)
 
       keyClick(data.key, data.modifiers)
       compare(changes.count, 2, "the next press changes the choice once again")
       compare(panel.changedPreferences[data.field], data.initial)
       panel.snapshot = Object.assign({}, panel.snapshot, { preferences: panel.changedPreferences })
       keyClick(Qt.Key_F, Qt.ControlModifier)
-      tryCompare(panel.searchControl, "activeFocus", true)
+      waitForValue(panel.searchControl, "activeFocus", true)
       keyClick(Qt.Key_End)
-      waitForRendering(panel)
+      waitForFrame(panel)
 
       mouseClick(toggle, toggle.width - toggle.pillWidth / 2, toggle.height / 2)
       compare(changes.count, 3, "a mouse click changes the choice once")
@@ -85,7 +85,7 @@ EventPathFixture {
       keyClick(Qt.Key_Escape)
       verify(!panel.visible)
       panel.visible = true
-      tryCompare(panel.searchControl, "activeFocus", true)
+      waitForValue(panel.searchControl, "activeFocus", true)
       compare(toggle.checked, !data.initial, "reopening reflects the saved choice")
       panel.snapshot = original
     }

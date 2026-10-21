@@ -25,9 +25,9 @@ EventPathFixture {
       changes.clear()
       resets.clear()
       panel.visible = true
-      tryCompare(panel.searchControl, "activeFocus", true)
+      waitForValue(panel.searchControl, "activeFocus", true)
       panel.showPage("customization")
-      waitForRendering(panel)
+      waitForFrame(panel)
       return panel.part_colorsCard
     }
 
@@ -42,7 +42,7 @@ EventPathFixture {
       verify(flick !== null, "the control sits in a scrolling page")
       const top = item.mapToItem(flick.contentItem, 0, 0).y
       flick.contentY = Math.max(0, Math.min(top - 40, flick.contentHeight - flick.height))
-      waitForRendering(fixture.part_settingsPanel)
+      waitForFrame(fixture.part_settingsPanel)
     }
 
     function test_choosing_the_commanddeck_theme_by_keyboard() {
@@ -56,7 +56,7 @@ EventPathFixture {
       compare(lastChange().source, "commanddeck")
 
       fixture.part_settingsPanel.colorThemeSource = "commanddeck"
-      tryCompare(card.accentControl, "visible", true)
+      waitForValue(card.accentControl, "visible", true)
       compare(card.sourceControl.currentIndex, 1)
       verify(card.sourceControl.activeFocus, "focus stays on the choice")
     }
@@ -68,7 +68,7 @@ EventPathFixture {
 
       card.sourceControl.forceActiveFocus()
       keyClick(Qt.Key_Tab)
-      tryVerify(function() { return accent.swatchAt(0).activeFocus })
+      waitForCondition(function() { return accent.swatchAt(0).activeFocus })
       compare(accent.captionText, "Blue · #8ab4f8")
 
       keyClick(Qt.Key_Right)
@@ -96,7 +96,7 @@ EventPathFixture {
       const accent = card.accentControl
       card.sourceControl.forceActiveFocus()
       keyClick(Qt.Key_Tab)
-      tryVerify(function() { return accent.swatchAt(0).activeFocus })
+      waitForCondition(function() { return accent.swatchAt(0).activeFocus })
 
       keyClick(Qt.Key_Down)
       verify(accent.swatchAt(1).activeFocus, "Down steps to the next swatch")
@@ -127,8 +127,8 @@ EventPathFixture {
       const before = amber.mapToItem(panel, 0, 0)
 
       mouseMove(amber, amber.width / 2, amber.height / 2)
-      tryCompare(accent, "captionText", "Amber · #f5c26b")
-      waitForRendering(panel)
+      waitForValue(accent, "captionText", "Amber · #f5c26b")
+      waitForFrame(panel)
       const after = amber.mapToItem(panel, 0, 0)
       compare(after.x, before.x, "a longer caption does not shift the swatches under the pointer")
       compare(after.y, before.y)
@@ -137,7 +137,7 @@ EventPathFixture {
       accent.focusSwatch(1)
       compare(accent.captionText, "Amber · #f5c26b", "the hovered swatch keeps the caption")
       mouseMove(panel, 2, 2)
-      tryCompare(accent, "captionText", "Violet · #b4a1f5")
+      waitForValue(accent, "captionText", "Violet · #b4a1f5")
     }
 
     function test_hex_field_applies_valid_colors_only() {
@@ -219,8 +219,8 @@ EventPathFixture {
       fixture.part_settingsPanel.deckColors = { accent: "#8ab4f8", background: "#0e0e11", text: "#1c1d22" }
       verify(!card.readable, "text almost as dark as the background is flagged")
       compare(card.textControl.captionText, "Custom")
-      tryCompare(card.resetControl, "enabled", true)
-      waitForRendering(fixture.part_settingsPanel)
+      waitForValue(card.resetControl, "enabled", true)
+      waitForFrame(fixture.part_settingsPanel)
       card.resetControl.forceActiveFocus()
       keyClick(Qt.Key_Space)
       compare(resets.count, 1)
@@ -238,14 +238,14 @@ EventPathFixture {
       compare(lastChange().colors.accent, "#1c1d22")
       fixture.part_settingsPanel.deckColors = { accent: "#1c1d22", background: "#0e0e11", text: "#f1f1f1" }
       verify(card.readable, "text is still readable")
-      tryCompare(card.accentWarningControl, "visible", true)
+      waitForValue(card.accentWarningControl, "visible", true)
       verify(card.accentWarningControl.text.indexOf("focus") >= 0, "the warning says focus rings change")
     }
 
     function test_without_the_omarchy_theme_the_palette_is_always_editable() {
       const card = openColors("omarchy")
       fixture.part_settingsPanel.hostThemeAvailable = false
-      tryCompare(card.accentControl, "visible", true)
+      waitForValue(card.accentControl, "visible", true)
       verify(!card.sourceControl.enabled)
       compare(card.sourceControl.currentIndex, 1)
     }

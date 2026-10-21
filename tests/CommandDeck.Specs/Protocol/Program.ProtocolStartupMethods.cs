@@ -6,8 +6,7 @@ public static partial class Program
 {
     private static async Task SocketConnectionWaitsForDelayedDaemonAsync( )
     {
-        var socketPath = Path.Combine( Path.GetTempPath( ),
-            $"commanddeck-delayed-socket-{Guid.NewGuid( ):N}.sock" );
+        var socketPath = SpecTemporaryFiles.PathFor( $"commanddeck-delayed-socket-{Guid.NewGuid( ):N}.sock" );
         using Socket listener = new( AddressFamily.Unix, SocketType.Stream, ProtocolType.Unspecified );
         var startup = Task.Run( async ( ) =>
         {

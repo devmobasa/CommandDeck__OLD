@@ -6,7 +6,7 @@ public static partial class Program
 {
     private static async Task AgentPreferencesAndGrantsPersistWithoutSecretsAsync( )
     {
-        var root = Path.Combine( Path.GetTempPath( ), $"commanddeck-agent-store-{Guid.NewGuid( ):N}" );
+        var root = SpecTemporaryFiles.PathFor( $"commanddeck-agent-store-{Guid.NewGuid( ):N}" );
         Directory.CreateDirectory( root );
         try
         {

@@ -9,7 +9,7 @@ public static partial class Program
     // restricted for login and model discovery, and stops by generation only.
     private static async Task CodexBackendAdmitsProcessesOnlyAtTheCurrentEpochAsync( )
     {
-        var root = Path.Combine( Path.GetTempPath( ), $"commanddeck-codex-admission-{Guid.NewGuid( ):N}" );
+        var root = SpecTemporaryFiles.PathFor( $"commanddeck-codex-admission-{Guid.NewGuid( ):N}" );
         Directory.CreateDirectory( root );
         try
         {
@@ -86,7 +86,7 @@ public static partial class Program
     // with the retryable error, a prewarm stays quiet, and nothing is installed.
     private static async Task CodexLaunchDuringADowngradeIsStoppedAsync( bool prewarm )
     {
-        var root = Path.Combine( Path.GetTempPath( ), $"commanddeck-codex-launch-race-{Guid.NewGuid( ):N}" );
+        var root = SpecTemporaryFiles.PathFor( $"commanddeck-codex-launch-race-{Guid.NewGuid( ):N}" );
         Directory.CreateDirectory( root );
         try
         {

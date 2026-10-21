@@ -30,7 +30,7 @@ Item {
     returnFocus: invoker
   }
 
-  TestCase {
+  DeadlineTestCase {
     name: "CommandDeck_clipboard_browser"
     when: windowShown
 
@@ -85,11 +85,11 @@ Item {
       reply("open", openResponse("session"))
       reply("settings", settings(policy))
       reply("query", page(entries, cursor))
-      tryCompare(surface.searchControl, "activeFocus", true)
+      waitForValue(surface.searchControl, "activeFocus", true)
     }
     function cleanup() {
       controller.close(false)
-      wait(0)
+      nextTurn()
     }
 
     function test_selection_is_marked_while_search_or_list_has_focus() {
@@ -136,7 +136,7 @@ Item {
       reply("query", page([entry(0)]))
       typeText("a")
       compare(controller.query, "a")
-      tryVerify(function() { return Boolean(controller.pending.query) })
+      waitForCondition(function() { return Boolean(controller.pending.query) })
       reply("query", page([entry(0)]))
 
       keyClick(Qt.Key_Escape)
@@ -196,7 +196,7 @@ Item {
     function test_home_and_end_reach_the_ends_from_the_entry_list() {
       openBrowser([entry(0), entry(1), entry(2)])
       typeText("cl")
-      tryVerify(function() { return Boolean(controller.pending.query) })
+      waitForCondition(function() { return Boolean(controller.pending.query) })
       reply("query", page([entry(0), entry(1), entry(2)]))
       keyClick(Qt.Key_Home)
       keyClick(Qt.Key_End)
@@ -217,7 +217,7 @@ Item {
       openBrowser([entry(0)])
       verify(!surface.previewPaneControl.nextMatchControl.visible, "match steps stay hidden without a search")
       typeText("clip")
-      tryVerify(function() { return Boolean(controller.pending.query) })
+      waitForCondition(function() { return Boolean(controller.pending.query) })
       reply("query", page([entry(0)]))
       reply("preview", previewWithMatches(0, 3))
       verify(surface.previewPaneControl.nextMatchControl.visible)
@@ -248,22 +248,22 @@ Item {
       reply("open", openResponse("session"))
       reply("settings", settings({consent: "None"}))
       reply("query", page([]))
-      tryCompare(surface.searchControl, "activeFocus", true)
+      waitForValue(surface.searchControl, "activeFocus", true)
       compare(surface.emptyStateControl.titleControl.text, "Clipboard history is off")
 
       const action = surface.emptyStateControl.actionControl
       tabTo(action)
       keyClick(Qt.Key_Space)
-      tryCompare(surface.dialogControl, "opened", true)
+      waitForValue(surface.dialogControl, "opened", true)
       compare(surface.dialogControl.purpose, "enable")
-      tryCompare(surface.dialogControl.cancelControl, "activeFocus", true)
+      waitForValue(surface.dialogControl.cancelControl, "activeFocus", true)
       keyClick(Qt.Key_Escape)
-      tryCompare(action, "activeFocus", true)
+      waitForValue(action, "activeFocus", true)
       mouseClick(surface.searchControl)
       mouseClick(action)
-      tryCompare(surface.dialogControl, "opened", true)
+      waitForValue(surface.dialogControl, "opened", true)
       keyClick(Qt.Key_Escape)
-      tryCompare(surface.searchControl, "activeFocus", true)
+      waitForValue(surface.searchControl, "activeFocus", true)
 
       controller.send("settings", Protocol.Operations.ClipboardSettingsGet)
       reply("settings", settings({paused: true}))
@@ -273,7 +273,7 @@ Item {
       compare(surface.searchControl.activeFocus, true)
 
       typeText("zz")
-      tryVerify(function() { return Boolean(controller.pending.query) })
+      waitForCondition(function() { return Boolean(controller.pending.query) })
       reply("query", page([]))
       compare(surface.emptyStateControl.titleControl.text, "No entries match “zz”")
       verify(!surface.emptyStateControl.actionControl.visible)
@@ -299,7 +299,7 @@ Item {
       compare(lastOf(Protocol.Operations.ClipboardQuery).clipboard.cursor, "cursor2")
       reply("more", page([entry(3)]))
       compare(surface.moreControl.visible, false)
-      tryCompare(surface.searchControl, "activeFocus", true)
+      waitForValue(surface.searchControl, "activeFocus", true)
       typeText("k")
       compare(controller.query, "k")
     }
@@ -342,7 +342,7 @@ Item {
     function test_shift_delete_preserves_search_cut_with_selected_text() {
       openBrowser([entry(0)])
       typeText("query")
-      tryVerify(function() { return Boolean(controller.pending.query) })
+      waitForCondition(function() { return Boolean(controller.pending.query) })
       reply("query", page([entry(0)]))
       surface.searchControl.selectAll()
 
@@ -408,7 +408,7 @@ Item {
           value.status = state.status
           value.migration.required = state.migration === true
           controller.settings = value
-          wait(0)
+          nextTurn()
           for (const control of [surface.backControl, surface.captureControl, surface.deleteControl, surface.sequenceControl, surface.refreshControl]) {
             verify(control.visible && control.mapToItem(surface, control.width, 0).x <= surface.width, state.status + ": " + control.text)
           }
@@ -437,12 +437,12 @@ Item {
 
       mouseClick(surface.filterControl)
       reply("query", page([entry(0, {pinned: true})]))
-      tryVerify(function() { return surface.listControl.itemAtIndex(0) !== null })
+      waitForCondition(function() { return surface.listControl.itemAtIndex(0) !== null })
       verify(!surface.listControl.itemAtIndex(0).sectionControl.visible, "a pinned-only page needs no labels")
 
       mouseClick(surface.filterControl)
       reply("query", page([entry(1), entry(0, {pinned: true})]))
-      tryVerify(function() { return surface.listControl.itemAtIndex(1) !== null })
+      waitForCondition(function() { return surface.listControl.itemAtIndex(1) !== null })
       verify(!surface.listControl.itemAtIndex(0).sectionControl.visible)
       verify(!surface.listControl.itemAtIndex(1).sectionControl.visible)
     }

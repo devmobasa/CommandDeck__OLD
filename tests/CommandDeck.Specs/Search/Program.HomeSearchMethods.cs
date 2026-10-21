@@ -9,9 +9,7 @@ public static partial class Program
     // them for every usage or favorite row.
     private static async Task HomeQueryProbesItemsInsteadOfScanningTheCatalogAsync( )
     {
-        var database = Path.Combine(
-            Path.GetTempPath( ),
-            $"commanddeck-home-plan-{Guid.NewGuid( ):N}.db" );
+        var database = SpecTemporaryFiles.PathFor( $"commanddeck-home-plan-{Guid.NewGuid( ):N}.db" );
         try
         {
             await using SqliteCatalog catalog = new( new StorageOptions { DatabasePath = database } );
@@ -56,9 +54,7 @@ public static partial class Program
     // walk titles belonging to disabled sources.
     private static async Task FuzzyCandidateLookupUsesTitleIndexesAsync( )
     {
-        var database = Path.Combine(
-            Path.GetTempPath( ),
-            $"commanddeck-fuzzy-plan-{Guid.NewGuid( ):N}.db" );
+        var database = SpecTemporaryFiles.PathFor( $"commanddeck-fuzzy-plan-{Guid.NewGuid( ):N}.db" );
         try
         {
             await using SqliteCatalog catalog = new( new StorageOptions { DatabasePath = database } );
@@ -141,9 +137,7 @@ public static partial class Program
     // Its cost must follow the favorites count, not the catalog.
     private static async Task CustomizationsSnapshotProbesAvailabilityByStableIdAsync( )
     {
-        var database = Path.Combine(
-            Path.GetTempPath( ),
-            $"commanddeck-customizations-plan-{Guid.NewGuid( ):N}.db" );
+        var database = SpecTemporaryFiles.PathFor( $"commanddeck-customizations-plan-{Guid.NewGuid( ):N}.db" );
         try
         {
             await using SqliteCatalog catalog = new( new StorageOptions { DatabasePath = database } );
@@ -215,7 +209,7 @@ public static partial class Program
 
     private static async Task HomeSearchScopePersistsAndFiltersCandidatesAsync( )
     {
-        var database = Path.Combine( Path.GetTempPath( ), $"commanddeck-home-search-{Guid.NewGuid( ):N}.db" );
+        var database = SpecTemporaryFiles.PathFor( $"commanddeck-home-search-{Guid.NewGuid( ):N}.db" );
         var home = PathExpansion.Expand( "~" );
         True( CanonicalPathBoundary.TryCreate( home, out var boundary ) );
         home = boundary!.CanonicalRoot;

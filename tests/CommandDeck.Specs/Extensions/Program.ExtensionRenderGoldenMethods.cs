@@ -8,7 +8,7 @@ public static partial class Program
 {
     private static void ExtensionRenderedViewsMatchGolden( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-render-golden-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-render-golden-" ).FullName;
         try
         {
             Directory.CreateDirectory( Path.Combine( root, "assets" ) );

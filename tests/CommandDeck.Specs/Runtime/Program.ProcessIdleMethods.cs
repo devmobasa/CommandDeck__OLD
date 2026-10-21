@@ -31,7 +31,7 @@ public static partial class Program
 
         foreach ( var maximum in new[] { 64L * 1024 * 1024, long.MaxValue } )
         {
-            var root = Directory.CreateTempSubdirectory( "commanddeck-process-idle-" ).FullName;
+            var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-process-idle-" ).FullName;
             var start = ClipboardPrivateFixtureStart( "--process-idle-parent-fixture", root );
             start.ArgumentList.Add( root );
             start.ArgumentList.Add( maximum.ToString( CultureInfo.InvariantCulture ) );

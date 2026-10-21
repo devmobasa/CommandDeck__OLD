@@ -75,7 +75,7 @@ EventPathFixture {
         panel.currentExpression = fixture.part_controller.queryExpression()
         panel.visible = true
         panel.showPage("filters")
-        tryCompare(panel.searchControl, "activeFocus", true)
+        waitForValue(panel.searchControl, "activeFocus", true)
         mouseClick(panel.savedSearchNameControl)
         typeText("Assistant prompt")
         keyClick(Qt.Key_Return)

@@ -6,8 +6,7 @@ public static partial class Program
 {
     private static async Task SavedSearchesPersistTypedQueriesAndRejectConflictsAsync( )
     {
-        var database = Path.Combine(
-            Path.GetTempPath( ), $"commanddeck-saved-search-spec-{Guid.NewGuid( ):N}.db" );
+        var database = SpecTemporaryFiles.PathFor( $"commanddeck-saved-search-spec-{Guid.NewGuid( ):N}.db" );
         try
         {
             string id;

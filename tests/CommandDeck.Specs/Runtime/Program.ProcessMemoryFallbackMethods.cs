@@ -20,7 +20,14 @@ public static partial class Program
         List<string> command = [start.FileName, .. start.ArgumentList, "--process-memory-fallback-parent-fixture"];
         start.FileName = "bwrap";
         start.ArgumentList.Clear( );
-        foreach ( var argument in MemoryFallbackSandboxArguments.Concat( command ) )
+        var temporaryRoot = Environment.GetEnvironmentVariable( "COMMANDDECK_SPEC_TEMP_ROOT" );
+        if ( temporaryRoot is null )
+        {
+            throw new InvalidOperationException( "The memory fixture requires its owned temporary root." );
+        }
+
+        string[] sandbox = [.. MemoryFallbackSandboxArguments[..^1], "--bind", temporaryRoot, temporaryRoot, "--"];
+        foreach ( var argument in sandbox.Concat( command ) )
         {
             start.ArgumentList.Add( argument );
         }
@@ -44,7 +51,7 @@ public static partial class Program
                 throw new SpecSkippedException( "Bubblewrap could not create the isolated fixture: " + error.Trim( ) );
             }
 
-            Equal( 0, process.ExitCode );
+            True( process.ExitCode == 0, $"Memory fallback fixture exited {process.ExitCode}: {error}" );
             Equal( "", error );
             Equal( "rss-enforced", (await output).Trim( ) );
         }
@@ -65,9 +72,27 @@ public static partial class Program
         start.ArgumentList.RemoveAt( start.ArgumentList.Count - 1 );
         start.ArgumentList.RemoveAt( start.ArgumentList.Count - 1 );
         start.ArgumentList.Add( "--process-memory-allocation-fixture" );
+        var temporaryRoot = Environment.GetEnvironmentVariable( "COMMANDDECK_SPEC_TEMP_ROOT" );
+        if ( temporaryRoot is null )
+        {
+            throw new InvalidOperationException( "The allocating child requires its owned temporary root." );
+        }
+
+        ProcessExecutionLimits limits = new( )
+        {
+            MaximumMemoryBytes = 64L * 1024 * 1024,
+            MaximumStandardOutputBytes = 4096,
+            MaximumStandardErrorBytes = 4096,
+            EnvironmentVariables = new Dictionary<string, string>( StringComparer.Ordinal )
+            {
+                ["COMMANDDECK_SPEC_TEMP_ROOT"] = temporaryRoot,
+                ["LANG"] = "C.UTF-8",
+                ["LC_ALL"] = "C.UTF-8"
+            }
+        };
         var result = await ProcessRunner.RunBoundedAsync( start.FileName, start.ArgumentList.ToArray( ), null,
-            TimeSpan.FromSeconds( 5 ), ProcessIdleLimits( 64L * 1024 * 1024 ), CancellationToken.None );
-        True( result.MemoryLimitExceeded, "the finite RSS fallback terminates the allocating child" );
+            TimeSpan.FromSeconds( 5 ), limits, CancellationToken.None );
+        True( result.MemoryLimitExceeded, $"the finite RSS fallback terminates the allocating child; exit={result.ExitCode}, timeout={result.TimedOut}, stderr={result.StandardError}" );
         True( !result.TimedOut && !result.AnyOutputLimitExceeded, "the memory limit, rather than another bound, ended execution" );
         True( result.ExitCode != 0, "the allocating child was terminated" );
         Console.WriteLine( "rss-enforced" );

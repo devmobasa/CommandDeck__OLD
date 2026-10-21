@@ -4,7 +4,7 @@ public static partial class Program
 {
     private static void ClipboardBrowserBoundsEncodedSummaryMetadata( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-clipboard-summary-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-clipboard-summary-" ).FullName;
         try
         {
             using ClipboardHistoryStore store = new( Path.Combine( root, "history.db" ), new( ) );
@@ -30,7 +30,7 @@ public static partial class Program
 
     private static void ClipboardBrowserSnapshotsSurviveRecopyAndSkipTombstones( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-clipboard-browser-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-clipboard-browser-" ).FullName;
         try
         {
             using ClipboardHistoryStore store = new( Path.Combine( root, "history.db" ), new ClipboardHistoryOptions( ) );
@@ -76,7 +76,7 @@ public static partial class Program
 
     private static void ClipboardBrowserRejectsStaleAndCrossOwnerActions( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-clipboard-browser-owner-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-clipboard-browser-owner-" ).FullName;
         try
         {
             using ClipboardHistoryStore store = new( Path.Combine( root, "history.db" ), new ClipboardHistoryOptions( ) );
@@ -120,7 +120,7 @@ public static partial class Program
 
     private static void ClipboardBrowserBoundsOwnersGenerationsAndLifetime( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-clipboard-browser-bounds-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-clipboard-browser-bounds-" ).FullName;
         try
         {
             using ClipboardHistoryStore store = new( Path.Combine( root, "history.db" ), new ClipboardHistoryOptions( ) );

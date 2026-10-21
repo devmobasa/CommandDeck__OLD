@@ -4,7 +4,7 @@ public static partial class Program
 {
     private static async Task ExcludedTitlesCannotConsumeFuzzyCandidateBudgetAsync( )
     {
-        var database = Path.Combine( Path.GetTempPath( ), $"commanddeck-fuzzy-policy-{Guid.NewGuid( ):N}.db" );
+        var database = SpecTemporaryFiles.PathFor( $"commanddeck-fuzzy-policy-{Guid.NewGuid( ):N}.db" );
         try
         {
             await using SqliteCatalog catalog = new( new StorageOptions { DatabasePath = database } );

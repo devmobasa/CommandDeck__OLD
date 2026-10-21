@@ -8,7 +8,7 @@ public static partial class Program
         {
             throw new SpecSkippedException( "This fixture requires Linux." );
         }
-        var root = Directory.CreateTempSubdirectory( "commanddeck-open-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-open-" ).FullName;
         var originalPath = Environment.GetEnvironmentVariable( "PATH" );
         try
         {

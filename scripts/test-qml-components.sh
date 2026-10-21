@@ -23,7 +23,7 @@ done
 # The component harness quits itself once every stage has run; the limit only
 # stops a hung Quickshell. A passing run takes a few seconds and grows with the
 # specs, and shared CI runners are slower, so the default leaves wide headroom.
-component_timeout=${COMMANDDECK_QML_COMPONENT_TIMEOUT:-60}
+component_timeout=${COMMANDDECK_QML_COMPONENT_TIMEOUT:-300}
 if [[ ! $component_timeout =~ ^[1-9][0-9]*$ ]]; then
   printf 'error: COMMANDDECK_QML_COMPONENT_TIMEOUT must be a whole number of seconds.\n' >&2
   exit 2
@@ -53,10 +53,11 @@ if ((lint_status != 0)); then
   exit "$lint_status"
 fi
 
-spec_dir=$(mktemp -d)
+mkdir -p "$repo_dir/build"
+spec_dir=$(mktemp -d "$repo_dir/build/qml-components.XXXXXX")
 trap 'rm -rf -- "$spec_dir"' EXIT
 cp "$repo_dir"/qml/common/*.qml "$repo_dir"/qml/common/*.js "$spec_dir/"
-cp "$repo_dir/tests/CommandDeck.QmlSpecs/shell.qml" "$spec_dir/shell.qml"
+cp "$repo_dir/tests/CommandDeck.QmlSpecs/"{shell,DeadlineTestCase}.qml "$spec_dir/"
 cp "$repo_dir"/tests/CommandDeck.QmlSpecs/Assertions/*.qml "$spec_dir/"
 cp -R "$repo_dir/qml/common" "$repo_dir/qml/omarchy" "$spec_dir/"
 

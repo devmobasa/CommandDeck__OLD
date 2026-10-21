@@ -6,7 +6,7 @@ public static partial class Program
 {
     private static async Task ClipboardRichAdmissionPublishesAtomicSelectionsAsync( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-rich-admission-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-rich-admission-" ).FullName;
         var path = Path.Combine( root, "history.db" );
         try
         {
@@ -51,7 +51,7 @@ public static partial class Program
 
     private static async Task ClipboardRichAdmissionPersistsInertMetadataAsync( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-rich-metadata-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-rich-metadata-" ).FullName;
         var path = Path.Combine( root, "history.db" );
         try
         {
@@ -96,7 +96,7 @@ public static partial class Program
 
     private static async Task ClipboardRichAdmissionRejectsRevocationAndAliasConflictAsync( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-rich-rejection-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-rich-rejection-" ).FullName;
         var path = Path.Combine( root, "history.db" );
         try
         {

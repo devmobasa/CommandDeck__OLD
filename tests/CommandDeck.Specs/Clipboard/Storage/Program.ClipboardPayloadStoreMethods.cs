@@ -7,7 +7,7 @@ public static partial class Program
 {
     private static void ClipboardPayloadStorePreservesBytesAndRevokesDeletedEntries( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-clipboard-payload-store-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-clipboard-payload-store-" ).FullName;
         var path = Path.Combine( root, "history.db" );
         try
         {
@@ -59,7 +59,7 @@ public static partial class Program
 
     private static void ClipboardPayloadMigrationLowSpacePreservesSource( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-clipboard-space-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-clipboard-space-" ).FullName;
         var path = Path.Combine( root, "history.db" );
         try
         {
@@ -84,7 +84,7 @@ public static partial class Program
 
     private static void ClipboardPayloadStoreRecoversMissingAndDamagedFiles( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-clipboard-damaged-payload-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-clipboard-damaged-payload-" ).FullName;
         try
         {
             foreach ( var missing in new[] { true, false } )
@@ -124,7 +124,7 @@ public static partial class Program
 
     private static void ClipboardPayloadMigrationRetriesDamagedStagedProgress( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-clipboard-migration-retry-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-clipboard-migration-retry-" ).FullName;
         var path = Path.Combine( root, "history.db" );
         try
         {

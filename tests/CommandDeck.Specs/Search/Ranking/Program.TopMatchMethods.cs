@@ -4,7 +4,7 @@ public static partial class Program
 {
     private static async Task LearnedSignalAppearsAboveSourceGroupsAsync( )
     {
-        var database = Path.Combine( Path.GetTempPath( ), $"commanddeck-top-match-{Guid.NewGuid( ):N}.db" );
+        var database = SpecTemporaryFiles.PathFor( $"commanddeck-top-match-{Guid.NewGuid( ):N}.db" );
         FixedTimeProvider clock = new( new DateTimeOffset( 2026, 9, 7, 12, 0, 0, TimeSpan.Zero ) );
         try
         {

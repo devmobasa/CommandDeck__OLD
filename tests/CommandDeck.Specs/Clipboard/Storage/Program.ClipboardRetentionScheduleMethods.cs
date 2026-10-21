@@ -11,7 +11,7 @@ public static partial class Program
             throw new SpecSkippedException( "This fixture requires Linux." );
         }
 
-        var root = Directory.CreateTempSubdirectory( "commanddeck-clipboard-retention-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-clipboard-retention-" ).FullName;
         var database = Path.Combine( root, "history.db" );
         try
         {
@@ -60,7 +60,7 @@ public static partial class Program
         [System.Runtime.CompilerServices.CallerArgumentExpression( nameof( condition ) )] string? expression = null )
     {
         var started = Stopwatch.GetTimestamp( );
-        while ( !condition( ) && Stopwatch.GetElapsedTime( started ) < TimeSpan.FromSeconds( 10 ) )
+        while ( !condition( ) && Stopwatch.GetElapsedTime( started ) < TimeSpan.FromSeconds( 30 ) )
         {
             await Task.Delay( 10 );
         }

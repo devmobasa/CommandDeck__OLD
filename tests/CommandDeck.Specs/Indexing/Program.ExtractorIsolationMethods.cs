@@ -7,9 +7,7 @@ public static partial class Program
 {
     private static async Task FileTypeExtractionLimitsOverrideDefaultsAsync( )
     {
-        var root = Path.Combine(
-            Path.GetTempPath( ),
-            $"commanddeck-type-limits-{Guid.NewGuid( ):N}" );
+        var root = SpecTemporaryFiles.PathFor( $"commanddeck-type-limits-{Guid.NewGuid( ):N}" );
         Directory.CreateDirectory( root );
         var truncatedPath = Path.Combine( root, "truncated.txt" );
         var rejectedPath = Path.Combine( root, "rejected.txt" );
@@ -75,9 +73,7 @@ public static partial class Program
             throw new SpecSkippedException( "This fixture requires Linux." );
         }
 
-        var root = Path.Combine(
-            Path.GetTempPath( ),
-            $"commanddeck-hostile-extractor-{Guid.NewGuid( ):N}" );
+        var root = SpecTemporaryFiles.PathFor( $"commanddeck-hostile-extractor-{Guid.NewGuid( ):N}" );
         var bin = Path.Combine( root, "bin" );
         Directory.CreateDirectory( bin );
         var extractor = Path.Combine( bin, "pdftotext" );
@@ -244,7 +240,7 @@ public static partial class Program
             throw new SpecSkippedException( "This fixture requires Linux." );
         }
 
-        var root = Directory.CreateTempSubdirectory( "commanddeck-special-extraction-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-special-extraction-" ).FullName;
         string[] pipes = [Path.Combine( root, "pipe.txt" ), Path.Combine( root, "pipe.pdf" )];
         foreach ( var pipe in pipes )
         {

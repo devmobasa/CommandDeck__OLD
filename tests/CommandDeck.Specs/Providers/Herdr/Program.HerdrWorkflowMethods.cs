@@ -62,7 +62,7 @@ public static partial class Program
 
     private static async Task HerdrTabEditsUseCachedTargetsAsync( )
     {
-        var directory = Directory.CreateTempSubdirectory( "commanddeck-herdr-edits-" ).FullName;
+        var directory = SpecTemporaryFiles.CreateDirectory( "commanddeck-herdr-edits-" ).FullName;
         try
         {
             CommandDeckOptions options = new( )

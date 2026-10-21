@@ -26,3 +26,10 @@ ignored-dirs/
 .env
 .env.*
 !.env.example
+
+# Per-run backend fixtures (including SQLite WAL files).
+/tmp/*
+# Keep the run boundary traversable for repository-policy fixtures, while Git
+# still ignores every generated file beneath it.
+!/tmp/run-*/
+/tmp/run-*/**

@@ -130,7 +130,7 @@ public static partial class Program
 
     private static async Task AiSettingsStoreWritesPrivatelyDetectsConflictsAndFailsClosedAsync( )
     {
-        var root = Path.Combine( Path.GetTempPath( ), $"commanddeck-ai-settings-store-{Guid.NewGuid( ):N}" );
+        var root = SpecTemporaryFiles.PathFor( $"commanddeck-ai-settings-store-{Guid.NewGuid( ):N}" );
         try
         {
             var configDirectory = Path.Combine( root, "config" );
@@ -202,7 +202,7 @@ public static partial class Program
 
     private static async Task AiSettingsServiceResolvesPrecedenceAndRetiresRegistriesAsync( )
     {
-        var root = Path.Combine( Path.GetTempPath( ), $"commanddeck-ai-settings-service-{Guid.NewGuid( ):N}" );
+        var root = SpecTemporaryFiles.PathFor( $"commanddeck-ai-settings-service-{Guid.NewGuid( ):N}" );
         Directory.CreateDirectory( root );
         await using ManagedAiFixtureServer fixture = await ManagedAiFixtureServer.StartAsync( );
         try

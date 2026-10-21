@@ -7,7 +7,7 @@ public static partial class Program
         foreach ( var stage in new[] { "migration-marked", "row-migrated", "schema-switched",
             "projection-schema-created", "projection-rows-written", "projection-schema-committed" } )
         {
-            var root = Directory.CreateTempSubdirectory( "commanddeck-migration-crash-" ).FullName;
+            var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-migration-crash-", preservePrefix: true ).FullName;
             try
             {
                 await KillClipboardLedgerFixtureAsync( root, stage, "--clipboard-migration-crash-fixture" );

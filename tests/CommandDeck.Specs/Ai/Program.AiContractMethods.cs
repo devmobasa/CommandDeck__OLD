@@ -187,7 +187,7 @@ public static partial class Program
 
     private static async Task AiSelectionTemplatesAndPreflightAreDurableAndBoundAsync( )
     {
-        var root = Path.Combine( Path.GetTempPath( ), $"commanddeck-ai-state-{Guid.NewGuid( ):N}" );
+        var root = SpecTemporaryFiles.PathFor( $"commanddeck-ai-state-{Guid.NewGuid( ):N}" );
         Directory.CreateDirectory( root );
         var file = Path.Combine( root, "attachment.txt" );
         await File.WriteAllTextAsync( file, "attachment sentinel" );

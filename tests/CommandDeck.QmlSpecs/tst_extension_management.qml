@@ -27,7 +27,7 @@ Item {
     onScopedSearchRequested: (token, label) => { scopedToken = token; scopedLabel = label }
   }
   LiteralTextProbe { id: literal }
-  TestCase {
+  DeadlineTestCase {
     name: "ExtensionManagement"
     when: windowShown
     function inventory() { return { revision: 7, enabled: true, packages: [{ key: "draft", name: "Local Draft", id: "org.example.draft", version: "1.0.0", digest: "current", retainedDigests: ["current", "previous"], grants: ["storage.read"], enabled: true }], offset: 0, total: 1 } }
@@ -37,7 +37,7 @@ Item {
       controller.handleMessage({ requestId: id, type: Protocol.Messages.Done })
       // Rows shown by the response keep stale positions until the layout
       // polishes; a real click before that can land on a neighbouring control.
-      waitForRendering(panel)
+      waitForFrame(panel)
     }
     function init() {
       panel.opened = false; controller.disconnected(); requests = []; sequence = 0; browserHandoffs = 0
@@ -61,16 +61,16 @@ Item {
       detail()
       panel.selected = Object.assign({}, panel.selected, { key: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef" })
       panel.manifest = Object.assign({}, panel.manifest, { searchProviders: [{ id: "notes", title: "Notes", commandId: "edit", cacheKey: "cache" }] })
-      waitForRendering(panel)
+      waitForFrame(panel)
       mouseClick(panel.scopedSearchControl)
       compare(scopedToken, "extension-search:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef:notes")
       compare(scopedLabel, "Local Draft · Notes")
       mouseClick(panel.globalSearchControl)
-      tryCompare(panel.cancelControl, "activeFocus", true)
+      waitForValue(panel.cancelControl, "activeFocus", true)
       keyClick(Qt.Key_Escape)
       verify(requests[requests.length - 1].extension.action !== "global-search")
       mouseClick(panel.globalSearchControl)
-      tryCompare(panel.cancelControl, "activeFocus", true)
+      waitForValue(panel.cancelControl, "activeFocus", true)
       keyClick(Qt.Key_Tab)
       keyClick(Qt.Key_Space)
       const change = requests[requests.length - 1].extension
@@ -79,7 +79,7 @@ Item {
       compare(change.globalSearchEnabled, true)
     }
     function test_search_keyboard_inspect_and_configure() {
-      tryCompare(panel.searchControl, "activeFocus", true)
+      waitForValue(panel.searchControl, "activeFocus", true)
       keyClick(Qt.Key_D)
       compare(requests[requests.length - 1].query, "d")
       respond("list", inventory())
@@ -89,7 +89,7 @@ Item {
       respond("inspect", Object.assign(inventory(), { manifest: { name: "Draft", preferences: [{ id: "title", type: "text", title: "Title", required: true, default: "Default" }] }, settings: { title: "Saved" } }))
       panel.configureSettings()
       const editor = panel.settingsControl.fieldsControl.itemAt(0).editor
-      tryCompare(editor, "activeFocus", true)
+      waitForValue(editor, "activeFocus", true)
       compare(editor.text, "Saved")
       keyClick(Qt.Key_A, Qt.ControlModifier)
       keyClick(Qt.Key_N)
@@ -105,7 +105,7 @@ Item {
       const reason = "<span style='font-size:1px'>Reads every file</span>"
       const listed = inventory()
       listed.packages[0].name = name
-      tryCompare(panel.searchControl, "activeFocus", true)
+      waitForValue(panel.searchControl, "activeFocus", true)
       keyClick(Qt.Key_D)
       respond("list", listed)
       compare(literal.problem(panel.packagesControl.itemAtIndex(0), name + " · 1.0.0 · Enabled"), "")
@@ -128,7 +128,7 @@ Item {
       ], debug: { commandId: "edit", consumed: false, expiresAt: "later", socketPath: "/private/debug.sock" } })
       respond("logs", value)
       const view = panel.diagnosticsControl
-      tryCompare(view.searchControl, "activeFocus", true)
+      waitForValue(view.searchControl, "activeFocus", true)
       compare(view.listControl.count, 2)
       mouseClick(view.listControl.itemAtIndex(0))
       keyClick(Qt.Key_E)
@@ -145,36 +145,36 @@ Item {
       verify(view.searchControl.activeFocus)
       compare(view.searchControl.text, "edit")
       keyClick(Qt.Key_Tab)
-      tryCompare(view.stderrControl, "activeFocus", true)
+      waitForValue(view.stderrControl, "activeFocus", true)
       keyClick(Qt.Key_Space)
       compare(requests[requests.length - 1].extension.includeStderr, true)
       respond("logs", value)
       verify(view.stderrControl.activeFocus)
       keyClick(Qt.Key_Tab)
-      tryCompare(view.stopControl, "activeFocus", true)
+      waitForValue(view.stopControl, "activeFocus", true)
       keyClick(Qt.Key_Space)
       compare(requests[requests.length - 1].extension.action, "debug-stop")
       respond("debug-stop", Object.assign(inventory(), { diagnostics: [], debug: null }))
-      tryCompare(view.searchControl, "activeFocus", true)
+      waitForValue(view.searchControl, "activeFocus", true)
       keyClick(Qt.Key_Escape)
       compare(view.searchControl.text, "")
       keyClick(Qt.Key_Escape)
       compare(panel.page, "detail")
-      tryCompare(panel.logsControl, "activeFocus", true)
+      waitForValue(panel.logsControl, "activeFocus", true)
     }
     function test_oauth_approval_releases_surface_before_sending_login() {
       detail()
       mouseClick(panel.connectionsButtonControl)
       respond("connections", Object.assign(inventory(), { connections: [{ name: "tasks", kind: "http", scope: "https://example.test/tasks", credentialStatus: "disconnected" }] }))
       const view = panel.connectionsControl
-      tryCompare(view.searchControl, "activeFocus", true)
+      waitForValue(view.searchControl, "activeFocus", true)
       mouseClick(view.listControl.itemAtIndex(0))
       mouseClick(view.loginControl)
-      tryCompare(panel.cancelControl, "activeFocus", true)
+      waitForValue(panel.cancelControl, "activeFocus", true)
       keyClick(Qt.Key_Escape)
       compare(browserHandoffs, 0)
       mouseClick(view.loginControl)
-      tryCompare(panel.cancelControl, "activeFocus", true)
+      waitForValue(panel.cancelControl, "activeFocus", true)
       keyClick(Qt.Key_Tab)
       keyClick(Qt.Key_Space)
       compare(browserHandoffs, 1)
@@ -190,13 +190,13 @@ Item {
       const view = panel.connectionsControl
       compare(view.effectAttempts, 12)
       mouseClick(view.resetEffectsControl)
-      tryCompare(panel.cancelControl, "activeFocus", true)
+      waitForValue(panel.cancelControl, "activeFocus", true)
       keyClick(Qt.Key_Escape)
       compare(panel.page, "connections")
-      tryCompare(view.resetEffectsControl, "activeFocus", true)
+      waitForValue(view.resetEffectsControl, "activeFocus", true)
       verify(requests[requests.length - 1].extension.action !== "effects-reset")
       keyClick(Qt.Key_Space)
-      tryCompare(panel.cancelControl, "activeFocus", true)
+      waitForValue(panel.cancelControl, "activeFocus", true)
       keyClick(Qt.Key_Tab)
       keyClick(Qt.Key_Space)
       const input = requests[requests.length - 1].extension
@@ -204,33 +204,33 @@ Item {
       compare(input.confirmed, true)
       respond("effects-reset", Object.assign(inventory(), { connections: [], effectAttempts: 0 }))
       compare(view.effectAttempts, 0)
-      tryCompare(view.resetEffectsControl, "activeFocus", true)
+      waitForValue(view.resetEffectsControl, "activeFocus", true)
     }
     function test_connection_setup_confirmation_typing_and_delayed_back() {
       detail()
       mouseClick(panel.connectionsButtonControl)
       respond("connections", Object.assign(inventory(), { connections: [{ name: "notes", kind: "files", scope: "/tmp/notes", credentialStatus: "none" }] }))
       const view = panel.connectionsControl
-      tryCompare(view.searchControl, "activeFocus", true)
+      waitForValue(view.searchControl, "activeFocus", true)
       mouseClick(view.listControl.itemAtIndex(0))
       keyClick(Qt.Key_N)
       compare(view.searchControl.text, "n")
       verify(view.searchControl.activeFocus)
       mouseClick(view.addControl)
-      tryCompare(view.nameControl, "activeFocus", true)
+      waitForValue(view.nameControl, "activeFocus", true)
       keyClick(Qt.Key_N)
-      waitForRendering(view)
+      waitForFrame(view)
       mouseClick(view.pathControl)
       for (const character of "/TMP/NOTES") keyClick(character.charCodeAt(0))
       mouseClick(view.saveControl)
       compare(panel.page, "confirm")
-      tryCompare(panel.cancelControl, "activeFocus", true)
+      waitForValue(panel.cancelControl, "activeFocus", true)
       keyClick(Qt.Key_Escape)
       compare(panel.page, "connections")
       compare(view.editing, true)
       compare(view.pathControl.text, "/tmp/notes")
       mouseClick(view.saveControl)
-      tryCompare(panel.cancelControl, "activeFocus", true)
+      waitForValue(panel.cancelControl, "activeFocus", true)
       keyClick(Qt.Key_Tab)
       keyClick(Qt.Key_Space)
       const change = requests[requests.length - 1].extension
@@ -239,7 +239,7 @@ Item {
       compare(change.confirmed, true)
       respond("connection-set", Object.assign(inventory(), { connections: [] }))
       compare(panel.page, "connections")
-      tryCompare(view.searchControl, "activeFocus", true)
+      waitForValue(view.searchControl, "activeFocus", true)
       mouseClick(panel.reloadControl)
       const pending = controller.activeRequestId
       keyClick(Qt.Key_Escape)
@@ -258,7 +258,7 @@ Item {
         { at: "now", sessionId: "s3", commandId: "save", digest: "build3", status: "closed" }
       ] }))
       const view = panel.diagnosticsControl
-      tryCompare(view.searchControl, "activeFocus", true)
+      waitForValue(view.searchControl, "activeFocus", true)
       keyClick(Qt.Key_Down)
       compare(view.listControl.currentIndex, 0)
       keyClick(Qt.Key_Down)
@@ -270,7 +270,7 @@ Item {
       verify(view.listControl.activeFocus)
       keyClick(Qt.Key_C)
       compare(view.searchControl.text, "c")
-      tryCompare(view.searchControl, "activeFocus", true)
+      waitForValue(view.searchControl, "activeFocus", true)
       keyClick(Qt.Key_O)
       compare(view.listControl.count, 1)
       compare(view.listControl.model[0].commandId, "copy")
@@ -283,7 +283,7 @@ Item {
       mouseClick(panel.logsControl)
       if (data.reload) {
         respond("logs", inventory())
-        tryCompare(panel.diagnosticsControl.searchControl, "activeFocus", true)
+        waitForValue(panel.diagnosticsControl.searchControl, "activeFocus", true)
         mouseClick(panel.reloadControl)
       }
       const pendingId = controller.activeRequestId
@@ -292,20 +292,20 @@ Item {
       compare(panel.page, destination)
       controller.handleMessage({ requestId: pendingId, type: Protocol.Messages.ExtensionsResult, extensions: inventory() })
       controller.handleMessage({ requestId: pendingId, type: Protocol.Messages.Done })
-      wait(0)
+      nextTurn()
       compare(panel.page, destination)
       if (data.reload) {
-        tryCompare(panel.logsControl, "activeFocus", true)
+        waitForValue(panel.logsControl, "activeFocus", true)
         mouseClick(panel.logsControl)
         respond("logs", inventory())
         compare(panel.page, "logs")
-        tryCompare(panel.diagnosticsControl.searchControl, "activeFocus", true)
+        waitForValue(panel.diagnosticsControl.searchControl, "activeFocus", true)
       }
     }
     function test_remove_confirmation_traps_focus_and_cancel_restores() {
       detail()
       mouseClick(panel.removeControl)
-      tryCompare(panel.cancelControl, "activeFocus", true)
+      waitForValue(panel.cancelControl, "activeFocus", true)
       const count = requests.length
       keyClick(Qt.Key_Tab)
       keyClick(Qt.Key_Tab)
@@ -313,10 +313,10 @@ Item {
       verify(panel.cancelControl.activeFocus)
       keyClick(Qt.Key_Escape)
       compare(panel.page, "detail")
-      tryCompare(panel.removeControl, "activeFocus", true)
+      waitForValue(panel.removeControl, "activeFocus", true)
       compare(requests.length, count)
       mouseClick(panel.removeControl)
-      tryCompare(panel.cancelControl, "activeFocus", true)
+      waitForValue(panel.cancelControl, "activeFocus", true)
       keyClick(Qt.Key_Backtab)
       keyClick(Qt.Key_Space)
       compare(requests[requests.length - 1].extension.confirmed, true)
@@ -336,7 +336,7 @@ Item {
       verify(controller.error.indexOf("Disconnected") >= 0)
     }
     function test_mouse_reload_keeps_search_ready_for_typing() {
-      tryCompare(panel.searchControl, "activeFocus", true)
+      waitForValue(panel.searchControl, "activeFocus", true)
       mouseClick(panel.reloadControl)
       respond("list", inventory())
       keyClick(Qt.Key_D)
@@ -365,7 +365,7 @@ Item {
       respond("list", Object.assign(inventory(), { revision: 8 }))
       if (data.beforeEdit) panel.configureSettings()
       const editor = panel.settingsControl.fieldsControl.itemAt(0).editor
-      tryCompare(editor, "activeFocus", true)
+      waitForValue(editor, "activeFocus", true)
       compare(editor.text, "Saved default")
       keyClick(Qt.Key_A, Qt.ControlModifier)
       keyClick(Qt.Key_N)
@@ -378,12 +378,12 @@ Item {
       keyClick(Qt.Key_Escape)
       keyClick(Qt.Key_Escape)
       respond("list", Object.assign(inventory(), { revision: 8 }))
-      tryCompare(panel.searchControl, "activeFocus", true)
+      waitForValue(panel.searchControl, "activeFocus", true)
       keyClick(Qt.Key_Return)
       respond("inspect", Object.assign(inventory(), { revision: 8, manifest: panel.manifest, settings: { title: "New saved value" } }))
       panel.configureSettings()
       const refreshed = panel.settingsControl.fieldsControl.itemAt(0).editor
-      tryCompare(refreshed, "activeFocus", true)
+      waitForValue(refreshed, "activeFocus", true)
       compare(refreshed.text, "New saved value")
       mouseClick(panel.settingsControl.submitControl)
       compare(requests[requests.length - 1].extension.expectedRevision, 8)
@@ -403,7 +403,7 @@ Item {
       ] }, settings: data.saved === undefined ? {} : { amount: data.saved } }))
       panel.configureSettings()
       const editor = panel.settingsControl.fieldsControl.itemAt(0).editor
-      tryCompare(editor, "activeFocus", true)
+      waitForValue(editor, "activeFocus", true)
       keyClick(Qt.Key_A, Qt.ControlModifier)
       keyClick(Qt.Key_Backspace)
       if (data.value === " ") keyClick(Qt.Key_Space)

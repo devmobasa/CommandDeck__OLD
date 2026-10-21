@@ -49,7 +49,7 @@ public static partial class Program
 
     private static async Task DisplaySizingMigrationPreservesExistingUsersAsync( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-display-sizing-" );
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-display-sizing-" );
         try
         {
             var database = Path.Combine( root.FullName, "catalog.db" );

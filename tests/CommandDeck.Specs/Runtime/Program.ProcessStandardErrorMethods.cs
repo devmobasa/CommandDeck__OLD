@@ -53,7 +53,7 @@ public static partial class Program
         }, "", CancellationToken.None );
         Equal( "'/bin/sh' exceeded its output limit.", run.Message );
 
-        var root = Directory.CreateTempSubdirectory( "commanddeck-agent-stderr-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-agent-stderr-" ).FullName;
         try
         {
             AgentCommandTool tool = new( root );

@@ -288,9 +288,7 @@ public static partial class Program
 
         public HerdrTitleServer( params string?[] responses )
         {
-            SocketPath = Path.Combine(
-                Path.GetTempPath( ),
-                $"commanddeck-herdr-title-{Guid.NewGuid( ):N}.sock" );
+            SocketPath = SpecTemporaryFiles.PathFor( $"commanddeck-herdr-title-{Guid.NewGuid( ):N}.sock" );
             _listener = new System.Net.Sockets.Socket(
                 System.Net.Sockets.AddressFamily.Unix,
                 System.Net.Sockets.SocketType.Stream,

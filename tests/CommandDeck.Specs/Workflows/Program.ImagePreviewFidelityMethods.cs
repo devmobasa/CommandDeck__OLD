@@ -11,7 +11,7 @@ public static partial class Program
             SkipSpec( "ImageMagick or Bubblewrap is not installed." );
         }
 
-        var directory = Directory.CreateTempSubdirectory( "commanddeck-image-fidelity-" ).FullName;
+        var directory = SpecTemporaryFiles.CreateDirectory( "commanddeck-image-fidelity-" ).FullName;
         try
         {
             var service = PreviewService( directory, false, [] );
@@ -65,7 +65,7 @@ public static partial class Program
             SkipSpec( "ImageMagick or Bubblewrap is not installed." );
         }
 
-        var directory = Directory.CreateTempSubdirectory( "commanddeck-image-confinement-" ).FullName;
+        var directory = SpecTemporaryFiles.CreateDirectory( "commanddeck-image-confinement-" ).FullName;
         try
         {
             var path = Path.Combine( directory, "image.png" );

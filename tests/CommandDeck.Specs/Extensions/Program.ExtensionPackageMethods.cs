@@ -84,7 +84,7 @@ public static partial class Program
 
     private static async Task ExtensionPackagesRejectUnsafeArchivesAsync( )
     {
-        var root = Path.Combine( Path.GetTempPath( ), "commanddeck-package-" + Guid.NewGuid( ).ToString( "N" ) );
+        var root = SpecTemporaryFiles.PathFor( "commanddeck-package-" + Guid.NewGuid( ).ToString( "N" ) );
         Directory.CreateDirectory( root );
         try
         {
@@ -112,7 +112,7 @@ public static partial class Program
 
     private static async Task ExtensionPackageLifecyclePreservesIdentityAsync( )
     {
-        var root = Path.Combine( Path.GetTempPath( ), "commanddeck-registry-" + Guid.NewGuid( ).ToString( "N" ) );
+        var root = SpecTemporaryFiles.PathFor( "commanddeck-registry-" + Guid.NewGuid( ).ToString( "N" ) );
         Directory.CreateDirectory( root );
         try
         {
@@ -171,7 +171,7 @@ public static partial class Program
 
     private static async Task ExtensionInventoryBoundsPreserveSourcesAsync( )
     {
-        var root = Path.Combine( Path.GetTempPath( ), "commanddeck-inventory-" + Guid.NewGuid( ).ToString( "N" ) );
+        var root = SpecTemporaryFiles.PathFor( "commanddeck-inventory-" + Guid.NewGuid( ).ToString( "N" ) );
         Directory.CreateDirectory( root );
         try
         {
@@ -216,7 +216,7 @@ public static partial class Program
 
     private static async Task ExtensionActivationFailurePreservesCurrentAsync( )
     {
-        var root = Path.Combine( Path.GetTempPath( ), "commanddeck-activation-" + Guid.NewGuid( ).ToString( "N" ) );
+        var root = SpecTemporaryFiles.PathFor( "commanddeck-activation-" + Guid.NewGuid( ).ToString( "N" ) );
         Directory.CreateDirectory( root );
         try
         {
@@ -265,7 +265,7 @@ public static partial class Program
 
     private static async Task ExtensionArtifactCleanupPreservesRetainedVersionsAsync( )
     {
-        var root = Path.Combine( Path.GetTempPath( ), "commanddeck-artifact-cleanup-" + Guid.NewGuid( ).ToString( "N" ) );
+        var root = SpecTemporaryFiles.PathFor( "commanddeck-artifact-cleanup-" + Guid.NewGuid( ).ToString( "N" ) );
         Directory.CreateDirectory( root );
         try
         {

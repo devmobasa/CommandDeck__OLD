@@ -372,7 +372,7 @@ public static partial class Program
             throw new SpecSkippedException( "This fixture requires Linux." );
         }
 
-        var root = Directory.CreateTempSubdirectory( "commanddeck-hey-client-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-hey-client-" ).FullName;
         try
         {
             var script = Path.Combine( root, "hey" );

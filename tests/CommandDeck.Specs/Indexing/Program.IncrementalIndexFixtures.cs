@@ -82,7 +82,7 @@ public static partial class Program
     }
 
     private static string CreateIncrementalSpecRoot( ) =>
-        Path.Combine( Path.GetTempPath( ), $"commanddeck-incremental-spec-{Guid.NewGuid( ):N}" );
+        SpecTemporaryFiles.PathFor( $"commanddeck-incremental-spec-{Guid.NewGuid( ):N}" );
 
     private static void DeleteIncrementalSpecRoot( string root )
     {

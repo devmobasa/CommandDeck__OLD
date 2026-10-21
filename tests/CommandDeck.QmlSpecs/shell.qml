@@ -78,6 +78,7 @@ ShellRoot {
   readonly property alias part_transparencyStoreSpec: discovery.transparencyStoreSpecControl
   readonly property alias part_colorThemeStoreSpec: discovery.colorThemeStoreSpecControl
   readonly property alias part_wideSettingsRow: wideSettingsRow
+  readonly property alias pointerIsolation: productionHostJourney.pointerIsolation
 
   property int failures: 0
   property int assertions: 0
@@ -471,7 +472,7 @@ ShellRoot {
     onQueryInputRequested: value => routedInputs = routedInputs.concat([value])
   }
 
-  TestCase {
+  DeadlineTestCase {
     id: hostEvents
     parent: integratedDeck.testSearchInput
     when: false

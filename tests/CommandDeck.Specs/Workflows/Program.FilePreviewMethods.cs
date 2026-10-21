@@ -59,7 +59,7 @@ public static partial class Program
 
     private static async Task FilePreviewMatchesAsync( )
     {
-        var root = Path.Combine( Path.GetTempPath( ), $"commanddeck-preview-matches-{Guid.NewGuid( ):N}" );
+        var root = SpecTemporaryFiles.PathFor( $"commanddeck-preview-matches-{Guid.NewGuid( ):N}" );
         Directory.CreateDirectory( root );
         try
         {

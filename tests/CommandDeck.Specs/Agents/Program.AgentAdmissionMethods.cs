@@ -121,7 +121,7 @@ public static partial class Program
                 clock.Advance( TimeSpan.FromMinutes( AgentLimits.TrustLeaseHourMinutes + 1 ) );
                 TaskCompletionSource<bool> releaseStop = new( TaskCreationOptions.RunContinuationsAsynchronously );
                 backend.BlockNextStop = releaseStop;
-                await using var client = await ConnectWithRetryAsync( Path.Combine( root, "commanddeck.sock" ) );
+                await using var client = await ConnectWithRetryAsync( SpecTemporaryFiles.SocketPath( root, "commanddeck.sock" ) );
                 await client.SendAsync( new ProtocolRequest
                 {
                     RequestId = 7,

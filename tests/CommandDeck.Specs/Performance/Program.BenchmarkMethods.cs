@@ -10,9 +10,7 @@ public static partial class Program
     {
         const int itemCount = 100_000;
         const int usageCount = 10_000;
-        var database = Path.Combine(
-            Path.GetTempPath( ),
-            $"commanddeck-phase3-benchmark-{Guid.NewGuid( ):N}.db" );
+        var database = SpecTemporaryFiles.PathFor( $"commanddeck-phase3-benchmark-{Guid.NewGuid( ):N}.db" );
         try
         {
             SqliteCatalog catalog = new( new StorageOptions { DatabasePath = database } );

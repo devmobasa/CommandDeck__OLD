@@ -4,7 +4,7 @@ public static partial class Program
 {
     private static async Task ClipboardRichBrowserFiltersKindsAndPresentsInertMetadataAsync( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-rich-browser-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-rich-browser-" ).FullName;
         try
         {
             using ClipboardHistoryStore store = new( Path.Combine( root, "history.db" ), new( ) );

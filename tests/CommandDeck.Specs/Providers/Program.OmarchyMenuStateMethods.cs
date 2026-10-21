@@ -51,7 +51,7 @@ public static partial class Program
         True( items.Single( value => value.StableId == "omarchy:style.dark" ).PayloadJson!
             .Contains( "\"checked\":\"[[ 2 -gt 1 ]]\"", StringComparison.Ordinal ) );
 
-        var root = Directory.CreateTempSubdirectory( "commanddeck-omarchy-state-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-omarchy-state-" ).FullName;
         try
         {
             await using SqliteCatalog catalog = new( new StorageOptions { DatabasePath = Path.Combine( root, "catalog.db" ) } );

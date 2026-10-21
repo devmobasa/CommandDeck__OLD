@@ -8,9 +8,7 @@ public static partial class Program
 {
     private static async Task LocalSuggestionsAreBoundedPrivateAndNetworkSilentAsync( )
     {
-        var root = Path.Combine(
-            Path.GetTempPath( ),
-            $"commanddeck-suggestion-spec-{Guid.NewGuid( ):N}" );
+        var root = SpecTemporaryFiles.PathFor( $"commanddeck-suggestion-spec-{Guid.NewGuid( ):N}" );
         Directory.CreateDirectory( root );
         TcpListener listener = new( IPAddress.Loopback, 0 );
         listener.Start( );

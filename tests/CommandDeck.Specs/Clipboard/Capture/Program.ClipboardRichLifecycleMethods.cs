@@ -6,7 +6,7 @@ public static partial class Program
 {
     private static async Task ClipboardRichMetadataEscapingSurvivesReopenAsync( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-rich-escaping-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-rich-escaping-" ).FullName;
         var path = Path.Combine( root, "history.db" );
         try
         {
@@ -40,7 +40,7 @@ public static partial class Program
 
     private static async Task ClipboardRichImagePinBudgetAsync( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-rich-pin-budget-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-rich-pin-budget-" ).FullName;
         var path = Path.Combine( root, "history.db" );
         try
         {
@@ -98,7 +98,7 @@ public static partial class Program
 
     private static async Task ClipboardRichClearDuringProjectionAsync( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-rich-clear-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-rich-clear-" ).FullName;
         var path = Path.Combine( root, "history.db" );
         try
         {

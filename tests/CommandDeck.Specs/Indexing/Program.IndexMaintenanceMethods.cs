@@ -4,9 +4,7 @@ public static partial class Program
 {
     private static async Task WatcherOverflowSurvivesRestartAndReconcilesOnlyItsRootAsync( )
     {
-        var temporary = Path.Combine(
-            Path.GetTempPath( ),
-            $"commanddeck-overflow-restart-{Guid.NewGuid( ):N}" );
+        var temporary = SpecTemporaryFiles.PathFor( $"commanddeck-overflow-restart-{Guid.NewGuid( ):N}" );
         var affectedRoot = Path.Combine( temporary, "affected" );
         var quietRoot = Path.Combine( temporary, "quiet" );
         Directory.CreateDirectory( affectedRoot );
@@ -74,9 +72,7 @@ public static partial class Program
 
     private static async Task ScheduledMaintenanceIsDueOnceAndPersistsItsResultAsync( )
     {
-        var temporary = Path.Combine(
-            Path.GetTempPath( ),
-            $"commanddeck-scheduled-maintenance-{Guid.NewGuid( ):N}" );
+        var temporary = SpecTemporaryFiles.PathFor( $"commanddeck-scheduled-maintenance-{Guid.NewGuid( ):N}" );
         var root = Path.Combine( temporary, "documents" );
         Directory.CreateDirectory( root );
         var stale = Path.Combine( root, "stale.txt" );

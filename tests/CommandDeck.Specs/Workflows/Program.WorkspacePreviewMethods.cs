@@ -11,7 +11,7 @@ public static partial class Program
             throw new SpecSkippedException( "This fixture requires Linux." );
         }
 
-        var root = Directory.CreateTempSubdirectory( "commanddeck-workspace-spec-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-workspace-spec-" ).FullName;
         var previousPath = Environment.GetEnvironmentVariable( "PATH" );
         try
         {
@@ -122,7 +122,7 @@ public static partial class Program
 
     private static async Task WorkspacePreviewPreferencesAsync( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-preview-preferences-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-preview-preferences-" ).FullName;
         var options = new StorageOptions { DatabasePath = Path.Combine( root, "catalog.db" ) };
         try
         {

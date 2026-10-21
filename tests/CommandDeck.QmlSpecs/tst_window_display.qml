@@ -26,7 +26,7 @@ Item {
   Deck.WindowDisplay { id: primary; host: host; width: 2304; height: 1296; legacyHeight: 2160 }
   Deck.WindowDisplay { id: laptop; host: host; width: 1440; height: 900; legacyHeight: 1800 }
 
-  TestCase {
+  DeadlineTestCase {
     name: "WindowDisplay"
 
     function init() {
@@ -40,8 +40,8 @@ Item {
       primary.height = 1296
       laptop.width = 1440
       laptop.height = 900
-      tryCompare(primary, "configuredSize", Qt.size(2304, 1296))
-      tryCompare(laptop, "configuredSize", Qt.size(1440, 900))
+      waitForValue(primary, "configuredSize", Qt.size(2304, 1296))
+      waitForValue(laptop, "configuredSize", Qt.size(1440, 900))
     }
 
     function test_layout_choices_resize_only_the_launcher_and_update_its_limit() {
@@ -69,7 +69,7 @@ Item {
       laptop.width = 1280
       laptop.height = 400
       compare(primary.sizing, original)
-      tryVerify(function() { return laptop.sizing.limited })
+      waitForCondition(function() { return laptop.sizing.limited })
       laptop.width = 1440
       laptop.height = 900
     }
@@ -91,7 +91,7 @@ Item {
       laptop.width = 2560
       laptop.height = 1440
       compare(host.displaySizePercent, 150)
-      tryVerify(function() { return !laptop.sizing.limited })
+      waitForCondition(function() { return !laptop.sizing.limited })
       laptop.width = 1440
       laptop.height = 900
     }
@@ -105,7 +105,7 @@ Item {
     function test_description_and_maximum_follow_launcher_while_settings_is_open() {
       primary.width = 1920
       primary.height = 1080
-      tryCompare(primary, "configuredSize", Qt.size(1920, 1080))
+      waitForValue(primary, "configuredSize", Qt.size(1920, 1080))
       host.displaySizePercent = 150
       verify(!primary.launcher.limited)
       const description = primary.description
@@ -127,12 +127,12 @@ Item {
     function test_narrow_and_scrolling_layouts_are_explained() {
       laptop.width = 720
       laptop.height = 900
-      tryVerify(function() { return laptop.sizing.narrow })
+      waitForCondition(function() { return laptop.sizing.narrow })
       verify(laptop.description.indexOf("narrow layout") >= 0)
       verify(!laptop.sizing.scroll)
       laptop.width = 320
       laptop.height = 240
-      tryVerify(function() { return laptop.sizing.scroll })
+      waitForCondition(function() { return laptop.sizing.scroll })
       verify(laptop.description.indexOf("scroll to view") >= 0)
       laptop.width = 1440
       laptop.height = 900
@@ -141,7 +141,7 @@ Item {
     function test_zoom_status_when_no_percentage_fits() {
       laptop.width = 320
       laptop.height = 240
-      tryCompare(laptop, "maximumFittingPercent", 0)
+      waitForValue(laptop, "maximumFittingPercent", 0)
       DisplayActions.stepDisplaySize(host, 1)
       verify(host.statusText.indexOf("no percentage fits here") >= 0)
       verify(host.statusText.indexOf("max 75%") < 0)

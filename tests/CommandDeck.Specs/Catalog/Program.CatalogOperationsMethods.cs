@@ -7,9 +7,7 @@ public static partial class Program
 {
     private static async Task CatalogOperationsInspectMaintainAndPurgeAsync( )
     {
-        var database = Path.Combine(
-            Path.GetTempPath( ),
-            $"commanddeck-catalog-operations-{Guid.NewGuid( ):N}.db" );
+        var database = SpecTemporaryFiles.PathFor( $"commanddeck-catalog-operations-{Guid.NewGuid( ):N}.db" );
         try
         {
             await using SqliteCatalog catalog = new(

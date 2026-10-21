@@ -4,7 +4,7 @@ public static partial class Program
 {
     private static async Task HerdrProjectRejectsIncompleteInventoryAsync( )
     {
-        var directory = Directory.CreateTempSubdirectory( "commanddeck-herdr-inventory-" ).FullName;
+        var directory = SpecTemporaryFiles.CreateDirectory( "commanddeck-herdr-inventory-" ).FullName;
         try
         {
             var excessive = string.Join( ',', Enumerable.Range( 1, HerdrClient.MaximumWorkspaces + 1 )
@@ -76,7 +76,7 @@ public static partial class Program
 
     private static async Task HerdrProjectRejectsOverlappingOpensAsync( )
     {
-        var directory = Directory.CreateTempSubdirectory( "commanddeck-herdr-overlap-" ).FullName;
+        var directory = SpecTemporaryFiles.CreateDirectory( "commanddeck-herdr-overlap-" ).FullName;
         try
         {
             TaskCompletionSource<ProcessResult> pending = new( TaskCreationOptions.RunContinuationsAsynchronously );
@@ -107,7 +107,7 @@ public static partial class Program
 
     private static async Task HerdrProjectReportsWindowFailureAsync( )
     {
-        var directory = Directory.CreateTempSubdirectory( "commanddeck-herdr-window-" ).FullName;
+        var directory = SpecTemporaryFiles.CreateDirectory( "commanddeck-herdr-window-" ).FullName;
         try
         {
             HerdrFake fake = new( )

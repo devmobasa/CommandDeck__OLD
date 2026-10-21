@@ -143,9 +143,7 @@ public static partial class Program
 
         public static PackageHelperFixture Create( )
         {
-            var root = Path.Combine(
-                Path.GetTempPath( ),
-                $"commanddeck-package-helper-{Guid.NewGuid( ):N}" );
+            var root = SpecTemporaryFiles.PathFor( $"commanddeck-package-helper-{Guid.NewGuid( ):N}" );
             Directory.CreateDirectory( Path.Combine( root, "sync" ) );
             Directory.CreateDirectory( Path.Combine( root, "local" ) );
             File.WriteAllText( Path.Combine( root, "sync", "core.db" ), "core" );

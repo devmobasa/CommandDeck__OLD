@@ -70,9 +70,7 @@ public static partial class Program
             MimeTypeCacheEvictsLeastRecentlyUsedPathAsync );
         await RunAsync( "application invocation keeps user arguments as argv", async ( ) =>
         {
-            var database = Path.Combine(
-                Path.GetTempPath( ),
-                $"commanddeck-spec-{Guid.NewGuid( ):N}.db" );
+            var database = SpecTemporaryFiles.PathFor( $"commanddeck-spec-{Guid.NewGuid( ):N}.db" );
             try
             {
                 SqliteCatalog catalog = new( new StorageOptions { DatabasePath = database } );

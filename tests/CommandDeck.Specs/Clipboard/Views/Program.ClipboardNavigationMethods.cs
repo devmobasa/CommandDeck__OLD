@@ -4,7 +4,7 @@ public static partial class Program
 {
     private static async Task ClipboardNavigationSurvivesBookmarksAsync( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-clipboard-navigation-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-clipboard-navigation-" ).FullName;
         try
         {
             List<IndexedItem> items = [];

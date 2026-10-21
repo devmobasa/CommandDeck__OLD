@@ -15,14 +15,14 @@ Item {
       panel.launcherWidthPercent = 100
       panel.launcherHeightPercent = 100
       panel.visible = true
-      tryCompare(panel.searchControl, "activeFocus", true)
+      waitForValue(panel.searchControl, "activeFocus", true)
       typeText("panel percent")
       keyClick(Qt.Key_Return)
       keyClick(Qt.Key_Tab)
-      tryCompare(panel.layoutWidthControl.sliderControl, "activeFocus", true)
+      waitForValue(panel.layoutWidthControl.sliderControl, "activeFocus", true)
       if (axis === "Height") keyClick(Qt.Key_Tab)
       const control = panel["layout" + axis + "Control"]
-      tryCompare(control.sliderControl, "activeFocus", true)
+      waitForValue(control.sliderControl, "activeFocus", true)
       return control
     }
 
@@ -53,9 +53,9 @@ Item {
       for (let step = 0; step < 14; step++) keyClick(Qt.Key_Left)
       compare(control.value, 80)
       keyClick(Qt.Key_Tab)
-      tryCompare(reset, "activeFocus", true)
+      waitForValue(reset, "activeFocus", true)
       keyClick(Qt.Key_Backtab)
-      tryCompare(control.sliderControl, "activeFocus", true)
+      waitForValue(control.sliderControl, "activeFocus", true)
       keyClick(Qt.Key_Tab)
       keyClick(data.resetKey)
       compare(control.value, 100)
@@ -65,7 +65,7 @@ Item {
       keyClick(Qt.Key_Escape)
       verify(!panel.visible)
       panel.visible = true
-      tryCompare(panel.searchControl, "activeFocus", true)
+      waitForValue(panel.searchControl, "activeFocus", true)
       compare(control.value, 100)
     }
 
@@ -77,15 +77,15 @@ Item {
       const control = openLayout(data.axis)
       const panel = fixture.part_settingsPanel
       const slider = control.sliderControl
-      verify(waitForRendering(slider))
+      verify(waitForFrame(slider))
       mouseClick(slider, slider.width * 0.9, slider.height / 2)
       verify(control.value > 100 && control.value <= 140)
       compare(control.value % 5, 0)
       compare(panel["launcher" + data.axis + "Percent"], control.value)
       keyClick(Qt.Key_Tab)
       const reset = panel["layout" + data.axis + "ResetControl"]
-      tryCompare(reset, "activeFocus", true)
-      verify(waitForRendering(reset))
+      waitForValue(reset, "activeFocus", true)
+      verify(waitForFrame(reset))
       mouseClick(reset)
       compare(control.value, 100)
       verify(panel.searchControl.activeFocus)

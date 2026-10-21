@@ -56,7 +56,7 @@ public static partial class Program
 
     private static async Task ExtensionDataPersistsAndRejectsStaleWritesAsync( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-data-spec-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-data-spec-" ).FullName;
         try
         {
             var storage = new StorageOptions { DatabasePath = Path.Combine( root, "catalog.db" ) };

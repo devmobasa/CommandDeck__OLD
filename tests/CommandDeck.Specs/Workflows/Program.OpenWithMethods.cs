@@ -6,7 +6,7 @@ public static partial class Program
 {
     private static async Task RuntimeSearchSurvivesMimeDetectionFailureAsync( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-failed-mime-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-failed-mime-" ).FullName;
         try
         {
             await using var runtime = await SlowMimeRuntimeAsync( SlowMimeOptions( root ), new FailingMimeTypeResolver( ) );
@@ -34,7 +34,7 @@ public static partial class Program
     // each cache miss. Candidates that ranking discards must not pay for it.
     private static async Task RuntimeResolvesMimeTypesOnlyForShownFilesAsync( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-open-with-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-open-with-" ).FullName;
         try
         {
             CommandDeckOptions options = new( )
@@ -83,7 +83,7 @@ public static partial class Program
     // the rows with their own actions.
     private static async Task RuntimeSearchDoesNotWaitForSlowMimeDetectionAsync( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-slow-mime-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-slow-mime-" ).FullName;
         try
         {
             var options = SlowMimeOptions( root );
@@ -127,7 +127,7 @@ public static partial class Program
     // long wait leaves the request's cancellation as the only way out.
     private static async Task RuntimeSearchCancellationEndsMimeDetectionAsync( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-cancelled-mime-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-cancelled-mime-" ).FullName;
         try
         {
             SlowMimeTypeResolver mime = new( honoursCancellation: true );
@@ -158,7 +158,7 @@ public static partial class Program
     // With instead of starting more, and shutdown waits for that work to end.
     private static async Task RuntimeBoundsAndJoinsAbandonedMimeDetectionAsync( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-abandoned-mime-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-abandoned-mime-" ).FullName;
         SlowMimeTypeResolver mime = new( honoursCancellation: false );
         CommandDeckRuntime? runtime = null;
         try
@@ -265,7 +265,7 @@ public static partial class Program
             return;
         }
 
-        var root = Directory.CreateTempSubdirectory( "commanddeck-mime-cache-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-mime-cache-" ).FullName;
         var originalPath = Environment.GetEnvironmentVariable( "PATH" );
         try
         {

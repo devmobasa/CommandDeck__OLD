@@ -6,7 +6,7 @@ public static partial class Program
     // descriptor, and neither save path can switch it on.
     private static async Task HeySourceNeverAppearsOnHomeAsync( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-hey-source-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-hey-source-" ).FullName;
         try
         {
             await using SqliteCatalog catalog = new( new StorageOptions { DatabasePath = Path.Combine( root, "catalog.db" ) } );

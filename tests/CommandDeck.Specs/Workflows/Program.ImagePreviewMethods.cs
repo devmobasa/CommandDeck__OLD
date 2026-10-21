@@ -59,7 +59,7 @@ public static partial class Program
             SkipSpec( "ImageMagick or Bubblewrap is not installed; image boundary fixtures still run separately." );
         }
 
-        var directory = Directory.CreateTempSubdirectory( "commanddeck-raster-spec-" ).FullName;
+        var directory = SpecTemporaryFiles.CreateDirectory( "commanddeck-raster-spec-" ).FullName;
         try
         {
             var source = Path.Combine( directory, "source.png" );
@@ -103,7 +103,7 @@ public static partial class Program
 
     private static async Task ImagePreviewsEnforceBoundariesAsync( )
     {
-        var directory = Directory.CreateTempSubdirectory( "commanddeck-image-boundary-" ).FullName;
+        var directory = SpecTemporaryFiles.CreateDirectory( "commanddeck-image-boundary-" ).FullName;
         try
         {
             var path = Path.Combine( directory, "picture.png" );

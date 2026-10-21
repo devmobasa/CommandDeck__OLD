@@ -42,7 +42,7 @@ public static partial class Program
 
     private static async Task SystemdControlsAsync( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-systemd-controls-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-systemd-controls-" ).FullName;
         try
         {
             CommandDeckOptions options = new( )
@@ -128,7 +128,7 @@ public static partial class Program
 
     private static async Task SystemdEditingAsync( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-systemd-editor-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-systemd-editor-" ).FullName;
         try
         {
             var path = Path.Combine( root, "literal $(never); unit.service" );

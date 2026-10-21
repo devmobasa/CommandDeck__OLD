@@ -32,7 +32,7 @@ Item {
     onDismissed: opened = false
   }
 
-  TestCase {
+  DeadlineTestCase {
     name: "FocusTrap"
     when: windowShown
 
@@ -46,7 +46,7 @@ Item {
     function test_inspector_tab_stays_on_close_when_it_is_the_only_control() {
       inspector.inspection = inspection(2)
       inspector.opened = true
-      tryCompare(inspector.closeControl, "activeFocus", true)
+      waitForValue(inspector.closeControl, "activeFocus", true)
       verify(!inspector.previousControl.enabled && !inspector.nextControl.enabled)
 
       keyClick(Qt.Key_Tab)
@@ -59,7 +59,7 @@ Item {
       inspector.healthDetails = "The clipboard service is not running."
       inspector.inspection = inspection(6)
       inspector.opened = true
-      tryCompare(inspector.closeControl, "activeFocus", true)
+      waitForValue(inspector.closeControl, "activeFocus", true)
       verify(!inspector.previousControl.enabled && inspector.nextControl.enabled)
 
       keyClick(Qt.Key_Tab)

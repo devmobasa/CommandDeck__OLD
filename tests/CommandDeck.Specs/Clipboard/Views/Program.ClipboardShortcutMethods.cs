@@ -16,7 +16,7 @@ public static partial class Program
             throw new SpecSkippedException( "This fixture requires Linux." );
         }
 
-        var root = Directory.CreateTempSubdirectory( "commanddeck-shortcut-spec-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-shortcut-spec-" ).FullName;
         var previousPath = Environment.GetEnvironmentVariable( "PATH" );
         try
         {

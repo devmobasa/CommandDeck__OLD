@@ -167,7 +167,7 @@ public static partial class Program
 
     private static async Task TypedUrlFollowsTheWebSourceAndExplicitFiltersAsync( )
     {
-        var database = Path.Combine( Path.GetTempPath( ), $"commanddeck-typed-url-{Guid.NewGuid( ):N}.db" );
+        var database = SpecTemporaryFiles.PathFor( $"commanddeck-typed-url-{Guid.NewGuid( ):N}.db" );
         try
         {
             await using SqliteCatalog catalog = new( new StorageOptions { DatabasePath = database } );
@@ -225,7 +225,7 @@ public static partial class Program
 
     private static async Task TypedUrlInvocationStoresNoAddressAsync( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-typed-url-usage-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-typed-url-usage-" ).FullName;
         try
         {
             CommandDeckOptions options = new( )

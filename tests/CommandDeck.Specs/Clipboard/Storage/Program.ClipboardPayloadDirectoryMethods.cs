@@ -9,7 +9,7 @@ public static partial class Program
             throw new SpecSkippedException( "This fixture requires Linux." );
         }
 
-        var root = Directory.CreateTempSubdirectory( "commanddeck-clipboard-payload-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-clipboard-payload-" ).FullName;
         try
         {
             var path = Path.Combine( root, "history.data" );
@@ -81,7 +81,7 @@ public static partial class Program
             throw new SpecSkippedException( "This fixture requires Linux." );
         }
 
-        var root = Directory.CreateTempSubdirectory( "commanddeck-clipboard-directory-swap-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-clipboard-directory-swap-" ).FullName;
         try
         {
             var original = Path.Combine( root, "history.data" );
@@ -121,7 +121,7 @@ public static partial class Program
             throw new SpecSkippedException( "This fixture requires Linux." );
         }
 
-        var root = Directory.CreateTempSubdirectory( "commanddeck-clipboard-payload-nodes-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-clipboard-payload-nodes-" ).FullName;
         try
         {
             var path = Path.Combine( root, "history.data" );

@@ -33,6 +33,13 @@ Item {
     }
   }
 
+  Connections {
+    target: deck
+    function onTestSurfaceWindowChanged() {
+      if (deck.testSurfaceWindow) deck.testSurfaceWindow.mask = journey.host.pointerIsolation
+    }
+  }
+
   TestCase { id: events; parent: deck.testSearchInput; when: false }
 
   function focused() {

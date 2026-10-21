@@ -6,9 +6,7 @@ public static partial class Program
     // removes the old one. Readers must never see both, or neither.
     private static async Task StagedPathBatchesPublishAsOneTransactionAsync( )
     {
-        var database = Path.Combine(
-            Path.GetTempPath( ),
-            $"commanddeck-staged-batch-{Guid.NewGuid( ):N}.db" );
+        var database = SpecTemporaryFiles.PathFor( $"commanddeck-staged-batch-{Guid.NewGuid( ):N}.db" );
         try
         {
             await using SqliteCatalog catalog = new( new StorageOptions { DatabasePath = database } );

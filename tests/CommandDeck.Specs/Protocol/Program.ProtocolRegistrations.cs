@@ -35,13 +35,11 @@ public static partial class Program
 
         async Task UnixProtocolFramesCancellationAndFilePreviewsAsync( )
         {
-            var root = Path.Combine(
-                Path.GetTempPath( ),
-                $"commanddeck-protocol-spec-{Guid.NewGuid( ):N}" );
+            var root = SpecTemporaryFiles.PathFor( $"commanddeck-protocol-spec-{Guid.NewGuid( ):N}" );
             Directory.CreateDirectory( root );
             var database = Path.Combine( root, "catalog.db" );
             var config = Path.Combine( root, "config.json" );
-            var socket = Path.Combine( root, "commanddeck.sock" );
+            var socket = SpecTemporaryFiles.SocketPath( root, "commanddeck.sock" );
             var files = Path.Combine( root, "files" );
             Directory.CreateDirectory( files );
             Directory.CreateDirectory( Path.Combine( files, "project-a" ) );

@@ -8,7 +8,7 @@ public static partial class Program
 
         public HeyLaunchFixture( params string[] tools )
         {
-            Root = Directory.CreateTempSubdirectory( "commanddeck-hey-actions-" ).FullName;
+            Root = SpecTemporaryFiles.CreateDirectory( "commanddeck-hey-actions-" ).FullName;
             foreach ( var tool in tools )
             {
                 AddTool( tool );

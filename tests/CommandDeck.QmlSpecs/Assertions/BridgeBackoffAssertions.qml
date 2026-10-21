@@ -21,9 +21,11 @@ QtObject {
     id: defaultClient
     property int exits: 0
     property var delays: []
+    property var exitTimes: []
     executable: "false"
     enabled: false
     onDisconnected: {
+      defaultClient.exitTimes = defaultClient.exitTimes.concat([Date.now()])
       defaultClient.exits++
       defaultClient.delays = defaultClient.delays.concat([defaultClient.reconnectDelay])
     }
@@ -47,6 +49,7 @@ QtObject {
     id: reconnectDeck
     visible: false
     testMode: true
+    desktopIntegration: CommandDeck.DesktopIntegration { }
   }
 
   function start() {
@@ -76,25 +79,35 @@ QtObject {
     host.pendingAsyncSpecs--
   }
 
-  function waitFor(condition, timeout, done) {
-    waits = waits.concat([{ condition: condition, deadline: Date.now() + timeout, done: done }])
+  function waitFor(condition, done) {
+    waits = waits.concat([{ condition: condition, deadline: Date.now() + 30000, done: done }])
   }
 
   function checkWaits() {
     const now = Date.now()
     const ready = waits.filter(value => value.condition() || now >= value.deadline)
     waits = waits.filter(value => ready.indexOf(value) < 0)
-    for (const value of ready) value.done(value.condition())
+    for (const value of ready) {
+      const reached = value.condition()
+      if (!reached) host.expect(false, "bridge readiness deadline: " + value.condition.toString()
+        + "; " + JSON.stringify({ defaultExits: defaultClient.exits, defaultDelays: defaultClient.delays,
+          fastExits: fastClient.exits, fastDelays: fastClient.delays,
+          deckRetryRunning: reconnectDeck.part_protocol.reconnectTimer.running }))
+      value.done(reached)
+    }
   }
 
   function verifyDefaultBackoff() {
     defaultClient.enabled = true
-    waitFor(() => false, 2500, () => {
+    waitFor(() => defaultClient.exits >= 3, reached => {
       const spawns = defaultClient.exits
       defaultClient.enabled = false
-      host.expect(spawns >= 2 && spawns <= 4,
+      host.expect(reached && spawns >= 3,
         "a bridge that keeps failing backs off instead of respawning every 500 ms ("
-          + spawns + " spawns in 2.5 s)")
+          + spawns + " observed failures)")
+      host.expect(defaultClient.exitTimes[1] - defaultClient.exitTimes[0] >= 450
+          && defaultClient.exitTimes[2] - defaultClient.exitTimes[1] >= 900,
+        "actual reconnect attempts honor the increasing minimum delays")
       host.expect(defaultClient.delays[0] === 500 && defaultClient.delays[1] === 1000
           && defaultClient.delays.every(delay => delay <= 30000),
         "reconnect waits double from 0.5 s toward the 30 s cap")
@@ -106,7 +119,7 @@ QtObject {
     fastClient.reconnectInitialDelay = 40
     fastClient.reconnectMaximumDelay = 160
     fastClient.enabled = true
-    waitFor(() => fastClient.exits >= 5, 4000, reached => {
+    waitFor(() => fastClient.exits >= 5, reached => {
       host.expect(reached && fastClient.delays.slice(0, 4).join(",") === "40,80,160,160",
         "reconnect waits double and stop at the configured cap")
       const exitsBeforeReset = fastClient.exits
@@ -117,7 +130,7 @@ QtObject {
       host.expect(fastClient.reconnects === 1 && !fastClient.awaitingReconnect
           && fastClient.reconnectDelay === 0,
         "a verified reconnection resets the backoff")
-      waitFor(() => fastClient.exits > exitsBeforeReset, 4000, failedAgain => {
+      waitFor(() => fastClient.exits > exitsBeforeReset, failedAgain => {
         fastClient.enabled = false
         host.expect(failedAgain && fastClient.delays[fastClient.delays.length - 1] === 40,
           "the first failure after a reconnection waits the initial delay again")
@@ -133,12 +146,13 @@ QtObject {
     client.executable = "false"
     client.reconnectInitialDelay = 60000
     client.enabled = true
-    waitFor(() => exits === 1, 4000, failed => {
+    waitFor(() => exits === 1, failed => {
       host.expect(failed && !reconnectDeck.daemonAvailable && client.reconnectTimer.running,
         "a failed bridge waits for its backoff while the launcher is closed")
       reconnectDeck.open("{}")
-      // The old fixed retry fired 500 ms after a failure; this wait ends earlier.
-      waitFor(() => exits === 2, 400, retried => {
+      // Opening cancels the scheduled 60 s backoff rather than waiting for it.
+      host.expect(!client.reconnectTimer.running, "opening cancels the pending bridge backoff")
+      waitFor(() => exits === 2, retried => {
         client.enabled = false
         reconnectDeck.close()
         host.expect(retried, "opening the launcher retries a failed bridge at once")

@@ -25,7 +25,7 @@ EventPathFixture {
       const panel = fixture.part_settingsPanel
       originalSnapshot = panel.snapshot
       panel.visible = true
-      tryCompare(panel.searchControl, "activeFocus", true)
+      waitForValue(panel.searchControl, "activeFocus", true)
       typeText("hey")
       compare(panel.currentPage, "search")
       const card = panel.part_heyCard
@@ -39,10 +39,10 @@ EventPathFixture {
       verify(picker.activeFocus, "Tab reaches the picker")
 
       keyClick(Qt.Key_Space)
-      tryCompare(picker.popup, "visible", true)
+      waitForValue(picker.popup, "visible", true)
       keyClick(Qt.Key_Down)
       keyClick(Qt.Key_Return)
-      tryCompare(picker.popup, "visible", false)
+      waitForValue(picker.popup, "visible", false)
       verify(panel.changedPreferences !== null)
       compare(panel.changedPreferences.heyOpenTarget, Protocol.HeyOpenTargets.Terminal)
       compare(panel.changedPreferences.sources.length, 2, "other preferences are kept")

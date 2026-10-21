@@ -4,7 +4,7 @@ public static partial class Program
 {
     private static async Task SearchSocketReportsIncompleteWithoutDiagnosticsAsync( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-search-outcome-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-search-outcome-" ).FullName;
         using CancellationTokenSource stop = new( );
         try
         {
@@ -20,7 +20,7 @@ public static partial class Program
                 catalog, catalog.LauncherPreferences );
             await using var runtime = InvocationFixture( options, catalog, catalog.UsageHistory,
                 new AcceptanceExecutor( ), search );
-            var socket = Path.Combine( root, "daemon.sock" );
+            var socket = SpecTemporaryFiles.SocketPath( root, "daemon.sock" );
             UnixProtocolServer server = new( runtime, socket );
             _ = server.RunAsync( stop.Token );
             try

@@ -4,9 +4,7 @@ public static partial class Program
 {
     private static async Task WebFallbackDoesNotConnectBeforeInvocationAsync( )
     {
-        var root = Path.Combine(
-            Path.GetTempPath( ),
-            $"commanddeck-fallback-network-spec-{Guid.NewGuid( ):N}" );
+        var root = SpecTemporaryFiles.PathFor( $"commanddeck-fallback-network-spec-{Guid.NewGuid( ):N}" );
         Directory.CreateDirectory( root );
         System.Net.Sockets.TcpListener listener = new(
             System.Net.IPAddress.Loopback,
@@ -189,9 +187,7 @@ public static partial class Program
             throw new SpecSkippedException( "This fixture requires Linux." );
         }
 
-        var directory = Path.Combine(
-            Path.GetTempPath( ),
-            $"commanddeck-shortcut-spec-{Guid.NewGuid( ):N}" );
+        var directory = SpecTemporaryFiles.PathFor( $"commanddeck-shortcut-spec-{Guid.NewGuid( ):N}" );
         Directory.CreateDirectory( directory );
         var executable = Path.Combine( directory, "hyprctl" );
         var previousPath = Environment.GetEnvironmentVariable( "PATH" );
@@ -258,9 +254,7 @@ public static partial class Program
 
     private static async Task FilePreviewEnforcesBoundsAndPathPolicyAsync( )
     {
-        var sandbox = Path.Combine(
-            Path.GetTempPath( ),
-            $"commanddeck-preview-spec-{Guid.NewGuid( ):N}" );
+        var sandbox = SpecTemporaryFiles.PathFor( $"commanddeck-preview-spec-{Guid.NewGuid( ):N}" );
         var root = Path.Combine( sandbox, "root" );
         var outside = Path.Combine( sandbox, "outside" );
         Directory.CreateDirectory( root );
@@ -385,9 +379,7 @@ public static partial class Program
 
     private static async Task DetailFieldsRemainOrderedAndSerializeAsync( )
     {
-        var database = Path.Combine(
-            Path.GetTempPath( ),
-            $"commanddeck-detail-spec-{Guid.NewGuid( ):N}.db" );
+        var database = SpecTemporaryFiles.PathFor( $"commanddeck-detail-spec-{Guid.NewGuid( ):N}.db" );
         try
         {
             SqliteCatalog catalog = new( new StorageOptions { DatabasePath = database } );

@@ -183,7 +183,7 @@ public static partial class Program
 
     private static async Task AiCredentialsResolveOnlyFromBoundedNamedSourcesAsync( )
     {
-        var root = Path.Combine( Path.GetTempPath( ), $"commanddeck-ai-credential-{Guid.NewGuid( ):N}" );
+        var root = SpecTemporaryFiles.PathFor( $"commanddeck-ai-credential-{Guid.NewGuid( ):N}" );
         Directory.CreateDirectory( root );
         var oldDirectory = Environment.GetEnvironmentVariable( "CREDENTIALS_DIRECTORY" );
         var oldEnvironment = Environment.GetEnvironmentVariable( "COMMANDDECK_AI_TEST_KEY" );
@@ -255,7 +255,7 @@ public static partial class Program
 
     private static async Task AiPreflightAttachesOnlyOwnedResultsAsync( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-ai-attachment-owner-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-ai-attachment-owner-" ).FullName;
         try
         {
             var documents = Path.Combine( root, "documents" );

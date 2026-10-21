@@ -19,7 +19,7 @@ EventPathFixture {
       const flickable = panel.parts.customizationScroll.contentItem
       const top = item.mapToItem(flickable.contentItem, 0, 0).y
       flickable.contentY = Math.max(0, Math.min(top - 40, flickable.contentHeight - flickable.height))
-      waitForRendering(panel)
+      waitForFrame(panel)
     }
 
     function hiddenList() {
@@ -41,11 +41,11 @@ EventPathFixture {
       const panel = fixture.part_settingsPanel
       panel.part_hiddenItemsCard.searchControl.text = ""
       panel.visible = true
-      tryCompare(panel.searchControl, "activeFocus", true)
+      waitForValue(panel.searchControl, "activeFocus", true)
       typeText("hidden items")
       keyClick(Qt.Key_Escape)
       panel.hiddenItems = hiddenList()
-      tryCompare(panel.part_hiddenItemsCard, "renderedCount", 2)
+      waitForValue(panel.part_hiddenItemsCard, "renderedCount", 2)
       return panel.part_hiddenItemsCard
     }
 
@@ -70,7 +70,7 @@ EventPathFixture {
       typeText("note")
       compare(card.searchControl.text, "note")
       verify(card.searchControl.activeFocus)
-      tryCompare(fixture.part_settingsPanel, "hiddenItemsQueryRequested", "note")
+      waitForValue(fixture.part_settingsPanel, "hiddenItemsQueryRequested", "note")
       fixture.part_settingsPanel.visible = false
     }
 
@@ -100,17 +100,17 @@ EventPathFixture {
       panel.hiddenItemRestored = ""
       panel.part_hiddenItemsCard.searchControl.text = ""
       panel.visible = true
-      tryCompare(panel.searchControl, "activeFocus", true)
+      waitForValue(panel.searchControl, "activeFocus", true)
       typeText("hidden items")
       compare(panel.currentPage, "customization")
-      tryVerify(() => panel.hiddenItemsRequests >= 1)
+      waitForCondition(() => panel.hiddenItemsRequests >= 1)
       compare(panel.hiddenItemsQueryRequested, "")
       compare(panel.hiddenItemsOffsetRequested, 0)
       keyClick(Qt.Key_Escape)
 
       const card = panel.part_hiddenItemsCard
       panel.hiddenItems = hiddenList()
-      tryCompare(card, "renderedCount", 2)
+      waitForValue(card, "renderedCount", 2)
       compare(card.renderedItemAt(1).available, false)
 
       focusByTab(card.searchControl)
@@ -125,18 +125,18 @@ EventPathFixture {
       const reordered = hiddenList()
       reordered.items.reverse()
       panel.hiddenItems = reordered
-      tryVerify(() => card.restoreControlAt(0).activeFocus)
+      waitForCondition(() => card.restoreControlAt(0).activeFocus)
       compare(card.renderedItemAt(0).modelData.id, "hidden:app:old.desktop")
 
       // Typing from a focused restore button reaches search immediately.
       const before = panel.hiddenItemsRequests
       typeText("note")
       compare(card.searchControl.text, "note")
-      tryVerify(() => panel.hiddenItemsRequests > before)
+      waitForCondition(() => panel.hiddenItemsRequests > before)
       compare(panel.hiddenItemsQueryRequested, "note")
       compare(panel.hiddenItemsOffsetRequested, 0)
       panel.hiddenItems = { query: "note", total: 1, truncated: false, items: [hiddenList().items[0]] }
-      tryCompare(card, "renderedCount", 1)
+      waitForValue(card, "renderedCount", 1)
       verify(card.searchControl.activeFocus)
 
       // Mouse path: the refreshed rows must be laid out and in view first.
@@ -146,28 +146,28 @@ EventPathFixture {
       typeText("x")
       compare(card.searchControl.text, "notex")
       verify(card.searchControl.activeFocus)
-      tryCompare(panel, "hiddenItemsQueryRequested", "notex")
+      waitForValue(panel, "hiddenItemsQueryRequested", "notex")
 
       panel.hiddenItems = { query: "notex", total: 70, truncated: true, items: hiddenList().items }
-      tryCompare(card.loadMoreControl, "visible", true)
+      waitForValue(card.loadMoreControl, "visible", true)
       scrollIntoView(panel, card.loadMoreControl)
       mouseClick(card.loadMoreControl)
       compare(panel.hiddenItemsOffsetRequested, 2)
       typeText("y")
       compare(card.searchControl.text, "notexy")
       verify(card.searchControl.activeFocus)
-      tryCompare(panel, "hiddenItemsQueryRequested", "notexy")
+      waitForValue(panel, "hiddenItemsQueryRequested", "notexy")
       compare(panel.hiddenItemsOffsetRequested, 0)
 
       // If the focused restored row disappears, search becomes the useful fallback.
       focusByTab(card.restoreControlAt(0))
       keyClick(Qt.Key_Return)
       panel.hiddenItems = { query: "notexy", total: 0, truncated: false, items: [] }
-      tryCompare(card.searchControl, "activeFocus", true)
+      waitForValue(card.searchControl, "activeFocus", true)
 
       panel.visible = false
       panel.visible = true
-      tryCompare(panel.searchControl, "activeFocus", true)
+      waitForValue(panel.searchControl, "activeFocus", true)
       compare(card.searchControl.text, "notexy")
 
       panel.hiddenItems = null

@@ -6,10 +6,10 @@ public static partial class Program
 
     private static async Task SocketAiReadsAnswerWhileAnAnswerStreamsAsync( )
     {
-        var root = Path.Combine( Path.GetTempPath( ), $"commanddeck-ai-reads-{Guid.NewGuid( ):N}" );
+        var root = SpecTemporaryFiles.PathFor( $"commanddeck-ai-reads-{Guid.NewGuid( ):N}" );
         Directory.CreateDirectory( root );
         await using var provider = await ScriptedOllamaServer.StartAsync( );
-        var socket = Path.Combine( root, "commanddeck.sock" );
+        var socket = SpecTemporaryFiles.SocketPath( root, "commanddeck.sock" );
         var config = await WriteScriptedAiConfigAsync( root, provider );
 
         using CancellationTokenSource serverCancellation = new( );
@@ -83,7 +83,7 @@ public static partial class Program
         {
             await using ( runtime )
             {
-                await using var client = await ConnectWithRetryAsync( Path.Combine( root, "commanddeck.sock" ) );
+                await using var client = await ConnectWithRetryAsync( SpecTemporaryFiles.SocketPath( root, "commanddeck.sock" ) );
                 var files = await BrowseFileResultsAsync( client, 1, folder );
                 var first = files["first.txt"];
                 var second = files["second.txt"];

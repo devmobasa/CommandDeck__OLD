@@ -4,7 +4,7 @@ public static partial class Program
 {
     private static async Task ClipboardCopyBindsEntryOwnerAndGenerationAsync( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-clipboard-copy-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-clipboard-copy-" ).FullName;
         try
         {
             using ClipboardHistoryStore store = new( Path.Combine( root, "history.db" ), new ClipboardHistoryOptions( ) );
@@ -39,7 +39,7 @@ public static partial class Program
 
     private static async Task ClipboardCopyCancellationRetainsBusySlotUntilCompletionAsync( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-clipboard-copy-cancel-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-clipboard-copy-cancel-" ).FullName;
         try
         {
             foreach ( var close in new[] { "generation", "session", "disconnect", "clear", "delete" } )
@@ -99,7 +99,7 @@ public static partial class Program
 
     private static async Task ClipboardCopyRejectsPayloadDamageAfterBrowserOpenAsync( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-clipboard-copy-damage-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-clipboard-copy-damage-" ).FullName;
         try
         {
             foreach ( var missing in new[] { true, false } )

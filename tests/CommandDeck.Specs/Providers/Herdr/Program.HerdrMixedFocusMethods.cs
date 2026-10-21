@@ -4,7 +4,7 @@ public static partial class Program
 {
     private static async Task HerdrMixedFocusActionsShareGateAsync( )
     {
-        var directory = Directory.CreateTempSubdirectory( "commanddeck-herdr-mixed-focus-" ).FullName;
+        var directory = SpecTemporaryFiles.CreateDirectory( "commanddeck-herdr-mixed-focus-" ).FullName;
         try
         {
             ProjectProvider provider = new( [new ProjectOptions { Title = "Project", Path = directory }] );

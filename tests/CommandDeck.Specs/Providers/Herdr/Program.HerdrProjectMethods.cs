@@ -6,7 +6,7 @@ public static partial class Program
 {
     private static async Task HerdrProjectActionsUseCachedFoldersAsync( )
     {
-        var directory = Directory.CreateTempSubdirectory( "commanddeck-herdr-project-" ).FullName;
+        var directory = SpecTemporaryFiles.CreateDirectory( "commanddeck-herdr-project-" ).FullName;
         try
         {
             var path = Directory.CreateDirectory( Path.Combine( directory, "--literal $(never) ; café" ) ).FullName;
@@ -101,7 +101,7 @@ public static partial class Program
 
     private static async Task HerdrProjectReuseMatchesDirectoriesAsync( )
     {
-        var directory = Directory.CreateTempSubdirectory( "commanddeck-herdr-reuse-" ).FullName;
+        var directory = SpecTemporaryFiles.CreateDirectory( "commanddeck-herdr-reuse-" ).FullName;
         try
         {
             var path = ProjectJsonString( directory + "/./" );
@@ -136,7 +136,7 @@ public static partial class Program
 
     private static async Task HerdrProjectFailuresNeverRetryAsync( )
     {
-        var directory = Directory.CreateTempSubdirectory( "commanddeck-herdr-failure-" ).FullName;
+        var directory = SpecTemporaryFiles.CreateDirectory( "commanddeck-herdr-failure-" ).FullName;
         try
         {
             foreach ( var operation in new[] { "list", "create", "focus" } )

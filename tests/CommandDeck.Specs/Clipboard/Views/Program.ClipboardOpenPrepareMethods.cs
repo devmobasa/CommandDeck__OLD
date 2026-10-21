@@ -6,7 +6,7 @@ public static partial class Program
 {
     private static async Task ClipboardOpenPreparationMintsCapabilitiesWithoutEffectsAsync( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-open-prepare-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-open-prepare-" ).FullName;
         try
         {
             using ClipboardHistoryStore store = new( Path.Combine( root, "history.db" ), new( ) );
@@ -144,7 +144,7 @@ public static partial class Program
             throw new SpecSkippedException( "This fixture requires Linux." );
         }
 
-        var root = Directory.CreateTempSubdirectory( "commanddeck-action-worker-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-action-worker-" ).FullName;
         try
         {
             var bin = Directory.CreateDirectory( Path.Combine( root, "bin" ) ).FullName;

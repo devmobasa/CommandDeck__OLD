@@ -7,6 +7,17 @@ Item {
   id: journey
   required property var host
   readonly property var deck: host.part_integratedDeck
+  readonly property alias pointerIsolation: pointerIsolation
+  Region { id: pointerIsolation }
+  Connections {
+    target: journey.deck
+    function onTestSurfaceWindowChanged() {
+      if (!journey.deck.testSurfaceWindow) return
+      journey.deck.testSurfaceWindow.mask = pointerIsolation
+      const strip = journey.host.part_hostEvents.findChild(journey.deck.testSurfaceWindow, "hiddenUndoBar")
+      if (strip) strip.holdMs = 300000
+    }
+  }
   property var steps: []
   property int stepIndex: 0
   property double deadline: 0
@@ -25,6 +36,7 @@ Item {
 
   // A real exclusive zone, plus a non-exclusive witness that confirms the
   // compositor applied it before we inspect the launcher's full-screen scrim.
+  // qmllint disable uncreatable-type
   PanelWindow {
     id: reservedBar
     visible: false
@@ -36,6 +48,7 @@ Item {
     WlrLayershell.layer: WlrLayer.Top
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
   }
+  // qmllint disable uncreatable-type
   PanelWindow {
     id: workArea
     visible: false
@@ -162,6 +175,8 @@ Item {
     deck.reconciliationPending = false
     host.expect(!deck.opened && !deck.testSurfaceWindow.part_searchBar.placeholderRotating,
       "a closed launcher leaves its search placeholder timer stopped")
+    host.expect(deck.testSurfaceWindow.mask === host.pointerIsolation,
+      "production fixture windows reject native pointer input while accepting QtTest events")
     workArea.visible = true
 
     steps = [
@@ -494,7 +509,7 @@ Item {
         ready: () => deck.testAgentSurface.part_retryButton.visible,
         message: "Retry remains available after editing the restored draft",
         action: () => {
-          host.expect(host.part_hostEvents.waitForRendering(deck.testAgentSurface.part_retryButton),
+          host.expect(host.part_hostEvents.waitForFrame(deck.testAgentSurface.part_retryButton),
             "the retry button renders before its real mouse click")
           host.part_hostEvents.mouseClick(deck.testAgentSurface.part_retryButton)
           host.expect(turnRequests().length === 4 && turnRequests()[3].query === "Another prompt",
@@ -512,8 +527,26 @@ Item {
     steps = steps.concat(savedShortcuts.steps()).concat(hoverSelection.steps()).concat(keptSearch.steps())
       .concat(omarchyClose.steps())
     stepIndex = 0
-    deadline = Date.now() + 2000
+    deadline = Date.now() + 30000
     stepTimer.start()
+  }
+
+  function diagnostics(step) {
+    const window = deck.testSurfaceWindow
+    const input = deck.testSearchInput
+    const session = deck.part_searchSession
+    const palette = window ? window.part_palette : null
+    return "predicate=" + step.ready.toString() + "; " + JSON.stringify({
+      step: stepIndex, opened: deck.opened, windowVisible: window ? window.visible : null,
+      windowActive: window ? window.active : null, query: deck.queryText,
+      inputText: input ? input.text : null, inputFocus: input ? input.activeFocus : null,
+      selectedIndex: deck.selectedIndex, result: deck.currentResult,
+      requestId: session.activeRequestId, inFlight: session.inFlight,
+      debounceRunning: session.debounce.running, lastRequests: deck.sentRequests.slice(-3),
+      workAreaHeight: workArea.height, baselineWorkAreaHeight: baselineWorkAreaHeight,
+      palette: palette ? [palette.x, palette.y, palette.width, palette.height, palette.opacity] : null,
+      undo: deck.lastUndo, helpOpen: deck.helpOpen, actionPanelOpen: deck.actionPanelOpen
+    }) + (step.diagnostics ? "; " + step.diagnostics() : "")
   }
 
   function advance() {
@@ -525,7 +558,7 @@ Item {
           return
         }
 
-        host.expect(false, step.message + " (readiness deadline exceeded)")
+        host.expect(false, step.message + " (readiness deadline exceeded); " + diagnostics(step))
         finish()
         return
       }
@@ -538,7 +571,7 @@ Item {
         return
       }
 
-      deadline = Date.now() + 2000
+      deadline = Date.now() + 30000
       stepTimer.start()
     } catch (error) {
       host.expect(false, step.message + ": " + error)

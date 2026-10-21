@@ -7,7 +7,7 @@ public static partial class Program
 {
     private static async Task ClipboardNativeAdmissionPreservesAliasesAsync( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-native-admission-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-native-admission-" ).FullName;
         var path = Path.Combine( root, "history.db" );
         try
         {
@@ -55,7 +55,7 @@ public static partial class Program
 
     private static async Task ClipboardNativeAdmissionRejectsInvalidAsync( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-native-admission-invalid-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-native-admission-invalid-" ).FullName;
         var path = Path.Combine( root, "history.db" );
         try
         {

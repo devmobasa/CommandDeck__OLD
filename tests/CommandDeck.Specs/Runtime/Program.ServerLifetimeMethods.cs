@@ -16,7 +16,7 @@ public static partial class Program
             {
                 Socket socket = new( AddressFamily.Unix, SocketType.Stream, ProtocolType.Unspecified );
                 clients.Add( socket );
-                await socket.ConnectAsync( new UnixDomainSocketEndPoint( Path.Combine( directory, "commanddeck.sock" ) ), timeout.Token );
+                await socket.ConnectAsync( new UnixDomainSocketEndPoint( SpecTemporaryFiles.SocketPath( directory, "commanddeck.sock" ) ), timeout.Token );
             }
             while ( server.ConnectedClients != UnixProtocolServer.MaximumClients )
             {
@@ -24,7 +24,7 @@ public static partial class Program
             }
 
             using Socket excess = new( AddressFamily.Unix, SocketType.Stream, ProtocolType.Unspecified );
-            await excess.ConnectAsync( new UnixDomainSocketEndPoint( Path.Combine( directory, "commanddeck.sock" ) ), timeout.Token );
+            await excess.ConnectAsync( new UnixDomainSocketEndPoint( SpecTemporaryFiles.SocketPath( directory, "commanddeck.sock" ) ), timeout.Token );
             Equal( 0, await excess.ReceiveAsync( new byte[1], SocketFlags.None, timeout.Token ) );
 
             // Send enough malformed requests to back up error writes without reading.
@@ -33,7 +33,7 @@ public static partial class Program
             await stop.CancelAsync( );
             await server.Completion.WaitAsync( TimeSpan.FromSeconds( 5 ) );
             Equal( 0, server.ConnectedClients );
-            True( !File.Exists( Path.Combine( directory, "commanddeck.sock" ) ) );
+            True( !File.Exists( SpecTemporaryFiles.SocketPath( directory, "commanddeck.sock" ) ) );
             try
             {
                 await write;

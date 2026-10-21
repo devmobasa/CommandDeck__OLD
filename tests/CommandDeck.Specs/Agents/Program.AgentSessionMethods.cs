@@ -14,7 +14,7 @@ public static partial class Program
         {
             await using ( runtime )
             {
-                var socket = Path.Combine( root, "commanddeck.sock" );
+                var socket = SpecTemporaryFiles.SocketPath( root, "commanddeck.sock" );
                 await using var client = await ConnectWithRetryAsync( socket );
                 await client.SendAsync( new ProtocolRequest
                 {
@@ -61,7 +61,7 @@ public static partial class Program
         {
             await using ( runtime )
             {
-                var socket = Path.Combine( root, "commanddeck.sock" );
+                var socket = SpecTemporaryFiles.SocketPath( root, "commanddeck.sock" );
                 await using var client = await ConnectWithRetryAsync( socket );
                 await client.SendAsync( new ProtocolRequest
                 {

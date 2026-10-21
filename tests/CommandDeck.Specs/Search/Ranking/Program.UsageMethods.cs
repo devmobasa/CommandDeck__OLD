@@ -6,9 +6,7 @@ public static partial class Program
 {
     private static async Task PersonalizationCopyAndPreviewLeaveUsageUnchangedAsync( )
     {
-        var root = Path.Combine(
-            Path.GetTempPath( ),
-            $"commanddeck-usage-spec-{Guid.NewGuid( ):N}" );
+        var root = SpecTemporaryFiles.PathFor( $"commanddeck-usage-spec-{Guid.NewGuid( ):N}" );
         var previousPath = Environment.GetEnvironmentVariable( "PATH" ) ?? string.Empty;
         Directory.CreateDirectory( root );
         try

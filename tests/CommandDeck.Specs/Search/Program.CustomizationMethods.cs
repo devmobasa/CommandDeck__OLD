@@ -6,9 +6,7 @@ public static partial class Program
 {
     private static async Task FileIndexSourcePreservesTraversalBehaviorAsync( )
     {
-        var root = Path.Combine(
-            Path.GetTempPath( ),
-            $"commanddeck-file-index-spec-{Guid.NewGuid( ):N}" );
+        var root = SpecTemporaryFiles.PathFor( $"commanddeck-file-index-spec-{Guid.NewGuid( ):N}" );
         Directory.CreateDirectory( root );
         try
         {
@@ -65,9 +63,7 @@ public static partial class Program
 
     private static async Task CustomizationAndHomeSurviveRebuildAsync( )
     {
-        var database = Path.Combine(
-            Path.GetTempPath( ),
-            $"commanddeck-customization-spec-{Guid.NewGuid( ):N}.db" );
+        var database = SpecTemporaryFiles.PathFor( $"commanddeck-customization-spec-{Guid.NewGuid( ):N}.db" );
         try
         {
             SqliteCatalog catalog = new( new StorageOptions { DatabasePath = database } );
@@ -253,9 +249,7 @@ public static partial class Program
 
     private static async Task DisabledLiveSourcesDoNotStartProviderAsync( )
     {
-        var database = Path.Combine(
-            Path.GetTempPath( ),
-            $"commanddeck-provider-preference-spec-{Guid.NewGuid( ):N}.db" );
+        var database = SpecTemporaryFiles.PathFor( $"commanddeck-provider-preference-spec-{Guid.NewGuid( ):N}.db" );
         try
         {
             SqliteCatalog catalog = new( new StorageOptions { DatabasePath = database } );
@@ -308,9 +302,7 @@ public static partial class Program
 
     private static async Task FavoritesRejectOverflowInsteadOfTruncatingExportAsync( )
     {
-        var database = Path.Combine(
-            Path.GetTempPath( ),
-            $"commanddeck-favorite-limit-spec-{Guid.NewGuid( ):N}.db" );
+        var database = SpecTemporaryFiles.PathFor( $"commanddeck-favorite-limit-spec-{Guid.NewGuid( ):N}.db" );
         try
         {
             await using SqliteCatalog catalog = new( new StorageOptions { DatabasePath = database } );
@@ -377,9 +369,7 @@ public static partial class Program
 
     private static async Task HomePreservesBookmarkOrderOverScoreAsync( )
     {
-        var database = Path.Combine(
-            Path.GetTempPath( ),
-            $"commanddeck-home-order-spec-{Guid.NewGuid( ):N}.db" );
+        var database = SpecTemporaryFiles.PathFor( $"commanddeck-home-order-spec-{Guid.NewGuid( ):N}.db" );
         try
         {
             SqliteCatalog catalog = new( new StorageOptions { DatabasePath = database } );
@@ -427,9 +417,7 @@ public static partial class Program
 
     private static async Task HomeFrecencyConsidersOlderFrequentResultsAsync( )
     {
-        var database = Path.Combine(
-            Path.GetTempPath( ),
-            $"commanddeck-home-frecency-spec-{Guid.NewGuid( ):N}.db" );
+        var database = SpecTemporaryFiles.PathFor( $"commanddeck-home-frecency-spec-{Guid.NewGuid( ):N}.db" );
         DateTimeOffset now = new( 2026, 8, 30, 12, 0, 0, TimeSpan.Zero );
         try
         {

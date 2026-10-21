@@ -19,9 +19,7 @@ public static partial class Program
 
     private static async Task<int> RunQualityBenchmarkAsync( string? outputPath, bool observeLatency )
     {
-        var root = Path.Combine(
-            Path.GetTempPath( ),
-            $"commanddeck-quality-benchmark-{Guid.NewGuid( ):N}" );
+        var root = SpecTemporaryFiles.PathFor( $"commanddeck-quality-benchmark-{Guid.NewGuid( ):N}" );
         Directory.CreateDirectory( root );
         try
         {

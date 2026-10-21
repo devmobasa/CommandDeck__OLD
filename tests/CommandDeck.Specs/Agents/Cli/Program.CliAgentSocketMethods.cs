@@ -4,7 +4,7 @@ public static partial class Program
 {
     private static async Task CliAgentBackendSignsInAndAnswersThroughTheDaemonAsync( )
     {
-        var binaryRoot = Path.Combine( Path.GetTempPath( ), $"commanddeck-cli-socket-bin-{Guid.NewGuid( ):N}" );
+        var binaryRoot = SpecTemporaryFiles.PathFor( $"commanddeck-cli-socket-bin-{Guid.NewGuid( ):N}" );
         Directory.CreateDirectory( binaryRoot );
         var binary = CreateFakeCliBinary( binaryRoot, "claude" );
         var authenticated = false;
@@ -67,7 +67,7 @@ public static partial class Program
         {
             await using ( runtime )
             {
-                var socket = Path.Combine( root, "commanddeck.sock" );
+                var socket = SpecTemporaryFiles.SocketPath( root, "commanddeck.sock" );
                 await using var client = await ConnectWithRetryAsync( socket );
 
                 await client.SendAsync( new ProtocolRequest { RequestId = 1, Operation = ProtocolOperations.AgentBackendsGet }, default );

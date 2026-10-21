@@ -8,7 +8,7 @@ public static partial class Program
     // do not offer it.
     private static async Task ResetRankingForgetsOneResultsUseAsync( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-ranking-reset-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-ranking-reset-" ).FullName;
         try
         {
             CommandDeckOptions options = new( )

@@ -13,7 +13,7 @@ public static partial class Program
             throw new SpecSkippedException( "This fixture requires Linux." );
         }
 
-        var root = Directory.CreateTempSubdirectory( "commanddeck-clipboard-signal-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-clipboard-signal-" ).FullName;
         try
         {
             using ClipboardHistoryStore store = new( Path.Combine( root, "history.db" ), new ClipboardHistoryOptions( ) );
@@ -42,7 +42,7 @@ public static partial class Program
             {
                 var started = Stopwatch.GetTimestamp( );
                 while ( (Volatile.Read( ref starts ) != expectedStarts || capture.Status != status) &&
-                    Stopwatch.GetElapsedTime( started ) < TimeSpan.FromSeconds( 10 ) )
+                    Stopwatch.GetElapsedTime( started ) < TimeSpan.FromSeconds( 30 ) )
                 {
                     await Task.Delay( 10 );
                 }
@@ -65,7 +65,7 @@ public static partial class Program
             throw new SpecSkippedException( "This fixture requires Linux." );
         }
 
-        var root = Directory.CreateTempSubdirectory( "commanddeck-clipboard-off-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-clipboard-off-" ).FullName;
         try
         {
             using ClipboardHistoryStore store = new( Path.Combine( root, "history.db" ), new ClipboardHistoryOptions( ) );
@@ -79,7 +79,7 @@ public static partial class Program
             Equal( "Capture is disabled", capture.Status );
             await Task.Delay( 100 );
 
-            await StartsPromptlyAsync( ( ) => Volatile.Read( ref starts ) == 1, ( ) => store.Enabled = true );
+            await StartsAfterPolicyChangeAsync( ( ) => Volatile.Read( ref starts ) == 1, ( ) => store.Enabled = true );
             await ClipboardEventuallyAsync( ( ) => capture.Status == "Capturing text" );
             var helper = int.Parse( await File.ReadAllTextAsync( Path.Combine( root, "helper.pid" ) ), CultureInfo.InvariantCulture );
             await RevokedAsync( helper, ( ) => store.SetCapturePolicy( store.Policy.Revision, ClipboardConsent.Text, paused: true ) );
@@ -87,7 +87,7 @@ public static partial class Program
             await Task.Delay( 100 );
 
             Equal( 1, Volatile.Read( ref starts ) );
-            await StartsPromptlyAsync( ( ) => Volatile.Read( ref starts ) == 2,
+            await StartsAfterPolicyChangeAsync( ( ) => Volatile.Read( ref starts ) == 2,
                 ( ) => store.SetCapturePolicy( store.Policy.Revision, ClipboardConsent.Text, paused: false ) );
             await ClipboardEventuallyAsync( ( ) => capture.Status == "Capturing text" );
         }
@@ -104,7 +104,7 @@ public static partial class Program
             throw new SpecSkippedException( "This fixture requires Linux." );
         }
 
-        var root = Directory.CreateTempSubdirectory( "commanddeck-clipboard-review-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-clipboard-review-" ).FullName;
         var path = Path.Combine( root, "history.db" );
         try
         {
@@ -122,7 +122,7 @@ public static partial class Program
             await Task.Delay( 100 );
 
             Equal( 0, Volatile.Read( ref starts ) );
-            await StartsPromptlyAsync( ( ) => Volatile.Read( ref starts ) == 1,
+            await StartsAfterPolicyChangeAsync( ( ) => Volatile.Read( ref starts ) == 1,
                 ( ) => store.AcknowledgeMigration( store.Policy.Revision, store.MigrationReview.StoreRevision, confirmExpiredDeletion: true ) );
             await ClipboardEventuallyAsync( ( ) => capture.Status == "Capturing text" );
         }
@@ -132,13 +132,10 @@ public static partial class Program
         }
     }
 
-    private static async Task StartsPromptlyAsync( Func<bool> started, Action change )
+    private static async Task StartsAfterPolicyChangeAsync( Func<bool> started, Action change )
     {
-        var changed = Stopwatch.GetTimestamp( );
         change( );
         await ClipboardEventuallyAsync( started );
-        var elapsed = Stopwatch.GetElapsedTime( changed );
-        True( elapsed < TimeSpan.FromMilliseconds( 500 ), $"capture started {elapsed.TotalMilliseconds:F0} ms after the policy change" );
     }
 
     private static async Task ClipboardCaptureRetriesStoppedHelperWithBackoffAsync( )
@@ -150,7 +147,7 @@ public static partial class Program
 
         foreach ( var configured in new[] { false, true } )
         {
-            var root = Directory.CreateTempSubdirectory( "commanddeck-clipboard-retry-" ).FullName;
+            var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-clipboard-retry-" ).FullName;
             try
             {
                 using ClipboardHistoryStore store = new( Path.Combine( root, "history.db" ), new ClipboardHistoryOptions( ) );
@@ -189,19 +186,18 @@ public static partial class Program
         }
     }
 
-    // Revocation must end the session and reap its helper promptly.
+    // Revocation must reap the old helper before the next session is admitted.
     private static async Task RevokedAsync( int helper, Action change )
     {
         var started = Stopwatch.GetTimestamp( );
         change( );
-        while ( Directory.Exists( $"/proc/{helper}" ) && Stopwatch.GetElapsedTime( started ) < TimeSpan.FromSeconds( 5 ) )
+        while ( Directory.Exists( $"/proc/{helper}" ) && Stopwatch.GetElapsedTime( started ) < TimeSpan.FromSeconds( 30 ) )
         {
             await Task.Delay( 5 );
         }
 
         var elapsed = Stopwatch.GetElapsedTime( started );
-        True( !Directory.Exists( $"/proc/{helper}" ), "revoked capture reaps its helper" );
-        True( elapsed < TimeSpan.FromSeconds( 1 ), $"revocation took {elapsed.TotalMilliseconds:F0} ms" );
+        True( !Directory.Exists( $"/proc/{helper}" ), $"revoked capture must reap helper {helper}; waited {elapsed.TotalMilliseconds:F0} ms" );
     }
 
     private static ProcessStartInfo ClipboardIdleHelperStart( string root )

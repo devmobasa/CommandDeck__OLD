@@ -11,7 +11,7 @@ public static partial class Program
 
     private static void ClipboardDeletedTextLeavesNoDatabaseRemnant( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-clipboard-remnant-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-clipboard-remnant-" ).FullName;
         var path = Path.Combine( root, "history.db" );
         try
         {
@@ -37,7 +37,7 @@ public static partial class Program
 
     private static void ClipboardSearchIndexMigrationDropsTheLegacyIndex( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-clipboard-index-migration-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-clipboard-index-migration-" ).FullName;
         var path = Path.Combine( root, "history.db" );
         try
         {

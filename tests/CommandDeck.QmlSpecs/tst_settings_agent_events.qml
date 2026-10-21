@@ -26,7 +26,7 @@ EventPathFixture {
       }
       fixture.part_settingsPanel.visible = true
       fixture.part_settingsPanel.showPage("assistant")
-      wait(0)
+      nextTurn()
       fixture.part_settingsPanel.synchronizeAgentChoices()
       fixture.part_settingsPanel.agentPreferencesEmitted = null
       fixture.part_settingsPanel.agentModelsBackendRequested = ""
@@ -47,7 +47,7 @@ EventPathFixture {
       const panel = fixture.part_settingsPanel
       panel.visible = true
       panel.showPage("assistant")
-      wait(0)
+      nextTurn()
       const note = panel.part_assistantCard.part_answerOnlyNote
 
       panel.agentStatus = { helper: { installed: false }, warnings: [] }
@@ -90,7 +90,7 @@ EventPathFixture {
       }
       fixture.part_settingsPanel.visible = true
       fixture.part_settingsPanel.showPage("assistant")
-      wait(0)
+      nextTurn()
       verify(fixture.part_settingsPanel.searchControl.activeFocus, "Settings opens ready to type")
       const picker = fixture.part_settingsPanel.agentEffortControl
       verify(picker.enabled)
@@ -102,11 +102,11 @@ EventPathFixture {
       for (let index = 0; index < efforts.length; index++) {
         fixture.part_settingsPanel.agentPreferencesEmitted = null
         keyClick(Qt.Key_Space)
-        tryCompare(picker.popup, "visible", true)
+        waitForValue(picker.popup, "visible", true)
         keyClick(Qt.Key_Home)
         for (let step = 0; step < index; step++) keyClick(Qt.Key_Down)
         keyClick(Qt.Key_Return)
-        tryCompare(picker.popup, "visible", false)
+        waitForValue(picker.popup, "visible", false)
         compare(picker.currentOption.id, efforts[index])
         verify(fixture.part_settingsPanel.agentPreferencesEmitted !== null)
         compare(fixture.part_settingsPanel.agentPreferencesEmitted.reasoningEffort, efforts[index])
@@ -116,10 +116,10 @@ EventPathFixture {
 
       fixture.part_settingsPanel.agentPreferencesEmitted = null
       keyClick(Qt.Key_Space)
-      tryCompare(picker.popup, "visible", true)
+      waitForValue(picker.popup, "visible", true)
       keyClick(Qt.Key_Up)
       keyClick(Qt.Key_Escape)
-      tryCompare(picker.popup, "visible", false)
+      waitForValue(picker.popup, "visible", false)
       compare(picker.currentOption.id, "max")
       compare(fixture.part_settingsPanel.agentPreferencesEmitted, null, "cancelling does not save an effort")
       verify(picker.activeFocus)
@@ -170,7 +170,7 @@ EventPathFixture {
       }
       fixture.part_settingsPanel.visible = true
       fixture.part_settingsPanel.showPage("assistant")
-      wait(0)
+      nextTurn()
       fixture.part_settingsPanel.synchronizeAgentChoices()
       compare(fixture.part_settingsPanel.agentTrustControl.currentIndex, 2)
       compare(fixture.part_settingsPanel.agentEffortControl.currentIndex, 1,
@@ -188,7 +188,7 @@ EventPathFixture {
         prompt: "Confirm unrestricted authority",
         warnings: ["Protected paths no longer apply"]
       }
-      wait(0)
+      nextTurn()
       verify(fixture.part_settingsPanel.agentChallengeCardControl.visible)
       verify(!fixture.part_settingsPanel.agentChallengeConfirmControl.enabled)
 

@@ -4,7 +4,7 @@ public static partial class Program
 {
     private static async Task CliAgentRevocationPreservesNewerTurnScratchAsync( )
     {
-        var root = Path.Combine( Path.GetTempPath( ), $"commanddeck-cli-revocation-{Guid.NewGuid( ):N}" );
+        var root = SpecTemporaryFiles.PathFor( $"commanddeck-cli-revocation-{Guid.NewGuid( ):N}" );
         Directory.CreateDirectory( root );
         TaskCompletionSource releaseDisposal = new( TaskCreationOptions.RunContinuationsAsynchronously );
         try

@@ -247,7 +247,7 @@ public static partial class Program
 
     private static async Task CodexBackendOwnsLoginAndRuntimeLifecycleAsync( )
     {
-        var root = Path.Combine( Path.GetTempPath( ), $"commanddeck-agent-backend-{Guid.NewGuid( ):N}" );
+        var root = SpecTemporaryFiles.PathFor( $"commanddeck-agent-backend-{Guid.NewGuid( ):N}" );
         Directory.CreateDirectory( root );
         try
         {

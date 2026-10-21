@@ -6,9 +6,7 @@ public static partial class Program
 {
     private static async Task PathRemovalProbesSearchRowsByRowidAsync( )
     {
-        var database = Path.Combine(
-            Path.GetTempPath( ),
-            $"commanddeck-path-removal-plan-{Guid.NewGuid( ):N}.db" );
+        var database = SpecTemporaryFiles.PathFor( $"commanddeck-path-removal-plan-{Guid.NewGuid( ):N}.db" );
         try
         {
             await using SqliteCatalog catalog = new( new StorageOptions { DatabasePath = database } );
@@ -46,9 +44,7 @@ public static partial class Program
 
     private static async Task PathRemovalMatchesOnlyThePathAndDescendantsAsync( )
     {
-        var database = Path.Combine(
-            Path.GetTempPath( ),
-            $"commanddeck-path-removal-range-{Guid.NewGuid( ):N}.db" );
+        var database = SpecTemporaryFiles.PathFor( $"commanddeck-path-removal-range-{Guid.NewGuid( ):N}.db" );
         string[] removed =
         [
             "/spec/dir",
@@ -135,9 +131,7 @@ public static partial class Program
 
     private static async Task StalePathPagerReadsThePathIndexInOrderAsync( )
     {
-        var database = Path.Combine(
-            Path.GetTempPath( ),
-            $"commanddeck-stale-path-pager-{Guid.NewGuid( ):N}.db" );
+        var database = SpecTemporaryFiles.PathFor( $"commanddeck-stale-path-pager-{Guid.NewGuid( ):N}.db" );
         try
         {
             await using SqliteCatalog catalog = new( new StorageOptions { DatabasePath = database } );
@@ -229,9 +223,7 @@ public static partial class Program
 
     private static async Task CatalogMigrationLinksExistingSearchRowsAsync( )
     {
-        var database = Path.Combine(
-            Path.GetTempPath( ),
-            $"commanddeck-search-link-migration-{Guid.NewGuid( ):N}.db" );
+        var database = SpecTemporaryFiles.PathFor( $"commanddeck-search-link-migration-{Guid.NewGuid( ):N}.db" );
         try
         {
             await using ( SqliteCatalog current = new( new StorageOptions { DatabasePath = database } ) )

@@ -149,7 +149,7 @@ public static partial class Program
 
     private static async Task CliAgentBackendOwnsSignInModelsAndSandboxedTurnsAsync( )
     {
-        var root = Path.Combine( Path.GetTempPath( ), $"commanddeck-cli-agent-{Guid.NewGuid( ):N}" );
+        var root = SpecTemporaryFiles.PathFor( $"commanddeck-cli-agent-{Guid.NewGuid( ):N}" );
         Directory.CreateDirectory( root );
         try
         {
@@ -281,7 +281,7 @@ public static partial class Program
 
     private static async Task CliAgentGrokDeviceCodeLoginHarvestsUrlAndCodeAsync( )
     {
-        var root = Path.Combine( Path.GetTempPath( ), $"commanddeck-cli-grok-{Guid.NewGuid( ):N}" );
+        var root = SpecTemporaryFiles.PathFor( $"commanddeck-cli-grok-{Guid.NewGuid( ):N}" );
         Directory.CreateDirectory( root );
         try
         {

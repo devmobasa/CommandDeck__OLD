@@ -118,7 +118,7 @@ public static partial class Program
             throw new SpecSkippedException( "This fixture requires Linux." );
         }
 
-        var root = Directory.CreateTempSubdirectory( "commanddeck-hey-pages-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-hey-pages-" ).FullName;
         try
         {
             await using SqliteCatalog catalog = new( new StorageOptions { DatabasePath = Path.Combine( root, "catalog.db" ) } );

@@ -59,7 +59,7 @@ public static partial class Program
         {
             var config = await WriteManagedSpecConfigAsync( root, new AiOptions { Enabled = false } );
             await using var runtime = await CommandDeckRuntime.CreateAsync( config, lifetime.Token );
-            var socket = Path.Combine( root, "settings.sock" );
+            var socket = SpecTemporaryFiles.SocketPath( root, "settings.sock" );
             server = new UnixProtocolServer( runtime, socket ).RunAsync( lifetime.Token );
             var manifest = PackageFixture( ) with
             {

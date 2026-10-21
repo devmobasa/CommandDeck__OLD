@@ -78,7 +78,7 @@ public static partial class Program
         }
 
         // The real runner and a stand-in hey that writes 200 KB of errors.
-        var root = Directory.CreateTempSubdirectory( "commanddeck-hey-stderr-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-hey-stderr-" ).FullName;
         try
         {
             var script = Path.Combine( root, "hey" );

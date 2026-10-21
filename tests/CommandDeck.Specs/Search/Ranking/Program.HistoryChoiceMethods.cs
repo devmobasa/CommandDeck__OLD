@@ -10,7 +10,7 @@ public static partial class Program
     // keeps an unmade choice unmade, and a reset returns to the configuration.
     private static async Task HistoryChoicesOverrideTheConfigurationAsync( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-history-choices-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-history-choices-" ).FullName;
         try
         {
             CommandDeckOptions options = new( )
@@ -87,7 +87,7 @@ public static partial class Program
         policy.ApplyRead( new LauncherPreferences( ) { RememberSearches = true, TopMatches = true }, policy.Version );
         True( policy.RememberSearches && policy.TopMatches );
 
-        var root = Directory.CreateTempSubdirectory( "commanddeck-history-reads-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-history-reads-" ).FullName;
         try
         {
             CommandDeckOptions options = new( )

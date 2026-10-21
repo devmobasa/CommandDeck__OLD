@@ -83,8 +83,7 @@ public static partial class Program
         {
             throw new SpecSkippedException( "This fixture requires Linux." );
         }
-        var root = Path.Combine(
-            Path.GetTempPath( ), $"commanddeck-private-create-{Guid.NewGuid( ):N}" );
+        var root = SpecTemporaryFiles.PathFor( $"commanddeck-private-create-{Guid.NewGuid( ):N}" );
         Directory.CreateDirectory( root );
         var path = Path.Combine( root, "staging.tmp" );
         try

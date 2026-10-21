@@ -4,9 +4,7 @@ public static partial class Program
 {
     private static async Task FilterAliasesPersistResolveAndResetAsync( )
     {
-        var database = Path.Combine(
-            Path.GetTempPath( ),
-            $"commanddeck-filter-alias-spec-{Guid.NewGuid( ):N}.db" );
+        var database = SpecTemporaryFiles.PathFor( $"commanddeck-filter-alias-spec-{Guid.NewGuid( ):N}.db" );
         try
         {
             await using ( SqliteCatalog catalog = new( new StorageOptions { DatabasePath = database } ) )

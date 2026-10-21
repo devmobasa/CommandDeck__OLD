@@ -6,7 +6,7 @@ public static partial class Program
 {
     private static void ClipboardCurrentSchemaRejectsCorruptionBeforeStartupDeletion( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-clipboard-integrity-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-clipboard-integrity-" ).FullName;
         try
         {
             string[] corruptions =
@@ -66,7 +66,7 @@ public static partial class Program
 
     private static void ClipboardCaptureRejectsInvalidUnicodeWithoutReplacement( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-clipboard-unicode-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-clipboard-unicode-" ).FullName;
         try
         {
             using ClipboardHistoryStore store = new( Path.Combine( root, "history.db" ), new ClipboardHistoryOptions( ) );

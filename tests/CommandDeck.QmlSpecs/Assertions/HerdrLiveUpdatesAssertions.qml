@@ -30,6 +30,8 @@ QtObject {
     focus = host.part_integratedDeck.focusRevision
     host.liveSteps = [
       () => {
+        host.part_hostEvents.waitForCondition(() => searches() === count + 1
+          && host.part_integratedDeck.part_searchSession.inFlight, 30000, "Herdr refresh starts")
         host.expect(searches() === count + 1 && host.part_integratedDeck.part_searchSession.inFlight,
           "an open Herdr view refreshes automatically through the search protocol")
         host.expect(host.part_integratedDeck.currentResult.id === other.id && host.part_integratedDeck.focusRevision === focus,
@@ -58,6 +60,7 @@ QtObject {
         host.part_integratedDeck.part_invocationController.requestId = 0
       },
       () => {
+        host.part_hostEvents.waitForCondition(() => searches() === count + 1, 30000, "Herdr polling resumes")
         host.expect(searches() === count + 1, "live polling resumes after the action settles")
         host.part_integratedDeck.handleMessage({ type: Protocol.Messages.Done, requestId: host.part_integratedDeck.part_searchSession.activeRequestId - 1 })
         host.expect(host.part_integratedDeck.part_searchSession.inFlight, "a stale completion cannot enable another live search")

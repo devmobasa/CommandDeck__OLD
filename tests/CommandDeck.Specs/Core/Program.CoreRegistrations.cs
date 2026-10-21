@@ -16,6 +16,8 @@ public static partial class Program
         await RunAsync( "window commands dispatch only to the bound window address", WindowCommandsDispatchToTheBoundAddressAsync );
         await RunAsync( "workspace preview preferences persist export reset and reject invalid writes", WorkspacePreviewPreferencesAsync );
         await RunAsync( "spec selection lists filters and reports failures without running unrelated fixtures", SpecSelectionReportsAsync );
+        await RunAsync( "spec storage cleans signals and binds short sockets from a long disk root", SpecTemporaryStorageLifetimeAsync );
+        await RunAsync( "spec storage recovers crashed runs while preserving live unmarked and linked directories", SpecTemporaryStorageRecoversCrashAsync );
         Run( "result cache bounds bursts refreshes and deterministic expiry", ResultCacheBoundsAndExpiry );
         Run( "detached undo cache bounds expiry and stable-ID isolation", DetachedUndoCacheBoundsAndExpiry );
         await RunAsync( "invocation snapshot rejects a replaced action target", InvocationSnapshotRejectsReplacedActionAsync );
@@ -384,9 +386,7 @@ public static partial class Program
 
         await RunAsync( "configuration rejects terminal-unsafe quicklink IDs", async ( ) =>
         {
-            var path = Path.Combine(
-                Path.GetTempPath( ),
-                $"commanddeck-unsafe-quicklink-{Guid.NewGuid( ):N}.json" );
+            var path = SpecTemporaryFiles.PathFor( $"commanddeck-unsafe-quicklink-{Guid.NewGuid( ):N}.json" );
             try
             {
                 CommandDeckOptions options = new( )
@@ -453,42 +453,7 @@ public static partial class Program
             Equal( "ok", await reader.ReadLineAsync( CancellationToken.None ) );
         } );
 
-        await RunAsync( "application action treats shell metacharacters literally", async ( ) =>
-        {
-            var marker = Path.Combine(
-                Path.GetTempPath( ),
-                $"commanddeck-shell-marker-{Guid.NewGuid( ):N}" );
-            SearchResult result = new( )
-            {
-                Id = "app:literal.desktop",
-                Kind = ResultKinds.Application,
-                Title = "Literal",
-                SourceId = SourceIds.Applications,
-                Actions = []
-            };
-            CommandAction action = new( )
-            {
-                Id = "launch",
-                Title = "Open with Arguments",
-                Kind = ActionKinds.LaunchDesktop,
-                Arguments = new Dictionary<string, string>( StringComparer.Ordinal )
-                {
-                    ["desktopFile"] = "/tmp/literal.desktop",
-                    ["desktopId"] = "literal.desktop",
-                    ["applicationName"] = "Literal",
-                    ["exec"] = "/usr/bin/test -n %f",
-                    ["launchArguments"] = LaunchArgumentCodec.Encode( [$";touch {marker}"] )
-                }
-            };
-
-            var outcome = await new LinuxActionExecutor( ).ExecuteAsync(
-                result,
-                action,
-                query: string.Empty,
-                CancellationToken.None );
-            True( outcome.Succeeded );
-            True( !File.Exists( marker ) );
-        } );
+        await RunAsync( "application action treats shell metacharacters literally", ApplicationArgumentsRemainLiteralAsync );
 
     }
 }

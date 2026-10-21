@@ -52,7 +52,7 @@ public static partial class Program
                 "agent", "preferences", "set", "--ttl", "999999", "--config", config );
             Equal( 1, invalid.ExitCode );
             var unavailable = await RunCommandDeckProcessAsync(
-                "agent", "ask", "hello", "--socket", Path.Combine( root, "missing.sock" ), "--config", config );
+                "agent", "ask", "hello", "--socket", SpecTemporaryFiles.SocketPath( root, "missing.sock" ), "--config", config );
             Equal( 1, unavailable.ExitCode );
             True( unavailable.StandardError.Contains( "daemon", StringComparison.OrdinalIgnoreCase ) );
             var doctor = await RunCommandDeckProcessAsync( "doctor", "--config", config );
@@ -81,7 +81,7 @@ public static partial class Program
             await using ( runtime )
             {
                 await runtime.SetAgentPreferencesAsync( new AgentPreferences { Enabled = true }, default );
-                var socket = Path.Combine( root, "commanddeck.sock" );
+                var socket = SpecTemporaryFiles.SocketPath( root, "commanddeck.sock" );
                 var ask = await RunCommandDeckProcessAsync(
                     "agent", "ask", "hello", "--socket", socket );
                 Equal( 0, ask.ExitCode );

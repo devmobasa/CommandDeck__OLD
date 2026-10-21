@@ -221,7 +221,7 @@ public static partial class Program
 
     private static async Task HerdrCoordinatorGatesAndHomeAsync( )
     {
-        var database = Path.Combine( Path.GetTempPath( ), $"commanddeck-herdr-{Guid.NewGuid( ):N}.db" );
+        var database = SpecTemporaryFiles.PathFor( $"commanddeck-herdr-{Guid.NewGuid( ):N}.db" );
         try
         {
             await using SqliteCatalog catalog = new( new StorageOptions { DatabasePath = database } );
@@ -355,7 +355,7 @@ public static partial class Program
 
     private static async Task HerdrPreferenceMergesAsync( )
     {
-        var database = Path.Combine( Path.GetTempPath( ), $"commanddeck-herdr-prefs-{Guid.NewGuid( ):N}.db" );
+        var database = SpecTemporaryFiles.PathFor( $"commanddeck-herdr-prefs-{Guid.NewGuid( ):N}.db" );
         try
         {
             await using SqliteCatalog catalog = new( new StorageOptions { DatabasePath = database } );

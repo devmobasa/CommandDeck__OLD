@@ -6,7 +6,7 @@ public static partial class Program
 {
     private static void ClipboardProjectionUpgradePreservesV2History( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-projection-storage-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-projection-storage-" ).FullName;
         var path = Path.Combine( root, "history.db" );
         try
         {
@@ -60,7 +60,7 @@ public static partial class Program
             "UPDATE clipboard_projections SET metadata=replace(metadata,'[]','[\"https://safe.invalid/\\nfile:///bad\"]')"
         } )
         {
-            var root = Directory.CreateTempSubdirectory( "commanddeck-projection-corruption-" ).FullName;
+            var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-projection-corruption-" ).FullName;
             var path = Path.Combine( root, "history.db" );
             try
             {

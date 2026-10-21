@@ -15,7 +15,7 @@ Item {
     onBackRequested: opened = false
   }
   SignalSpy { id: submissions; target: host; signalName: "formSubmitted" }
-  TestCase {
+  DeadlineTestCase {
     name: "ExtensionForms"
     when: windowShown
     function form(revision, depth) {
@@ -30,11 +30,11 @@ Item {
     function init() { host.opened = false; host.busy = false; host.snapshot = { revision: 0, content: {} }; host.snapshot = form(1); submissions.clear() }
     function test_open_validate_edit_submit_cancel_keyboard() {
       mouseClick(opener)
-      tryCompare(editor(0), "activeFocus", true)
+      waitForValue(editor(0), "activeFocus", true)
       mouseClick(host.formControl.submitControl)
       compare(submissions.count, 0)
       compare(host.formControl.errors.title, "This field is required.")
-      tryCompare(editor(0), "activeFocus", true)
+      waitForValue(editor(0), "activeFocus", true)
       keyClick(Qt.Key_A)
       keyClick(Qt.Key_Tab)
       verify(editor(1).activeFocus)
@@ -59,40 +59,40 @@ Item {
       compare(submissions.count, 1)
       keyClick(Qt.Key_Escape)
       compare(host.opened, false)
-      tryCompare(opener, "activeFocus", true)
+      waitForValue(opener, "activeFocus", true)
     }
     function test_keyboard_focus_is_visible_on_every_form_control() {
       mouseClick(opener)
-      tryCompare(editor(0), "activeFocus", true)
+      waitForValue(editor(0), "activeFocus", true)
       compare(editor(0).background.border.width, 2)
       compare(editor(0).background.border.color, theme.accent)
       compare(host.formControl.submitControl.kind, "primary")
       compare(host.formControl.cancelControl.kind, "secondary")
 
       keyClick(Qt.Key_Tab)
-      tryCompare(editor(1), "activeFocus", true)
+      waitForValue(editor(1), "activeFocus", true)
       compare(editor(1).background.border.width, 2)
       compare(editor(1).background.border.color, theme.accent)
 
       keyClick(Qt.Key_Tab)
-      tryCompare(editor(2), "activeFocus", true)
+      waitForValue(editor(2), "activeFocus", true)
       compare(editor(2).background.border.width, 2)
       compare(editor(2).background.border.color, theme.accent)
 
       keyClick(Qt.Key_Tab)
-      tryCompare(editor(3), "activeFocus", true)
+      waitForValue(editor(3), "activeFocus", true)
       compare(editor(3).background.border.width, 2)
       compare(editor(3).background.border.color, theme.accent)
 
       keyClick(Qt.Key_Tab)
-      tryCompare(host.formControl.submitControl, "activeFocus", true)
+      waitForValue(host.formControl.submitControl, "activeFocus", true)
       compare(host.formControl.submitControl.kind, "primary")
       compare(host.formControl.cancelControl.kind, "secondary")
       compare(host.formControl.submitControl.focusRingVisible, true)
       compare(host.formControl.cancelControl.focusRingVisible, false)
 
       keyClick(Qt.Key_Tab)
-      tryCompare(host.formControl.cancelControl, "activeFocus", true)
+      waitForValue(host.formControl.cancelControl, "activeFocus", true)
       compare(host.formControl.submitControl.kind, "primary")
       compare(host.formControl.cancelControl.kind, "secondary")
       compare(host.formControl.submitControl.focusRingVisible, false)
@@ -100,18 +100,18 @@ Item {
     }
     function test_form_buttons_emphasize_hover_and_keyboard_focus() {
       mouseClick(opener)
-      tryCompare(editor(0), "activeFocus", true)
+      waitForValue(editor(0), "activeFocus", true)
 
       const cancel = host.formControl.cancelControl
       mouseMove(cancel, cancel.width / 2, cancel.height / 2)
-      tryCompare(cancel, "hovered", true)
+      waitForValue(cancel, "hovered", true)
       compare(cancel.background.border.width, 3)
       compare(cancel.background.border.color, theme.text)
       compare(cancel.background.color, Qt.rgba(theme.accent.r, theme.accent.g, theme.accent.b, 0.38))
 
       mouseMove(host, host.width - 4, 4)
       for (let index = 0; index < 5; index++) keyClick(Qt.Key_Tab)
-      tryCompare(cancel, "activeFocus", true)
+      waitForValue(cancel, "activeFocus", true)
       compare(cancel.background.border.width, 3)
       compare(cancel.background.border.color, theme.text)
       compare(cancel.background.color, Qt.rgba(theme.accent.r, theme.accent.g, theme.accent.b, 0.58))
@@ -119,14 +119,14 @@ Item {
     }
     function test_refresh_preserves_edits_and_ignores_stale_validation() {
       mouseClick(opener)
-      tryCompare(editor(0), "activeFocus", true)
+      waitForValue(editor(0), "activeFocus", true)
       keyClick(Qt.Key_A)
       const revision = host.formControl.formRevision
       const next = form(2)
       next.content.validatedFormRevision = revision - 1
       next.content.fieldErrors = { title: "Old error" }
       host.snapshot = next
-      tryCompare(editor(0), "activeFocus", true)
+      waitForValue(editor(0), "activeFocus", true)
       compare(editor(0).text, "a")
       compare(host.formControl.errors.title, undefined)
       const current = form(3)
@@ -139,34 +139,34 @@ Item {
     }
     function test_push_form_starts_fresh_and_back_restores_parent_edits() {
       mouseClick(opener)
-      tryCompare(editor(0), "activeFocus", true)
+      waitForValue(editor(0), "activeFocus", true)
       keyClick(Qt.Key_A)
       host.snapshot = form(2, 2)
-      tryCompare(editor(0), "activeFocus", true)
+      waitForValue(editor(0), "activeFocus", true)
       compare(editor(0).text, "")
       keyClick(Qt.Key_B)
       host.snapshot = form(3, 1)
-      tryCompare(editor(0), "text", "a")
-      tryCompare(editor(0), "activeFocus", true)
+      waitForValue(editor(0), "text", "a")
+      waitForValue(editor(0), "activeFocus", true)
     }
     function test_new_form_after_list_starts_with_fresh_values() {
       mouseClick(opener)
-      tryCompare(editor(0), "activeFocus", true)
+      waitForValue(editor(0), "activeFocus", true)
       keyClick(Qt.Key_A)
       host.snapshot = { revision: 2, content: { id: "list", kind: "list", title: "List", items: [] } }
       host.snapshot = form(3)
-      tryCompare(editor(0), "activeFocus", true)
+      waitForValue(editor(0), "activeFocus", true)
       compare(editor(0).text, "")
     }
     function test_removed_focused_field_falls_back_to_first_input() {
       mouseClick(opener)
-      tryCompare(editor(0), "activeFocus", true)
+      waitForValue(editor(0), "activeFocus", true)
       keyClick(Qt.Key_Tab)
       verify(editor(1).activeFocus)
       const next = form(2)
       next.content.fields = [next.content.fields[0]]
       host.snapshot = next
-      tryCompare(editor(0), "activeFocus", true)
+      waitForValue(editor(0), "activeFocus", true)
       keyClick(Qt.Key_A)
       compare(editor(0).text, "a")
     }

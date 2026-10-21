@@ -4,7 +4,7 @@ public static partial class Program
 {
     private static void ClipboardBrowserReportsCaptureStatus( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-clipboard-status-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-clipboard-status-" ).FullName;
         try
         {
             using ClipboardHistoryStore store = new( Path.Combine( root, "history.db" ), new( ) );

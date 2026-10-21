@@ -6,9 +6,7 @@ public static partial class Program
 {
     private static async Task AgentSensitiveDecisionsStayBoundToTheRequestingClientAsync( )
     {
-        var home = Environment.GetFolderPath( Environment.SpecialFolder.UserProfile );
-        var contextRoot = Path.Combine( home, $"commanddeck-client-owner-{Guid.NewGuid( ):N}" );
-        Directory.CreateDirectory( contextRoot );
+        var contextRoot = SpecTemporaryFiles.CreateHomeDirectory( "commanddeck-client-owner-" ).FullName;
         var contextPath = Path.Combine( contextRoot, "note.txt" );
         await File.WriteAllTextAsync( contextPath, "owner-only context" );
         ScriptedAgentBackend backend = new( );
@@ -40,7 +38,7 @@ public static partial class Program
         {
             await using ( runtime )
             {
-                var socket = Path.Combine( root, "commanddeck.sock" );
+                var socket = SpecTemporaryFiles.SocketPath( root, "commanddeck.sock" );
                 await using var owner = await ConnectWithRetryAsync( socket );
                 await owner.SendAsync( new ProtocolRequest
                 {
@@ -172,7 +170,7 @@ public static partial class Program
         {
             await using ( runtime )
             {
-                var socket = Path.Combine( root, "commanddeck.sock" );
+                var socket = SpecTemporaryFiles.SocketPath( root, "commanddeck.sock" );
                 await runtime.SetAgentPreferencesAsync( new AgentPreferences { Enabled = true }, default );
                 var starter = await ConnectWithRetryAsync( socket );
                 await starter.SendAsync( new ProtocolRequest { RequestId = 1, Operation = ProtocolOperations.AgentTurnStart, Query = "hi" }, default );

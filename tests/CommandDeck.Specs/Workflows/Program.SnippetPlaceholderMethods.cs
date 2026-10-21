@@ -83,7 +83,7 @@ public static partial class Program
         var repeated = string.Concat( Enumerable.Range( 0, 16 ).Select( static index => "{input" + index + "} {input" + index + " | uppercase}" ) );
         SnippetTemplate.ValidateOptions( [new( ) { Id = "ok", Title = "OK", Text = repeated }] );
 
-        var directory = Directory.CreateTempSubdirectory( "commanddeck-snippet-config-" ).FullName;
+        var directory = SpecTemporaryFiles.CreateDirectory( "commanddeck-snippet-config-" ).FullName;
         try
         {
             var path = Path.Combine( directory, "config.json" );
