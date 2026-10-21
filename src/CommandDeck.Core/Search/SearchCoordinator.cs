@@ -188,7 +188,7 @@ public sealed partial class SearchCoordinator
             .Where( provider => purpose == SearchPurpose.Interactive || !PrivateSources.ReadsPrivateContent( provider.Id ) );
 
     private bool UseTopMatches( SearchRequest request, ParsedQuery query ) =>
-        _options.Ranking.TopMatches.Enabled && !IsFolderBrowsing( request, query ) && !HeySearch.IsRequested( query ) &&
+        _history.TopMatches && !IsFolderBrowsing( request, query ) && !HeySearch.IsRequested( query ) &&
         request.OmarchyMenuId is null &&
         query.Text.Length > 0;
 

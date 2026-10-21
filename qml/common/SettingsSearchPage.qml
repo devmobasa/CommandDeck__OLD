@@ -81,9 +81,21 @@ ScrollView {
     SettingsCard {
       id: behaviorCard
       searchQuery: searchScroll.host.part_settingsSearch.text
-      searchTerms: "search web fallback hide after opening item close copying reduce motion animation workspace layout previews snapshots"
+      searchTerms: "search top matches ranking best grouped sections web fallback hide after opening item close copying reduce motion animation workspace layout previews snapshots"
       theme: searchScroll.host.theme
       title: "Behavior"
+
+      SettingsToggle {
+        objectName: "topMatchesToggle"
+        theme: searchScroll.host.theme
+        Layout.fillWidth: true
+        text: "Top Matches"
+        help: "Show the best one to three results above the grouped sections."
+        checked: searchScroll.host.historyChoice("topMatches")
+        enabled: !searchScroll.host.loading
+        Accessible.name: "Top Matches"
+        onClicked: searchScroll.host.setHistoryChoice("topMatches", checked)
+      }
 
       SettingsRow {
         theme: searchScroll.host.theme

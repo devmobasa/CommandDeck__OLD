@@ -1,6 +1,6 @@
 namespace CommandDeck;
 
-// What the launcher may remember and learn from: the configuration's defaults,
+// History and search behavior: the configuration's defaults,
 // overridden by any choice made in Settings. Readers ask on every use, so a
 // changed choice applies to the next search or invocation without a restart.
 // The runtime applies preferences it saves or resets; the search coordinator,
@@ -25,7 +25,8 @@ public sealed class HistoryPolicy
     {
         RememberSearches = _privacy.StoreQueryHistory,
         LearnFromUse = _search.LearnFromInvocations && _privacy.StoreUsageHistory,
-        OmarchyMenuState = _search.OmarchyMenuState
+        OmarchyMenuState = _search.OmarchyMenuState,
+        TopMatches = _search.Ranking.TopMatches.Enabled
     };
 
     // Query history: the searches a result was accepted after.
@@ -36,6 +37,8 @@ public sealed class HistoryPolicy
     public bool LearnFromUse => _preferences?.LearnFromUse ?? (_search.LearnFromInvocations && _privacy.StoreUsageHistory);
 
     public bool OmarchyMenuState => _preferences?.OmarchyMenuState ?? _search.OmarchyMenuState;
+
+    public bool TopMatches => _preferences?.TopMatches ?? _search.Ranking.TopMatches.Enabled;
 
     // Taken before reading preferences, for ApplyRead.
     public long Version => Interlocked.Read( ref _version );

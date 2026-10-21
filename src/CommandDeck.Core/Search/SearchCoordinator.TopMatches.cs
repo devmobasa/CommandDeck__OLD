@@ -102,7 +102,7 @@ public sealed partial class SearchCoordinator
         }
         var ids = results.Where( result =>
                         result.Kind is ResultKinds.Window or ResultKinds.Workspace or ResultKinds.Tab ||
-                        (_options.Ranking.TopMatches.Enabled && !browsing &&
+                        (_history.TopMatches && !browsing &&
                          (Learnable( result, query ) || LearnedFromQuery( result, query, learnedQueries ))) )
                     .Select( UsageId ).Distinct( StringComparer.Ordinal ).Order( StringComparer.Ordinal ).ToArray( );
         try

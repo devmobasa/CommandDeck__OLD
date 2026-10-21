@@ -109,7 +109,7 @@ QtObject {
     const settingsSnapshot = host.part_settings.snapshot
     const withChoices = Object.assign({}, settingsSnapshot, {
       preferences: Object.assign({}, settingsSnapshot.preferences, { learnFromUse: false }),
-      defaults: { rememberSearches: true, learnFromUse: true, omarchyMenuState: false }
+      defaults: { rememberSearches: true, learnFromUse: true, omarchyMenuState: false, topMatches: true }
     })
     host.part_settings.snapshot = withChoices
     host.expect(host.part_settings.rememberSearchesControl.checked
@@ -120,13 +120,28 @@ QtObject {
     host.part_settings.rememberSearchesControl.click()
     host.expect(host.part_settings.changedPreferences !== null
         && host.part_settings.changedPreferences.rememberSearches === false
-        && host.part_settings.changedPreferences.learnFromUse === false,
-      "turning Remember searches off saves the choice with the other preferences")
+        && host.part_settings.changedPreferences.learnFromUse === false
+        && host.part_settings.changedPreferences.topMatches === null,
+      "turning Remember searches off saves its choice and leaves Top Matches unset")
     host.part_settings.changedPreferences = null
     host.part_settings.omarchyMenuStateControl.click()
     host.expect(host.part_settings.changedPreferences !== null
         && host.part_settings.changedPreferences.omarchyMenuState === true,
       "turning Omarchy menu state on saves the choice")
+    const topMatches = host.part_hostEvents.findChild(host.part_settings, "topMatchesToggle")
+    host.expect(topMatches !== null && topMatches.checked && topMatches.Accessible.name === "Top Matches",
+      "Top Matches shows its configuration default and accessible name")
+    host.part_settings.changedPreferences = null
+    topMatches.click()
+    host.expect(host.part_settings.changedPreferences !== null
+        && host.part_settings.changedPreferences.topMatches === false
+        && host.part_settings.changedPreferences.learnFromUse === false,
+      "turning Top Matches off emits the choice with the other preferences")
+    host.part_settings.snapshot = Object.assign({}, withChoices, {
+      preferences: Object.assign({}, withChoices.preferences, { topMatches: true }),
+      defaults: Object.assign({}, withChoices.defaults, { topMatches: false })
+    })
+    host.expect(topMatches.checked, "an explicit Top Matches choice overrides its configuration default")
     host.part_settings.snapshot = settingsSnapshot
     host.part_settings.previewPaneVisible = true
     host.part_settings.previewPaneControl.click()

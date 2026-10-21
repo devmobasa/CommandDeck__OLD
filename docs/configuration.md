@@ -52,9 +52,11 @@ queries and invocation history.
 
 `search.ranking.topMatches.enabled` defaults to `true`. It enables the bounded
 three-row Top Matches section, including strongly relevant recent learned
-matches. Set it to `false` and restart the daemon to restore the previous
-exact-only assembly, including its old exact-section limits. History is retained
-and no database migration is needed. See [Search and ranking](search-and-ranking.md)
+matches. Set it to `false` and restart the daemon to show results only in their
+source groups, including exact matches. History is retained
+and no database migration is needed. **Top Matches** in Settings > Search
+overrides this default from the next search, without a restart. Resetting
+customizations returns it to the configuration. See [Search and ranking](search-and-ranking.md)
 for eligibility, source caps, and privacy gates.
 
 ## Top-level schema
@@ -558,11 +560,12 @@ no usage.
 These are defaults that Settings can override without editing this file:
 **Remember searches** (Customization > Data) overrides `storeQueryHistory`,
 **Learn from what you open** overrides `search.learnFromInvocations` together
-with `storeUsageHistory`, and **Omarchy menu state** (Search) overrides
-`search.omarchyMenuState`. Until you change one in Settings, the configuration
+with `storeUsageHistory`, **Omarchy menu state** (Search) overrides
+`search.omarchyMenuState`, and **Top Matches** (Search) overrides
+`search.ranking.topMatches.enabled`. Until you change one in Settings, the configuration
 applies; once changed, the choice is stored with the launcher preferences and
 takes effect from the next search, without a restart. Resetting customizations
-returns all three to the configuration. `search.ranking.adaptive.enabled` still
+returns all four to the configuration. `search.ranking.adaptive.enabled` still
 gates usage learning, and `commanddeck preferences` shows each value and where
 it comes from.
 

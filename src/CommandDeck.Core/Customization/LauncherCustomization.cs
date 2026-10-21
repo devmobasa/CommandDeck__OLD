@@ -25,10 +25,12 @@ public sealed class LauncherPreferences
     public EditorAdapter TerminalEditor { get; init; } = EditorAdapter.CreateTerminalDefault( );
     // Settings choices over the configuration's defaults; null follows the
     // configuration (privacy.storeQueryHistory; search.learnFromInvocations
-    // with privacy.storeUsageHistory; search.omarchyMenuState).
+    // with privacy.storeUsageHistory; search.omarchyMenuState;
+    // search.ranking.topMatches.enabled).
     public bool? RememberSearches { get; init; }
     public bool? LearnFromUse { get; init; }
     public bool? OmarchyMenuState { get; init; }
+    public bool? TopMatches { get; init; }
 
     public static LauncherPreferences CreateDefault( ) => new( )
     {
@@ -268,6 +270,7 @@ public sealed class PreferenceDefaults
     public bool RememberSearches { get; init; }
     public bool LearnFromUse { get; init; }
     public bool OmarchyMenuState { get; init; }
+    public bool TopMatches { get; init; } = true;
 }
 
 public sealed class PreferencesSnapshot

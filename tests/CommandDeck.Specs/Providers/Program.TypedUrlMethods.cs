@@ -155,13 +155,14 @@ public static partial class Program
             Equal( weight > 1, ranked[0].Score == ranked[1].Score );
         }
 
-        // The legacy exact-only assembly keeps the row in its Top Match section.
+        // Disabling Top Matches keeps exact aliases and typed URLs in their source groups.
         SearchCoordinator legacy = new(
             [new WebSearchProvider( WebEngineFixture ), new StaticSearchProvider( [alias] )],
             new SearchOptions { Ranking = new RankingOptions { TopMatches = new TopMatchesOptions { Enabled = false } } } );
         var rollback = await legacy.SearchAsync( new SearchRequest { Query = "www.example.com" }, default );
         Equal( "app:zen|web-search:url", string.Join( '|', rollback.Take( 2 ).Select( static result => result.Id ) ) );
-        True( rollback.Take( 2 ).All( static result => result.Section!.Title == "Top Match" ) );
+        Equal( SourceIds.Applications, rollback[0].Section!.Id );
+        Equal( SourceIds.WebSearch, rollback[1].Section!.Id );
     }
 
     private static async Task TypedUrlFollowsTheWebSourceAndExplicitFiltersAsync( )

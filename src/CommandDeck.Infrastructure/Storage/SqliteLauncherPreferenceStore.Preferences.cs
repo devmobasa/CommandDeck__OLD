@@ -114,7 +114,7 @@ internal sealed partial class SqliteLauncherPreferenceStore
                     terminalEditor = System.Text.Json.JsonSerializer.Deserialize(
                         value, CommandDeckJsonContext.Default.EditorAdapter ) ?? terminalEditor;
                 }
-                else if ( key is RememberSearchesKey or LearnFromUseKey or OmarchyMenuStateKey )
+                else if ( key is RememberSearchesKey or LearnFromUseKey or OmarchyMenuStateKey or TopMatchesKey )
                 {
                     choices[key] = value;
                 }
@@ -143,13 +143,15 @@ internal sealed partial class SqliteLauncherPreferenceStore
             TerminalEditor = EditorAdapterValidator.Validate( terminalEditor, terminal: true ),
             RememberSearches = ReadChoice( choices.GetValueOrDefault( RememberSearchesKey ) ),
             LearnFromUse = ReadChoice( choices.GetValueOrDefault( LearnFromUseKey ) ),
-            OmarchyMenuState = ReadChoice( choices.GetValueOrDefault( OmarchyMenuStateKey ) )
+            OmarchyMenuState = ReadChoice( choices.GetValueOrDefault( OmarchyMenuStateKey ) ),
+            TopMatches = ReadChoice( choices.GetValueOrDefault( TopMatchesKey ) )
         };
     }
 
     private const string RememberSearchesKey = "remember_searches";
     private const string LearnFromUseKey = "learn_from_use";
     private const string OmarchyMenuStateKey = "omarchy_menu_state";
+    private const string TopMatchesKey = "top_matches";
 
     // A choice made in Settings; a missing, empty or unknown value follows the configuration.
     private static bool? ReadChoice( string? value ) => value switch
@@ -258,7 +260,8 @@ internal sealed partial class SqliteLauncherPreferenceStore
         {
             (RememberSearchesKey, preferences.RememberSearches),
             (LearnFromUseKey, preferences.LearnFromUse),
-            (OmarchyMenuStateKey, preferences.OmarchyMenuState)
+            (OmarchyMenuStateKey, preferences.OmarchyMenuState),
+            (TopMatchesKey, preferences.TopMatches)
         } )
         {
             await UpsertLauncherPreferenceAsync( connection, transaction, key, WriteChoice( value ), now, cancellationToken )
