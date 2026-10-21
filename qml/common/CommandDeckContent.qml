@@ -16,6 +16,7 @@ ColumnLayout {
   readonly property alias part_footerActions: footerActions
   readonly property alias part_detailPane: detailPane
   readonly property alias part_statusLine: statusLine
+  readonly property alias part_pointerGate: resultPointerGate
 
   id: launcherContent
   // The Herdr or Omarchy menu bar under the search field, first in Tab order
@@ -23,6 +24,11 @@ ColumnLayout {
   readonly property var scopeBar: herdrNavigation.visible ? herdrNavigation
     : omarchyNavigation.visible ? omarchyNavigation : null
 
+  PointerMoveGate { id: resultPointerGate }
+  Connections {
+    target: launcherContent.host
+    function onVisibleChanged() { resultPointerGate.reset() }
+  }
   visible: !launcherContent.host.host.part_extensionController.opened && !launcherContent.host.host.part_clipboardController.opened
   anchors.fill: parent
   anchors.margins: launcherContent.host.part_appTheme.panelPadding
@@ -114,10 +120,15 @@ ColumnLayout {
       model: launcherContent.host.host.part_rows
       highlightMoveDuration: launcherContent.host.part_appTheme.highlightMoveDuration
 
-      ResultHoverTracker {
-        view: resultList
-        surfaceVisible: launcherContent.host.visible
-        onIndexHovered: index => {
+      // Track headers, gaps and empty space too; row layout changes alone
+      // must never turn a resting pointer into a new selection.
+      HoverHandler {
+        acceptedButtons: Qt.NoButton
+        onPointChanged: {
+          const position = resultList.mapToItem(null, point.position.x, point.position.y)
+          if (!resultPointerGate.moved(position.x, position.y)) return
+          const contentPosition = resultList.mapToItem(resultList.contentItem, point.position.x, point.position.y)
+          const index = resultList.indexAt(contentPosition.x, contentPosition.y)
           const row = resultList.itemAtIndex(index) as ResultListDelegate
           if (row && !row.isHeader) launcherContent.host.host.selectedIndex = index
         }
