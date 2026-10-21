@@ -74,7 +74,9 @@ public static class ProtocolRoutes
         Add( routes, ProtocolFamily.Status, ProtocolOperations.Status );
         Add( routes, ProtocolFamily.Ping, ProtocolOperations.Ping );
         Add( routes, ProtocolFamily.Reindex, ProtocolOperations.Reindex );
-        Add( routes, ProtocolFamily.IndexControl, ProtocolOperations.IndexPause, ProtocolOperations.IndexResume );
+        Add( routes, ProtocolFamily.IndexControl, ProtocolOperations.IndexPause, ProtocolOperations.IndexResume,
+            ProtocolOperations.IndexRoots, ProtocolOperations.IndexAdd, ProtocolOperations.IndexRemove,
+            ProtocolOperations.IndexDisable, ProtocolOperations.IndexEnable, ProtocolOperations.IndexRootsImport );
         Add( routes, ProtocolFamily.Files,
             ProtocolOperations.FilesSelect, ProtocolOperations.FilesClear, ProtocolOperations.FilesBatch );
 

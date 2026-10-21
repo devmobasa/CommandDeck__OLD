@@ -174,7 +174,7 @@ public static partial class Program
 
                     return ValueTask.FromResult( true );
                 },
-                static ( _, _ ) => ValueTask.CompletedTask,
+                static ( _, _ ) => ValueTask.FromResult( true ),
                 journal );
 
             await engine.StartAsync( CancellationToken.None );

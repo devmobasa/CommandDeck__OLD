@@ -418,7 +418,7 @@ ScrollView {
       searchTerms: "customization reset defaults"
       theme: customizationScroll.host.theme
       title: "Reset"
-      description: "Returns sources, favorites, aliases, saved searches, and assistant grants to their defaults. Asks for confirmation."
+      description: "Returns sources, favorites, aliases, saved searches, and assistant grants to their defaults. Removes added folders and re-enables configuration folders. Asks for confirmation."
       danger: true
 
       RowLayout {

@@ -6,7 +6,7 @@ internal sealed partial class IncrementalIndexEngine
     private readonly Dictionary<string, FileSystemWatcher> _policyWatchers = new( StringComparer.Ordinal );
     private bool _policyWatchersDisposed;
 
-    private void SavePolicyState( )
+    public void SavePolicyState( )
     {
         if ( !PolicyReconciliationRequired )
         {
@@ -103,7 +103,7 @@ internal sealed partial class IncrementalIndexEngine
             // buffering events while their shared reader restarts.
             if ( recoveryRoots.Count > 0 )
             {
-                var targetsChanged = RestoreWatchers( rootId: null, recoveryRoots );
+                var targetsChanged = RestoreWatchers( rootId: null, recoveryRoots, cancellationToken );
                 if ( targetsChanged )
                 {
                     affectedRoots = [];
@@ -115,12 +115,25 @@ internal sealed partial class IncrementalIndexEngine
             }
 
             _lastReconciledRootCount = affectedRoots.Length;
-            await _reconcile( affectedRoots, cancellationToken ).ConfigureAwait( false );
+            var reconciled = await _reconcile( affectedRoots, cancellationToken ).ConfigureAwait( false );
+            if ( !reconciled )
+            {
+                lock ( _statusLock )
+                {
+                    _reconciling = false;
+                }
+                ScheduleRetry( cancellationToken );
+                return;
+            }
             SavePolicyState( );
             _journal.AdvanceCheckpoint( checkpoint, ContentExtractor.ExtractorVersion );
             lock ( _statusLock )
             {
                 _reconciling = false;
+                if ( _pausedUntilFullScan )
+                {
+                    return;
+                }
                 _reconciliationRequired = false;
                 _reconciliationReason = null;
                 _lastSuccessAt = DateTimeOffset.UtcNow;

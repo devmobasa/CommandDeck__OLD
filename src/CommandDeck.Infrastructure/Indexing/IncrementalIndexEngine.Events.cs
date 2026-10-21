@@ -216,6 +216,7 @@ internal sealed partial class IncrementalIndexEngine
                 cancellationToken ).ConfigureAwait( false );
             if ( !applied )
             {
+                ScheduleRetry( cancellationToken );
                 return;
             }
             SavePolicyState( );

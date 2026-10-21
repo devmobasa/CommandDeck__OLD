@@ -6,6 +6,7 @@ import QtQuick.Layouts
 ScrollView {
   readonly property alias quicklinksCard: quicklinksCard
   required property var host
+  readonly property alias part_indexRootsCard: indexRootsCard
   readonly property alias part_fileSearchCard: fileSearchCard
   readonly property alias part_homeFolderOnlyCheck: homeFolderOnlyCheck
   readonly property alias part_omarchyMenuStateCheck: omarchyMenuStateCheck
@@ -232,10 +233,15 @@ ScrollView {
         }
       }
     }
+
+    SettingsIndexRootsCard {
+      id: indexRootsCard
+      host: searchScroll.host
+    }
+
     SettingsQuicklinksCard {
       id: quicklinksCard
       host: searchScroll.host
     }
-
   }
 }

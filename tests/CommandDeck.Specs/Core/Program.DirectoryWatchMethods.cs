@@ -230,7 +230,7 @@ public static partial class Program
                 ( roots, _ ) =>
                 {
                     reconciled.Enqueue( string.Join( ",", roots ) );
-                    return ValueTask.CompletedTask;
+                    return ValueTask.FromResult( true );
                 },
                 inotify: inotify );
             await engine.StartAsync( CancellationToken.None );
@@ -271,6 +271,7 @@ public static partial class Program
 
             // After the limit is raised, a root rescan watches the rest.
             inotify.Limit = 1_000;
+            engine.RetryUnwatchedDirectories( root, CancellationToken.None );
             engine.RecordRootScan( root, 0 );
             var recovered = engine.GetStatus( ).Roots.Single( );
             Equal( 41, recovered.WatchedDirectoryCount );

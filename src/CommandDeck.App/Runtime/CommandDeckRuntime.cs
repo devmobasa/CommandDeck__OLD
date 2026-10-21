@@ -147,5 +147,13 @@ public sealed partial class CommandDeckRuntime : IAsyncDisposable, IAgentLaunche
         };
     }
 
+    internal void CancelBackgroundIndexing( )
+    {
+        if ( Indexer is IndexCoordinator indexer )
+        {
+            indexer.CancelBackgroundWork( );
+        }
+    }
+
     public ValueTask DisposeAsync( ) => _resources.DisposeAsync( );
 }

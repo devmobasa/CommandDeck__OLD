@@ -78,6 +78,8 @@ public static partial class Program
                 ALTER TABLE catalog_items DROP COLUMN title_in_search;
                 ALTER TABLE catalog_items DROP COLUMN metadata_in_search;
                 DELETE FROM schema_migrations WHERE version >= 21;
+                DROP TABLE added_index_roots;
+                DROP TABLE disabled_index_roots;
                 DELETE FROM catalog_fts WHERE stable_id = 'file:policy-private';
                 """ );
 

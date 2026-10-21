@@ -74,8 +74,7 @@ public sealed partial class SqliteCatalog
 
         foreach ( var change in changes )
         {
-            var pathPrefix = Path.TrimEndingDirectorySeparator( change.Path ) +
-                             Path.DirectorySeparatorChar;
+            var pathPrefix = PathPrefix( change.Path );
             BindPathRemoval( removeFts, change, pathPrefix );
             await removeFts.ExecuteNonQueryAsync( cancellationToken ).ConfigureAwait( false );
             BindPathRemoval( removeItems, change, pathPrefix );

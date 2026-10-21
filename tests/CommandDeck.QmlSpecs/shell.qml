@@ -17,6 +17,7 @@ ShellRoot {
   DeferredLayoutAssertions { id: stage5; host: root }
   HiddenItemAssertions { id: stage6; host: root }
   SearchDataPathAssertions { id: stage7; host: root }
+  IndexRootsAssertions { id: stage8; host: root }
   ResultListAssertions { id: resultListAssertions; host: root }
   BridgeBackoffAssertions { id: bridgeBackoff; host: root }
   DisplayStoreAssertions { id: displayStoreAssertions; host: root }
@@ -551,7 +552,6 @@ ShellRoot {
   }
 
   function verifyAgentController() { verifyAgentControllerPart.run() }
-
   function verifyAgentSurface() { verifyAgentSurfacePart.run() }
 
   CommandDeck.AiProviderSettingsController {
@@ -584,14 +584,7 @@ ShellRoot {
 
   Component.onCompleted: Qt.callLater(function() {
     const context = {}
-    stage0.run(context)
-    stage1.run(context)
-    stage2.run(context)
-    stage3.run(context)
-    stage4.run(context)
-    stage5.run(context)
-    stage6.run(context)
-    stage7.run(context)
+    for (const stage of [stage0, stage1, stage2, stage3, stage4, stage5, stage6, stage7, stage8]) stage.run(context)
     quicklinkAssertions.run()
     resultListAssertions.run()
     bridgeBackoff.start()

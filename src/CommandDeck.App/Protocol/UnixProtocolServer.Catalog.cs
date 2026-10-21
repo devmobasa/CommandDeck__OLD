@@ -25,6 +25,20 @@ public sealed partial class UnixProtocolServer
     {
         var cancellationToken = context.CancellationToken;
 
+        if ( request.Operation is not (ProtocolOperations.IndexPause or ProtocolOperations.IndexResume) )
+        {
+            var roots = await _runtime.Indexer.ManageRootsAsync( request.Operation, request.Path, request.RootId,
+                request.IndexRoots, cancellationToken ).ConfigureAwait( false );
+            await writer.WriteAsync( new ProtocolMessage
+            {
+                RequestId = request.RequestId,
+                Type = ProtocolMessageTypes.IndexRootsResult,
+                IndexRoots = roots
+            } ).ConfigureAwait( false );
+            await writer.DoneAsync( request.RequestId ).ConfigureAwait( false );
+            return;
+        }
+
         var change = request.Operation switch
         {
             ProtocolOperations.IndexPause => _runtime.Indexer.PauseAsync( request.RootId, cancellationToken ),

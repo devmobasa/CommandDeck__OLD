@@ -39,7 +39,8 @@ internal sealed partial class IndexExclusionPolicy
     public string ConfigurationFingerprint { get; }
     public long InputRevision => _inputs.Revision;
     public PolicyInputStamp[] SnapshotInputs( out long revision ) => _inputs.Snapshot( out revision );
-    public bool RestoreInputsIfCurrent( IReadOnlyList<PolicyInputStamp> inputs ) => _inputs.RestoreIfCurrent( inputs );
+    public bool RestoreInputsIfCurrent( IReadOnlyList<PolicyInputStamp> inputs, CancellationToken cancellationToken = default ) =>
+        _inputs.RestoreIfCurrent( inputs, cancellationToken );
     public void Invalidate( string path ) => _inputs.Invalidate( path );
 
     public IndexExclusion? Match( CanonicalPathBoundary boundary, IndexRootOptions options,
@@ -50,13 +51,14 @@ internal sealed partial class IndexExclusionPolicy
 
     public (CanonicalPathBoundary Boundary, IndexRootOptions Options)? FindRoot( string path )
     {
+        var options = _options.Roots;
         List<(CanonicalPathBoundary Boundary, IndexRootOptions Options)> candidates = [];
-        for ( var index = 0; index < _options.Roots.Count; index++ )
+        for ( var index = 0; index < options.Count; index++ )
         {
-            var boundary = GetRootBoundary( index );
+            var boundary = GetRootBoundary( index, options[index] );
             if ( boundary is not null && boundary.Contains( path ) )
             {
-                candidates.Add( (boundary, _options.Roots[index]) );
+                candidates.Add( (boundary, options[index]) );
             }
         }
         if ( candidates.Count == 0 )
@@ -71,20 +73,21 @@ internal sealed partial class IndexExclusionPolicy
     // Every configured root that currently exists, in configuration order.
     public IReadOnlyList<(CanonicalPathBoundary Boundary, IndexRootOptions Options)> ResolveRoots( )
     {
-        List<(CanonicalPathBoundary Boundary, IndexRootOptions Options)> roots = new( _options.Roots.Count );
-        for ( var index = 0; index < _options.Roots.Count; index++ )
+        var options = _options.Roots;
+        List<(CanonicalPathBoundary Boundary, IndexRootOptions Options)> roots = new( options.Count );
+        for ( var index = 0; index < options.Count; index++ )
         {
-            var boundary = GetRootBoundary( index );
+            var boundary = GetRootBoundary( index, options[index] );
             if ( boundary is not null )
             {
-                roots.Add( (boundary, _options.Roots[index]) );
+                roots.Add( (boundary, options[index]) );
             }
         }
 
         return roots;
     }
 
-    private CanonicalPathBoundary? GetRootBoundary( int index )
+    private CanonicalPathBoundary? GetRootBoundary( int index, IndexRootOptions options )
     {
         if ( _rootBoundaries is not null )
         {
@@ -95,7 +98,7 @@ internal sealed partial class IndexExclusionPolicy
             }
         }
 
-        if ( !CanonicalPathBoundary.TryCreate( _options.Roots[index].Path, out var boundary ) )
+        if ( !CanonicalPathBoundary.TryCreate( options.Path, out var boundary ) )
         {
             boundary = null;
         }

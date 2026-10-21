@@ -89,5 +89,5 @@ internal sealed partial class IndexExclusionPolicy
     }
 
     internal static bool IsWithin( string path, string root ) => path == root ||
-        path.StartsWith( Path.TrimEndingDirectorySeparator( root ) + Path.DirectorySeparatorChar, StringComparison.Ordinal );
+        path.StartsWith( Path.EndsInDirectorySeparator( root ) ? root : root + Path.DirectorySeparatorChar, StringComparison.Ordinal );
 }

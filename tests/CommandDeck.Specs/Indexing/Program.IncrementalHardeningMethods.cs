@@ -151,12 +151,9 @@ public static partial class Program
 #pragma warning restore CA1859
             var purge = operations.PurgeProjectionAsync(
                 CancellationToken.None ).AsTask( );
-            await Task.Delay( 50 );
-            True( !purge.IsCompleted );
-
+            var result = await purge.WaitAsync( TimeSpan.FromSeconds( 2 ) );
             release( );
-            await reindex;
-            var result = await purge;
+            await ThrowsAsync<OperationCanceledException>( ( ) => reindex );
             True( result.Succeeded );
             True( result.RebuildRequired );
             Equal( 0, (await SearchAsync( catalog, "maintenance initial" )).Count );

@@ -32,7 +32,8 @@ internal sealed partial class IncrementalIndexEngine : IDirectoryWatchSink
         List<(string Path, IndexRootOptions Options)> roots,
         IReadOnlyList<InotifyTreeWatcher>? retained = null,
         HashSet<string>? selected = null,
-        bool coveredByReconciliation = false )
+        bool coveredByReconciliation = false,
+        CancellationToken cancellationToken = default )
     {
         List<(string Path, CanonicalPathBoundary Boundary, IndexRootOptions Options)> resolved = [];
         foreach ( (var path, var options) in roots )
@@ -102,10 +103,10 @@ internal sealed partial class IncrementalIndexEngine : IDirectoryWatchSink
                 }
             }
         }
-        StartWatchLoop( watchers );
+        StartWatchLoop( watchers, retained, cancellationToken );
     }
 
-    private void StartWatchLoop( List<InotifyTreeWatcher> watchers )
+    private void StartWatchLoop( List<InotifyTreeWatcher> watchers, IReadOnlyList<InotifyTreeWatcher>? retained, CancellationToken cancellationToken )
     {
         if ( watchers.Count == 0 )
         {
@@ -132,7 +133,8 @@ internal sealed partial class IncrementalIndexEngine : IDirectoryWatchSink
         // The loop already drains events while the admitted directories are
         // walked, so a large tree does not fill the kernel's queue. Start
         // returns once every admitted directory is watched or refused.
-        WatchTrees( watchers, _lifetime.Token );
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource( _lifetime.Token, cancellationToken );
+        WatchTrees( watchers.Where( watcher => retained?.Contains( watcher ) != true ).ToList( ), linked.Token );
     }
 
     private void WatchTrees( List<InotifyTreeWatcher> watchers, CancellationToken cancellationToken )
@@ -213,7 +215,7 @@ internal sealed partial class IncrementalIndexEngine : IDirectoryWatchSink
         return coverage;
     }
 
-    private void RetryUnwatchedDirectories( string rootPath )
+    public void RetryUnwatchedDirectories( string rootPath, CancellationToken cancellationToken )
     {
         foreach ( var watcher in _treeWatchers )
         {
@@ -221,7 +223,7 @@ internal sealed partial class IncrementalIndexEngine : IDirectoryWatchSink
                 (string.Equals( watcher.RootPath, rootPath, StringComparison.Ordinal ) ||
                 string.Equals( watcher.CanonicalRoot, rootPath, StringComparison.Ordinal )) )
             {
-                watcher.RetryUnwatched( );
+                watcher.RetryUnwatched( cancellationToken );
             }
         }
     }

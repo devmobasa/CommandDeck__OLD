@@ -85,6 +85,7 @@ HiddenItemsController 1.0 HiddenItemsController.qml
 HyprlandDesktopIntegration 1.0 HyprlandDesktopIntegration.qml
 ImageFilePreview 1.0 ImageFilePreview.qml
 IndexInspector 1.0 IndexInspector.qml
+IndexRootsController 1.0 IndexRootsController.qml
 InvocationController 1.0 InvocationController.qml
 KeyCap 1.0 KeyCap.qml
 KeyboardButton 1.0 KeyboardButton.qml
@@ -146,6 +147,7 @@ SettingsPanelState 1.0 SettingsPanelState.qml
 SettingsQuicklinksCard 1.0 SettingsQuicklinksCard.qml
 SettingsRow 1.0 SettingsRow.qml
 SettingsSearchPage 1.0 SettingsSearchPage.qml
+SettingsIndexRootsCard 1.0 SettingsIndexRootsCard.qml
 SettingsShortcutsPage 1.0 SettingsShortcutsPage.qml
 SettingsSlider 1.0 SettingsSlider.qml
 SettingsSourceList 1.0 SettingsSourceList.qml

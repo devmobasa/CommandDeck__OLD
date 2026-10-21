@@ -28,6 +28,15 @@ boundary against every process already running as the same user.
   stores credential references, and assistant credentials use owned restricted files.
 
 See [configuration](configuration.md) for actual options and defaults.
+Settings can add roots or disable configuration roots through the local daemon.
+The SQLite overlay does not bypass configuration validation, `neverIndex`, protected
+paths, symlink or mount rules. Export contains these personal paths. Removing a
+root commits its preference, policy-aware Search and Home purge, and full reindex
+request together. Surviving overlapping roots retain permitted coverage. Only the
+catalog owner publishes the background scan; restart resumes a pending request.
+Reset removes additions and re-enables configuration roots. Adding a root does
+not grant assistant or extension filesystem access.
+
 User-selected roots, commands, editors, remote services, and unrestricted assistant
 access remain deliberate trust decisions.
 

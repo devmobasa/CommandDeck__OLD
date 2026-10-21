@@ -53,7 +53,8 @@ public sealed partial class CommandDeckRuntime
                     catalog,
                     catalog,
                     options,
-                    diagnostic: SearchLogging.LogIndexDiagnostic );
+                    diagnostic: SearchLogging.LogIndexDiagnostic,
+                    rootPreferences: catalog.LauncherPreferences );
                 resources.Own( indexer );
                 if ( constructionOptions.StartIndexer )
                 {

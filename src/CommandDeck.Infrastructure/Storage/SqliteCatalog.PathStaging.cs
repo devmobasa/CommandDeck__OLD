@@ -139,5 +139,5 @@ public sealed partial class SqliteCatalog : IStagedPathChangeStore
     }
 
     private static string PathPrefix( string path ) =>
-        Path.TrimEndingDirectorySeparator( path ) + Path.DirectorySeparatorChar;
+        Path.EndsInDirectorySeparator( path ) ? path : path + Path.DirectorySeparatorChar;
 }

@@ -163,7 +163,7 @@ public sealed partial class CommandDeckRuntime
         CancellationToken cancellationToken )
     {
         await Assistant.ResetAuthorityAsync( cancellationToken ).ConfigureAwait( false );
-        var reset = await _preferences.ResetAsync( cancellationToken ).ConfigureAwait( false );
+        var reset = await Indexer.ResetPreferencesAsync( cancellationToken ).ConfigureAwait( false );
         _history.Apply( reset );
         return reset;
     }

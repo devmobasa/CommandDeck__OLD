@@ -173,6 +173,7 @@ public sealed partial class IndexCoordinator
             return 0;
         }
 
+        CancelFullScan( );
         var count = changes.Count;
         await _catalog.ApplyPathChangesAsync( [.. changes], cancellationToken ).ConfigureAwait( false );
         changes.Clear( );

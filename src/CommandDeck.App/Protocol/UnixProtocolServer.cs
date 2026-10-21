@@ -24,6 +24,7 @@ public sealed partial class UnixProtocolServer
 
     private async Task RunCoreAsync( CancellationToken cancellationToken )
     {
+        using var shutdown = cancellationToken.Register( _runtime.CancelBackgroundIndexing );
         PrepareSocketPath( );
 
         using Socket listener = new(
@@ -58,6 +59,7 @@ public sealed partial class UnixProtocolServer
         }
         finally
         {
+            _runtime.CancelBackgroundIndexing( );
             listener.Dispose( );
             await connections.CancelAsync( ).ConfigureAwait( false );
             await Task.WhenAll( clients.Snapshot( ) ).ConfigureAwait( false );

@@ -28,8 +28,12 @@ public sealed partial class FileIndexSource
     // nested inside it. Scoped, resumed, and overflow rescans all use it. A file
     // reached twice (through a followed link) is emitted twice; consumers keep
     // the first.
+    public IAsyncEnumerable<IndexedItem> ScanDirectoryAsync( string path, CancellationToken cancellationToken ) =>
+        ScanDirectoryAsync( path, null, cancellationToken );
+
     public async IAsyncEnumerable<IndexedItem> ScanDirectoryAsync(
         string path,
+        IProgress<IndexProgress>? progress,
         [EnumeratorCancellation] CancellationToken cancellationToken )
     {
         if ( !TryStartDirectoryScan( path, out var start, out var scope ) )
@@ -45,7 +49,7 @@ public sealed partial class FileIndexSource
                 start,
                 NestedRoots( start.Boundary, roots ),
                 counters,
-                progress: null,
+                progress,
                 cancellationToken ).ConfigureAwait( false ) )
             {
                 yield return item;
@@ -73,7 +77,7 @@ public sealed partial class FileIndexSource
                 nestedStart,
                 NestedRoots( boundary, roots ),
                 counters,
-                progress: null,
+                progress,
                 cancellationToken ).ConfigureAwait( false ) )
             {
                 yield return item;

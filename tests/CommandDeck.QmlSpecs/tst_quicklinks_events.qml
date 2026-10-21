@@ -28,7 +28,7 @@ Item {
     snapshot: ({ preferences: { sources: [] }, shortcuts: [], customizations: [] })
     onDismissed: visible = false
   }
-  TestCase {
+  DeadlineTestCase {
     name: "QuicklinksEvents"
     when: windowShown
     function typeText(text) {
@@ -47,7 +47,7 @@ Item {
     function control(name) { return findChild(panel, name) }
     function openCard() {
       panel.visible = true
-      tryCompare(panel.searchControl, "activeFocus", true)
+      waitForValue(panel.searchControl, "activeFocus", true)
       typeText("quicklinks")
       compare(panel.currentPage, "search")
       reply([link("configured")])
@@ -66,6 +66,57 @@ Item {
     }
     function cleanup() { panel.visible = false; controller.disconnect() }
 
+    function test_folder_refresh_does_not_take_focus_from_quicklink_editor() {
+      panel.indexRoots = [{ id: "folder", path: "/folders/added", source: "added", enabled: true, status: "Watching" }]
+      panel.visible = true
+      waitForValue(panel.searchControl, "activeFocus", true)
+      reply([link("configured")])
+      const folders = panel.part_indexRootsCard
+      const add = control("quicklinkAdd")
+      for (let index = 0; index < 80 && !folders.actionControlAt(0).activeFocus; index++) keyClick(Qt.Key_Tab)
+      verify(folders.actionControlAt(0).activeFocus)
+      const view = panel.parts.searchScroll.contentItem
+      view.contentY = add.mapToItem(view.contentItem, 0, 0).y - view.height / 2
+      waitForFrame(panel)
+
+      panel.indexRoots = [{ id: "folder", path: "/folders/added", source: "added", enabled: true, status: "Indexing · 5 items" }]
+      mouseClick(add, add.width / 2, add.height / 2, Qt.LeftButton, Qt.NoModifier, 0)
+      waitForValue(control("quicklinkTitle"), "activeFocus", true)
+      nextTurn()
+      typeText("x")
+      compare(control("quicklinkTitle").text, "x")
+      compare(folders.pathControl.text, "")
+      keyClick(Qt.Key_Escape)
+      waitForValue(add, "activeFocus", true)
+    }
+
+    function test_indexed_folders_and_quicklinks_share_visual_and_tab_order() {
+      panel.indexRoots = [{ id: "folder", path: "/folders/added", source: "added", enabled: true, status: "Watching" }]
+      panel.visible = true
+      waitForValue(panel.searchControl, "activeFocus", true)
+      reply([link("configured")])
+      const folders = panel.part_indexRootsCard
+      const quicklinks = panel.part_quicklinksCard
+      verify(folders.visible && quicklinks.visible)
+      verify(folders.y + folders.height <= quicklinks.y)
+      for (let index = 0; index < 80 && !folders.pathControl.activeFocus; index++) keyClick(Qt.Key_Tab)
+      verify(folders.pathControl.activeFocus)
+      keyClick(Qt.Key_Tab)
+      verify(folders.addControl.activeFocus)
+      keyClick(Qt.Key_Tab)
+      verify(folders.actionControlAt(0).activeFocus)
+      keyClick(Qt.Key_Tab)
+      verify(control("quicklinkAdd").activeFocus)
+      keyClick(Qt.Key_Tab, Qt.ShiftModifier)
+      verify(folders.actionControlAt(0).activeFocus)
+      keyClick(Qt.Key_Tab)
+      keyClick(Qt.Key_Space)
+      waitForValue(control("quicklinkTitle"), "activeFocus", true)
+      typeText("From shared Search page")
+      keyClick(Qt.Key_Escape)
+      waitForValue(control("quicklinkAdd"), "activeFocus", true)
+    }
+
     function test_shared_url_validation_data() {
       return UrlCases.cases.map(entry => ({ tag: entry.url + ":" + (entry.alias || ""),
         url: entry.url, alias: entry.alias, error: entry.error || "" }))
@@ -78,10 +129,10 @@ Item {
     function test_add_preview_validation_save_and_reopen() {
       openCard()
       keyClick(Qt.Key_Return)
-      tryCompare(control("quicklinkTitle"), "activeFocus", true)
+      waitForValue(control("quicklinkTitle"), "activeFocus", true)
       typeText("My docs")
       keyClick(Qt.Key_Tab)
-      tryCompare(control("quicklinkUrl"), "activeFocus", true)
+      waitForValue(control("quicklinkUrl"), "activeFocus", true)
       typeText("javascript:alert(1)")
       verify(control("quicklinkValidation").text.indexOf("HTTP") >= 0)
       verify(!control("quicklinkSave").enabled)
@@ -111,18 +162,18 @@ Item {
       compare(draft.alias, "mine")
       compare(draft.icon, "help-browser")
       reply([link("configured"), { quicklink: draft, source: "user", enabled: true }], "Quicklink saved.")
-      tryCompare(control("quicklinkAdd"), "activeFocus", true)
+      waitForValue(control("quicklinkAdd"), "activeFocus", true)
       keyClick(Qt.Key_Return)
-      tryCompare(control("quicklinkTitle"), "activeFocus", true)
+      waitForValue(control("quicklinkTitle"), "activeFocus", true)
       keyClick(Qt.Key_Escape)
-      tryCompare(control("quicklinkAdd"), "activeFocus", true)
+      waitForValue(control("quicklinkAdd"), "activeFocus", true)
     }
 
     function test_refresh_queues_actions_and_preserves_row_focus() {
       openCard()
       keyClick(Qt.Key_Tab)
       const button = control("quicklinkEdit-configured")
-      tryCompare(button, "activeFocus", true)
+      waitForValue(button, "activeFocus", true)
       controller.load()
       const count = fixture.requests.length
       keyClick(Qt.Key_Space)
@@ -132,12 +183,12 @@ Item {
       compare(fixture.requests.length, count + 1)
       compare(controller.active.request.operation, Protocol.Operations.QuicklinksDisable)
       reply([link("configured", "configured", false)], "Quicklink disabled.")
-      tryCompare(control("quicklinkEdit-configured"), "activeFocus", true)
+      waitForValue(control("quicklinkEdit-configured"), "activeFocus", true)
       compare(control("quicklinkEdit-configured").text, "Enable")
       keyClick(Qt.Key_Return)
       compare(controller.active.request.operation, Protocol.Operations.QuicklinksEnable)
       reply([link("configured")])
-      tryCompare(control("quicklinkEdit-configured"), "activeFocus", true)
+      waitForValue(control("quicklinkEdit-configured"), "activeFocus", true)
     }
 
     function test_older_save_cannot_close_a_newer_edit_of_the_same_link_data() {
@@ -149,17 +200,17 @@ Item {
       controller.load()
       reply([link("user", "user")])
       keyClick(Qt.Key_Tab)
-      tryCompare(control("quicklinkEdit-user"), "activeFocus", true)
+      waitForValue(control("quicklinkEdit-user"), "activeFocus", true)
       keyClick(Qt.Key_Return)
-      tryCompare(control("quicklinkTitle"), "activeFocus", true)
+      waitForValue(control("quicklinkTitle"), "activeFocus", true)
       keyClick(Qt.Key_A, Qt.ControlModifier)
       typeText("First edit")
       keyClick(Qt.Key_Return)
       const first = controller.active.request.quicklink
       keyClick(Qt.Key_Escape)
-      tryCompare(control("quicklinkEdit-user"), "activeFocus", true)
+      waitForValue(control("quicklinkEdit-user"), "activeFocus", true)
       keyClick(Qt.Key_Return)
-      tryCompare(control("quicklinkTitle"), "activeFocus", true)
+      waitForValue(control("quicklinkTitle"), "activeFocus", true)
       keyClick(Qt.Key_A, Qt.ControlModifier)
       typeText("Second edit")
       keyClick(Qt.Key_Return)
@@ -175,7 +226,7 @@ Item {
       compare(control("quicklinkTitle").text, "Second edit")
       const second = controller.active.request.quicklink
       reply([{ quicklink: second, source: "user", enabled: true }], "Quicklink saved.")
-      tryCompare(control("quicklinkEdit-user"), "activeFocus", true)
+      waitForValue(control("quicklinkEdit-user"), "activeFocus", true)
       compare(controller.errorText, "")
       compare(controller.statusText, "Quicklink saved.")
       compare(control("quicklinksFeedback").text, "Quicklink saved.")
@@ -184,16 +235,16 @@ Item {
     function test_mouse_toggle_and_refresh_keep_search_ready() {
       openCard()
       mouseClick(control("quicklinkEdit-configured"))
-      tryCompare(panel.searchControl, "activeFocus", true)
+      waitForValue(panel.searchControl, "activeFocus", true)
       typeText(" web")
       compare(panel.searchControl.text, "quicklinks web")
       reply([link("configured", "configured", false)])
-      tryCompare(panel.searchControl, "activeFocus", true)
+      waitForValue(panel.searchControl, "activeFocus", true)
       mouseClick(control("quicklinksRefresh"))
       typeText(" searches")
       compare(panel.searchControl.text, "quicklinks web searches")
       reply([link("configured", "configured", false)])
-      tryCompare(panel.searchControl, "activeFocus", true)
+      waitForValue(panel.searchControl, "activeFocus", true)
     }
 
     function test_late_save_keeps_focus_in_filters_data() {
@@ -203,7 +254,7 @@ Item {
     function test_late_save_keeps_focus_in_filters(data) {
       openCard()
       keyClick(Qt.Key_Return)
-      tryCompare(control("quicklinkTitle"), "activeFocus", true)
+      waitForValue(control("quicklinkTitle"), "activeFocus", true)
       typeText("Delayed docs")
       keyClick(Qt.Key_Tab)
       typeText("https://example.test/?q={query}")
@@ -216,14 +267,14 @@ Item {
       panel.visible = true
       panel.searchControl.text = ""
       panel.showPage("filters")
-      wait(0)
-      waitForRendering(panel)
+      nextTurn()
+      waitForFrame(panel)
       mouseClick(panel.filterAliasInputControl)
-      tryCompare(panel.filterAliasInputControl, "activeFocus", true)
+      waitForValue(panel.filterAliasInputControl, "activeFocus", true)
       typeText("before")
 
       reply([{ quicklink: draft, source: "user", enabled: true }], "Quicklink saved.")
-      wait(0)
+      nextTurn()
       verify(panel.filterAliasInputControl.activeFocus, "late save leaves the active editor focused")
       typeText("after")
       compare(panel.filterAliasInputControl.text, "beforeafter")
@@ -243,7 +294,7 @@ Item {
     function test_deferred_row_focus_cannot_leave_the_current_editor(data) {
       openCard()
       keyClick(Qt.Key_Tab)
-      tryCompare(control("quicklinkEdit-configured"), "activeFocus", true)
+      waitForValue(control("quicklinkEdit-configured"), "activeFocus", true)
       if (data.action === "refresh") controller.load()
       else keyClick(Qt.Key_Space)
       reply([link("configured", "configured", data.action === "refresh")])
@@ -258,7 +309,7 @@ Item {
         mouseClick(panel.searchControl)
         field = panel.searchControl
       }
-      wait(0)
+      nextTurn()
       verify(field.activeFocus, "replacement cannot restore a row over a new editor")
       typeText("draft")
       compare(field.text, "draft")
@@ -275,17 +326,17 @@ Item {
       controller.load()
       reply([link("user", "user")])
       keyClick(Qt.Key_Tab)
-      tryCompare(control("quicklinkEdit-user"), "activeFocus", true)
+      waitForValue(control("quicklinkEdit-user"), "activeFocus", true)
       if (data.action.indexOf("editor") === 0) {
         keyClick(Qt.Key_Return)
-        tryCompare(control("quicklinkTitle"), "activeFocus", true)
+        waitForValue(control("quicklinkTitle"), "activeFocus", true)
         if (data.action === "editor escape") keyClick(Qt.Key_Escape)
         else mouseClick(control("quicklinkCancel"))
       } else {
         keyClick(Qt.Key_Tab)
         keyClick(Qt.Key_Return)
         const confirmation = control("quicklinkRemoveConfirmation")
-        tryCompare(confirmation.cancelControl, "activeFocus", true)
+        waitForValue(confirmation.cancelControl, "activeFocus", true)
         if (data.action === "remove cancel") keyClick(Qt.Key_Escape)
         else {
           keyClick(Qt.Key_Right)
@@ -294,13 +345,13 @@ Item {
       }
 
       mouseClick(control("quicklinkAdd"))
-      wait(0)
+      nextTurn()
       verify(control("quicklinkTitle").activeFocus, "dismissal cannot restore the old session over a new editor")
       typeText("New draft")
       compare(control("quicklinkTitle").text, "New draft")
       if (data.action === "remove accept") {
         reply([])
-        wait(0)
+        nextTurn()
         verify(control("quicklinkTitle").activeFocus)
         typeText(" after removal")
         compare(control("quicklinkTitle").text, "New draft after removal")
@@ -310,40 +361,40 @@ Item {
     function test_mouse_add_immediate_typing_edit_and_remove_confirmation() {
       openCard()
       mouseClick(control("quicklinkAdd"))
-      tryCompare(control("quicklinkTitle"), "activeFocus", true)
+      waitForValue(control("quicklinkTitle"), "activeFocus", true)
       typeText("Mouse docs")
       keyClick(Qt.Key_Tab)
       typeText("https://example.test/static")
       keyClick(Qt.Key_Return)
       const draft = controller.active.request.quicklink
       reply([{ quicklink: draft, source: "user", enabled: true }], "Quicklink saved.")
-      tryCompare(control("quicklinkAdd"), "activeFocus", true)
+      waitForValue(control("quicklinkAdd"), "activeFocus", true)
       keyClick(Qt.Key_Tab)
-      tryCompare(control("quicklinkEdit-" + draft.id), "activeFocus", true)
+      waitForValue(control("quicklinkEdit-" + draft.id), "activeFocus", true)
       keyClick(Qt.Key_Return)
-      tryCompare(control("quicklinkTitle"), "activeFocus", true)
+      waitForValue(control("quicklinkTitle"), "activeFocus", true)
       keyClick(Qt.Key_A, Qt.ControlModifier)
       typeText("Renamed")
       keyClick(Qt.Key_Escape)
-      tryCompare(control("quicklinkEdit-" + draft.id), "activeFocus", true)
+      waitForValue(control("quicklinkEdit-" + draft.id), "activeFocus", true)
       keyClick(Qt.Key_Tab)
       keyClick(Qt.Key_Return)
       const confirmation = control("quicklinkRemoveConfirmation")
-      tryCompare(confirmation.cancelControl, "activeFocus", true)
+      waitForValue(confirmation.cancelControl, "activeFocus", true)
       keyClick(Qt.Key_Backtab)
-      tryCompare(confirmation.confirmControl, "activeFocus", true)
+      waitForValue(confirmation.confirmControl, "activeFocus", true)
       keyClick(Qt.Key_Tab)
-      tryCompare(confirmation.cancelControl, "activeFocus", true)
+      waitForValue(confirmation.cancelControl, "activeFocus", true)
       keyClick(Qt.Key_Escape)
-      tryCompare(control("quicklinkRemove-" + draft.id), "activeFocus", true)
+      waitForValue(control("quicklinkRemove-" + draft.id), "activeFocus", true)
       keyClick(Qt.Key_Space)
-      tryCompare(confirmation.cancelControl, "activeFocus", true)
+      waitForValue(confirmation.cancelControl, "activeFocus", true)
       keyClick(Qt.Key_Right)
       keyClick(Qt.Key_Return)
       compare(controller.active.request.operation, Protocol.Operations.QuicklinksRemove)
       verify(controller.active.request.confirmed)
       reply([], "Web fallback reset to the default.")
-      tryCompare(control("quicklinkAdd"), "activeFocus", true)
+      waitForValue(control("quicklinkAdd"), "activeFocus", true)
       compare(controller.statusText, "Web fallback reset to the default.")
     }
   }

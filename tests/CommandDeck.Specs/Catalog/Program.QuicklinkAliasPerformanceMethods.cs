@@ -6,7 +6,7 @@ public static partial class Program
 {
     private static async Task QuicklinkAliasLookupWorkIsBoundedAsync( )
     {
-        var database = Path.Combine( Path.GetTempPath( ), $"commanddeck-alias-work-{Guid.NewGuid( ):N}.db" );
+        var database = SpecTemporaryFiles.PathFor( $"commanddeck-alias-work-{Guid.NewGuid( ):N}.db" );
         try
         {
             await using SqliteCatalog catalog = new( new StorageOptions { DatabasePath = database } );

@@ -389,6 +389,14 @@ PanelWindow {
         inspection: launcherWindow.host.runtimeStatus ? launcherWindow.host.runtimeStatus.inspection : null
         healthDetails: launcherWindow.part_runtimeStatusSurface.details
         healthSummary: launcherWindow.part_runtimeStatusSurface.issueCount > 0 ? launcherWindow.part_runtimeStatusSurface.summary : ""
+        onIndexedFoldersRequested: {
+          launcherWindow.host.indexInspectorOpen = false
+          launcherWindow.host.openSettings()
+          Qt.callLater(function() {
+            const settings = settingsSurface.item as CommandDeckWindowSettings
+            if (settings) settings.showIndexedFolders()
+          })
+        }
         onDismissed: {
           launcherWindow.host.indexInspectorOpen = false
           launcherWindow.host.focusRevision++

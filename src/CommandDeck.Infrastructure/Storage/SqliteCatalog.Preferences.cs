@@ -2,6 +2,12 @@ namespace CommandDeck;
 
 public sealed partial class SqliteCatalog
 {
+    public ValueTask<IndexRootPreferences> GetIndexRootsAsync( CancellationToken cancellationToken ) =>
+        _launcherPreferences.GetIndexRootsAsync( cancellationToken );
+
+    public ValueTask ReplaceIndexRootsAsync( IndexRootPreferences preferences, CancellationToken cancellationToken ) =>
+        _launcherPreferences.ReplaceIndexRootsAsync( preferences, cancellationToken );
+
     public ValueTask<LauncherPreferences> GetPreferencesAsync(
         CancellationToken cancellationToken ) =>
         _launcherPreferences.GetPreferencesAsync( cancellationToken );

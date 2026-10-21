@@ -13,16 +13,30 @@ public sealed partial class FileIndexSource : IDisposable
     private readonly List<IndexWorkItem> _workItems = [];
 
     public FileIndexSource( IndexingOptions options, PrivacyOptions privacy, string? databasePath = null )
+        : this( options, privacy, databasePath, null )
+    {
+    }
+
+    private FileIndexSource( IndexingOptions options, PrivacyOptions privacy, string? databasePath, IndexExclusionPolicy? exclusions )
     {
         _options = options;
         _pathPolicy = new PathPolicy( privacy );
-        Exclusions = new IndexExclusionPolicy( options, privacy, databasePath, cacheRootBoundaries: true );
+        Exclusions = exclusions ?? new IndexExclusionPolicy( options, privacy, databasePath, cacheRootBoundaries: true );
         _contentExtractor = new ContentExtractor( options );
         _storagePaths = databasePath is null ? null : new IndexStoragePaths( databasePath );
     }
 
+    internal FileIndexSource CreateScanSource( IndexingOptions options, PrivacyOptions privacy, string databasePath ) =>
+        new( options, privacy, databasePath, Exclusions );
+
     public IReadOnlyList<IndexExclusionDiagnostic> SnapshotDiagnostics( ) =>
         _diagnostics.ToArray( );
+
+    internal void ReplaceDiagnostics( IReadOnlyList<IndexExclusionDiagnostic> diagnostics )
+    {
+        _diagnostics.Clear( );
+        _diagnostics.AddRange( diagnostics );
+    }
 
     public IReadOnlyList<IndexWorkItem> SnapshotWorkItems( ) =>
         _workItems.ToArray( );

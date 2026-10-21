@@ -10,7 +10,7 @@ Item {
   width: 900
   height: 700
 
-  CommandDeck.Theme { id: theme; loadShellTokens: false }
+  CommandDeck.Theme { id: appTheme; loadShellTokens: false }
 
   function workItems(count) {
     const values = []
@@ -28,7 +28,7 @@ Item {
   CommandDeck.IndexInspector {
     id: inspector
     anchors.fill: parent
-    theme: theme
+    theme: appTheme
     onDismissed: opened = false
   }
 
@@ -44,7 +44,7 @@ Item {
     }
 
     function test_inspector_tab_stays_on_close_when_it_is_the_only_control() {
-      inspector.inspection = inspection(2)
+      inspector.inspection = scene.inspection(2)
       inspector.opened = true
       waitForValue(inspector.closeControl, "activeFocus", true)
       verify(!inspector.previousControl.enabled && !inspector.nextControl.enabled)
@@ -57,13 +57,15 @@ Item {
 
     function test_inspector_tab_skips_the_disabled_page_button_and_wraps() {
       inspector.healthDetails = "The clipboard service is not running."
-      inspector.inspection = inspection(6)
+      inspector.inspection = scene.inspection(6)
       inspector.opened = true
       waitForValue(inspector.closeControl, "activeFocus", true)
       verify(!inspector.previousControl.enabled && inspector.nextControl.enabled)
 
       keyClick(Qt.Key_Tab)
       compare(focused(), inspector.healthControl)
+      keyClick(Qt.Key_Tab)
+      compare(focused(), inspector.foldersControl, "Tab reaches indexed folder management")
       keyClick(Qt.Key_Tab)
       compare(focused(), inspector.nextControl, "Tab skips the disabled Previous button")
       keyClick(Qt.Key_Tab)

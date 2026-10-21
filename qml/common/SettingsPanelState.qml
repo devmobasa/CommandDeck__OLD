@@ -13,6 +13,21 @@ FocusScope {
   readonly property var part_closeButton: parts.closeButton
   readonly property var part_aiRemoveConfirmation: parts.aiRemoveConfirmation
   readonly property var part_aiProviderEditor: parts.aiProviderEditor
+  readonly property var part_indexRootsCard: parts.searchScroll.part_indexRootsCard
+  property var indexRoots: []
+  property string indexRootsError: ""
+  property bool indexRootsBusy: false
+  property bool indexReindexPending: false
+  property var indexReindexProgress: null
+  property string indexReindexError: ""
+  signal indexRootsRequested()
+  signal indexRootChangeRequested(string operation, string path, string rootId)
+  signal indexRootPathEdited()
+  function showIndexedFolders() {
+    owner.part_settingsSearch.text = "indexed folders"
+    owner.showPage(Ui.SettingsPage.Search)
+    Qt.callLater(owner.part_indexRootsCard.focusPath)
+  }
   readonly property var part_fileSearchCard: parts.searchScroll.part_fileSearchCard
   readonly property var part_homeFolderOnlyCheck: parts.searchScroll.part_homeFolderOnlyCheck
   readonly property var part_omarchyMenuStateCheck: parts.searchScroll.part_omarchyMenuStateCheck
@@ -273,7 +288,7 @@ FocusScope {
     { id: Ui.SettingsPage.Customization, title: "Customization", subtitle: "Size, colors, favorites", icon: "☆" }
   ]
   readonly property var pageCards: ({
-    search: [settingsState.owner.part_fileSearchCard, settingsState.owner.part_sourcesCard, settingsState.owner.part_heyCard, settingsState.owner.part_behaviorCard, settingsState.part_quicklinksCard],
+    search: [settingsState.owner.part_fileSearchCard, settingsState.owner.part_sourcesCard, settingsState.owner.part_heyCard, settingsState.owner.part_behaviorCard, settingsState.owner.part_indexRootsCard, settingsState.part_quicklinksCard],
     assistant: [settingsState.owner.part_assistantCard, settingsState.owner.part_modelCard, settingsState.owner.part_trustCard, settingsState.owner.part_limitsCard, settingsState.owner.part_grantsCard, settingsState.owner.part_diagnosticsCard],
     editors: [settingsState.owner.part_editorsCard],
     filters: [settingsState.owner.part_filterAliasesCard, settingsState.owner.part_savedSearchesCard],

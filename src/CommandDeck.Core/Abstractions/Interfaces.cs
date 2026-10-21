@@ -155,6 +155,8 @@ public interface ILauncherSearchPreferences
 
 public interface ILauncherPreferenceStore : ILauncherSearchPreferences
 {
+    ValueTask<IndexRootPreferences> GetIndexRootsAsync( CancellationToken cancellationToken );
+    ValueTask ReplaceIndexRootsAsync( IndexRootPreferences preferences, CancellationToken cancellationToken );
     ValueTask<LauncherPreferences> PatchSourcePreferencesAsync( SourcePreferencePatch patch, CancellationToken cancellationToken );
     ValueTask<IReadOnlyList<SavedSearch>> SaveSavedSearchAsync(
         SavedSearch search,
@@ -243,6 +245,9 @@ public interface IAiPreferenceStore
 
 public interface IIndexCoordinator : IAsyncDisposable, ICatalogOperations
 {
+    ValueTask<IndexRootsResult> ManageRootsAsync( string operation, string? path, string? rootId,
+        IndexRootPreferences? import, CancellationToken cancellationToken );
+    ValueTask<LauncherPreferences> ResetPreferencesAsync( CancellationToken cancellationToken );
     ValueTask StartAsync( CancellationToken cancellationToken );
     ValueTask<ReindexReport> ReindexAsync(
         IProgress<IndexProgress>? progress,

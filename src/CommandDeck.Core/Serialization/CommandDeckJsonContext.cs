@@ -166,6 +166,8 @@ namespace CommandDeck;
 [JsonSerializable( typeof( List<FilterAlias> ) )]
 [JsonSerializable( typeof( CustomizationResult ) )]
 [JsonSerializable( typeof( CustomizationExport ) )]
+[JsonSerializable( typeof( IndexRootPreferences ) )]
+[JsonSerializable( typeof( IndexRootsResult ) )]
 [JsonSerializable( typeof( HiddenItemSummary ) )]
 [JsonSerializable( typeof( List<HiddenItemSummary> ) )]
 [JsonSerializable( typeof( HiddenItemsResult ) )]

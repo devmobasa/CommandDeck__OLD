@@ -46,6 +46,39 @@ CommandDeck.SettingsPanel {
     shortcuts: [],
     customizations: []
   })
+  property var rootChanges: []
+  property var rootRequests: []
+  property bool delayRootReads: false
+  property int rootSequence: 0
+  readonly property alias part_indexRootsController: indexRootsController
+  indexRoots: indexRootsController.roots
+  indexRootsError: indexRootsController.error
+  indexRootsBusy: indexRootsController.busy
+  indexReindexPending: indexRootsController.reindexPending
+  indexReindexProgress: indexRootsController.progress
+  indexReindexError: indexRootsController.reindexError
+  CommandDeck.IndexRootsController {
+    id: indexRootsController
+    nextRequestId: () => ++settingsPanel.rootSequence
+    onRequest: message => {
+      settingsPanel.rootRequests = settingsPanel.rootRequests.concat([message])
+      if (message.operation === Protocol.Operations.IndexRoots) {
+        if (!settingsPanel.delayRootReads) Qt.callLater(() => settingsPanel.respondRoots(message.requestId, roots))
+      } else {
+        settingsPanel.rootChanges = settingsPanel.rootChanges.concat([message])
+      }
+    }
+  }
+  function respondRoots(requestId, roots) {
+    indexRootsController.handleMessage({ requestId: requestId, type: Protocol.Messages.IndexRootsResult,
+      indexRoots: { roots: roots, reindexPending: indexRootsController.reindexPending,
+        progress: indexRootsController.progress, reindexError: indexRootsController.reindexError } })
+  }
+  onIndexRootsRequested: indexRootsController.refresh()
+  onIndexRootPathEdited: indexRootsController.clearActionError(Protocol.Operations.IndexAdd, "")
+  onIndexRootChangeRequested: (operation, path, rootId) => {
+    indexRootsController.change(operation, path, rootId)
+  }
   property int dismissals: 0
   property var changedPreferences: null
   property bool queueChanges: false

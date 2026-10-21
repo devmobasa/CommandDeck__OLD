@@ -97,8 +97,8 @@ See [search](search-and-ranking.md), [security](security.md),
 [AI](ai.md), and [extension contracts](extensions/README.md)
 before changing these boundaries.
 
-Quicklink preferences have a separate migration (23; 22 is left available for
-indexed-folder preferences). Quicklink edits update user records, exclusions,
+Indexed-folder preferences use migration 22; quicklink preferences follow in
+migration 23. Quicklink edits update user records, exclusions,
 search rows, and any fallback reset in one SQLite transaction. Only quicklink
 rows are republished. Full-index publication reads the current preferences in
 its publication transaction, so an older scan cannot restore removed links.
@@ -142,9 +142,23 @@ until events or shutdown. Only directories admitted by traversal policy consume
 tree watches. Nested roots are watched once; watch-limit failures preserve the
 indexed snapshot and report remediation. Resume and reindex rebuild the watcher
 set from current root identities, including roots that appeared later.
+
+Folder edits commit preferences, coverage revocation, and a durable reindex flag
+in one transaction. A background worker coalesces edits into a full scan.
+Discovery and extraction run outside the catalog gate; publication reacquires
+the gate and checks cancellation. Later edits cancel the old generation.
+Startup resumes pending work in the background, so the daemon can serve Search
+and Settings while extraction runs. Incremental publication pauses until the
+full scan completes; watches continue buffering events. Purge and repair cancel
+the pending worker and hold incremental publication in that runtime until an
+explicit full scan or a later folder edit. The durable rebuild flag remains set
+during that hold.
+
 Overflow recovery replaces affected tree watches before scanning, includes
 interrupted overlapping roots in that scan, and preserves other roots' buffered
-events. A changed canonical root requires a full catalog scan. Watch admission
+events. Journal acknowledgement follows successful publication. Folder scans
+leave pending events for the incremental worker after publication. A changed
+canonical root requires a full catalog scan. Watch admission
 rechecks canonical ancestry before adding a kernel watch or enumerating children.
 Directory counts are local diagnostics; the wire contract is unchanged.
 

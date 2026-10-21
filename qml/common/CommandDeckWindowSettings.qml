@@ -21,6 +21,16 @@ SettingsPanel {
     NumberAnimation { duration: settingsPanel.host.part_appTheme.durationNormal }
   }
   theme: settingsPanel.host.part_settingsTheme
+  indexRoots: settingsPanel.host.host.part_indexRootsController.roots
+  indexRootsError: settingsPanel.host.host.part_indexRootsController.error
+  indexRootsBusy: settingsPanel.host.host.part_indexRootsController.busy
+  indexReindexPending: settingsPanel.host.host.part_indexRootsController.reindexPending
+  indexReindexProgress: settingsPanel.host.host.part_indexRootsController.progress
+  indexReindexError: settingsPanel.host.host.part_indexRootsController.reindexError
+  onIndexRootsRequested: settingsPanel.host.host.part_indexRootsController.refresh()
+  onIndexRootPathEdited: settingsPanel.host.host.part_indexRootsController.clearActionError(Protocol.Operations.IndexAdd, "")
+  onIndexRootChangeRequested: (operation, path, rootId) =>
+    settingsPanel.host.host.part_indexRootsController.change(operation, path, rootId)
   snapshot: settingsPanel.host.host.settingsSnapshot
   quicklinksController: settingsPanel.host.host.part_quicklinksController
   fallbackQuicklinks: settingsPanel.host.host.fallbackQuicklinks

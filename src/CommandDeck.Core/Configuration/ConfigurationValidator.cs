@@ -331,12 +331,20 @@ public static class ConfigurationValidator
         }
     }
 
-    private static void ValidateIndexRoot( IndexRootOptions root )
+    public static void ValidateIndexRoot( IndexRootOptions? root )
     {
         if ( root is null || string.IsNullOrWhiteSpace( root.Path ) )
         {
             throw new InvalidOperationException(
                 "indexing.roots must contain objects with a non-empty path." );
+        }
+        try
+        {
+            _ = IndexRootPaths.Normalize( root.Path );
+        }
+        catch ( ArgumentException )
+        {
+            throw new InvalidOperationException( "Configured root path is invalid." );
         }
         if ( root.IncludeGlobs is null || root.ExcludeGlobs is null ||
             root.IncludeGlobs.Concat( root.ExcludeGlobs ).Any( static pattern =>
