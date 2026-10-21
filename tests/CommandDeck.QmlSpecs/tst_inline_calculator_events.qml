@@ -2,6 +2,7 @@ import QtQuick
 import QtTest
 import "../../qml/common/DeckSearchActions.js" as SearchActions
 import "../../qml/common/QueryExpressions.js" as QueryExpressions
+import "../../qml/common/DisplaySizing.js" as DisplaySizing
 
 EventPathFixture {
   id: scene
@@ -10,6 +11,8 @@ EventPathFixture {
     part_searchField.surfaceVisible = opened
     if (opened) part_controller.focusRevision++
   }
+
+  FontMetrics { id: wrapMetrics }
 
   QtObject {
     id: savedSearchHost
@@ -22,6 +25,60 @@ EventPathFixture {
   EventPathTestCase {
     fixture: scene
     name: "CommandDeck_inline_calculator"
+
+    function test_word_wrapping_at_default_width_data() {
+      return [
+        { tag: "expression", field: "expression", objectName: "calculatorExpression" },
+        { tag: "result", field: "value", objectName: "calculatorValue" },
+        { tag: "exact", field: "exactValue", objectName: "calculatorExactValue" }
+      ]
+    }
+
+    function test_word_wrapping_at_default_width(data) {
+      scene.opened = false
+      scene.opened = true
+      waitForValue(fixture.part_searchField.inputControl, "activeFocus", true)
+      typeText("days between 10 may 2026 and 19 sep 2026")
+      compare(fixture.part_controller.queryText, "days between 10 may 2026 and 19 sep 2026")
+      const details = createTemporaryObject(fixture.part_calculatorComponent, fixture, {
+        y: 130, width: DisplaySizing.calculate({}).contentWidth - 2 * fixture.part_theme.panelPadding - 32,
+        theme: fixture.part_theme
+      })
+      verify(details !== null)
+      const textItem = findChild(details, data.objectName)
+      const lineWidths = []
+      textItem.lineLaidOut.connect(function(line) { lineWidths[line.number] = line.implicitWidth })
+      const range = "Sun 10 May 2026 → Sat 19 Sep 2026"
+      details[data.field] = data.field === "exactValue" ? [range, range, range, range].join(" ") : range
+      waitForCondition(() => textItem.lineCount > 1 && lineWidths.length === textItem.lineCount)
+
+      wrapMetrics.font = textItem.font
+      let remaining = textItem.text
+      for (const width of lineWidths) {
+        let boundary = -1
+        for (let end = 1; end <= remaining.length; end++) {
+          if (end < remaining.length && remaining[end - 1] !== " " && remaining[end] !== " ") continue
+          const line = remaining.slice(0, end)
+          if (Math.abs(wrapMetrics.advanceWidth(line) - width) < 1
+              || Math.abs(wrapMetrics.advanceWidth(line.trim()) - width) < 1) {
+            boundary = end
+            break
+          }
+        }
+        verify(boundary > 0, "line breaks only at spaces: " + remaining + " (line width " + width + ")")
+        remaining = remaining.slice(boundary).trim()
+      }
+      compare(remaining, "", "every word is displayed")
+
+      lineWidths.length = 0
+      details[data.field] = "1234567890".repeat(20)
+      waitForCondition(() => textItem.lineCount > 1 && lineWidths.length === textItem.lineCount)
+      verify(lineWidths.every(width => width <= textItem.width + 1), "an unbroken number wraps within the view")
+      mouseClick(findChild(details, "calculatorCopyButton"))
+      verify(fixture.part_searchField.inputControl.activeFocus)
+      typeText("x")
+      verify(fixture.part_controller.queryText.endsWith("x"))
+    }
 
     function test_copy_and_type_after_result_replacement() {
       scene.opened = false
