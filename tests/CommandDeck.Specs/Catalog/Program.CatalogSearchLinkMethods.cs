@@ -246,6 +246,8 @@ public static partial class Program
                     ALTER TABLE catalog_items DROP COLUMN metadata_in_search;
                     CREATE VIEW customizable_items AS SELECT * FROM catalog_items UNION ALL SELECT * FROM extension_commands;
                     DELETE FROM schema_migrations WHERE version >= 20;
+                    DROP TABLE added_index_roots;
+                    DROP TABLE disabled_index_roots;
 
                     CREATE TEMP TABLE reordered AS
                         SELECT stable_id, kind, source_id, title, subtitle, path, body, config_keys

@@ -110,10 +110,11 @@ internal sealed class IndexPolicyInputs
         }
     }
 
-    public bool RestoreIfCurrent( IReadOnlyList<PolicyInputStamp> stamps )
+    public bool RestoreIfCurrent( IReadOnlyList<PolicyInputStamp> stamps, CancellationToken cancellationToken = default )
     {
         foreach ( var stamp in stamps )
         {
+            cancellationToken.ThrowIfCancellationRequested( );
             var current = stamp.Directory
                 ? MarkerFingerprint( ReadMarkers( stamp.Path ) )
                 : ReadBoundedText( stamp.Path ).Fingerprint;
@@ -124,6 +125,7 @@ internal sealed class IndexPolicyInputs
         }
         foreach ( var stamp in stamps )
         {
+            cancellationToken.ThrowIfCancellationRequested( );
             Observe( stamp.Path, stamp.Directory, stamp.Fingerprint );
             foreach ( var scope in stamp.Scopes )
             {

@@ -536,6 +536,15 @@ CommandDeckState {
     }
   }
 
+  readonly property alias part_indexRootsController: indexRootsController
+  IndexRootsController {
+    id: indexRootsController
+    nextRequestId: () => ++root.requestSequence
+    available: root.daemonAvailable
+    onRequest: value => root.part_protocol.send(value)
+    onChanged: { root.requestRuntimeStatus(); root.requestSearch() }
+  }
+
   ExtensionSessionController {
     id: extensionController
     nextRequestId: () => ++root.requestSequence

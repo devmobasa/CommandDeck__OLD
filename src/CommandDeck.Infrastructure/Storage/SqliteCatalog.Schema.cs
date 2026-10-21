@@ -359,6 +359,16 @@ public sealed partial class SqliteCatalog
                     WHERE json_extract(value, '$.field') = 'metadata'
                       AND json_extract(value, '$.included') = 0);
             """),
+        new(22, "Store indexed folder preferences", """
+            CREATE TABLE added_index_roots (
+                path TEXT PRIMARY KEY,
+                created_unix_ms INTEGER NOT NULL,
+                options_json TEXT NOT NULL
+            ) WITHOUT ROWID;
+            CREATE TABLE disabled_index_roots (
+                path TEXT PRIMARY KEY
+            ) WITHOUT ROWID;
+            """),
         QuicklinksMigration
     ];
 

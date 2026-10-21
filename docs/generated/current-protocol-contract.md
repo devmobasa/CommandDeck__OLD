@@ -84,8 +84,14 @@ Generated from Core protocol constants and registries. Run `scripts/generate-pro
 - `history.delete`
 - `history.get`
 - `history.reset`
+- `index.add`
+- `index.disable`
+- `index.enable`
 - `index.pause`
+- `index.remove`
 - `index.resume`
+- `index.roots`
+- `index.roots.import`
 - `invoke`
 - `launcher.open.cancel`
 - `package.cancel`
@@ -148,6 +154,7 @@ Generated from Core protocol constants and registries. Run `scripts/generate-pro
 - `file-selection`
 - `filter-alias-result`
 - `hidden-items-result`
+- `index.roots.result`
 - `package-commit-result`
 - `package-preview-result`
 - `package-search-result`
@@ -202,6 +209,7 @@ Generated from Core protocol constants and registries. Run `scripts/generate-pro
 - `HistoryId`
 - `IncludeHidden`
 - `IncludeShortcuts`
+- `IndexRoots`
 - `InputValues`
 - `InvocationReference`
 - `Limit`
@@ -284,6 +292,7 @@ Generated from Core protocol constants and registries. Run `scripts/generate-pro
 - `FileSelection`
 - `FilterAliases`
 - `HiddenItems`
+- `IndexRoots`
 - `PackageCommit`
 - `PackagePreview`
 - `PackageSearch`

@@ -48,6 +48,7 @@ public sealed class ProtocolRequest
     public string? Scope { get; init; }
     public string? Path { get; init; }
     public string? RootId { get; init; }
+    public IndexRootPreferences? IndexRoots { get; init; }
     public bool IncludeShortcuts { get; init; }
     public bool? Enabled { get; init; }
     public string? Alias { get; init; }

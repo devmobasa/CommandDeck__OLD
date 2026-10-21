@@ -32,6 +32,8 @@ FocusScope {
   readonly property alias nextControl: nextButton
 
   signal dismissed()
+  signal indexedFoldersRequested()
+  readonly property alias foldersControl: foldersButton
 
   function close() {
     root.dismissed()
@@ -71,7 +73,7 @@ FocusScope {
     } else if (event.key === Qt.Key_Tab || event.key === Qt.Key_Backtab) {
       // The details show only with health issues, and a page button is
       // disabled at its end; both are skipped then.
-      FocusTrap.cycleTargets([closeButton, healthText, previousButton, nextButton],
+      FocusTrap.cycleTargets([closeButton, healthText, foldersButton, previousButton, nextButton],
         event.key === Qt.Key_Tab && !(event.modifiers & Qt.ShiftModifier))
       event.accepted = true
     }
@@ -160,6 +162,15 @@ FocusScope {
           background: null
           Accessible.name: "Index and service issue details"
         }
+      }
+
+      DeckButton {
+        id: foldersButton
+        visible: root.healthDetails.length > 0
+        theme: root.theme
+        text: "Manage indexed folders"
+        Accessible.name: "Manage indexed folders in Settings"
+        onClicked: root.indexedFoldersRequested()
       }
 
       Text {

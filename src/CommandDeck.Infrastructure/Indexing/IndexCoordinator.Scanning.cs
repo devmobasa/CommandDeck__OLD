@@ -14,9 +14,75 @@ public sealed partial class IndexCoordinator
 
     private async ValueTask<ReindexReport> ReindexCoreAsync(
         IProgress<IndexProgress>? progress,
+        CancellationToken cancellationToken, bool background = false )
+    {
+        if ( !background )
+        {
+            CancelFullScan( );
+        }
+        using var scan = CancellationTokenSource.CreateLinkedTokenSource( cancellationToken, _lifetime.Token );
+        if ( !background )
+        {
+            _fullScanCancellation = scan;
+        }
+        var token = scan.Token;
+        var locked = false;
+        var scanning = false;
+        _indexLock.Release( );
+        try
+        {
+            await _fullScanLock.WaitAsync( token ).ConfigureAwait( false );
+            scanning = true;
+            await _indexLock.WaitAsync( token ).ConfigureAwait( false );
+            locked = true;
+            token.ThrowIfCancellationRequested( );
+            if ( background && !_reindexPending )
+            {
+                return new ReindexReport( );
+            }
+            _fullScanCancellation = scan;
+            using var files = _files.CreateScanSource( _options.Indexing with { Roots = [.. _options.Indexing.Roots] },
+                _options.Privacy, _options.Storage.DatabasePath );
+            _indexLock.Release( );
+            locked = false;
+
+            // Discovery and extraction run outside the catalog gate. Enumeration
+            // reacquires it before the staged generation can publish any row.
+            var report = await BuildGenerationAsync( files, async ( ) =>
+            {
+                await _indexLock.WaitAsync( token ).ConfigureAwait( false );
+                locked = true;
+                token.ThrowIfCancellationRequested( );
+            }, progress, token ).ConfigureAwait( false );
+            _reindexPending = false;
+            _reindexError = null;
+            return report;
+        }
+        finally
+        {
+            if ( !locked )
+            {
+                // Callers entered with this gate held and release it themselves.
+                await _indexLock.WaitAsync( CancellationToken.None ).ConfigureAwait( false );
+            }
+            if ( ReferenceEquals( _fullScanCancellation, scan ) )
+            {
+                _fullScanCancellation = null;
+            }
+            if ( scanning )
+            {
+                _fullScanLock.Release( );
+            }
+        }
+    }
+
+    private async ValueTask<ReindexReport> BuildGenerationAsync(
+        FileIndexSource files, Func<Task> acquirePublication,
+        IProgress<IndexProgress>? progress,
         CancellationToken cancellationToken )
     {
         var started = DateTimeOffset.UtcNow;
+        _incremental.RestoreWatchers( null, cancellationToken: cancellationToken );
         var checkpoint = _incremental.CaptureCheckpoint( );
         Counter counter = new( );
         Dictionary<string, long> rootCounts = new( StringComparer.Ordinal );
@@ -64,20 +130,25 @@ public sealed partial class IndexCoordinator
                 progress?.Report( value );
             } );
 
-            await foreach ( var item in _files.ScanAsync( fileProgress, token ).ConfigureAwait( false ) )
+            await foreach ( var item in files.ScanAsync( fileProgress, token ).ConfigureAwait( false ) )
             {
                 counter.Indexed++;
                 yield return item;
             }
+
+            await acquirePublication( ).ConfigureAwait( false );
         }
 
         progress?.Report( new IndexProgress { Stage = "begin" } );
         await _catalog.ReplaceGenerationAsync(
             Enumerate( cancellationToken ),
-            _files.SnapshotDiagnostics,
-            _files.SnapshotWorkItems,
+            files.SnapshotDiagnostics,
+            files.SnapshotWorkItems,
             progress,
             cancellationToken ).ConfigureAwait( false );
+
+        // Incremental publication must start from the committed scan's diagnostics.
+        _files.ReplaceDiagnostics( files.SnapshotDiagnostics( ) );
         _incremental.CompleteFullScan( checkpoint );
         foreach ( (var root, var count) in rootCounts )
         {
@@ -113,7 +184,7 @@ public sealed partial class IndexCoordinator
         await _indexLock.WaitAsync( cancellationToken ).ConfigureAwait( false );
         try
         {
-            if ( _incremental.IsPausedUntilFullScan )
+            if ( _incremental.IsPausedUntilFullScan || _fullScanCancellation is not null )
             {
                 return false;
             }
@@ -121,34 +192,35 @@ public sealed partial class IndexCoordinator
             List<(IncrementalPathRequest Request, string ChangePath, bool IsDirectory)> batch = new( paths.Count );
             foreach ( var request in paths )
             {
-                var isDirectory = Directory.Exists( request.Path );
                 if ( _files.TryResolveChangePath( request.Path, out var changePath ) )
                 {
-                    batch.Add( (request, changePath, isDirectory) );
+                    batch.Add( (request, changePath, Directory.Exists( request.Path )) );
                 }
             }
 
             await ApplyPathBatchAsync( batch, cancellationToken ).ConfigureAwait( false );
             await _catalog.ReplaceExclusionDiagnosticsAsync( _files.SnapshotDiagnostics( ), cancellationToken ).ConfigureAwait( false );
+            _incremental.SavePolicyState( );
             return true;
         }
         finally
         {
+            StartBackgroundReindex( );
             _indexLock.Release( );
         }
     }
 
-    private async ValueTask ReconcileAsync(
+    private async ValueTask<bool> ReconcileAsync(
         IReadOnlyList<string> affectedRoots,
         CancellationToken cancellationToken )
     {
         await _indexLock.WaitAsync( cancellationToken ).ConfigureAwait( false );
         try
         {
-            if ( _incremental.IsPausedUntilFullScan ||
+            if ( _incremental.IsPausedUntilFullScan || _fullScanCancellation is not null ||
                 !_incremental.GetStatus( ).ReconciliationRequired )
             {
-                return;
+                return false;
             }
 
             if ( affectedRoots.Count == 0 )
@@ -165,34 +237,48 @@ public sealed partial class IndexCoordinator
                 {
                     await ReindexCoreAsync( progress: null, cancellationToken ).ConfigureAwait( false );
                 }
-
-                return;
             }
-
-            var status = _incremental.GetStatus( );
-            foreach ( var rootPath in affectedRoots )
+            else
             {
-                var root = status.Roots.SingleOrDefault( value =>
-                    string.Equals( value.Path, rootPath, StringComparison.Ordinal ) );
-                if ( root is null )
+                var status = _incremental.GetStatus( );
+                foreach ( var rootPath in affectedRoots )
                 {
-                    continue;
-                }
-
-                await ReindexScopedCoreAsync(
-                    new IndexReindexScope
+                    var root = status.Roots.SingleOrDefault( value =>
+                        string.Equals( value.Path, rootPath, StringComparison.Ordinal ) );
+                    if ( root is null )
                     {
-                        Kind = IndexReindexScopeKinds.Root,
-                        RootId = root.Id
-                    },
-                    progress: null,
-                    cancellationToken ).ConfigureAwait( false );
+                        continue;
+                    }
+
+                    await ReindexScopedCoreAsync(
+                        new IndexReindexScope
+                        {
+                            Kind = IndexReindexScopeKinds.Root,
+                            RootId = root.Id
+                        },
+                        progress: null,
+                        cancellationToken ).ConfigureAwait( false );
+                }
+                _incremental.SavePolicyState( );
             }
+        }
+        catch ( OperationCanceledException ) when ( !cancellationToken.IsCancellationRequested )
+        {
+            // A newer full scan owns reconciliation. Keep the journal worker
+            // alive and leave this snapshot unacknowledged until it completes.
+            return false;
         }
         finally
         {
+            StartBackgroundReindex( );
             _indexLock.Release( );
         }
+
+        foreach ( var root in _options.Indexing.Roots )
+        {
+            _incremental.RetryUnwatchedDirectories( IndexRootPaths.Normalize( root.Path ), cancellationToken );
+        }
+        return true;
     }
 
     private async ValueTask ReindexStaleExtractorPathsAsync(
@@ -249,9 +335,13 @@ public sealed partial class IndexCoordinator
         CancellationToken cancellationToken )
     {
         ObjectDisposedException.ThrowIf( _disposed, this );
-        await StartAsync( cancellationToken ).ConfigureAwait( false );
+        await StartCoreAsync( reconcilePolicy: false, cancellationToken ).ConfigureAwait( false );
         EnsureCatalogMutationOwnership( );
-        return await RunExclusiveAsync( operation, cancellationToken ).ConfigureAwait( false );
+        return await RunExclusiveAsync( async token =>
+        {
+            CancelFullScan( );
+            return await operation( token ).ConfigureAwait( false );
+        }, cancellationToken ).ConfigureAwait( false );
     }
 
     private void EnsureCatalogMutationOwnership( )

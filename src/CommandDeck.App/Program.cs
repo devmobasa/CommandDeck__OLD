@@ -53,6 +53,10 @@ public static partial class Program
                 "bridge" => await StdioBridge.RunAsync(
                     arguments.GetOption( "--socket" ),
                     shutdown.Token ).ConfigureAwait( false ),
+                "preferences" when IsPreferencesResetCommand( arguments ) =>
+                    await RunPreferencesResetCliAsync( arguments, shutdown.Token ).ConfigureAwait( false ),
+                "index" when IsIndexRootsCommand( arguments ) =>
+                    await RunIndexRootsCliAsync( arguments, shutdown.Token ).ConfigureAwait( false ),
                 "agent" when AgentActionUsesDaemon( arguments ) =>
                     await RunAgentDaemonAsync( arguments, shutdown.Token ).ConfigureAwait( false ),
                 "ai" when AiActionUsesDaemon( arguments ) =>
@@ -88,7 +92,9 @@ public static partial class Program
                 cancellationToken )
                 .ConfigureAwait( false );
 
-        if ( command is not ("reindex" or CatalogCommand or "index" or "quicklinks") &&
+        using var shutdown = cancellationToken.Register( runtime.CancelBackgroundIndexing );
+
+        if ( command is not ("daemon" or "serve" or "reindex" or CatalogCommand or "index" or "quicklinks") &&
             await runtime.Catalog.RequiresReindexAsync( cancellationToken ).ConfigureAwait( false ) )
         {
             AppLog.Info( "Catalog schema changed; rebuilding the index before continuing." );
@@ -435,7 +441,8 @@ public static partial class Program
                 }
 
                 await runtime.ResetCustomizationsAsync( cancellationToken ).ConfigureAwait( false );
-                Console.WriteLine( "Launcher preferences and customizations reset." );
+                await (( IndexCoordinator ) runtime.Indexer).WaitForBackgroundReindexAsync( cancellationToken ).ConfigureAwait( false );
+                Console.WriteLine( "Launcher preferences and customizations reset. Added folders removed; configuration folders re-enabled." );
                 return 0;
 
             default:

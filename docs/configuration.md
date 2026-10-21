@@ -69,8 +69,8 @@ Read-only state still applies for the
 current session. No monitor resolution, hardware DPI, or DPR influences Recommended.
 There is no `config migrate` command yet; option renames will need one.
 
-Changes require daemon restart. Index-root/content changes also require
-`commanddeck reindex`.
+JSONC changes require daemon restart. Index-root/content changes in JSONC also
+require `commanddeck reindex`. The Settings overlay below applies live.
 
 Inspect or reset daemon-owned preferences with:
 
@@ -82,6 +82,61 @@ commanddeck preferences reset --yes
 
 Export contains preferences and customization snapshots only; it excludes
 queries and invocation history.
+
+## Indexed folders in Settings
+
+**Settings > Search > Indexed folders** lists configuration and added folders,
+with their status or issue. The index inspector's **Manage indexed folders**
+button opens this card. Add a path, remove an added folder, or disable/enable a
+configuration folder without editing JSONC or restarting the daemon.
+
+The launcher preference store keeps added folders (path, creation time and root
+options) and disabled configuration paths in SQLite. The effective set is enabled
+configuration roots plus added roots, de-duplicated by expanded, absolute path
+with trailing separators removed. Disabling a nested root does not exclude it
+from another enabled parent root; the parent's policy then applies.
+
+New folders use `IndexRootOptions` defaults: filenames, metadata and eligible
+content are searchable, hidden files and symlink following are off, and generated
+directory exclusions and repository ignore rules are on. The daemon applies the
+same configuration validation, path expansion, `privacy.neverIndex`, protected
+paths, symlink and mount boundaries to added roots. Invalid, missing or protected
+folders show an inline error. Existing missing configuration roots remain listed
+so they can be disabled. Enabling an unavailable configuration root keeps its
+issue visible.
+
+A change commits its preferences, immediately purges revoked Search and Home
+coverage, and requests a full reindex in one SQLite transaction. Overlapping roots
+keep only the rows and search fields their remaining policy allows. The catalog
+owner runs the same full scan used by `commanddeck reindex` and startup recovery,
+rebuilding watches before scanning. Search and folder management stay available;
+the Settings card shows progress or retry status. Repeated edits coalesce into one
+pending full scan and cancel an outdated scan before it can publish. The durable
+reindex request survives restart and clears only when the full generation commits.
+Daemon shutdown cancels background work before draining requests. JSONC remains
+unchanged.
+
+```bash
+commanddeck index roots [--json]
+commanddeck index add ~/Documents
+commanddeck index remove <root-id>
+commanddeck index disable <root-id>
+commanddeck index enable <root-id>
+```
+
+CLI paths are expanded and made absolute in the caller's working directory
+before transmission. These commands use the running daemon by default, or a local
+runtime when it is absent. Local edits wait for indexing and honour Ctrl+C; daemon
+edits return after the preference transaction while indexing continues. `--socket <path>` selects a daemon explicitly. `--config <file>` selects a
+local runtime unless `--socket` is also supplied; stop that configuration's daemon
+first to release its index lease.
+
+Customization export includes `indexRoots`. `commanddeck index import <export-file>`
+restores only that folder overlay from a customization export, replacing existing
+added and disabled choices after validation; it does not restore other preferences.
+Review paths before importing. **Reset customizations** (or `preferences reset
+--yes`) removes added folders and re-enables all configuration roots, applying
+the effective roots live. Exported data is never restored automatically.
 
 ## Top Matches rollout switch
 

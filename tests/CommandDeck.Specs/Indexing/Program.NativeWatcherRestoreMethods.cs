@@ -34,7 +34,7 @@ public static partial class Program
                     {
                         reconciled.Enqueue( root );
                     }
-                    return ValueTask.CompletedTask;
+                    return ValueTask.FromResult( true );
                 }, inotify: system );
             await engine.StartAsync( default );
             True( await WaitUntilAsync( ( ) => Task.FromResult( !engine.GetStatus( ).ReconciliationRequired ), TimeSpan.FromSeconds( 5 ) ) );

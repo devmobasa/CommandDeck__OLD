@@ -12,7 +12,7 @@ internal sealed partial class IncrementalIndexEngine
             string path;
             try
             {
-                path = Path.GetFullPath( PathExpansion.Expand( configured.Path ) );
+                path = IndexRootPaths.Normalize( configured.Path );
             }
             catch ( ArgumentException )
             {
@@ -48,23 +48,22 @@ internal sealed partial class IncrementalIndexEngine
             : throw new InvalidOperationException( $"Unknown index root '{rootId}'." );
     }
 
-    private RootRuntimeState? FindRoot( string path ) => _roots.Values
-        .Where( root => IsWithin( path, root.Path ) )
-        .OrderByDescending( static root => root.Path.Length )
-        .FirstOrDefault( );
-
-    private static bool IsWithin( string path, string root )
+    private RootRuntimeState? FindRoot( string path )
     {
-        var normalizedRoot = Path.TrimEndingDirectorySeparator( root );
-        return string.Equals( path, normalizedRoot, StringComparison.Ordinal ) ||
-            path.StartsWith( normalizedRoot + Path.DirectorySeparatorChar, StringComparison.Ordinal );
+        lock ( _statusLock )
+        {
+            return _roots.Values.Where( root => IsWithin( path, root.Path ) )
+                .OrderByDescending( static root => root.Path.Length ).FirstOrDefault( );
+        }
     }
+
+    private static bool IsWithin( string path, string root ) => IndexExclusionPolicy.IsWithin( path, root );
 
     // A scoped retry replaces only its roots and overlapping trees. Other
     // descriptors remain open, buffering events while the reader restarts.
     // A reconciliation set is expanded to include every interrupted tree so
     // the current scan covers their restart gaps without another overflow.
-    internal bool RestoreWatchers( string? rootId, HashSet<string>? reconciliationRoots = null )
+    internal bool RestoreWatchers( string? rootId, HashSet<string>? reconciliationRoots = null, CancellationToken cancellationToken = default )
     {
         if ( !_started || !_options.EnableIncrementalIndexing || !_journal.IsOwner )
         {
@@ -124,7 +123,7 @@ internal sealed partial class IncrementalIndexEngine
                         root.Watched = false;
                     }
                 }
-                StartTreeWatchers( roots, retained, selected, reconciliationRoots is not null );
+                StartTreeWatchers( roots, retained, selected, reconciliationRoots is not null, cancellationToken );
             }
             else
             {
@@ -156,7 +155,7 @@ internal sealed partial class IncrementalIndexEngine
     }
 
     private bool IsHealthyTreeRoot( string path ) => _treeWatchers.Any( watcher =>
-        watcher.RootPath == path && watcher.IsWatching &&
+        watcher.RootPath == path && watcher.IsWatching && watcher.InitialTraversalComplete &&
         Directory.Exists( path ) &&
         CanonicalPathBoundary.TryCreate( path, out var boundary ) && boundary is not null &&
         watcher.CanonicalRoot == boundary.CanonicalRoot );
@@ -173,7 +172,7 @@ internal sealed partial class IncrementalIndexEngine
             string path;
             try
             {
-                path = Path.GetFullPath( PathExpansion.Expand( options.Path ) );
+                path = IndexRootPaths.Normalize( options.Path );
             }
             catch ( ArgumentException )
             {

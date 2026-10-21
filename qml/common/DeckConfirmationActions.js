@@ -7,7 +7,7 @@
 // says which window, unit, or item it acts on.
 function confirmationContent(root) {
   if (root.resetConfirmation) {
-    return { prompt: "Reset launcher preferences, bookmarks, and aliases?", confirmLabel: "Reset", destructive: true }
+    return { prompt: "Reset launcher preferences, bookmarks, and aliases? Added folders will be removed and configuration folders re-enabled.", confirmLabel: "Reset", destructive: true }
   }
   if (root.savedSearchDeleteTarget) {
     return {

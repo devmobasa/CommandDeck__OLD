@@ -4,6 +4,10 @@ public static partial class Program
 {
     private static async Task RunProtocolRegistrationsAsync( )
     {
+        await RunAsync( "indexed folder process restart serves search and settings during recovery", IndexedFolderProcessRestartServesDuringRecoveryAsync );
+        await RunAsync( "indexed folder blocked scan keeps same connection search listing and edits responsive", IndexedFolderScanKeepsConnectionResponsiveAsync );
+        await RunAsync( "indexed folder shutdown cancels committed blocked scan before request draining", IndexedFolderShutdownCancelsCommittedScanAsync );
+        await RunAsync( "indexed folder protocol changes live search watches policy import and reset", IndexedFolderProtocolAppliesLiveAndResetAsync );
         await RunAsync( "regular file handles preserve offsets after nonblocking admission", RegularFileHandlesPreserveOffsetsAsync );
         await RunAsync(
             "file index source preserves traversal behavior",

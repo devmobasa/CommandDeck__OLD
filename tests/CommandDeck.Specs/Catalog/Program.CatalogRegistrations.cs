@@ -4,6 +4,7 @@ public static partial class Program
 {
     private static async Task RunCatalogRegistrationsAsync( )
     {
+        await RunAsync( "indexed folder store persists options export and reset", IndexedFolderStorePersistsOptionsAndResetAsync );
         await RunAsync( "quicklinks alias lookup work is independent of unrelated catalog rows", QuicklinkAliasLookupWorkIsBoundedAsync );
         await RunAsync( "quicklinks aliases respect filtered and disabled sources", QuicklinkAliasesRespectSourceEligibilityAsync );
         await RunAsync( "quicklinks aliases share bookmark filter and reserved namespaces", QuicklinkAliasesShareNamespacesAsync );

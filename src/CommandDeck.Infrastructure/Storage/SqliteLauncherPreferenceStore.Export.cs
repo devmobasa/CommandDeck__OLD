@@ -10,6 +10,7 @@ internal sealed partial class SqliteLauncherPreferenceStore
         var searches = await GetSavedSearchesAsync( cancellationToken ).ConfigureAwait( false );
         return new( )
         {
+            IndexRoots = await GetIndexRootsAsync( cancellationToken ).ConfigureAwait( false ),
             Quicklinks = await ExportQuicklinksAsync( cancellationToken ).ConfigureAwait( false ),
             Preferences = await GetPreferencesAsync( cancellationToken ).ConfigureAwait( false ),
             Customizations = await ReadCustomizationsAsync( cancellationToken ).ConfigureAwait( false ),
@@ -30,10 +31,21 @@ internal sealed partial class SqliteLauncherPreferenceStore
         await using var connection = await OpenAsync( cancellationToken ).ConfigureAwait( false );
         await using var transaction =
             ( SqliteTransaction ) await connection.BeginTransactionAsync( cancellationToken ).ConfigureAwait( false );
+        await ResetRowsAsync( connection, transaction, cancellationToken ).ConfigureAwait( false );
+        await transaction.CommitAsync( cancellationToken ).ConfigureAwait( false );
+        InvalidateHiddenItems( );
+        return LauncherPreferences.CreateDefault( );
+    }
+
+    private async ValueTask ResetRowsAsync( SqliteConnection connection, SqliteTransaction transaction,
+        CancellationToken cancellationToken )
+    {
         await SqliteCatalog.ExecuteNonQueryAsync(
             connection,
             transaction,
             """
+            DELETE FROM added_index_roots;
+            DELETE FROM disabled_index_roots;
             DELETE FROM user_quicklinks;
             DELETE FROM disabled_configured_quicklinks;
             DELETE FROM aliases;
@@ -48,8 +60,5 @@ internal sealed partial class SqliteLauncherPreferenceStore
             """,
             cancellationToken ).ConfigureAwait( false );
         await _publishQuicklinks( connection, transaction, cancellationToken ).ConfigureAwait( false );
-        await transaction.CommitAsync( cancellationToken ).ConfigureAwait( false );
-        InvalidateHiddenItems( );
-        return LauncherPreferences.CreateDefault( );
     }
 }

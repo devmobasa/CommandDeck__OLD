@@ -14,7 +14,7 @@ public static class CapabilityRegistry
     [
         new("Application discovery", "On", "XDG `.desktop` entries", "Catalog metadata", "Search", "Disable provider"),
         new("Omarchy commands", "On", "Omarchy menu JSONC", "Catalog metadata", "Search/action", "Disable provider"),
-        new("Filename indexing", "On for configured roots", "Names, paths, stat data", "SQLite catalog", "Background reindex", "Remove root/disable"),
+        new("Filename indexing", "On for effective roots", "Names, paths, stat data", "SQLite catalog and indexed folder preferences", "Background reindex; Settings > Search > Indexed folders or index CLI", "Remove added roots; disable/enable configured roots; privacy exclusions always apply"),
         new("Text content indexing", "Configurable", "Eligible local text", "FTS5 body", "Background reindex", "Content mode/root/exclusions"),
         new("Index privacy audit", "On demand", "Stored catalog paths and path-only exclusion diagnostics", "Aggregate counts and generic messages only", "`commanddeck catalog audit` or `privacy.audit`", "No offending paths/content returned; fix policy then reindex"),
         new("PDF/document extraction", "Off unless tool/config enabled", "Selected documents", "Extracted text to FTS", "Background reindex", "Disable extractor/type"),
@@ -39,7 +39,7 @@ public static class CapabilityRegistry
         new("Bookmarks and aliases", "On", "Fresh daemon-cached result identity", "SQLite favorite/alias rows", "Explicit action-panel command", "Remove bookmark/alias; forged or stale result IDs rejected"),
         new("Filter aliases", "On", "Validated token and stable filter ID", "Bounded SQLite filter_aliases rows", "Explicit Settings or CLI command", "Remove alias or reset; built-in/reserved/conflicting tokens are rejected"),
         new("Favorite ordering/orphan cleanup", "On", "Existing customization IDs", "SQLite favorite positions or orphan deletion", "Explicit Settings action", "Reorder again; orphan deletion targets unavailable entries only"),
-        new("Customization export", "On demand", "Preferences, bookmarks, result aliases, filter aliases", "Local protocol response rendered in the export dialog", "Export button", "No network transmission; dismiss dialog"),
+        new("Customization export", "On demand", "Preferences, bookmarks, result aliases, filter aliases, indexed folder additions and disabled configuration paths", "Local protocol response rendered in the export dialog", "Export button", "No network transmission; dismiss dialog"),
         new("Customization reset", "On demand", "Existing personalization rows", "Deletes personalization rows and restores defaults", "Confirmed reset action", "Confirmation required; exported data is not auto-restored"),
         new("AI model discovery", "Off until configured", "Provider model catalog; named credential at explicit use", "Configured local/remote endpoint", "Refresh Models", "Disable provider; no passive polling"),
         new("AI preflight and streaming", "Off until configured", "Exact explicit prompt and up to four reviewed text/result/file attachments", "Digest-bound payload to the displayed destination", "Confirm preflight", "Cancel/close/disconnect; disable provider"),

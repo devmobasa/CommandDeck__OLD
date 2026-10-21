@@ -55,6 +55,7 @@ public sealed partial class IndexCoordinator
             long removed;
             try
             {
+                CancelFullScan( );
                 removed = await RemoveStaleIndexedPathsAsync( cancellationToken )
                     .ConfigureAwait( false );
                 var integrity = await _catalogOperations.CheckIntegrityAsync(
@@ -75,6 +76,7 @@ public sealed partial class IndexCoordinator
             }
             finally
             {
+                StartBackgroundReindex( );
                 _indexLock.Release( );
             }
 

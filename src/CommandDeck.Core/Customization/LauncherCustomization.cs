@@ -354,6 +354,7 @@ public sealed class CustomizationResult
 
 public sealed class CustomizationExport
 {
+    public IndexRootPreferences IndexRoots { get; init; } = new( );
     public QuicklinkState Quicklinks { get; init; } = new( );
     public int OmittedClipboardSearches { get; init; }
     public int Version { get; init; } = 3;

@@ -41,6 +41,12 @@ public static partial class Program
               commanddeck catalog repair [--json]
               commanddeck catalog purge --yes [--json]
               commanddeck preferences show [--json]
+              commanddeck index roots [--json]
+              commanddeck index add <path>
+              commanddeck index remove <root-id>
+              commanddeck index disable <root-id>
+              commanddeck index enable <root-id>
+              commanddeck index import <export-file>
               commanddeck preferences export
               commanddeck preferences reset --yes
               commanddeck ranking inspect [--limit N] [--json]

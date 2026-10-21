@@ -5,13 +5,13 @@ internal sealed partial class IncrementalIndexEngine : IAsyncDisposable
     private readonly IndexingOptions _options;
     private readonly IncrementalEventJournal _journal;
     private readonly IndexRootStateStore _rootStateStore;
-    private readonly IndexExclusionPolicy _exclusions;
+    private IndexExclusionPolicy _exclusions;
     private readonly IndexPolicyStateStore _policyState;
     private long _ignoredEventCount;
     public bool PolicyReconciliationRequired { get; private set; }
     private readonly Func<IReadOnlyList<IncrementalPathRequest>, CancellationToken, ValueTask<bool>>
         _applyPaths;
-    private readonly Func<IReadOnlyList<string>, CancellationToken, ValueTask> _reconcile;
+    private readonly Func<IReadOnlyList<string>, CancellationToken, ValueTask<bool>> _reconcile;
     private readonly List<string> _unwatchedRoots = [];
     private readonly SemaphoreSlim _signal = new( 0, 1 );
     private readonly CancellationTokenSource _lifetime = new( );
@@ -36,7 +36,7 @@ internal sealed partial class IncrementalIndexEngine : IAsyncDisposable
         CommandDeckOptions options,
         IndexExclusionPolicy exclusions,
         Func<IReadOnlyList<IncrementalPathRequest>, CancellationToken, ValueTask<bool>> applyPaths,
-        Func<IReadOnlyList<string>, CancellationToken, ValueTask> reconcile,
+        Func<IReadOnlyList<string>, CancellationToken, ValueTask<bool>> reconcile,
         IncrementalEventJournal? journal = null,
         IInotifySystem? inotify = null )
     {
@@ -59,14 +59,6 @@ internal sealed partial class IncrementalIndexEngine : IAsyncDisposable
             return ValueTask.CompletedTask;
         }
 
-        if ( !_options.EnableIncrementalIndexing )
-        {
-            PolicyReconciliationRequired = !_policyState.IsCurrent( _exclusions );
-            _started = true;
-            PersistRootStates( );
-            return ValueTask.CompletedTask;
-        }
-
         if ( !_journal.Initialize( ) )
         {
             _started = true;
@@ -74,39 +66,14 @@ internal sealed partial class IncrementalIndexEngine : IAsyncDisposable
             return ValueTask.CompletedTask;
         }
         PolicyReconciliationRequired = !_policyState.IsCurrent( _exclusions );
-        List<(string Path, IndexRootOptions Options)> roots = [];
-        foreach ( var rootOptions in _options.Roots )
+        if ( !_options.EnableIncrementalIndexing )
         {
-            string root;
-            try
-            {
-                root = Path.GetFullPath( PathExpansion.Expand( rootOptions.Path ) );
-            }
-            catch ( ArgumentException )
-            {
-                _unwatchedRoots.Add( rootOptions.Path );
-                MarkUnwatched( rootOptions.Path, "Configured root path is invalid." );
-                continue;
-            }
-
-            if ( !Directory.Exists( root ) )
-            {
-                _unwatchedRoots.Add( root );
-                MarkUnwatched( root, "Configured root does not exist." );
-                continue;
-            }
-
-            roots.Add( (root, rootOptions) );
+            _started = true;
+            PersistRootStates( );
+            return ValueTask.CompletedTask;
         }
 
-        if ( OperatingSystem.IsLinux( ) )
-        {
-            StartTreeWatchers( roots );
-        }
-        else
-        {
-            StartPortableWatchers( roots );
-        }
+        StartRootWatchers( );
 
         _started = true;
         _worker = Task.Run( ( ) => RunAsync( _lifetime.Token ), CancellationToken.None );
@@ -141,12 +108,72 @@ internal sealed partial class IncrementalIndexEngine : IAsyncDisposable
         return ValueTask.CompletedTask;
     }
 
+    private void StartRootWatchers( )
+    {
+        List<(string Path, IndexRootOptions Options)> roots = [];
+        foreach ( var rootOptions in _options.Roots )
+        {
+            string root;
+            try
+            {
+                root = IndexRootPaths.Normalize( rootOptions.Path );
+            }
+            catch ( ArgumentException )
+            {
+                _unwatchedRoots.Add( rootOptions.Path );
+                MarkUnwatched( rootOptions.Path, "Configured root path is invalid." );
+                continue;
+            }
+
+            if ( !Directory.Exists( root ) )
+            {
+                _unwatchedRoots.Add( root );
+                MarkUnwatched( root, "Folder does not exist." );
+                continue;
+            }
+
+            roots.Add( (root, rootOptions) );
+        }
+
+        if ( OperatingSystem.IsLinux( ) )
+        {
+            StartTreeWatchers( roots );
+        }
+        else
+        {
+            StartPortableWatchers( roots );
+        }
+
+    }
+
+    // Called under the coordinator's catalog gate. Old queued events are checked
+    // against the new file policy before they can publish any rows.
+    public void ReplaceRoots( IndexExclusionPolicy exclusions )
+    {
+        PolicyReconciliationRequired = true;
+        lock ( _watcherLock )
+        {
+            DisposeWatchers( );
+            _exclusions = exclusions;
+            lock ( _statusLock )
+            {
+                _roots.Clear( );
+                _unwatchedRoots.Clear( );
+                InitializeRootStates( );
+            }
+        }
+        if ( _started && CanMutateCatalog )
+        {
+            PersistRootStates( );
+        }
+    }
+
     public long CaptureCheckpoint( ) => _journal.LastSequence;
 
     internal void ReportWatcherOverflow( string rootPath ) => RecordOverflow( rootPath );
 
     public bool CanMutateCatalog =>
-        !_options.EnableIncrementalIndexing || _journal.IsOwner;
+        _journal.IsOwner;
 
     public bool IsPausedUntilFullScan
     {
@@ -159,14 +186,16 @@ internal sealed partial class IncrementalIndexEngine : IAsyncDisposable
         }
     }
 
-    public void CompleteFullScan( long checkpoint )
+    public void CompleteFullScan( long checkpoint ) => CompleteScan( checkpoint );
+
+    private void CompleteScan( long? checkpoint )
     {
         _policyState.Write( _exclusions );
         PolicyReconciliationRequired = false;
         RefreshPolicyWatchers( );
-        if ( _options.EnableIncrementalIndexing && _journal.IsOwner )
+        if ( checkpoint is long sequence && _options.EnableIncrementalIndexing && _journal.IsOwner )
         {
-            _journal.AdvanceCheckpoint( checkpoint, ContentExtractor.ExtractorVersion );
+            _journal.AdvanceCheckpoint( sequence, ContentExtractor.ExtractorVersion );
         }
 
         lock ( _statusLock )
@@ -275,9 +304,6 @@ internal sealed partial class IncrementalIndexEngine : IAsyncDisposable
                 PersistRootStatesUnderLock( );
             }
         }
-
-        // A rescan is the documented remedy after raising the watch limit.
-        RetryUnwatchedDirectories( path );
     }
 
     internal (IReadOnlyList<IncrementalWorkItem> Items, bool Complete) GetWorkItemsSnapshot( )
@@ -358,7 +384,10 @@ internal sealed partial class IncrementalIndexEngine : IAsyncDisposable
         lock ( _statusLock )
         {
             _reconciliationRequired = true;
-            _reconciliationReason = reason;
+            if ( !_pausedUntilFullScan )
+            {
+                _reconciliationReason = reason;
+            }
         }
 
         Signal( );

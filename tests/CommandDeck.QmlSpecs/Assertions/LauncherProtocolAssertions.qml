@@ -16,6 +16,8 @@ QtObject {
         && host.part_indexInspector.visibleWorkItemCount === 2
         && host.part_indexInspector.focusTrapConfigured,
       "index inspector pages bounded work rows and traps focus")
+    host.expect(host.part_indexInspector.foldersControl.Accessible.name === "Manage indexed folders in Settings",
+      "index issues expose a Settings destination for indexed folders")
     host.part_indexInspector.movePage(1)
     host.expect(host.part_indexInspector.page === 1
         && host.part_indexInspector.visibleWorkItemCount === 1,

@@ -7,7 +7,7 @@ public sealed partial class IndexCoordinator : IIndexCoordinator
     private readonly ICatalogProjectionStore _catalog;
     private readonly ICatalogOperations _catalogOperations;
     private readonly CommandDeckOptions _options;
-    private readonly FileIndexSource _files;
+    private FileIndexSource _files;
     private readonly ConfiguredItemSource _configured;
     private readonly IncrementalIndexEngine _incremental;
     private readonly SemaphoreSlim _indexLock = new( 1, 1 );
@@ -20,14 +20,18 @@ public sealed partial class IndexCoordinator : IIndexCoordinator
         ICatalogOperations catalogOperations,
         CommandDeckOptions options,
         TimeProvider? timeProvider = null,
-        Action<IndexDiagnostic>? diagnostic = null )
+        Action<IndexDiagnostic>? diagnostic = null,
+        ILauncherPreferenceStore? rootPreferences = null )
     {
         _catalog = catalog;
         _catalogOperations = catalogOperations;
         _options = options;
+        _configuredRoots = options.Indexing.Roots.Select( static root =>
+            root with { Path = IndexRootPaths.Normalize( root.Path ) } ).ToList( );
+        _rootPreferences = rootPreferences;
         _timeProvider = timeProvider ?? TimeProvider.System;
         _diagnostic = diagnostic;
-        _files = new FileIndexSource( options.Indexing, options.Privacy, options.Storage.DatabasePath );
+        _files = new FileIndexSource( options.Indexing with { Roots = [.. options.Indexing.Roots] }, options.Privacy, options.Storage.DatabasePath );
         _configured = new ConfiguredItemSource( options );
         _maintenanceStateStore = new IndexMaintenanceStateStore( options.Storage.DatabasePath );
         RestoreMaintenanceState( _maintenanceStateStore.Read( ) );
@@ -48,7 +52,20 @@ public sealed partial class IndexCoordinator : IIndexCoordinator
     {
         ObjectDisposedException.ThrowIf( _disposed, this );
 
+        await EnsureRootPreferencesAsync( cancellationToken ).ConfigureAwait( false );
         await _incremental.StartAsync( cancellationToken ).ConfigureAwait( false );
+        if ( reconcilePolicy && _reindexPending )
+        {
+            await _indexLock.WaitAsync( cancellationToken ).ConfigureAwait( false );
+            try
+            {
+                StartBackgroundReindex( );
+            }
+            finally
+            {
+                _indexLock.Release( );
+            }
+        }
 
         if ( reconcilePolicy )
         {
@@ -73,7 +90,7 @@ public sealed partial class IndexCoordinator : IIndexCoordinator
 
     private void StartDisabledPolicyReconciliation( )
     {
-        if ( _options.Indexing.EnableIncrementalIndexing )
+        if ( _options.Indexing.EnableIncrementalIndexing || !_incremental.CanMutateCatalog )
         {
             return;
         }
@@ -91,7 +108,7 @@ public sealed partial class IndexCoordinator : IIndexCoordinator
     // disposal can always await it.
     private async Task EnsureDisabledPolicyCurrentAsync( CancellationToken cancellationToken )
     {
-        if ( _options.Indexing.EnableIncrementalIndexing || _disabledPolicyChecked )
+        if ( _options.Indexing.EnableIncrementalIndexing || _disabledPolicyChecked || !_incremental.CanMutateCatalog )
         {
             return;
         }
@@ -107,7 +124,7 @@ public sealed partial class IndexCoordinator : IIndexCoordinator
                 return;
             }
 
-            if ( _incremental.PolicyReconciliationRequired &&
+            if ( !_reindexPending && _incremental.PolicyReconciliationRequired &&
                             (await _catalog.GetStatsAsync( cancellationToken ).ConfigureAwait( false )).ItemCount > 0 )
             {
                 var elapsed = Stopwatch.StartNew( );
@@ -171,29 +188,36 @@ public sealed partial class IndexCoordinator : IIndexCoordinator
 
         await StartCoreAsync( reconcilePolicy: !full, cancellationToken ).ConfigureAwait( false );
         EnsureCatalogMutationOwnership( );
-        if ( full || scope.Kind == IndexReindexScopeKinds.Root && !string.IsNullOrWhiteSpace( scope.RootId ) )
+        if ( !full && scope.Kind == IndexReindexScopeKinds.Root && !string.IsNullOrWhiteSpace( scope.RootId ) )
         {
-            full |= _incremental.RestoreWatchers( full ? null : scope.RootId );
+            full = _incremental.RestoreWatchers( scope.RootId, cancellationToken: cancellationToken );
         }
 
         await _indexLock.WaitAsync( cancellationToken ).ConfigureAwait( false );
+        ReindexReport report;
         try
         {
             if ( !full )
             {
-                return await ReindexScopedCoreAsync( scope, progress, cancellationToken )
-                    .ConfigureAwait( false );
+                report = await ReindexScopedCoreAsync( scope, progress, cancellationToken ).ConfigureAwait( false );
             }
-
-            var report = await ReindexCoreAsync( progress, cancellationToken ).ConfigureAwait( false );
-            _disabledPolicyChecked = true;
-
-            return report;
+            else
+            {
+                report = await ReindexCoreAsync( progress, cancellationToken ).ConfigureAwait( false );
+                _disabledPolicyChecked = true;
+            }
         }
         finally
         {
+            StartBackgroundReindex( );
             _indexLock.Release( );
         }
+
+        foreach ( var root in _options.Indexing.Roots )
+        {
+            _incremental.RetryUnwatchedDirectories( IndexRootPaths.Normalize( root.Path ), cancellationToken );
+        }
+        return report;
     }
 
     private async ValueTask<ReindexReport> ReindexScopedCoreAsync(
@@ -210,6 +234,8 @@ public sealed partial class IndexCoordinator : IIndexCoordinator
             throw new InvalidOperationException(
                 "The reindex target must be inside one configured index root." );
         }
+
+        CancelFullScan( );
 
         progress?.Report( new IndexProgress
         {
@@ -322,24 +348,27 @@ public sealed partial class IndexCoordinator : IIndexCoordinator
         await StartAsync( cancellationToken ).ConfigureAwait( false );
         EnsureCatalogMutationOwnership( );
         var roots = _incremental.Resume( rootId );
-        var targetsChanged = _incremental.RestoreWatchers( rootId );
+        var targetsChanged = _incremental.RestoreWatchers( rootId, cancellationToken: cancellationToken );
         await _indexLock.WaitAsync( cancellationToken ).ConfigureAwait( false );
         try
         {
+            CancelFullScan( );
             if ( targetsChanged )
             {
                 await ReindexCoreAsync( progress: null, cancellationToken ).ConfigureAwait( false );
-                return;
             }
-            foreach ( var root in roots )
+            else
             {
-                if ( !_files.TryResolveChangePath( root, out var canonicalRoot ) )
+                foreach ( var root in roots )
                 {
-                    continue;
-                }
+                    if ( !_files.TryResolveChangePath( root, out var canonicalRoot ) )
+                    {
+                        continue;
+                    }
 
-                var indexed = await ReplaceDirectoryAsync( root, canonicalRoot, cancellationToken ).ConfigureAwait( false );
-                _incremental.RecordRootScan( canonicalRoot, indexed );
+                    var indexed = await ReplaceDirectoryAsync( root, canonicalRoot, cancellationToken ).ConfigureAwait( false );
+                    _incremental.RecordRootScan( canonicalRoot, indexed );
+                }
             }
         }
         catch
@@ -349,7 +378,13 @@ public sealed partial class IndexCoordinator : IIndexCoordinator
         }
         finally
         {
+            StartBackgroundReindex( );
             _indexLock.Release( );
+        }
+
+        foreach ( var root in _options.Indexing.Roots )
+        {
+            _incremental.RetryUnwatchedDirectories( IndexRootPaths.Normalize( root.Path ), cancellationToken );
         }
     }
 
@@ -375,6 +410,7 @@ public sealed partial class IndexCoordinator : IIndexCoordinator
                 var result = await _catalogOperations.RepairAsync( token ).ConfigureAwait( false );
                 if ( result.RebuildRequired )
                 {
+                    _reindexPending = false;
                     _incremental.PauseUntilFullScan( "catalog-repair" );
                 }
 
@@ -389,6 +425,7 @@ public sealed partial class IndexCoordinator : IIndexCoordinator
                 var result = await _catalogOperations.PurgeProjectionAsync( token ).ConfigureAwait( false );
                 if ( result.Succeeded )
                 {
+                    _reindexPending = false;
                     _incremental.PauseUntilFullScan( "catalog-purge" );
                 }
 
@@ -405,6 +442,7 @@ public sealed partial class IndexCoordinator : IIndexCoordinator
 
         _disposed = true;
         _lifetime.Cancel( );
+        await BackgroundReindex.ConfigureAwait( false );
         if ( _maintenanceTask is not null )
         {
             try
@@ -448,6 +486,7 @@ public sealed partial class IndexCoordinator : IIndexCoordinator
         await _incremental.DisposeAsync( ).ConfigureAwait( false );
         _files.Dispose( );
         _lifetime.Dispose( );
+        _fullScanLock.Dispose( );
         _indexLock.Dispose( );
     }
 }

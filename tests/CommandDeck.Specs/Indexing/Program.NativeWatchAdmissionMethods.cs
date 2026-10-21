@@ -2,6 +2,59 @@ namespace CommandDeck.Specs;
 
 public static partial class Program
 {
+    private static async Task CancelledWatchAdmissionRebuildsCoverageAsync( )
+    {
+        var sandbox = CreateIncrementalSpecRoot( );
+        try
+        {
+            var original = Directory.CreateDirectory( Path.Combine( sandbox, "original" ) ).FullName;
+            var added = Directory.CreateDirectory( Path.Combine( sandbox, "added" ) ).FullName;
+            var child = Directory.CreateDirectory( Path.Combine( added, "child" ) ).FullName;
+            var deep = Directory.CreateDirectory( Path.Combine( child, "deep" ) ).FullName;
+            var file = Path.Combine( deep, "existing.txt" );
+            await File.WriteAllTextAsync( file, "before" );
+            var options = CreateIncrementalIndexOptions( Path.Combine( sandbox, "catalog.db" ), original );
+            RestoreInotifySystem system = new( );
+            TaskCompletionSource observed = new( TaskCreationOptions.RunContinuationsAsynchronously );
+            await using IncrementalIndexEngine engine = new( options,
+                new IndexExclusionPolicy( options.Indexing, options.Privacy, options.Storage.DatabasePath ),
+                ( paths, _ ) =>
+                {
+                    if ( paths.Any( request => request.Path == file ) )
+                    {
+                        observed.TrySetResult( );
+                    }
+                    return ValueTask.FromResult( true );
+                }, ( _, _ ) => ValueTask.FromResult( true ), inotify: system );
+            await engine.StartAsync( default );
+            engine.PauseUntilFullScan( "full-reindex" );
+            options.Indexing.Roots.Add( new IndexRootOptions { Path = added } );
+            engine.ReplaceRoots( new IndexExclusionPolicy( options.Indexing, options.Privacy, options.Storage.DatabasePath ) );
+            using CancellationTokenSource cancellation = new( );
+            system.AfterAdd = path =>
+            {
+                if ( path == child )
+                {
+                    cancellation.Cancel( );
+                }
+            };
+            await ThrowsAsync<OperationCanceledException>( ( ) => Task.Run( ( ) =>
+                engine.RestoreWatchers( null, cancellationToken: cancellation.Token ) ) );
+            True( !engine.SnapshotWatchedDirectories( ).Contains( deep ) );
+
+            system.AfterAdd = null;
+            engine.RestoreWatchers( null );
+            engine.CompleteFullScan( engine.CaptureCheckpoint( ) );
+            True( engine.SnapshotWatchedDirectories( ).Contains( deep ) );
+            await File.WriteAllTextAsync( file, "after" );
+            await observed.Task.WaitAsync( TimeSpan.FromSeconds( 3 ) );
+        }
+        finally
+        {
+            DeleteIncrementalSpecRoot( sandbox );
+        }
+    }
+
     private static async Task OverflowRecoveryDetectsRetargetedRetainedRootAsync( )
     {
         if ( !OperatingSystem.IsLinux( ) )
@@ -40,7 +93,7 @@ public static partial class Program
                         reconciled.TrySetResult( roots.ToArray( ) );
                     }
 
-                    return ValueTask.CompletedTask;
+                    return ValueTask.FromResult( true );
                 } );
             await engine.StartAsync( default );
             True( await WaitUntilAsync( ( ) => Task.FromResult( !engine.GetStatus( ).ReconciliationRequired ), TimeSpan.FromSeconds( 5 ) ) );
@@ -125,7 +178,7 @@ public static partial class Program
                         reconciled.TrySetResult( roots.ToArray( ) );
                     }
 
-                    return ValueTask.CompletedTask;
+                    return ValueTask.FromResult( true );
                 }, inotify: system );
             owner = engine;
             await engine.StartAsync( default );

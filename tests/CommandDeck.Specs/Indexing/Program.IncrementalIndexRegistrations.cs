@@ -4,6 +4,33 @@ public static partial class Program
 {
     private static async Task RunIncrementalIndexRegistrationsAsync( )
     {
+        await RunAsync( "full scan exclusion diagnostics survive incremental edits and refresh with changed paths", FullScanExclusionDiagnosticsSurviveIncrementalEditsAsync );
+        await RunAsync( "full scan exclusion diagnostics retire removed roots after incremental edits", ( ) => ExerciseExclusionDiagnosticsRootChangeAsync( configured: false ) );
+        await RunAsync( "full scan exclusion diagnostics retire disabled roots after incremental edits", ( ) => ExerciseExclusionDiagnosticsRootChangeAsync( configured: true ) );
+        await RunAsync( "indexed folder pending scan respects catalog purge hold", ( ) => ExercisePendingRootMaintenanceAsync( repair: false ) );
+        await RunAsync( "indexed folder pending scan respects catalog repair hold", ( ) => ExercisePendingRootMaintenanceAsync( repair: true ) );
+        await RunAsync( "indexed folder reset requires ownership even with an empty overlay", IndexedFolderEmptyResetRequiresOwnershipAsync );
+        await RunAsync( "indexed folder purge and pending full reindex survive reboot with a lost journal window", ( ) => IndexedFolderPurgeSurvivesPendingReindexRestartAsync( reboot: true ) );
+        await RunAsync( "indexed folder purge and pending full reindex survive restart with a torn journal tail", ( ) => IndexedFolderPurgeSurvivesPendingReindexRestartAsync( reboot: false ) );
+        await RunAsync( "cancelled full reindex keeps subsequent incremental events live", CancelledFullReindexKeepsIncrementalEventsAsync );
+        await RunAsync( "indexed folder edit supersedes startup recovery and preserves incremental events", IndexedFolderEditSupersedesStartupRecoveryAsync );
+        await RunAsync( "indexed folder edits coalesce full reindexes and watch existing deep files", IndexedFolderEditsReindexAllRootsAndRebuildWatchesAsync );
+        await RunAsync( "indexed folder symlink reports pending and failed work", IndexedFolderSymlinkReportsPendingAndFailedWorkAsync );
+        await RunAsync( "indexed folder trailing separator restores watches after nested edits", IndexedFolderTrailingSeparatorRestoresWatchesAsync );
+        await RunAsync( "indexed folder missing symlink removal retires target watches", ( ) => ExerciseUnavailableRootLinkAsync( configured: false, retargeted: false ) );
+        await RunAsync( "indexed folder missing symlink disable retires target watches", ( ) => ExerciseUnavailableRootLinkAsync( configured: true, retargeted: false ) );
+        await RunAsync( "indexed folder retargeted symlink removal retires target watches", ( ) => ExerciseUnavailableRootLinkAsync( configured: false, retargeted: true ) );
+        await RunAsync( "indexed folder retargeted symlink disable retires target watches", ( ) => ExerciseUnavailableRootLinkAsync( configured: true, retargeted: true ) );
+        await RunAsync( "indexed folder non-owner runtime cannot resurrect removed rows", IndexedFolderNonOwnerCannotResurrectRemovedRowsAsync );
+        await RunAsync( "indexed folder resumed work reconciles unrelated offline policy across restarts", IndexedFolderResumedWorkReconcilesOfflinePolicyAsync );
+        await RunAsync( "indexed folder edit preserves unrelated offline policy inputs", IndexedFolderEditPreservesUnrelatedOfflinePolicyInputsAsync );
+        await RunAsync( "indexed folder filesystem root retains covered Search and Home rows", IndexedFolderFilesystemRootRetainsCoveredRowsAsync );
+        await RunAsync( "indexed folder scan preserves unrelated pending incremental events", IndexedFolderScanPreservesUnrelatedPendingEventsAsync );
+        await RunAsync( "indexed folder purge failure rolls back preferences and coverage", IndexedFolderPurgeFailureRollsBackPreferencesAsync );
+        await RunAsync( "indexed folder purge revokes content beyond surviving root extraction limits", ( ) => ExerciseFailedRootCommitAsync( failPurge: false, limitContent: true ) );
+        await RunAsync( "indexed folder failed publication purges Search and Home and retries", IndexedFolderFailedPublicationPurgesSearchAndHomeAsync );
+        await RunAsync( "indexed folder overlap preserves parent policy and disabled roots across restart", IndexedFolderOverlapAndRestartAsync );
+        await RunAsync( "cancelled initial watch admission rebuilds coverage for an existing deep file", CancelledWatchAdmissionRebuildsCoverageAsync );
         Run( "a replaced parent cannot create outside native watches", ReplacedParentCannotCreateOutsideWatches );
         await RunAsync( "overflow reconciliation restores missing native watches", OverflowReconciliationRestoresMissingWatchesAsync );
         await RunAsync( "overflow reconciliation removes stale native watches", OverflowReconciliationRemovesStaleWatchesAsync );
@@ -126,7 +153,7 @@ public static partial class Program
             "incremental journal has one private runtime owner",
             IncrementalJournalHasOnePrivateRuntimeOwnerAsync );
         await RunAsync(
-            "catalog maintenance serializes with indexing and pauses after purge",
+            "catalog maintenance cancels staged indexing and pauses after purge",
             CatalogMaintenanceSerializesWithIndexingAsync );
         await RunAsync(
             "catalog repair that needs a rebuild pauses indexing until a full scan",

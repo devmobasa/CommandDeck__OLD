@@ -7,6 +7,7 @@ public static partial class Program
 {
     private static async Task RunCliRegistrationsAsync( )
     {
+        await RunAsync( "indexed folder CLI persists roots and routes live changes to daemon", IndexedFolderCliRoutesToDaemonAsync );
         await RunAsync( "quicklinks CLI adds edits lists validates and removes durable links", QuicklinkCliManagesDurableStateAsync );
         await RunAsync( "picker emits only selected values and honors cancellation", PickerReturnsOnlyTheSelectedValueAsync );
         await RunAsync(
@@ -152,11 +153,15 @@ public static partial class Program
         Equal( expected, snapshot.Customizations.Count );
     }
 
-    private static async Task<ProcessOutcome> RunCommandDeckProcessAsync( params string[] arguments )
+    private static Task<ProcessOutcome> RunCommandDeckProcessAsync( params string[] arguments ) =>
+        RunCommandDeckProcessInDirectoryAsync( Environment.CurrentDirectory, arguments );
+
+    private static async Task<ProcessOutcome> RunCommandDeckProcessInDirectoryAsync( string workingDirectory, params string[] arguments )
     {
         ProcessStartInfo start = new( )
         {
             FileName = "dotnet",
+            WorkingDirectory = workingDirectory,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false

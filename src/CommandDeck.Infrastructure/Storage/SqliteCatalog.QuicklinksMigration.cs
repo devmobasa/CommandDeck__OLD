@@ -2,7 +2,6 @@ namespace CommandDeck;
 
 public sealed partial class SqliteCatalog
 {
-    // 22 is reserved for the independently developed indexed-folder preferences.
     private static DatabaseMigration QuicklinksMigration => new( 23, "User quicklinks and configured quicklink exclusions", """
         CREATE TABLE IF NOT EXISTS user_quicklinks (
             id TEXT PRIMARY KEY COLLATE NOCASE,

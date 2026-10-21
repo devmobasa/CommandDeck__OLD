@@ -11,6 +11,12 @@ public static partial class ProtocolOperations
     public const string Preview = "preview";
     public const string Status = "status";
     public const string Reindex = "reindex";
+    public const string IndexRoots = "index.roots";
+    public const string IndexAdd = "index.add";
+    public const string IndexRemove = "index.remove";
+    public const string IndexDisable = "index.disable";
+    public const string IndexEnable = "index.enable";
+    public const string IndexRootsImport = "index.roots.import";
     public const string IndexPause = "index.pause";
     public const string IndexResume = "index.resume";
     public const string AiProvidersGet = "ai.providers.get";
@@ -101,6 +107,7 @@ public static partial class ProtocolOperations
 
 public static class ProtocolMessageTypes
 {
+    public const string IndexRootsResult = "index.roots.result";
     public const string ClipboardResult = "clipboard-result";
     public const string FileSelection = "file-selection";
     public const string Result = "result";
@@ -186,6 +193,7 @@ public sealed class ProtocolMessage
     public PreferencesSnapshot? Preferences { get; init; }
     public CustomizationResult? Customization { get; init; }
     public CustomizationExport? Export { get; init; }
+    public IndexRootsResult? IndexRoots { get; init; }
     public HiddenItemsResult? HiddenItems { get; init; }
     public CatalogInspection? CatalogInspection { get; init; }
     public CatalogMaintenanceResult? CatalogMaintenance { get; init; }

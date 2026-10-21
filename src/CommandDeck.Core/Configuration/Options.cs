@@ -148,9 +148,9 @@ public sealed class AdaptiveRankingOptions
     public int MaximumEvents { get; init; } = 10_000;
 }
 
-public sealed class IndexingOptions
+public sealed record IndexingOptions
 {
-    public List<IndexRootOptions> Roots { get; init; } =
+    public List<IndexRootOptions> Roots { get; set; } =
     [
         new IndexRootOptions { Path = "~", IncludeHidden = true, IncludeContentInSearch = false },
         new IndexRootOptions { Path = "~/Documents", IncludeHidden = true },
@@ -177,7 +177,7 @@ public sealed class IndexingOptions
     public int MaintenanceIntervalMinutes { get; init; } = 360;
 }
 
-public sealed class IndexRootOptions
+public sealed record IndexRootOptions
 {
     public required string Path { get; init; }
     public bool IncludeHidden { get; init; }

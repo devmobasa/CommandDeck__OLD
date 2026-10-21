@@ -66,6 +66,8 @@ internal sealed partial class InotifyTreeWatcher
         get; private set;
     }
 
+    public bool InitialTraversalComplete { get; private set; }
+
     public bool IsWatching
     {
         get
@@ -135,20 +137,33 @@ internal sealed partial class InotifyTreeWatcher
     {
         if ( _rootDirectory is not null )
         {
+            InitialTraversalComplete = false;
             AddTree( _rootDirectory, parent: null, RootPath, _boundary.CanonicalRoot, cancellationToken );
+            cancellationToken.ThrowIfCancellationRequested( );
+            InitialTraversalComplete = true;
         }
     }
 
     // Re-walks the root to add watches the kernel refused earlier, for example
     // after the limit was raised.
-    public void RetryUnwatched( )
+    public void RetryUnwatched( CancellationToken cancellationToken )
     {
+        cancellationToken.ThrowIfCancellationRequested( );
         if ( !IsWatching || Interlocked.Exchange( ref _unwatchedDirectories, 0 ) == 0 )
         {
             return;
         }
 
-        WatchTree( CancellationToken.None );
+        try
+        {
+            WatchTree( cancellationToken );
+            cancellationToken.ThrowIfCancellationRequested( );
+        }
+        catch ( OperationCanceledException )
+        {
+            Interlocked.Increment( ref _unwatchedDirectories );
+            throw;
+        }
     }
 
     // Adds watches for directories a policy change admitted below a path.
@@ -229,7 +244,7 @@ internal sealed partial class InotifyTreeWatcher
                 previousChildren = [.. node.Children];
             }
 
-            var children = AdmittedChildren( next.Directory );
+            var children = AdmittedChildren( next.Directory, cancellationToken );
             if ( children is null )
             {
                 continue;
@@ -296,7 +311,7 @@ internal sealed partial class InotifyTreeWatcher
     private bool IsRegistered( WatchNode node ) =>
         _nodes.TryGetValue( node.Watch, out var registered ) && ReferenceEquals( registered, node );
 
-    private List<AdmittedChild>? AdmittedChildren( AuthorizedDirectory directory )
+    private List<AdmittedChild>? AdmittedChildren( AuthorizedDirectory directory, CancellationToken cancellationToken )
     {
         if ( !IsCurrentDirectory( directory.Path ) )
         {
@@ -308,6 +323,7 @@ internal sealed partial class InotifyTreeWatcher
         {
             foreach ( var entry in Directory.EnumerateDirectories( directory.Path ) )
             {
+                cancellationToken.ThrowIfCancellationRequested( );
                 var child = AdmitChild( directory, entry );
                 if ( child is not null )
                 {
