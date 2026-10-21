@@ -10,11 +10,10 @@
     "maximumLimit": 200,
     "providerTimeoutMilliseconds": 350,
     "learnFromInvocations": true,
-    // auto: use qalc when it is on PATH; never: managed arithmetic and dates only;
-    // always: try qalc even if PATH detection misses it; Doctor fails if it is missing.
+    // Currency expressions lazily fetch ECB rates; false uses existing cached rates only.
     "calculator": {
       "inline": true,
-      "useQalc": "auto"
+      "exchangeRates": true
     }
   },
   "indexing": {

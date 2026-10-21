@@ -6,6 +6,28 @@ import "." as CommandDeck
 QtObject {
   required property var host
   function run(context) {
+    const previous = host.part_pane.result
+    host.part_pane.result = {
+      id: "calculator:100 USD to EUR", kind: "calculator", title: "€89.02", subtitle: "100 USD to EUR",
+      details: [{ label: "Exact value", value: "89.0154886950329 EUR" },
+        { label: "Exchange rates", value: "ECB reference rates, 2026-10-21" }],
+      actions: [{ id: "copy", title: "Copy Result", kind: Protocol.ActionKinds.CopyText }]
+    }
+    const exact = host.part_hostEvents.findChild(host.part_pane, "calculatorExactValue")
+    const rates = host.part_hostEvents.findChild(host.part_pane, "calculatorExchangeRates")
+    host.expect(exact.visible && exact.text === "Exact value: 89.0154886950329 EUR",
+      "calculator details bind the exact currency value through DetailPane")
+    host.expect(rates.visible && rates.text === "Exchange rates: ECB reference rates, 2026-10-21",
+      "calculator details bind the exchange rate date through DetailPane")
+    host.part_pane.result = {
+      id: "calculator:2 + 2", kind: "calculator", title: "4", subtitle: "2 + 2",
+      details: [{ label: "Expression", value: "2 + 2" }], actions: []
+    }
+    host.expect(!exact.visible && !rates.visible
+        && exact.text === "Exact value: " && rates.text === "Exchange rates: ",
+      "replacing currency with arithmetic clears both calculator detail lines")
+    host.part_pane.result = previous
+
     host.expect(!host.part_unsupportedPreview.supported,
       "window preview fails closed without an advertised compositor capability")
     host.expect(host.part_preview.normalizeAddress("0xAbC123") === "abc123",

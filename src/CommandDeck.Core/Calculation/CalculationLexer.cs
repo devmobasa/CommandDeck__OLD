@@ -43,7 +43,16 @@ internal static class CalculationLexer
                     i++;
                 }
 
-                tokens.Add( new( expression[start..i] ) );
+                var word = expression[start..i];
+                if ( tokens.Count > 0 &&
+                    (tokens[^1].Lower, word.ToLowerInvariant( )) is ("fl", "oz" ) or ("fluid", "ounce" or "ounces" ) )
+                {
+                    tokens[^1] = new( "floz" );
+                }
+                else
+                {
+                    tokens.Add( new( word ) );
+                }
             }
             else
             {

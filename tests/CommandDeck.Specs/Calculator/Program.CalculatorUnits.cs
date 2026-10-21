@@ -15,6 +15,8 @@ public static partial class Program
         ("3 km", "3 km"), ("km/h", "1 km/h"), ("60 mph to kilometers/hour", "96.56064 km/h"),
         ("2 h + 30 min", "2.5 h"), ("90 min to h", "1.5 h"), ("1.5 h to min", "90 min"),
         ("3 days in hours", "72 h"), ("1 year to days", "365.25 d"), ("12 months to year", "1 yr"),
+        ("10 mins to hours", "0.166666666666667 h"), ("90 secs to min", "1.5 min"),
+        ("2 hrs to min", "120 min"), ("2 yrs to d", "730.5 d"), ("3 wks to d", "21 d"),
         ("10 km / 5 km", "2"), ("2 km * 3 m", "0.006 km²"), ("3 km + 500 m", "3.5 km"),
         ("10000000000000000000000000000 km to km", "10000000000000000000000000000 km"),
         ("10000000000000000000000000000 km * 1", "10000000000000000000000000000 km"),

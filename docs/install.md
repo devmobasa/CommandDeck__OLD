@@ -21,7 +21,7 @@ sudo pacman -S --needed base-devel clang zlib sqlite icu shellcheck bubblewrap w
 ```
 
 Optional PDF/document content extraction needs `poppler`/`pandoc` and explicit
-configuration. The calculator can optionally use `qalc`. AI CLIs, Ollama, HEY,
+configuration. The calculator needs no optional dependency. AI CLIs, Ollama, HEY,
 and Herdr are separately installed optional integrations.
 
 ## Build and inspect

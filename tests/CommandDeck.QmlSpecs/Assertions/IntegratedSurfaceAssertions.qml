@@ -194,9 +194,9 @@ QtObject {
             { id: "extractor-pdf", label: "PDF extraction", state: "degraded",
               detail: "pdftotext is not on PATH.",
               remediation: "Install with: sudo pacman -S --needed poppler" },
-            { id: "calculator-qalc", label: "Qalc calculator", state: "degraded",
-              detail: "qalc is not on PATH.",
-              remediation: "Install with: sudo pacman -S --needed libqalculate" }
+            { id: "extractor-pandoc", label: "Document extraction", state: "degraded",
+              detail: "pandoc is not on PATH.",
+              remediation: "Install with: sudo pacman -S --needed pandoc" }
           ]
         }
         host.expect(host.part_integratedDeck.testRuntimeStatusSurface.height

@@ -16,6 +16,7 @@ public static class ConfigurationValidator
         ValidateIndexing( options.Indexing );
         ValidateRanking( options.Search?.Ranking );
         ValidateCalculator( options.Search?.Calculator );
+        ValidateStorage( options.Storage );
         ValidateAi( options.Ai );
         ValidateAgent( options.Agent );
         if ( options.Quicklinks is null )
@@ -236,18 +237,21 @@ public static class ConfigurationValidator
 
     private static void ValidateCalculator( CalculatorOptions? calculator )
     {
-        if ( calculator is null || string.IsNullOrWhiteSpace( calculator.UseQalc ) )
+        if ( calculator is null )
         {
-            throw new InvalidOperationException( "search.calculator.useQalc is required." );
+            throw new InvalidOperationException( "search.calculator is required." );
         }
+    }
 
-        var mode = calculator.UseQalc.Trim( );
-        if ( !string.Equals( mode, CalculatorOptions.UseQalcAuto, StringComparison.OrdinalIgnoreCase ) &&
-            !string.Equals( mode, CalculatorOptions.UseQalcNever, StringComparison.OrdinalIgnoreCase ) &&
-            !string.Equals( mode, CalculatorOptions.UseQalcAlways, StringComparison.OrdinalIgnoreCase ) )
+    // A database with the cache's file name would be overwritten by the next rate refresh.
+    private static void ValidateStorage( StorageOptions? storage )
+    {
+        if ( storage?.DatabasePath is { } path &&
+            string.Equals( System.IO.Path.GetFileName( path ), CalculatorOptions.ExchangeRateCacheFileName, StringComparison.Ordinal ) )
         {
             throw new InvalidOperationException(
-                "search.calculator.useQalc must be auto, never, or always." );
+                $"storage.databasePath must not be named {CalculatorOptions.ExchangeRateCacheFileName}; " +
+                "search.calculator keeps its exchange-rate cache under that name beside the database." );
         }
     }
 

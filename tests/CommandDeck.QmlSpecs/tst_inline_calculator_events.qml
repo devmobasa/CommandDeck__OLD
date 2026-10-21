@@ -78,16 +78,27 @@ EventPathFixture {
       verify(fixture.part_controller.queryText.endsWith("x"))
     }
 
+    // DetailPane needs Quickshell's plugins, so the component suite covers its
+    // binding of these details (PreviewAndPreferenceAssertions.qml).
     function test_currency_details_preserve_the_exact_value() {
       const details = createTemporaryObject(fixture.part_calculatorComponent, fixture, {
-        y: 130, width: 700, theme: fixture.part_theme, exactValue: "€89.0155"
+        y: 130, width: 700, theme: fixture.part_theme, value: "€89.02",
+        exactValue: "89.0154886950329 EUR", exchangeRates: "ECB reference rates, 2026-10-21"
       })
       verify(details !== null)
+
       const exact = findChild(details, "calculatorExactValue")
+      const rates = findChild(details, "calculatorExchangeRates")
       waitForValue(exact, "visible", true)
-      compare(exact.text, "Exact value: €89.0155")
+      waitForValue(rates, "visible", true)
+      compare(exact.text, "Exact value: 89.0154886950329 EUR")
+      compare(rates.text, "Exchange rates: ECB reference rates, 2026-10-21")
+      verify(rates.y > exact.y)
+
       details.exactValue = ""
+      details.exchangeRates = ""
       waitForValue(exact, "visible", false)
+      waitForValue(rates, "visible", false)
     }
   }
 }

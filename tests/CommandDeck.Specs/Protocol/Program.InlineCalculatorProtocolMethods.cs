@@ -10,8 +10,12 @@ public static partial class Program
         var files = Directory.CreateDirectory( Path.Combine( root, "notes" ) ).FullName;
         var titlePath = Path.Combine( files, "days until 11 sep.md" );
         var bodyPath = Path.Combine( files, "Notes.md" );
+        var conversionPath = Path.Combine( files, "5 km in miles.md" );
+        var ordinaryPath = Path.Combine( files, "10 years in prison.md" );
         await File.WriteAllTextAsync( titlePath, "Date notes" );
-        await File.WriteAllTextAsync( bodyPath, "11 sep: days until launch" );
+        await File.WriteAllTextAsync( conversionPath, "Conversion notes" );
+        await File.WriteAllTextAsync( ordinaryPath, "Sentence notes" );
+        await File.WriteAllTextAsync( bodyPath, "11 sep: days until launch\n5 km in miles\n10 years in prison" );
         var titleId = StableId.Create( ResultKinds.File, titlePath );
         var bodyId = StableId.Create( ResultKinds.File, bodyPath );
         CommandDeckOptions options = new( )
@@ -28,8 +32,8 @@ public static partial class Program
         SqliteCatalog catalog = new( options.Storage );
         await catalog.InitializeAsync( default );
         DateCalculatorClock clock = new( new DateTimeOffset( 2026, 10, 21, 12, 0, 0, TimeSpan.Zero ), TimeZoneInfo.Utc );
-        CalculatorProvider calculator = new( ( _, _, _, _ ) => throw new InvalidOperationException( "Inline input must stay offline." ),
-            ( ) => true, clock: clock, inlineEnabled: ( ) => catalog.History.InlineCalculator );
+        CalculatorProvider calculator = new( clock: clock, inlineEnabled: ( ) => catalog.History.InlineCalculator,
+            rates: ( ) => throw new InvalidOperationException( "Inline arithmetic must stay offline." ) );
         await using SearchCoordinator search = new( [calculator, new CatalogSearchProvider( catalog, catalog )], options.Search,
             catalog, catalog.LauncherPreferences, history: catalog.History );
         await using var runtime = InvocationFixture( options, catalog, catalog.UsageHistory,
@@ -51,7 +55,7 @@ public static partial class Program
             foreach ( var (query, expected) in new[]
             {
                 ("100 * 5", "500"), ("2 + 2", "4"),
-                ("days until 11 sep", "325 days"), ("-2 + 7", "5")
+                ("days until 11 sep", "325 days"), ("-2 + 7", "5"), ("5 km in miles", "3.10685596118667 mi")
             } )
             {
                 var expression = QueryParser.Parse( query ).Expression;
@@ -101,54 +105,67 @@ public static partial class Program
                 var preferences = await ReadMessageAsync( client, id, ProtocolMessageTypes.PreferencesResult, default );
                 Equal( ( bool? ) enabled, preferences!.Preferences!.Preferences.InlineCalculator );
 
-                foreach ( var excluded in new[] { false, true } )
+                foreach ( var (input, matchId, isCandidate, literal) in new[]
                 {
-                    var query = "days until 11 sep" + (excluded ? " -launch" : "");
-                    id = ++requestId;
-                    await client.SendAsync( new ProtocolRequest { RequestId = id, Operation = ProtocolOperations.Search, Query = query }, default );
-                    var original = await CollectUntilDoneAsync( client, id );
-                    Equal( enabled && !excluded, original.First( static message => message.Type == ProtocolMessageTypes.Result ).Result!.Kind == ResultKinds.Calculator );
+                    ("days until 11 sep", titleId, true, false),
+                    ("5 km in miles", StableId.Create( ResultKinds.File, conversionPath ), true, false),
+                    ("10 years in prison", StableId.Create( ResultKinds.File, ordinaryPath ), false, false),
+                    ("5 km in miles", StableId.Create( ResultKinds.File, conversionPath ), true, true),
+                    ("10 years in prison", StableId.Create( ResultKinds.File, ordinaryPath ), false, true)
+                } )
+                {
+                    foreach ( var excluded in new[] { false, true } )
+                    {
+                        var query = input + (excluded ? " -launch" : "");
+                        id = ++requestId;
+                        await client.SendAsync( new ProtocolRequest { RequestId = id, Operation = ProtocolOperations.Search, Query = query }, default );
+                        var original = await CollectUntilDoneAsync( client, id );
+                        Equal( enabled && isCandidate && !excluded, original.First( static message => message.Type == ProtocolMessageTypes.Result ).Result!.Kind == ResultKinds.Calculator );
 
-                    id = ++requestId;
-                    await client.SendAsync( new ProtocolRequest
-                    {
-                        RequestId = id,
-                        Operation = ProtocolOperations.SavedSearchSave,
-                        SavedSearch = new SavedSearch
-                        {
-                            Id = "saved-search:date",
-                            Name = "Date notes",
-                            Expression = new QueryExpression { Clauses = QueryParser.Parse( query ).Expression.Clauses }
-                        }
-                    }, default );
-                    _ = await ReadMessageAsync( client, id, ProtocolMessageTypes.SavedSearchResult, default );
-                    id = ++requestId;
-                    await client.SendAsync( new ProtocolRequest { RequestId = id, Operation = ProtocolOperations.SavedSearchGet }, default );
-                    var saved = await ReadMessageAsync( client, id, ProtocolMessageTypes.SavedSearchResult, default );
-                    var expression = saved!.SavedSearches!.Searches.Single( ).Expression;
-                    // DeckSearchActions restores each clause separately unless a
-                    // literal query exists. Reparse after typing into that field.
-                    var restoredText = expression.LiteralQuery ?? string.Join( ' ', expression.Clauses.Select( static clause =>
-                        (clause.Excluded ? "-" : "") + "\"" + clause.Text + "\"" ) );
-                    foreach ( var text in new[] { query, restoredText } )
-                    {
                         id = ++requestId;
                         await client.SendAsync( new ProtocolRequest
                         {
                             RequestId = id,
-                            Operation = ProtocolOperations.Search,
-                            Query = text,
-                            Expression = QueryParser.Parse( text ).Expression
+                            Operation = ProtocolOperations.SavedSearchSave,
+                            SavedSearch = new SavedSearch
+                            {
+                                Id = "saved-search:date",
+                                Name = "Date notes",
+                                Expression = new QueryExpression { LiteralQuery = literal ? query : null, Clauses = QueryParser.Parse( query ).Expression.Clauses }
+                            }
                         }, default );
-                        var messages = await CollectUntilDoneAsync( client, id );
-                        var rows = messages.Where( static message => message.Type == ProtocolMessageTypes.Result )
-                            .Select( static message => message.Result! ).ToArray( );
-                        True( rows.Any( row => row.Id == titleId ), "The title must still match after reopening." );
-                        Equal( !excluded, rows.Any( row => row.Id == bodyId ) );
-                        foreach ( var row in rows.Where( static row => row.Kind == ResultKinds.File ) )
+                        _ = await ReadMessageAsync( client, id, ProtocolMessageTypes.SavedSearchResult, default );
+                        id = ++requestId;
+                        await client.SendAsync( new ProtocolRequest { RequestId = id, Operation = ProtocolOperations.SavedSearchGet }, default );
+                        var saved = await ReadMessageAsync( client, id, ProtocolMessageTypes.SavedSearchResult, default );
+                        var expression = saved!.SavedSearches!.Searches.Single( ).Expression;
+                        // DeckSearchActions restores each clause separately unless a
+                        // literal query exists. Reparse after typing into that field.
+                        var restoredText = expression.LiteralQuery ?? string.Join( ' ', expression.Clauses.Select( static clause =>
+                            (clause.Excluded ? "-" : "") + "\"" + clause.Text + "\"" ) );
+                        foreach ( var text in new[] { query, restoredText } )
                         {
-                            True( row.Ranking.Contributions.Any( static value => value.Label == "Catalog lexical match" ),
-                                "Saved and reopened searches must retain independent FTS clauses and exclusions." );
+                            id = ++requestId;
+                            await client.SendAsync( new ProtocolRequest
+                            {
+                                RequestId = id,
+                                Operation = ProtocolOperations.Search,
+                                Query = text,
+                                Expression = QueryParser.Parse( text ).Expression
+                            }, default );
+                            var messages = await CollectUntilDoneAsync( client, id );
+                            var rows = messages.Where( static message => message.Type == ProtocolMessageTypes.Result )
+                                .Select( static message => message.Result! ).ToArray( );
+                            True( rows.Any( row => row.Id == matchId ), "The title must still match after reopening." );
+                            Equal( !excluded, rows.Any( row => row.Id == bodyId ) );
+                            var inline = enabled && isCandidate && !excluded && text == query;
+                            Equal( inline, rows[0].Kind == ResultKinds.Calculator );
+                            Equal( (inline ? 1 : 0) + (excluded ? 1 : 2), rows.Length );
+                            foreach ( var row in rows.Where( static row => row.Kind == ResultKinds.File ) )
+                            {
+                                True( row.Ranking.Contributions.Any( static value => value.Label == "Catalog lexical match" ),
+                                    "Saved and reopened searches must retain independent FTS clauses and exclusions." );
+                            }
                         }
                     }
                 }

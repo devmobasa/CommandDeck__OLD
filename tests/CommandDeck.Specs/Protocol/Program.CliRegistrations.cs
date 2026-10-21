@@ -7,6 +7,7 @@ public static partial class Program
 {
     private static async Task RunCliRegistrationsAsync( )
     {
+        await RunAsync( "calculator deprecated option loads any string and Doctor reports it once", CalculatorDeprecatedOptionAsync );
         await RunAsync( "indexed folder CLI persists roots and routes live changes to daemon", IndexedFolderCliRoutesToDaemonAsync );
         await RunAsync( "quicklinks CLI adds edits lists validates and removes durable links", QuicklinkCliManagesDurableStateAsync );
         await RunAsync( "picker emits only selected values and honors cancellation", PickerReturnsOnlyTheSelectedValueAsync );

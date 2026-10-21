@@ -28,6 +28,9 @@ internal static class CalculationCurrencies
         ["₪"] = "ILS"
     }.ToFrozenDictionary( StringComparer.OrdinalIgnoreCase );
 
+    internal static readonly CurrencyRateSnapshot PlaceholderRates = new(
+        DateOnly.MinValue, Supported.ToFrozenDictionary( code => code, _ => 1m, StringComparer.OrdinalIgnoreCase ) );
+
     internal static string? Resolve( string spelling )
     {
         if ( Unsupported.Contains( spelling ) )

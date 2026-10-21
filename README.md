@@ -149,7 +149,9 @@ interaction. Settings controls which sources appear in Search and Home.
 | `win: terminal` | Hyprland windows |
 | `oma: theme` | Omarchy controls |
 | `100 * 5` / `days until 11 sep` | Calculator and date counts |
-| `=100 km to miles` | Unit conversion with optional qalc |
+| `100 km to miles` / `105F in C` | Unit and temperature conversion |
+| `100 usd to eur` / `255 to hex` | Currency with lazy ECB rates, and number bases |
+| `=sin(30)` / `=2pi` | Functions, constants, and explicit expressions |
 | `ai: explain this` | Optional AI assistant |
 
 <details>

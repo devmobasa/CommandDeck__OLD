@@ -144,27 +144,11 @@ public static partial class Program
         await RunAsync(
             "systemd provider stays silent on failure or malformed output",
             SystemdProviderStaysSilentOnFailureAsync );
-        await RunAsync( "currency conversions retain qalc precision for large signed amounts", CurrencyConversionsRetainQalcPrecisionAsync );
-        await RunAsync( "currency conversions preserve nondecimal qalc output", CurrencyConversionsPreserveNondecimalOutputAsync );
-        await RunAsync( "inline calculator never starts qalc, including complete conversions", InlineCalculatorNeverStartsQalcAsync );
+        await RunAsync( "inline arithmetic preserves ordinary searches", InlineCalculatorArithmeticAsync );
+        await RunAsync( "inline conversions use engine tables and respect the inline toggle", InlineCalculatorConversionsAsync );
+        await RunAsync( "calculator currency retains precision and rate provenance", CalculatorProviderCurrencyAsync );
+        await RunAsync( "calculator provider lazily fetches rates and retries on next search", CalculatorProviderLazyRatesAsync );
         await RunAsync( "date calculator resolves local dates and missing years offline", DateCalculatorUsesLocalClockAndResolvesYearsAsync );
-        await RunAsync(
-            "calculator delegates units to qalc and keeps arithmetic local",
-            CalculatorProviderDelegatesUnitsToQalcAndKeepsArithmeticLocalAsync );
-        await RunAsync(
-            "calculator normalizes bare temperature shorthand to qalc canonical units",
-            CalculatorProviderNormalizesTemperatureShorthandAsync );
-        await RunAsync(
-            "calculator falls back when qalc is absent, errors, or disabled",
-            CalculatorProviderFallsBackWhenQalcErrorsAndHonorsNeverAsync );
-        await RunAsync(
-            "calculator refreshes currency rates in the background at most once per 15 minutes",
-            CalculatorProviderRefreshesCurrencyRatesAtMostOncePerCooldownAsync );
-        await RunAsync(
-            "live qalc evaluates units when installed",
-            CalculatorLiveQalcSmokeAsync );
-        Run( "calculator configuration rejects unknown qalc modes",
-            CalculatorConfigurationRejectsUnknownQalcModes );
         await RunAsync(
             "timezone provider returns the current time through the tz filter",
             TimezoneProviderReturnsCurrentTimeThroughFilterAsync );

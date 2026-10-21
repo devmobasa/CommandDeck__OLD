@@ -8,6 +8,7 @@ ColumnLayout {
   property string expression: ""
   property string value: ""
   property string exactValue: ""
+  property string exchangeRates: ""
   // The result's primary action title, so the button and the footer agree.
   property string actionTitle: ""
   signal copyRequested()
@@ -95,6 +96,18 @@ ColumnLayout {
     Layout.fillWidth: true
     visible: root.exactValue.length > 0
     text: "Exact value: " + root.exactValue
+    textFormat: Text.PlainText
+    wrapMode: Text.WrapAnywhere
+    color: root.theme.textMuted
+    font.family: "monospace"
+    font.pixelSize: root.theme.fontBody
+  }
+
+  Text {
+    objectName: "calculatorExchangeRates"
+    Layout.fillWidth: true
+    visible: root.exchangeRates.length > 0
+    text: "Exchange rates: " + root.exchangeRates
     textFormat: Text.PlainText
     wrapMode: Text.WrapAnywhere
     color: root.theme.textMuted

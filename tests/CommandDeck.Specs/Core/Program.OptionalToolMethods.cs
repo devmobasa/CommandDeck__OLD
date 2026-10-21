@@ -5,9 +5,9 @@ public static partial class Program
     private static void OptionalToolCatalogPrintsExactPacmanCommand( )
     {
         Equal(
-            "not found. Install with: sudo pacman -S --needed libqalculate",
-            OptionalToolCatalog.DoctorDetail( "qalc", found: false ) );
-        Equal( "found on PATH", OptionalToolCatalog.DoctorDetail( "qalc", found: true ) );
+            "not found. Install with: sudo pacman -S --needed poppler",
+            OptionalToolCatalog.DoctorDetail( "pdftotext", found: false ) );
+        Equal( "found on PATH", OptionalToolCatalog.DoctorDetail( "pdftotext", found: true ) );
         if ( !OptionalToolCatalog.TryGet( "pdftotext", out var poppler ) || poppler is null )
         {
             throw new InvalidOperationException( "pdftotext must be in the optional tool catalog." );
@@ -27,7 +27,8 @@ public static partial class Program
             var json = await File.ReadAllTextAsync( path );
             True( json.Contains( "\"$schema\":\"commanddeck.schema.json\"", StringComparison.Ordinal ) );
             var loaded = await ConfigurationLoader.LoadAsync( path, CancellationToken.None );
-            Equal( CalculatorOptions.UseQalcAuto, loaded.Search.Calculator.UseQalc );
+            True( loaded.Search.Calculator.UseQalc is null );
+            True( loaded.Search.Calculator.ExchangeRates );
         }
         finally
         {

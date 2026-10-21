@@ -90,14 +90,14 @@ public static partial class Program
             Environment.SetEnvironmentVariable( "COMMANDDECK_REQUIRE_NO_SKIPS", null );
 
             Environment.SetEnvironmentVariable( "PATH", directory );
-            var unavailable = await Invoke( root, "--filter", "live qalc", "--require-no-skips", "--results", output );
+            var unavailable = await Invoke( root, "--spec-reporting-fixture", "--filter", "unavailable synchronous prerequisite", "--require-no-skips", "--results", output );
             Environment.SetEnvironmentVariable( "PATH", originalPath );
             Equal( 1, unavailable.ExitCode );
             using ( var json = JsonDocument.Parse( await File.ReadAllTextAsync( output ) ) )
             {
                 Equal( 0, json.RootElement.GetProperty( "executed" ).GetInt32( ) );
                 Equal( 1, json.RootElement.GetProperty( "skipped" ).GetInt32( ) );
-                Equal( "qalc is not installed on PATH.", json.RootElement.GetProperty( "tests" )[0].GetProperty( "reason" ).GetString( ) );
+                Equal( "fixture tool is unavailable", json.RootElement.GetProperty( "tests" )[0].GetProperty( "reason" ).GetString( ) );
             }
 
             // An empty synthetic repository makes a real guard fail without modifying production sources.

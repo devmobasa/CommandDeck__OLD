@@ -395,7 +395,12 @@ file-selection controls, picker keyboard behavior, and launcher protocol wiring.
 
 Type `100 * 5` to show `500` above normal results, then press Enter to copy it.
 Type `days until 11 sep` for an offline date count, or `weeks until 11 sep` for
-weeks and remaining days. The subtitle shows the resolved dates. Use `=` for an
-explicit expression. Unit and currency conversions need `=` and optional qalc for now.
-See [calculator and date rules](search-and-ranking.md#calculator-and-date-counts).
+weeks and remaining days. The subtitle shows the resolved dates. Complete
+conversions such as `5 km in miles` and `105F in C` also work inline. Currency
+conversions such as `100 usd to eur` need cached exchange rates.
+
 Settings > Search > **Inline calculator** turns bare calculations on or off.
+Use `=` for the full expression grammar, including constants and functions,
+even when inline calculation is off. See the
+[calculator reference](search-and-ranking.md#calculator-and-date-counts)
+for the grammar, `g` and `in` rules, precision, and date-count rules.

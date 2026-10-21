@@ -229,11 +229,46 @@ operator or parentheses makes the input eligible: `1/2+1`, `10-4*2`, and
 Settings > Search > **Inline calculator** controls
 bare calculations; `search.calculator.inline` supplies its default (`true`).
 
-Unit and currency conversions require `=` and optional qalc for now:
-`=100 usd to eur`, `=5 km to miles`, `=105F in C`, and `=20 eur to usd`.
-Bare calculations use only managed arithmetic and date counting; they never start
-qalc. Currency rows show two decimals and keep the unrounded value in the details
-pane. Explicit `=` input also supports qalc constants, functions and compound units.
+Complete conversions also show a first-row result without `=`: `5 km in miles`,
+`100 usd to eur`, `5 lbs to kg`, `105F in C`, `3 days in hours`, `60 mph to km/h`,
+`$100 to €`, and `255 to hex`. The entire expression must parse with compatible
+units; phrases such as `3 days in rome` stay ordinary searches. Currency needs
+cached rates; the first currency search can start a lazy fetch and show no row
+until the next search. `=` always accepts the full expression grammar, including
+constants and functions, even when inline calculation is off.
+
+The grammar supports `+ - * / ^ ** mod`, parentheses, implicit multiplication
+(`2pi`, `2(3+4)`, `1/2pi` = 1/(2π)), factorials, and `to`, `in`, `as`, `->`, or `→`
+conversions. Units include SI and binary prefixes, compound units (`km/h`, `m²`),
+temperature (`105F in C`), data (`1 GiB to MB`), currency (`100 USD to EUR`), and
+durations (`2 h + 30 min`, `3 days in hours`). Months are a twelfth of a Julian
+365.25-day year. Volume includes `floz`, `fl oz`, `fluid ounce`, and `fluid ounces`.
+Functions include `sqrt`, `cbrt`, trigonometry, logarithms, `exp`, `abs`, rounding,
+`gcd`, `lcm`, `min`, and `max`. Trigonometric inputs default to degrees; use `rad`
+or `deg` explicitly. Constants include `pi`/`π`, `e`, `tau`/`τ`, `phi`/`φ`, `c`, and
+`g`. Percentages support `15% of 80`, `80 + 15%`, and `10 % 3` (modulo).
+Number bases use `0xff`, `0b1010`, `0o17` and targets `hex`, `bin`, `oct`, `dec`.
+
+`g` means gram directly after a number literal, `)`, or a unit identifier, and in
+conversion targets (`5 g to oz`, `1 lb to g`). After a constant or operator, or on
+its own, it means standard gravity (`pi g`, `2 * g`, `g`).
+
+`in` means the inch unit only directly after a number literal (`5 in`, `2 in²`,
+`12 in to cm`) or inside a conversion target (`5 ft in in`, `1 m² to in²`).
+Everywhere else it is the conversion word. An incomplete conversion such as
+`100 km in` produces no calculator row.
+
+Unit symbols are case-sensitive; names and currency codes are case-insensitive.
+Incompatible units and incomplete expressions produce no calculator row.
+
+Arithmetic and unit conversion use decimal (28 significant digits).
+Transcendental functions, roots, and non-integer powers use double (about 15
+significant digits), so inputs that need more precision than double can give
+rounded results. Overflow and very small magnitudes also fall back to double.
+Results show 15 significant digits, with exact decimal integers preserved in full;
+currency titles show two decimals. Currency details include the precise value
+and the ECB reference date.
+
 Inline detection reads the original input without changing normal catalog clauses.
 Matching titles and file contents follow the calculator row and remain available
 when inline calculation is off. Saved searches retain their ordinary clauses and

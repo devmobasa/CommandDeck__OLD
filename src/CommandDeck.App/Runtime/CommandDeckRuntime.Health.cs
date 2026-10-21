@@ -38,8 +38,6 @@ public sealed partial class CommandDeckRuntime
                         : "AI is disabled until explicitly configured."
             }
         ];
-        AddOptionalToolHealth( providers, "qalc", "calculator-qalc", "Qalc calculator",
-            _options.Search.Calculator.AllowsQalc( ) );
         AddOptionalToolHealth( providers, "pdftotext", "extractor-pdf", "PDF extraction",
             _options.Indexing.EnablePdfExtraction );
         AddOptionalToolHealth( providers, "pandoc", "extractor-pandoc", "Pandoc extraction",

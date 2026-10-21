@@ -201,7 +201,8 @@ object. Detailed guidance remains in the hand-written sections that follow.
 | `search.omarchyMenuState` | `boolean` | `true` |
 | `search.calculator` | `CalculatorOptions` | object |
 | `search.calculator.inline` | `boolean` | `true` |
-| `search.calculator.useQalc` | `string` | `auto` |
+| `search.calculator.exchangeRates` | `boolean` | `true` |
+| `search.calculator.useQalc` | `string?` | `null` |
 | `search.ranking` | `RankingOptions` | object |
 | `search.ranking.titleWeight` | `number` | `7` |
 | `search.ranking.pathWeight` | `number` | `1.5` |
@@ -349,7 +350,9 @@ object. Detailed guidance remains in the hand-written sections that follow.
 ```
 
 `databasePath` supports `~`, `$HOME`, and selected XDG variables. Keep the
-database on a local filesystem. Do not place it on a network mount.
+database on a local filesystem. Do not place it on a network mount. The file
+name `exchange-rates` is reserved for the calculator's rate cache, which is kept
+in the same directory, so configuration with that database name is rejected.
 
 ## `search`
 
@@ -362,7 +365,7 @@ database on a local filesystem. Do not place it on a network mount.
     "learnFromInvocations": true,
     "calculator": {
       "inline": true,
-      "useQalc": "auto"
+      "exchangeRates": true
     }
   }
 }
@@ -375,18 +378,24 @@ database on a local filesystem. Do not place it on a network mount.
 - `calculator.inline`: `true` (default) shows a clear calculation above the normal
   search results without `=`. Settings > Search > **Inline calculator** overrides
   this default without a restart. Explicit `=` expressions work with either choice.
-- `calculator.useQalc`: `auto` (default) uses `qalc` when it is on PATH for
-  unit, currency, constant, and function expressions; `never` keeps the
-  managed arithmetic and date evaluators only; `always` still tries `qalc` when PATH
-  detection is negative, and Doctor fails if `qalc` is missing. Arithmetic
-  such as `=2+2` never shells out. Currency queries evaluate against cached
-  rates in one fast `qalc` run; a background `-e` refresh with a 3 s budget
-  runs at most once per 15 minutes after a successful fetch. The expression
-  is a single argv token after `--`. Unit and currency conversions require `=`
-  for now, for example `=100 usd to eur`, `=5 km to miles`, or `=105F in C`.
-  Bare arithmetic, date counts, and ordinary searches never start qalc.
-  Currency rows round to two decimals; the details pane keeps the unrounded
-  evaluator output.
+- `calculator.exchangeRates`: `true` (default) permits CommandDeck's lazy ECB fetch.
+  A currency expression with no fresh cache starts exactly one HTTPS GET of
+  `https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml`, with only
+  `User-Agent: CommandDeck`, no cookies and no query content. Refreshes run at most
+  once per 6 hours after success and once per 30 minutes after a failure. Rates
+  are cached as `exchange-rates` beside the catalog database in the state directory.
+  Set `search.calculator.exchangeRates=false` to prevent network access; an existing
+  cache still works. Missing rates produce no row; the next search can use the fetch.
+  There is no Settings control for this option.
+- `calculator.useQalc` is deprecated and ignored. Any string value is accepted for
+  compatibility. Remove it; Doctor reports one non-failing reminder when it is set.
+
+The calculator evaluates arithmetic, functions, constants, units, durations, and
+currency in process. Complete conversions such as `100 usd to eur`, `5 km to miles`,
+`105F in C`, and `255 to hex` work inline. Use `=` for the full expression grammar
+or when inline calculation is off. Currency titles show two decimals; details
+include the precise value and the ECB reference date. See the
+[calculator grammar and precision rules](search-and-ranking.md#calculator-and-date-counts).
 
 `search.ranking` controls FTS field weights, optional per-source multipliers,
 per-source result caps, and first-page source diversity. Its nested `adaptive`

@@ -4,6 +4,14 @@ public static class CalculatorEngine
 {
     public const int MaximumExpressionLength = 512;
 
+    public static bool IsConversion( string expression )
+    {
+        // Placeholder rates validate compatibility only; their values never become search results.
+        var result = Evaluate( expression, static ( ) => CalculationCurrencies.PlaceholderRates );
+
+        return result.Status == CalculationStatus.Success && result.Features.HasFlag( CalculationFeatures.Conversion );
+    }
+
     public static CalculationResult Evaluate( string expression, Func<CurrencyRateSnapshot?>? rates = null )
     {
         var features = CalculationFeatures.None;
