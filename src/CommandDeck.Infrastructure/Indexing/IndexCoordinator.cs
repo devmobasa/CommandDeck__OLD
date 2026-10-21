@@ -186,17 +186,29 @@ public sealed partial class IndexCoordinator : IIndexCoordinator
             SupersedeOfflineChangeReconciliation( );
         }
 
-        await StartCoreAsync( reconcilePolicy: !full, cancellationToken ).ConfigureAwait( false );
-        EnsureCatalogMutationOwnership( );
-        if ( !full && scope.Kind == IndexReindexScopeKinds.Root && !string.IsNullOrWhiteSpace( scope.RootId ) )
+        // Preferences load under the catalog gate before startup can own it.
+        await EnsureRootPreferencesAsync( cancellationToken ).ConfigureAwait( false );
+        if ( !full )
         {
-            full = _incremental.RestoreWatchers( scope.RootId, cancellationToken: cancellationToken );
+            await StartCoreAsync( reconcilePolicy: true, cancellationToken ).ConfigureAwait( false );
         }
 
+        // Own the catalog before starting the worker for a requested full scan.
+        // Its startup reconciliation must not publish a redundant generation.
         await _indexLock.WaitAsync( cancellationToken ).ConfigureAwait( false );
         ReindexReport report;
         try
         {
+            if ( full )
+            {
+                await StartCoreAsync( reconcilePolicy: false, cancellationToken ).ConfigureAwait( false );
+            }
+            EnsureCatalogMutationOwnership( );
+            if ( !full && scope.Kind == IndexReindexScopeKinds.Root && !string.IsNullOrWhiteSpace( scope.RootId ) )
+            {
+                full = _incremental.RestoreWatchers( scope.RootId, cancellationToken: cancellationToken );
+            }
+
             if ( !full )
             {
                 report = await ReindexScopedCoreAsync( scope, progress, cancellationToken ).ConfigureAwait( false );

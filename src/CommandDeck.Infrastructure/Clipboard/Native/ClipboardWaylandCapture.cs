@@ -9,7 +9,8 @@ internal sealed unsafe partial class ClipboardWaylandCapture(
     Channel<ClipboardHelperFrame> events, ChannelWriter<ClipboardHelperFrame> acknowledgements, WaylandWakeSignal wake ) : IDisposable
 {
     private static readonly TimeSpan OfferLifetime = TimeSpan.FromSeconds( 5 );
-    private static readonly TimeSpan ReceiveLifetime = TimeSpan.FromSeconds( 2 );
+    private static readonly TimeSpan ReceiveIdleTimeout = TimeSpan.FromSeconds( 2 );
+    private static readonly TimeSpan ReceiveLifetime = TimeSpan.FromSeconds( 60 );
     private static readonly TimeSpan SyncLifetime = TimeSpan.FromSeconds( 2 );
     private nint _display;
     private nint _registry;
@@ -70,7 +71,15 @@ internal sealed unsafe partial class ClipboardWaylandCapture(
             }
 
             ReadCommands( );
-            foreach ( var offer in _pending.Where( static offer => Stopwatch.GetElapsedTime( offer.Started ) >= OfferLifetime ).ToArray( ) )
+            // Bound trickling sources even while output is backpressured. The generous
+            // total budget leaves room for large transfers under CPU contention.
+            if ( _receive is { Ended: false } receive && Stopwatch.GetElapsedTime( receive.Started ) >= ReceiveLifetime )
+            {
+                RemoveOffer( receive.Owner, notify: true );
+            }
+
+            foreach ( var offer in _pending.Where( offer => offer != _receive?.Owner &&
+                Stopwatch.GetElapsedTime( offer.Started ) >= OfferLifetime ).ToArray( ) )
             {
                 RemoveOffer( offer, notify: true );
             }
@@ -100,12 +109,19 @@ internal sealed unsafe partial class ClipboardWaylandCapture(
         TimeSpan? next = null;
         foreach ( var offer in _pending )
         {
-            next = Earliest( next, OfferLifetime - Stopwatch.GetElapsedTime( offer.Started ) );
+            if ( offer != _receive?.Owner )
+            {
+                next = Earliest( next, OfferLifetime - Stopwatch.GetElapsedTime( offer.Started ) );
+            }
         }
 
-        if ( _receive is not null )
+        if ( _receive is { Ended: false } receive )
         {
-            next = Earliest( next, ReceiveLifetime - Stopwatch.GetElapsedTime( _receive.Started ) );
+            next = Earliest( next, ReceiveLifetime - Stopwatch.GetElapsedTime( receive.Started ) );
+            if ( eventRoom )
+            {
+                next = Earliest( next, ReceiveIdleTimeout - Stopwatch.GetElapsedTime( receive.LastProgress ) );
+            }
         }
 
         if ( _callback != 0 )

@@ -66,7 +66,10 @@ public static partial class Program
         await Request( large, 0, 0 );
         while ( !largeState.Complete )
         {
-            largeState.Accept( await helper.Events.ReadAsync( token ) );
+            var frame = await helper.Events.ReadAsync( token );
+            True( frame.Header.Type != ClipboardHelperFrameType.Status,
+                $"native large receive must complete without cancellation after {largeState.ReceivedBytes} bytes" );
+            largeState.Accept( frame );
         }
 
         Equal( 16L * 1024 * 1024, largeState.ReceivedBytes );
@@ -76,12 +79,15 @@ public static partial class Program
         Equal( ClipboardCaptureStatus.SelectionCancelled, ClipboardCaptureProtocol.ReadStatus( expired ).Status );
         Equal( stalled, expired.Header.SelectionId );
 
+        var (trickling, _, _) = await Announce( "trickle" );
+        await AssertClipboardTrickleExpiresAsync( helper, trickling, token );
+
         var (blocked, _, _) = await Announce( "blocked" );
         await Request( blocked, 0, 0 );
         while ( true )
         {
             await server.StandardInput.WriteLineAsync( "count" );
-            if ( await server.StandardOutput.ReadLineAsync( token ) == "9" )
+            if ( await server.StandardOutput.ReadLineAsync( token ) == "10" )
             {
                 break;
             }
@@ -93,7 +99,7 @@ public static partial class Program
         while ( true )
         {
             await server.StandardInput.WriteLineAsync( "finished" );
-            if ( await server.StandardOutput.ReadLineAsync( token ) == "8" )
+            if ( await server.StandardOutput.ReadLineAsync( token ) == "9" )
             {
                 break;
             }
@@ -137,5 +143,34 @@ public static partial class Program
 
         ValueTask Request( Guid selection, int offer, uint sequence ) => helper.SendAsync(
             new( new( ClipboardHelperFrameType.ReceiveOffer, 17, selection, offer, sequence, 0 ), ReadOnlyMemory<byte>.Empty ), token );
+    }
+
+    private static async Task AssertClipboardTrickleExpiresAsync( ClipboardHostProcess helper, Guid trickling, CancellationToken token )
+    {
+        var started = Stopwatch.GetTimestamp( );
+        await helper.SendAsync(
+            new( new( ClipboardHelperFrameType.ReceiveOffer, 17, trickling, 0, 0, 0 ), ReadOnlyMemory<byte>.Empty ), token );
+        var trickled = 0;
+        using ( var deadline = CancellationTokenSource.CreateLinkedTokenSource( token ) )
+        {
+            deadline.CancelAfter( TimeSpan.FromSeconds( 75 ) );
+            while ( true )
+            {
+                var frame = await helper.Events.ReadAsync( deadline.Token );
+                Equal( trickling, frame.Header.SelectionId );
+                if ( frame.Header.Type == ClipboardHelperFrameType.Status )
+                {
+                    Equal( ClipboardCaptureStatus.SelectionCancelled, ClipboardCaptureProtocol.ReadStatus( frame ).Status );
+                    break;
+                }
+
+                Equal( ClipboardHelperFrameType.OfferChunk, frame.Header.Type );
+                trickled += frame.Payload.Length;
+            }
+        }
+
+        True( trickled > 0 && trickled < 32768, "a progressing source expires before its admitted byte limit" );
+        True( Stopwatch.GetElapsedTime( started ) >= TimeSpan.FromSeconds( 60 ),
+            "a trickling source reaches the total deadline, rather than the inactivity deadline" );
     }
 }

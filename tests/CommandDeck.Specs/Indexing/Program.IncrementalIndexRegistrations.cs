@@ -110,6 +110,10 @@ public static partial class Program
         await RunAsync(
             "watcher closes the initial scan window without rescanning ordinary edits",
             WatcherClosesInitialScanWindowAsync );
+        await RunAsync( "superseded reconciliation preserves edits in the full scan window",
+            SupersededReconciliationPreservesScanWindowAsync );
+        await RunAsync( "superseded reconciliation clears active status when the full scan precedes dispatch",
+            SupersededReconciliationClearsActiveStatusAsync );
         await RunAsync(
             "incremental status reports watched and unwatched roots",
             IncrementalStatusReportsRootCoverageAsync );
@@ -314,14 +318,24 @@ public static partial class Program
             var scan = indexer.ReindexAsync(
                 progress: null,
                 CancellationToken.None ).AsTask( );
-            await firstItem.WaitAsync( TimeSpan.FromSeconds( 30 ) );
+            try
+            {
+                await firstItem.WaitAsync( TimeSpan.FromSeconds( 30 ) );
+                var scanning = await indexer.GetIncrementalStatusAsync( CancellationToken.None );
+                True( scanning.ReconciliationRequired, "the staged generation has not completed startup reconciliation" );
+                Equal( 1, scanning.WatchedRootCount );
 
-            await File.WriteAllTextAsync( path, "scan window final marker" );
-            True( await WaitUntilAsync(
-                async ( ) => (await indexer.GetIncrementalStatusAsync( CancellationToken.None ))
-                    .PendingEventCount > 0,
-                TimeSpan.FromSeconds( 30 ) ) );
-            release( );
+                await File.WriteAllTextAsync( path, "scan window final marker" );
+                True( await WaitUntilAsync(
+                    async ( ) => (await indexer.GetIncrementalStatusAsync( CancellationToken.None ))
+                        .PendingEventCount > 0,
+                    TimeSpan.FromSeconds( 30 ) ) );
+            }
+            finally
+            {
+                release( );
+            }
+
             await scan;
 
             True( await WaitForCatalogResultAsync(
@@ -329,7 +343,18 @@ public static partial class Program
                 "window final",
                 result => result.Title == "window-note.txt",
                 TimeSpan.FromSeconds( 30 ) ) );
+
+            await File.WriteAllTextAsync( path, "scan window ordinary marker" );
+            True( await WaitForCatalogResultAsync(
+                catalog,
+                "window ordinary",
+                result => result.Title == "window-note.txt",
+                TimeSpan.FromSeconds( 30 ) ) );
+            True( await WaitUntilAsync(
+                async ( ) => (await indexer.GetIncrementalStatusAsync( CancellationToken.None )).PendingEventCount == 0,
+                TimeSpan.FromSeconds( 30 ) ) );
             Equal( 1, catalog.ReplaceAllCount );
+            True( !(await indexer.GetIncrementalStatusAsync( CancellationToken.None )).Reconciling );
             True( catalog.ApplyPathChangesCount > 0 );
             True( catalog.LastPathChanges.All( change =>
                 string.Equals( change.Path, path, StringComparison.Ordinal ) ) );

@@ -65,6 +65,10 @@ public static partial class Program
 
         // A signature-invalid PNG is received, rejected after classification, and cannot restart the helper.
         await Send( "large" );
+        // Zero reservations is also true before admission. Wait for this source
+        // to finish before treating that state as classification cleanup.
+        await server.StandardInput.WriteLineAsync( "wait-receive" );
+        Equal( "finished", await server.StandardOutput.ReadLineAsync( token ) );
         await WaitFor( ( ) => ClipboardDatabaseScalar( database, "SELECT count(*) FROM clipboard_payloads WHERE state=0" ) == 0 &&
             ClipboardDatabaseScalar( database, "SELECT count(*) FROM clipboard_payloads WHERE charge>=16777216" ) == 0 );
         var ordinaryRevision = store.ReadDocument( second.Id, second.Incarnation )!.Summary.Revision;

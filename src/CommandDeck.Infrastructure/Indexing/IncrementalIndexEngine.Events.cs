@@ -101,7 +101,11 @@ internal sealed partial class IncrementalIndexEngine
             await _signal.WaitAsync( cancellationToken ).ConfigureAwait( false );
             await DebounceAsync( cancellationToken ).ConfigureAwait( false );
             CommitJournalWindow( );
-            await ProcessPendingAsync( cancellationToken ).ConfigureAwait( false );
+            var batch = CapturePendingBatch( );
+            if ( batch is not null )
+            {
+                await ProcessPendingAsync( batch, cancellationToken ).ConfigureAwait( false );
+            }
         }
     }
 
@@ -146,7 +150,7 @@ internal sealed partial class IncrementalIndexEngine
         }
     }
 
-    private async ValueTask ProcessPendingAsync( CancellationToken cancellationToken )
+    internal PendingIndexBatch? CapturePendingBatch( )
     {
         var batchLimit = Math.Clamp( _options.IncrementalEventBatchLimit, 32, 16_384 );
         var pending = _journal.ReadPending( batchLimit + 1 );
@@ -156,7 +160,7 @@ internal sealed partial class IncrementalIndexEngine
         {
             if ( _pausedUntilFullScan )
             {
-                return;
+                return null;
             }
 
             mustReconcile = _reconciliationRequired;
@@ -174,7 +178,13 @@ internal sealed partial class IncrementalIndexEngine
             mustReconcile = true;
         }
 
-        if ( mustReconcile )
+        return new PendingIndexBatch( pending, mustReconcile );
+    }
+
+    internal async ValueTask ProcessPendingAsync( PendingIndexBatch batch, CancellationToken cancellationToken )
+    {
+        var pending = batch.Events;
+        if ( batch.MustReconcile )
         {
             await ReconcilePendingAsync( cancellationToken ).ConfigureAwait( false );
             return;
@@ -240,4 +250,6 @@ internal sealed partial class IncrementalIndexEngine
             Signal( );
         }
     }
+
+    internal sealed record PendingIndexBatch( IReadOnlyList<IncrementalJournalEvent> Events, bool MustReconcile );
 }
