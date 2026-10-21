@@ -78,6 +78,7 @@ SettingsPanel {
   displaySizePercent: settingsPanel.host.host.displaySizePercent
   displaySizeLegacy: settingsPanel.host.host.part_displayScaleStore.legacy
   displaySizeDescription: settingsPanel.host.displayDescription
+  maximumFittingPercent: settingsPanel.host.maximumFittingPercent
   onDisplaySizePercentSelected: percent => settingsPanel.host.host.applyDisplaySizePercent(percent)
   onDisplaySizeRecommendedRequested: settingsPanel.host.host.part_displayScaleStore.useRecommended()
   compactLayout: settingsPanel.host.host.compactLayout

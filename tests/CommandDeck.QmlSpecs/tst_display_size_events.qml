@@ -16,9 +16,60 @@ Item {
   }
 
   EventPathFixture { id: scene }
+  QtObject {
+    id: displayHost
+    property var part_appTheme: liveTheme
+    property var part_displayScaleStore: QtObject {
+      property bool legacy: false
+      property int legacyPercent: 100
+    }
+    property int displaySizePercent: scene.part_settingsPanel.displaySizePercent
+    property bool settingsOpen: scene.part_settingsPanel.visible
+    property bool extensionManagementOpen: false
+  }
+  CommandDeck.WindowDisplay { id: display; host: displayHost; width: 1440; height: 900 }
+
   EventPathTestCase {
     fixture: scene
     name: "CommandDeck_display_size"
+
+    function test_fitting_limit_feedback_preserves_full_slider_range() {
+      const panel = fixture.part_settingsPanel
+      panel.displaySizeDescription = Qt.binding(function() { return display.description })
+      panel.maximumFittingPercent = Qt.binding(function() { return display.maximumFittingPercent })
+      panel.displaySizePercent = 130
+      panel.visible = true
+      tryCompare(panel.searchControl, "activeFocus", true)
+      typeText("display size")
+      keyClick(Qt.Key_Return)
+      keyClick(Qt.Key_Tab)
+
+      const slider = panel.displaySizeControl.sliderControl
+      const marker = findChild(panel, "displaySizeLimitMarker")
+      tryCompare(slider, "activeFocus", true)
+      compare(panel.maximumFittingPercent, 135)
+      verify(marker.visible && marker.width > 0)
+      verify(slider.Accessible.description.indexOf("maximum that fits this screen: 135%") >= 0)
+      keyClick(Qt.Key_Right)
+      keyClick(Qt.Key_Right)
+      compare(panel.displaySizePercent, 140, "keyboard zoom can exceed the marked limit")
+      verify(findChild(panel, "displaySizeRow").help.indexOf("limited to fit (max 135% on this screen)") >= 0)
+      verify(waitForRendering(slider))
+      mouseClick(slider, slider.width - slider.rightPadding - slider.handle.width / 2, slider.height / 2)
+      compare(panel.displaySizePercent, 150, "the dimmed track still accepts mouse input")
+
+      display.width = 3840
+      display.height = 2160
+      tryCompare(panel, "maximumFittingPercent", 150)
+      verify(!marker.visible)
+      verify(slider.Accessible.description.indexOf("maximum that fits this screen: 150%") >= 0)
+      verify(findChild(panel, "displaySizeRow").help.indexOf("limited to fit") < 0)
+
+      panel.maximumFittingPercent = 150
+      panel.displaySizeDescription = ""
+      display.width = 1440
+      display.height = 900
+    }
 
     function test_display_size_keyboard_data() {
       return [

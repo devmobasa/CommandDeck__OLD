@@ -43,6 +43,7 @@ ScrollView {
       description: "Scale text and controls together. Recommended follows your workspace and Omarchy font settings. Applies immediately."
 
       SettingsRow {
+        objectName: "displaySizeRow"
         theme: customizationScroll.host.theme
         label: "Size"
         help: customizationScroll.host.displaySizeDescription
@@ -55,8 +56,8 @@ ScrollView {
           from: Ui.DisplaySizePercent.Minimum
           to: Ui.DisplaySizePercent.Maximum
           stepSize: Ui.DisplaySizePercent.Step
+          maximumFittingPercent: customizationScroll.host.maximumFittingPercent
           Accessible.name: "Launcher display size"
-          Accessible.description: "75 to 150 percent; 100 is Recommended"
           Component.onCompleted: value = customizationScroll.host.displaySizePercent
           Connections {
             target: customizationScroll.host

@@ -54,7 +54,7 @@ function stepDisplaySize(root, direction) {
   root.applyDisplaySizePercent(next)
   const window = root.presentingWindow
   root.statusText = "Display size: " + displaySizeLabel(next, root.part_displayScaleStore.legacy)
-    + (window ? Sizing.fitDescription(window.displaySizing) : "")
+    + (window ? Sizing.fitDescription(window.launcherSizing, window.maximumFittingPercent) : "")
 }
 
 function invokeShortcut(root, id) {

@@ -35,10 +35,16 @@ QML state files under `$XDG_STATE_HOME/commanddeck/` for overlay-only choices.
 Display size is stored as an integer percentage in `display-size` (75–150% in
 5% steps). **Recommended** selects 100% with sizing based on the presenting
 window's logical workspace and Omarchy fonts. Zoom applies equally to text and
-controls. When space is limited, one fit factor scales them together; Settings
-shows the requested percentage, “limited to fit”, and any narrow or scrolling
-layout without changing the saved value. The backdrop covers the full screen;
-safe margins leave room for the top bar inside it.
+controls. Before scaling down for height, the top margin shrinks only as needed,
+from its usual 12% (at least 54 logical pixels) toward 4% (at least 24); the
+bottom margin stays unchanged. One fit factor then scales text and controls
+together. Settings always describes the launcher, including while Settings is
+open: it shows the requested percentage, “limited to fit” with the largest 5%
+step that fits this screen, and any narrow or scrolling layout. The slider dims
+the track above that maximum while keeping the full 75–150% range and saved
+value. Zoom-key status also names the maximum when limited. The backdrop covers
+the full screen; safe margins keep the launcher toward the top, while Settings
+stays centred.
 
 The separate `display-sizing` file versions this model. Before first opening a
 catalog, the CLI records `logical-v1` for a fresh installation, or `legacy-v1`

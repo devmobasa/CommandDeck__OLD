@@ -205,11 +205,21 @@ disposable Arch install proof, which need the helper installed with `sudo`.
 
 Display sizing has a production-function matrix in `tst_display_sizing.qml`:
 every 5% zoom step, font scales 0.8–2, laptops/desktops, equivalent logical
-workspaces, ultrawide, portrait, 720p, and constrained fallbacks. Window/theme
-tests cover full-strength text zoom and requested values surviving geometry
-changes; real-event tests cover dragging during live resizing and reset focus.
-The production-host journey verifies that another monitor gaining focus cannot
-resize the presenting window.
+workspaces, ultrawide, portrait, 720p, and constrained fallbacks. It checks the
+maximum fitting 5% step, font-size monotonicity, and top-inset adaptation before
+scaling down, preserving fitting standard and narrow layouts unchanged. The
+2304×1296 legacy case with a 14-pixel Omarchy font fits through 110%: the top inset
+can shrink from 156 to 52 pixels, increasing available height from 1075 to 1179
+pixels; the bottom inset stays at 65 pixels.
+
+Window/theme tests cover full-strength text zoom, requested values surviving
+geometry changes, and launcher descriptions/maximums while Settings is open.
+Real-event tests cover dragging during live resizing, reset focus, the dimmed
+track above the maximum, accessible limit text, and keyboard/mouse selection
+through the full range. The production-host journey measures the existing work
+area before adding its 48-pixel exclusive zone, so desktops with existing bars
+and desktops without reservations both check the extra reservation. It also
+verifies that another monitor gaining focus cannot resize the presenting window.
 
 Render the shared production calculation and controls across logical geometry
 and raster-density combinations with:

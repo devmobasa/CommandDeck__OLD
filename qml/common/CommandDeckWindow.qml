@@ -25,6 +25,8 @@ PanelWindow {
   readonly property alias part_appTheme: display.theme
   readonly property alias part_settingsTheme: display.theme
   readonly property alias displaySizing: display.sizing
+  readonly property alias launcherSizing: display.launcher
+  readonly property alias maximumFittingPercent: display.maximumFittingPercent
   readonly property bool narrow: display.sizing.narrow
   readonly property string displayDescription: display.description
 

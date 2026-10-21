@@ -228,6 +228,7 @@ FocusScope {
   property int displaySizePercent: Ui.DisplaySizePercent.Default
   property bool displaySizeLegacy: false
   property string displaySizeDescription: ""
+  property int maximumFittingPercent: Ui.DisplaySizePercent.Maximum
   // Compact layout (QML-only, persisted outside the daemon snapshot).
   property bool compactLayout: false
   property bool previewPaneVisible: true

@@ -21,6 +21,7 @@ Item {
   property int originalDebounce: 0
   property var originalSizing: null
   property var originalScreens: []
+  property int baselineWorkAreaHeight: 0
 
   // A real exclusive zone, plus a non-exclusive witness that confirms the
   // compositor applied it before we inspect the launcher's full-screen scrim.
@@ -37,7 +38,7 @@ Item {
   }
   PanelWindow {
     id: workArea
-    visible: reservedBar.visible
+    visible: false
     screen: reservedBar.screen
     anchors { top: true; bottom: true; left: true; right: true }
     exclusionMode: ExclusionMode.Normal
@@ -159,13 +160,24 @@ Item {
     deck.reconciliationPending = false
     host.expect(!deck.opened && !deck.testSurfaceWindow.part_searchBar.placeholderRotating,
       "a closed launcher leaves its search placeholder timer stopped")
-    reservedBar.visible = true
-    deck.open("{}")
+    workArea.visible = true
 
     steps = [
       {
+        ready: () => workArea.backingWindowVisible && workArea.width === reservedBar.screen.width
+          && workArea.height > 48,
+        message: "the work-area witness is configured before adding an exclusive zone",
+        action: () => {
+          baselineWorkAreaHeight = workArea.height
+          host.expect(baselineWorkAreaHeight <= reservedBar.screen.height,
+            "the baseline work area respects existing desktop reservations")
+          reservedBar.visible = true
+          deck.open("{}")
+        }
+      },
+      {
         ready: () => deck.testSurfaceWindow !== null && deck.testSearchInput.activeFocus
-          && workArea.height === reservedBar.screen.height - 48,
+          && workArea.height === baselineWorkAreaHeight - 48,
         message: "window sizing is ready before another monitor receives focus",
         action: () => {
           host.expect(deck.testSurfaceWindow.height === reservedBar.screen.height
@@ -176,11 +188,11 @@ Item {
           deck.applyDisplaySizePercent(105)
           host.part_hostEvents.keyClick(Qt.Key_Equal, Qt.ControlModifier)
           host.expect(deck.displaySizePercent === 115
-              && /^Display size: 115%(; limited to fit)?(; narrow layout)?(; scroll to view)?$/.test(deck.statusText),
+              && /^Display size: 115%(; limited to fit \(max \d+% here\))?(; narrow layout)?(; scroll to view)?$/.test(deck.statusText),
             "real zoom keys keep the concise percentage status in a presenting window")
           host.part_hostEvents.keyClick(Qt.Key_0, Qt.ControlModifier)
           host.expect(deck.displaySizePercent === 100
-              && /^Display size: 100% \(Recommended\)(; limited to fit)?(; narrow layout)?(; scroll to view)?$/.test(deck.statusText),
+              && /^Display size: 100% \(Recommended\)(; limited to fit \(max \d+% here\))?(; narrow layout)?(; scroll to view)?$/.test(deck.statusText),
             "real zoom reset keys identify Recommended in a presenting window")
           const store = deck.part_displayScaleStore
           store.legacy = true
@@ -188,7 +200,7 @@ Item {
           deck.applyDisplaySizePercent(125)
           host.part_hostEvents.keyClick(Qt.Key_0, Qt.ControlModifier)
           host.expect(deck.displaySizePercent === 100 && store.legacy && store.legacyPercent === 115
-              && /^Display size: 100%(; limited to fit)?(; narrow layout)?(; scroll to view)?$/.test(deck.statusText),
+              && /^Display size: 100%(; limited to fit \(max \d+% here\))?(; narrow layout)?(; scroll to view)?$/.test(deck.statusText),
             "Ctrl+0 resets only the percentage and preserves the previous sizing profile")
           store.useRecommended()
           originalSizing = deck.testSurfaceWindow.displaySizing
@@ -535,6 +547,7 @@ Item {
     stepTimer.stop()
     deliveryTimer.stop()
     reservedBar.visible = false
+    workArea.visible = false
     savedShortcuts.restore()
     deck.close()
     deck.part_searchSession.debounce.interval = originalDebounce

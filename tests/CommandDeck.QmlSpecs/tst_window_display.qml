@@ -1,6 +1,7 @@
 import QtQuick
 import QtTest
 import "../../qml/common" as Deck
+import "../../qml/common/DeckDisplayActions.js" as DisplayActions
 
 Item {
   Deck.Theme { id: source; loadShellTokens: false }
@@ -12,6 +13,13 @@ Item {
     property int displaySizePercent: 100
     property bool settingsOpen: false
     property bool extensionManagementOpen: false
+    property string statusText: ""
+    property var presentingWindow: QtObject {
+      readonly property alias launcherSizing: laptop.launcher
+      readonly property alias displaySizing: laptop.sizing
+      readonly property alias maximumFittingPercent: laptop.maximumFittingPercent
+    }
+    function applyDisplaySizePercent(percent) { displaySizePercent = percent }
   }
   Deck.WindowDisplay { id: primary; host: host; width: 2304; height: 1296; legacyHeight: 2160 }
   Deck.WindowDisplay { id: laptop; host: host; width: 1440; height: 900; legacyHeight: 1800 }
@@ -24,6 +32,12 @@ Item {
       host.extensionManagementOpen = false
       store.legacy = false
       host.displaySizePercent = 100
+      primary.width = 2304
+      primary.height = 1296
+      laptop.width = 1440
+      laptop.height = 900
+      tryCompare(primary, "configuredSize", Qt.size(2304, 1296))
+      tryCompare(laptop, "configuredSize", Qt.size(1440, 900))
     }
 
     function test_metrics_use_each_windows_logical_geometry() {
@@ -31,7 +45,7 @@ Item {
       verify(primary.theme.fontBody >= 12 && primary.theme.fontBody <= 15)
       const original = primary.sizing
       laptop.width = 1280
-      laptop.height = 720
+      laptop.height = 400
       compare(primary.sizing, original)
       tryVerify(function() { return laptop.sizing.limited })
       laptop.width = 1440
@@ -66,6 +80,28 @@ Item {
       verify(primary.description.indexOf("Recommended") < 0)
     }
 
+    function test_description_and_maximum_follow_launcher_while_settings_is_open() {
+      primary.width = 1920
+      primary.height = 1080
+      tryCompare(primary, "configuredSize", Qt.size(1920, 1080))
+      host.displaySizePercent = 150
+      verify(!primary.launcher.limited)
+      const description = primary.description
+      compare(primary.maximumFittingPercent, 150)
+      for (const surface of ["settingsOpen", "extensionManagementOpen"]) {
+        host[surface] = true
+        verify(primary.sizing.limited, "the larger Settings surface needs a different fit")
+        compare(primary.description, description)
+        compare(primary.maximumFittingPercent, 150)
+        host[surface] = false
+      }
+
+      host.settingsOpen = true
+      host.displaySizePercent = 150
+      compare(laptop.maximumFittingPercent, 135)
+      verify(laptop.description.indexOf("limited to fit (max 135% on this screen)") >= 0)
+    }
+
     function test_narrow_and_scrolling_layouts_are_explained() {
       laptop.width = 720
       laptop.height = 900
@@ -78,6 +114,16 @@ Item {
       verify(laptop.description.indexOf("scroll to view") >= 0)
       laptop.width = 1440
       laptop.height = 900
+    }
+
+    function test_zoom_status_reports_launcher_limit_while_settings_is_open() {
+      host.settingsOpen = true
+      host.displaySizePercent = 120
+      DisplayActions.stepDisplaySize(host, 1)
+      compare(host.statusText, "Display size: 130%")
+      verify(laptop.settings.limited && !laptop.launcher.limited)
+      DisplayActions.stepDisplaySize(host, 1)
+      compare(host.statusText, "Display size: 140%; limited to fit (max 135% here)")
     }
 
   }
