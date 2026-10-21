@@ -25,6 +25,8 @@ namespace CommandDeck;
 [JsonSerializable( typeof( PrivacyOptions ) )]
 [JsonSerializable( typeof( UiOptions ) )]
 [JsonSerializable( typeof( QuicklinkOptions ) )]
+[JsonSerializable( typeof( QuicklinkEntry ) )]
+[JsonSerializable( typeof( QuicklinksResult ) )]
 [JsonSerializable( typeof( WebEngineOptions ) )]
 [JsonSerializable( typeof( CustomCommandOptions ) )]
 [JsonSerializable( typeof( AiOptions ) )]

@@ -7,6 +7,7 @@ public static partial class Program
 {
     private static async Task RunCliRegistrationsAsync( )
     {
+        await RunAsync( "quicklinks CLI adds edits lists validates and removes durable links", QuicklinkCliManagesDurableStateAsync );
         await RunAsync( "picker emits only selected values and honors cancellation", PickerReturnsOnlyTheSelectedValueAsync );
         await RunAsync(
             "picker build and installer deliver every relative QML dependency",

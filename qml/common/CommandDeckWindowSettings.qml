@@ -22,6 +22,7 @@ SettingsPanel {
   }
   theme: settingsPanel.host.part_settingsTheme
   snapshot: settingsPanel.host.host.settingsSnapshot
+  quicklinksController: settingsPanel.host.host.part_quicklinksController
   fallbackQuicklinks: settingsPanel.host.host.fallbackQuicklinks
   sourceDescriptors: settingsPanel.host.host.sourceDescriptors
   filterDescriptors: settingsPanel.host.host.filterDescriptors

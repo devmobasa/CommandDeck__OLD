@@ -22,20 +22,7 @@ public static class ConfigurationValidator
         {
             throw new InvalidOperationException( "quicklinks must be an array." );
         }
-        HashSet<string> quicklinkIds = new( StringComparer.OrdinalIgnoreCase );
-        foreach ( var quicklink in options.Quicklinks )
-        {
-            if ( quicklink is null )
-            {
-                throw new InvalidOperationException( "quicklinks must contain valid objects." );
-            }
-            ValidateIdentifier( quicklink.Id, "Quicklink ID" );
-            if ( !quicklinkIds.Add( quicklink.Id ) )
-            {
-                throw new InvalidOperationException(
-                    $"Quicklink ID '{quicklink.Id}' is configured more than once." );
-            }
-        }
+        QuicklinkValidator.ValidateUnique( options.Quicklinks );
         ValidateWebEngines( options.Search?.WebEngines );
         ValidateProjects( options.Projects );
         if ( options.ClipboardHistory is null || options.ClipboardHistory.MaximumEntries is < 10 or > 1000 ||

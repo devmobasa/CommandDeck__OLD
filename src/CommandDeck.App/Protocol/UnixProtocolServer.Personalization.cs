@@ -87,6 +87,9 @@ public sealed partial class UnixProtocolServer
             ProtocolOperations.QueryHistoryReset => await ResetQueryHistoryAsync(
                 request,
                 cancellationToken ).ConfigureAwait( false ),
+            ProtocolOperations.QuicklinksGet or ProtocolOperations.QuicklinksSave or ProtocolOperations.QuicklinksRemove or
+                ProtocolOperations.QuicklinksDisable or ProtocolOperations.QuicklinksEnable =>
+                await HandleQuicklinksAsync( request, cancellationToken ).ConfigureAwait( false ),
             ProtocolOperations.SavedSearchGet => new ProtocolMessage
             {
                 RequestId = request.RequestId,

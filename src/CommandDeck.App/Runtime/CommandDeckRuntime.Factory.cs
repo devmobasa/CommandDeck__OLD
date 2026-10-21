@@ -31,6 +31,8 @@ public sealed partial class CommandDeckRuntime
                 resources.Own( catalog );
                 await catalog.InitializeAsync( cancellationToken ).ConfigureAwait( false );
 
+                await catalog.ConfigureQuicklinksAsync( options.Quicklinks, cancellationToken ).ConfigureAwait( false );
+
                 var extensions = await ExtensionPackageRegistry.OpenAsync( catalog,
                     new ExtensionArtifactStore( PathExpansion.Expand( options.Storage.DatabasePath ) + ".extensions" ), cancellationToken ).ConfigureAwait( false );
                 resources.OwnDisposable( extensions );

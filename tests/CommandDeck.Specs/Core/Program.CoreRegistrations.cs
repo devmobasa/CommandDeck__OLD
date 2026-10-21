@@ -4,6 +4,7 @@ public static partial class Program
 {
     private static async Task RunCoreRegistrationsAsync( )
     {
+        Run( "quicklinks configuration and management share validation and placeholder rules", QuicklinkValidationMatchesConfiguration );
         await RunAsync( "display sizing CLI chooses its profile before creating a fresh catalog",
             DisplaySizingCliMigratesBeforeCatalogCreationAsync );
         await RunAsync( "display sizing migration distinguishes fresh installs from existing default users",

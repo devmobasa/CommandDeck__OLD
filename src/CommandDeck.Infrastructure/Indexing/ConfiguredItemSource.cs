@@ -26,23 +26,7 @@ public sealed class ConfiguredItemSource
         foreach ( var link in _options.Quicklinks )
         {
             cancellationToken.ThrowIfCancellationRequested( );
-            yield return new IndexedItem
-            {
-                StableId = $"quicklink:{link.Id}",
-                Kind = ResultKinds.Quicklink,
-                Title = link.Title,
-                Subtitle = string.IsNullOrWhiteSpace( link.Alias )
-                    ? link.UrlTemplate
-                    : $"{link.Alias} · {link.UrlTemplate}",
-                Icon = link.Icon ?? "internet-web-browser",
-                Body = $"{link.Alias} {link.UrlTemplate}",
-                PayloadJson = System.Text.Json.JsonSerializer.Serialize(
-                    new UrlActionPayload( link.UrlTemplate, link.Alias ).ToArguments( ),
-                    CommandDeckJsonContext.Default.DictionaryStringString ),
-                ProviderId = ProviderIds.Quicklinks
-                ,
-                SourceId = SourceIds.CommandsQuicklinks
-            };
+            yield return CreateQuicklinkItem( link );
         }
 
         foreach ( var command in _options.Commands )
@@ -68,4 +52,25 @@ public sealed class ConfiguredItemSource
             };
         }
     }
+
+    public static IndexedItem CreateQuicklinkItem( QuicklinkOptions link )
+    {
+        return new IndexedItem
+        {
+            StableId = $"quicklink:{link.Id}",
+            Kind = ResultKinds.Quicklink,
+            Title = link.Title,
+            Subtitle = string.IsNullOrWhiteSpace( link.Alias )
+                ? link.UrlTemplate
+                : $"{link.Alias} · {link.UrlTemplate}",
+            Icon = link.Icon ?? "internet-web-browser",
+            Body = $"{link.Alias} {link.UrlTemplate}",
+            PayloadJson = System.Text.Json.JsonSerializer.Serialize(
+                new UrlActionPayload( link.UrlTemplate, link.Alias ).ToArguments( ),
+                CommandDeckJsonContext.Default.DictionaryStringString ),
+            ProviderId = ProviderIds.Quicklinks,
+            SourceId = SourceIds.CommandsQuicklinks
+        };
+    }
+
 }

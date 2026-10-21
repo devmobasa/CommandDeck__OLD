@@ -97,6 +97,11 @@ Generated from Core protocol constants and registries. Run `scripts/generate-pro
 - `preferences.update`
 - `preview`
 - `privacy.audit`
+- `quicklinks.disable`
+- `quicklinks.enable`
+- `quicklinks.get`
+- `quicklinks.remove`
+- `quicklinks.save`
 - `reindex`
 - `saved-search.delete`
 - `saved-search.get`
@@ -152,6 +157,7 @@ Generated from Core protocol constants and registries. Run `scripts/generate-pro
 - `privacy-audit-result`
 - `progress`
 - `query-history-result`
+- `quicklinks-result`
 - `result`
 - `saved-search-result`
 - `status`
@@ -218,6 +224,8 @@ Generated from Core protocol constants and registries. Run `scripts/generate-pro
 - `PreviewId`
 - `ProviderId`
 - `Query`
+- `Quicklink`
+- `QuicklinkId`
 - `ReasoningEffort`
 - `Refresh`
 - `RequestId`
@@ -284,6 +292,7 @@ Generated from Core protocol constants and registries. Run `scripts/generate-pro
 - `PrivacyAudit`
 - `Progress`
 - `QueryHistory`
+- `Quicklinks`
 - `ReindexReport`
 - `RequestId`
 - `Result`

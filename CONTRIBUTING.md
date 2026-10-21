@@ -59,7 +59,8 @@ After changing protocol or filter contracts:
 ./scripts/generate-protocol-contract.sh
 ```
 
-After changing configuration options or capability descriptions:
+After changing configuration options, capability descriptions, or quicklink
+validation messages and reserved aliases:
 
 ```bash
 ./scripts/generate-reference-docs.sh

@@ -108,7 +108,7 @@ public static partial class Program
                     {
                         Id = "web",
                         Title = "Web Search",
-                        Alias = "web",
+                        Alias = "webdocs",
                         UrlTemplate = "https://example.test/search?q={query}"
                     }
                 ],
@@ -202,6 +202,7 @@ public static partial class Program
                     database,
                     timeout.Token );
                 await VerifyQueryHistoryProtocolAsync( client, runtime, timeout.Token );
+                await VerifyQuicklinksProtocolAsync( client, timeout.Token );
                 await VerifyFilterAliasProtocolAsync( client, timeout.Token );
                 await VerifySavedSearchProtocolAsync( client, timeout.Token );
                 await VerifySuggestionsProtocolAsync( client, timeout.Token );

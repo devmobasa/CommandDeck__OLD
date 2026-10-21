@@ -640,16 +640,61 @@ Bindings are applied in Hyprland config, not automatically by the daemon.
 }
 ```
 
-`{query}` is URL encoded. An alias is indexed and stripped from the submitted
-query when used at the beginning.
+Manage quicklinks in **Settings > Search > Quicklinks**, or from the CLI:
 
-Quicklink IDs use 1–64 ASCII letters, digits, dots, underscores, or hyphens,
-start with a letter or digit, and are unique case-insensitively. Invalid IDs
-are rejected when configuration is loaded, before they can be persisted as a
-fallback preference or rendered by the CLI.
+```bash
+commanddeck quicklinks
+commanddeck quicklinks add --title "Search docs" --url 'https://example.org/search?q={query}' --alias docs --icon help-browser
+commanddeck quicklinks edit USER_ID --title "Updated docs" --url 'https://example.org/?q={query}'
+commanddeck quicklinks remove USER_ID
+commanddeck quicklinks disable CONFIGURED_ID
+commanddeck quicklinks enable CONFIGURED_ID
+commanddeck quicklinks --json
+commanddeck preferences export > backup.json
+commanddeck quicklinks restore backup.json
+```
 
-Use HTTPS. A URL template is trusted config and can direct queries to a remote
-service; document sensitive quicklinks accordingly.
+Settings shows a source chip for each row. User quicklinks can be edited or
+removed; configured ones can be disabled or enabled without changing the config
+file. Settings confirms removal, shows validation errors inline, and previews
+the URL using an editable sample query. Add and Edit focus the title field;
+Tab moves through the form, Enter saves, and Escape cancels. Up and Down move
+between list actions. Changes apply immediately to search, aliases, and the web
+fallback choices. Refresh reloads changes made by another client.
+
+User quicklinks and disabled configured IDs are stored in SQLite, separately
+from the rebuildable index. The effective list contains enabled configured
+quicklinks and user quicklinks. At most 100 user quicklinks are supported.
+Configured IDs and aliases stay reserved even while disabled. A configuration
+change that conflicts with stored user quicklinks reports the same duplicate
+error; remove or rename the user quicklink before applying that configuration.
+Removing or disabling the selected fallback resets it to the default, **None**,
+and reports that reset. It leaves other preferences intact.
+
+`preferences export` includes portable user quicklinks (including creation times)
+and disabled configured IDs. `quicklinks restore BACKUP.json` replaces that
+quicklink state and its web fallback choice atomically, validates collisions
+against the current configuration and aliases, and leaves other preferences
+intact. If the saved fallback is unavailable, restore selects **None** and reports
+it. `preferences reset --yes` clears user quicklinks and exclusions and restores
+the configured search projection in the same transaction.
+
+Both configuration and management use the same validation and error messages:
+IDs use 1–64 ASCII letters, digits, dots, underscores, or hyphens and start with
+a letter or digit. IDs and aliases are unique case-insensitively. Quicklink,
+bookmark, and filter aliases share a namespace; built-in launcher tokens are
+reserved. Titles use
+1–64 characters, URL templates 1–2048, and optional icons 1–256; controls are
+rejected. Optional aliases use 1–32 ASCII letters, digits, dots, underscores,
+or hyphens and start with a letter or digit. URLs must be absolute HTTP or
+HTTPS URLs without credentials. Use HTTPS for remote services.
+
+`{query}` placeholders are case-insensitive, may appear more than once, and are
+replaced with URL-encoded search text. Other brace placeholders are rejected.
+A URL without a placeholder opens as a fixed link. An alias at the beginning
+of the query selects the quicklink and is stripped before URL expansion.
+Preview and search do not connect to the destination; invocation opens it in
+the browser. Review destinations before sending sensitive query text.
 
 ## `commands`
 

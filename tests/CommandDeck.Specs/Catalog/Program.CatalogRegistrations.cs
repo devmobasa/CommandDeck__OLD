@@ -4,6 +4,13 @@ public static partial class Program
 {
     private static async Task RunCatalogRegistrationsAsync( )
     {
+        await RunAsync( "quicklinks alias lookup work is independent of unrelated catalog rows", QuicklinkAliasLookupWorkIsBoundedAsync );
+        await RunAsync( "quicklinks aliases respect filtered and disabled sources", QuicklinkAliasesRespectSourceEligibilityAsync );
+        await RunAsync( "quicklinks aliases share bookmark filter and reserved namespaces", QuicklinkAliasesShareNamespacesAsync );
+        await RunAsync( "quicklinks export restore and reset preserve portable state atomically", QuicklinkExportAndResetAsync );
+        await RunAsync( "quicklinks migration upgrades existing catalogs beside independent preferences", QuicklinkMigrationPreservesExistingStateAsync );
+        await RunAsync( "quicklinks storage atomically updates search aliases preferences and survives reopening", QuicklinkStorageIsAtomicAndPersistentAsync );
+        await RunAsync( "quicklinks generation publication cannot restore stale rows", QuicklinkGenerationCannotRestoreStaleRowsAsync );
         await RunAsync( "an old catalog cancellation token cannot interrupt a later pooled borrower",
             OldCatalogTokenCannotInterruptLaterBorrowerAsync );
         await RunAsync( "home query probes items by stable id instead of scanning the catalog",

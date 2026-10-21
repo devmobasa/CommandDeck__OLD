@@ -4,6 +4,7 @@ public static partial class Program
 {
     private static async Task RunFeatureRegistrationsAsync( )
     {
+        await RunAsync( "quicklinks runtime updates search aliases fallback choices and external edits without restart", QuicklinkRuntimeChangesSearchAndFallbackAsync );
         await RunAsync( "copy action preserves empty whitespace and literal stdin but rejects missing payloads", CopyActionPreservesEmptyAndLiteralStdinAsync );
         await RunAsync( "URL action preserves alias stripping and escaped literal argv", UrlActionPreservesAliasAndEscapedArgvAsync );
         await RunAsync( "application argument actions preserve hidden state and declared inputs", ApplicationArgumentsPreserveHiddenInputsAsync );

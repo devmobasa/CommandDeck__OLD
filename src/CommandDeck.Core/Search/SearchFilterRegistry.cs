@@ -45,7 +45,10 @@ public static class SearchFilterRegistry
                 value.Aliases.Contains( token, StringComparer.OrdinalIgnoreCase ) ),
             StringComparer.OrdinalIgnoreCase );
 
+    private static readonly string[] ReservedKeywords = ["home", "settings"];
+
     public static IReadOnlyList<FilterDescriptor> All => Descriptors;
+    public static IReadOnlyList<string> ReservedAliases { get; } = ByToken.Keys.Concat( ReservedKeywords ).ToArray( );
 
     public static FilterDescriptor? FindById( string? id ) =>
         !string.IsNullOrWhiteSpace( id ) && ById.TryGetValue( id, out var value )
@@ -60,8 +63,7 @@ public static class SearchFilterRegistry
 
     public static bool IsReserved( string value ) =>
         FindByToken( value ) is not null ||
-        value.Equals( "home", StringComparison.OrdinalIgnoreCase ) ||
-        value.Equals( "settings", StringComparison.OrdinalIgnoreCase );
+        ReservedKeywords.Contains( value, StringComparer.OrdinalIgnoreCase );
 
     public static bool Matches( FilterDescriptor filter, SearchResult result ) =>
         string.Equals( filter.SourceId, result.SourceId, StringComparison.Ordinal ) &&

@@ -4,6 +4,7 @@
 .import "DeckHiddenItemActions.js" as DeckHiddenItemActions
 
 function handleMessage(root, message) {
+  if (root.part_quicklinksController && root.part_quicklinksController.handleMessage(message)) return
   // The search streams the most replies, so it is asked first.
   if (root.part_searchSession.handleMessage(message)) return
   if (root.part_clipboardController.handleMessage(message)) return

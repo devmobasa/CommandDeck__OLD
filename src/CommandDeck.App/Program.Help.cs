@@ -50,6 +50,7 @@ public static partial class Program
               commanddeck history export
               commanddeck history delete ID --yes
               commanddeck history reset --yes
+              commanddeck quicklinks [list|add|edit|remove|disable|enable|restore]  Manage quicklinks (add/edit: --title --url [--alias --icon])
               commanddeck filters list [--json]
               commanddeck filters alias set TOKEN FILTER_ID
               commanddeck filters alias remove TOKEN
@@ -76,7 +77,7 @@ public static partial class Program
               oma: theme              Omarchy controls
               system:                 native Omarchy System Menu route
               cmd: cleanup             configured commands
-              link: arch               configured quicklinks
+              link: arch               configured and user quicklinks
               ai: explain this        explicit AI command or assistant conversation
               codex: fix my config    assistant conversation with Codex
               = (19.99 * 1.2) + 4.5  calculator

@@ -199,6 +199,11 @@ internal sealed partial class SqliteLauncherPreferenceStore
         await using var transaction =
             ( SqliteTransaction ) await connection.BeginTransactionAsync( cancellationToken ).ConfigureAwait( false );
 
+        if ( preferences.WebFallbackQuicklinkId is not null && ValidateFallback is not null )
+        {
+            await ValidateFallback( connection, transaction, preferences.WebFallbackQuicklinkId, cancellationToken ).ConfigureAwait( false );
+        }
+
         var clipboardShortcut = ClipboardShortcut.Parse( preferences.ClipboardHistoryShortcut );
         await EnsureClipboardShortcutAvailableAsync( connection, transaction, clipboardShortcut, cancellationToken ).ConfigureAwait( false );
         await UpsertLauncherPreferenceAsync( connection, transaction, "clipboard_history_shortcut", clipboardShortcut, now,

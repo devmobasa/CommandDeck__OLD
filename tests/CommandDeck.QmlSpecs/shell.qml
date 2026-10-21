@@ -8,6 +8,7 @@ ShellRoot {
   id: root
   readonly property alias part_host: host
   readonly property alias slice2Filters: discovery.slice2Filters
+  QuicklinkAssertions { id: quicklinkAssertions; host: root }
   LauncherProtocolAssertions { id: stage0; host: root }
   PreferenceRecoveryAssertions { id: stage1; host: root }
   AssistantRoutingAssertions { id: stage2; host: root }
@@ -590,6 +591,7 @@ ShellRoot {
     stage5.run(context)
     stage6.run(context)
     stage7.run(context)
+    quicklinkAssertions.run()
     resultListAssertions.run()
     bridgeBackoff.start()
     displayStoreAssertions.start()

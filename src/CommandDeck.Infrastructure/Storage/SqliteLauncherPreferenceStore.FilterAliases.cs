@@ -70,6 +70,8 @@ internal sealed partial class SqliteLauncherPreferenceStore
         }
         else
         {
+            await SqliteCatalog.EnsureAliasAvailableAsync( connection, transaction, normalizedAlias, "filter", null,
+                _configuredQuicklinks( ), cancellationToken ).ConfigureAwait( false );
             await EnsureFilterAliasCapacityAsync(
                 connection,
                 transaction,

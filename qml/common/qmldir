@@ -112,6 +112,8 @@ SearchSessionController 1.0 SearchSessionController.qml
 SearchRetentionController 1.0 SearchRetentionController.qml
 QueryHistorySurface 1.0 QueryHistorySurface.qml
 QueryRecallController 1.0 QueryRecallController.qml
+QuicklinkEditor 1.0 QuicklinkEditor.qml
+QuicklinksController 1.0 QuicklinksController.qml
 ResultIcon 1.0 ResultIcon.qml
 ResultListDelegate 1.0 ResultListDelegate.qml
 ResultModelController 1.0 ResultModelController.qml
@@ -141,6 +143,7 @@ SettingsNumber 1.0 SettingsNumber.qml
 SettingsPageHost 1.0 SettingsPageHost.qml
 SettingsPanel 1.0 SettingsPanel.qml
 SettingsPanelState 1.0 SettingsPanelState.qml
+SettingsQuicklinksCard 1.0 SettingsQuicklinksCard.qml
 SettingsRow 1.0 SettingsRow.qml
 SettingsSearchPage 1.0 SettingsSearchPage.qml
 SettingsShortcutsPage 1.0 SettingsShortcutsPage.qml

@@ -358,7 +358,8 @@ public sealed partial class SqliteCatalog
                      FROM json_each(CASE WHEN json_valid(index_policy_json) THEN index_policy_json END)
                     WHERE json_extract(value, '$.field') = 'metadata'
                       AND json_extract(value, '$.included') = 0);
-            """)
+            """),
+        QuicklinksMigration
     ];
 
     // Activation replaces the search projection by recreating it, which frees

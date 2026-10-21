@@ -108,6 +108,12 @@ public sealed partial class SqliteCatalog
             workItemSnapshot,
             cancellationToken ).ConfigureAwait( false );
 
+        if ( _configuredQuicklinks is not null )
+        {
+            var quicklinks = await ReadQuicklinksAsync( connection, transaction, null, cancellationToken ).ConfigureAwait( false );
+            await PublishQuicklinksAsync( connection, transaction, quicklinks.Quicklinks, cancellationToken ).ConfigureAwait( false );
+        }
+
         await using ( var optimize = connection.CreateCommand( ) )
         {
             optimize.Transaction = transaction;

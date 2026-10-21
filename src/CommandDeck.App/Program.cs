@@ -83,12 +83,12 @@ public static partial class Program
         await using var runtime =
             await CommandDeckRuntime.CreateAsync(
                 configPath,
-                new RuntimeConstructionOptions { StartIndexer = command != CatalogCommand },
+                new RuntimeConstructionOptions { StartIndexer = command is not (CatalogCommand or "quicklinks") },
                 includeClipboardHistory: command is "daemon" or "serve",
                 cancellationToken )
                 .ConfigureAwait( false );
 
-        if ( command is not ("reindex" or CatalogCommand or "index") &&
+        if ( command is not ("reindex" or CatalogCommand or "index" or "quicklinks") &&
             await runtime.Catalog.RequiresReindexAsync( cancellationToken ).ConfigureAwait( false ) )
         {
             AppLog.Info( "Catalog schema changed; rebuilding the index before continuing." );
@@ -137,6 +137,7 @@ public static partial class Program
                 .ConfigureAwait( false ),
             "history" => await RunQueryHistoryAsync( runtime, arguments, cancellationToken )
                 .ConfigureAwait( false ),
+            "quicklinks" => await RunQuicklinksAsync( runtime, arguments, cancellationToken ).ConfigureAwait( false ),
             "filters" => await RunFilterAliasesAsync( runtime, arguments, cancellationToken )
                 .ConfigureAwait( false ),
             "saved-search" => await RunSavedSearchAsync( runtime, arguments, cancellationToken )

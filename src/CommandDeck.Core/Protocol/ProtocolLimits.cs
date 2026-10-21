@@ -116,6 +116,11 @@ public static partial class ProtocolRequestValidator
             ProtocolLimits.MaximumIdentifierCharacters );
         CheckLength( request.CurrentDirectory, nameof( request.CurrentDirectory ), 4 * 1024 );
         CheckLength( request.SelectedProject, nameof( request.SelectedProject ), 4 * 1024 );
+        CheckLength( request.QuicklinkId, "quicklinkId", 64 );
+        if ( request.Quicklink is not null )
+        {
+            QuicklinkValidator.Validate( request.Quicklink );
+        }
         ValidateSavedSearch( request, registry, deferFilterResolution );
     }
 

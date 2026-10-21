@@ -27,6 +27,7 @@ CommandDeckState {
   readonly property alias part_extensionController: extensionController
   readonly property alias part_aiController: aiController
   readonly property alias part_rows: resultRows
+  readonly property alias part_quicklinksController: quicklinksController
   readonly property alias part_personalization: personalization
   readonly property alias part_agentController: agentController
   readonly property alias part_aiFeaturesStore: aiFeaturesStore
@@ -432,6 +433,22 @@ CommandDeckState {
   function invokeAction(result, action, confirmed, inputValues, fromUndo) { return DeckInvocationActions.invokeAction(root, result, action, confirmed, inputValues, fromUndo) }
 
   function handleMessage(message) { return DeckMessageHandling.handleMessage(root, message) }
+
+  QuicklinksController {
+    id: quicklinksController
+    ready: root.part_protocol.ready
+    nextRequestId: function() { return ++root.requestSequence }
+    onRequestReady: request => root.part_protocol.send(request)
+    onChanged: result => {
+      root.fallbackQuicklinks = (result.quicklinks || []).filter(entry => entry.enabled)
+        .map(entry => ({ id: entry.quicklink.id, title: entry.quicklink.title }))
+      if (result.message) root.statusText = result.message
+      if (result.message || (root.launcherPreferences
+          && (root.launcherPreferences.webFallbackQuicklinkId || "") !== (result.webFallbackQuicklinkId || ""))) {
+        root.requestPreferencesSnapshot()
+      }
+    }
+  }
 
   PersonalizationController {
     id: personalization

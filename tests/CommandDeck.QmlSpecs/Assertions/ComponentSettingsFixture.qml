@@ -6,6 +6,13 @@ CommandDeck.SettingsPanel {
   required property var host
 
   id: settings
+  quicklinksController: quicklinks
+  CommandDeck.QuicklinksController {
+    id: quicklinks
+    ready: true
+    property int sequence: 0
+    nextRequestId: function() { return ++sequence }
+  }
   property string removedCustomizationId: ""
   property var savedAiTemplate: null
   property int favoriteReorderDispatches: 0
