@@ -191,6 +191,11 @@ public static partial class Program
             }
         } );
 
+        Run( "desktop Exec program names see through env flatpak and shell launchers", DesktopExecProgramNamesSeeThroughLaunchers );
+        await RunAsync( "applications are found by command name and desktop ID but not by wrapper words",
+            ApplicationsAreFoundByCommandNameAsync );
+        await RunAsync( "replacing applications keeps other rows and refreshes Open With handlers",
+            ReplacingApplicationsKeepsOtherRowsAndRefreshesOpenWithAsync );
         await RunAsync( "desktop scanner applies user masking and desktop visibility", async ( ) =>
         {
             var root = SpecTemporaryFiles.PathFor( $"commanddeck-desktop-spec-{Guid.NewGuid( ):N}" );

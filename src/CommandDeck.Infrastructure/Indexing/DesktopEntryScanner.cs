@@ -55,10 +55,13 @@ public static class DesktopEntryScanner
                     Path = file,
                     Icon = entry.Icon ?? "application-x-executable",
                     StartupWmClass = entry.StartupWmClass,
+                    // The program name and desktop ID are low-weight keywords; the
+                    // full Exec line would match every wrapper word and argument.
                     Body = string.Join(
                         ' ',
                         entry.Keywords
-                            .Append( entry.Exec ?? string.Empty )
+                            .Append( DesktopEntryCommand.ProgramName( entry.Exec ) ?? string.Empty )
+                            .Append( entry.DesktopId[..^".desktop".Length] )
                             .Append( entry.StartupWmClass ?? string.Empty ) ),
                     PayloadJson = PayloadWriter.Create(
                         ("desktopFile", file),
@@ -76,7 +79,7 @@ public static class DesktopEntryScanner
         }
     }
 
-    private static IEnumerable<string> GetApplicationDirectories( )
+    internal static IEnumerable<string> GetApplicationDirectories( )
     {
         var home = Environment.GetFolderPath( Environment.SpecialFolder.UserProfile );
         var dataHome = Environment.GetEnvironmentVariable( "XDG_DATA_HOME" )

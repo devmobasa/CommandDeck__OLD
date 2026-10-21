@@ -12,7 +12,8 @@ QtObject {
   id: root
 
   // Keyed by the canonical filter token so it stays valid as labels change.
-  // The calculator ("=") is not a daemon filter but is offered alongside them.
+  // The calculator ("=") and Run (">") are not daemon filters but are offered
+  // alongside them.
   readonly property var examples: ({
     [Ui.QueryPrefix.App]: "app: firefox",
     [Ui.QueryPrefix.Apps]: "apps: firefox",
@@ -51,7 +52,8 @@ QtObject {
     [Ui.QueryPrefix.Web]: "web: wayland layer shell",
     [Ui.QueryPrefix.Emoji]: "emoji: rocket",
     [Ui.QueryPrefix.EmojiShort]: "e: rocket",
-    [Ui.QueryPrefix.Calculator]: "= 100 km to miles"
+    [Ui.QueryPrefix.Calculator]: "= 100 km to miles",
+    [Ui.QueryPrefix.Run]: "> htop"
   })
 
   // The assistant is offered through a dedicated, prominent affordance, so its
@@ -106,6 +108,15 @@ QtObject {
     hasExample: true
   })
 
+  // Command mode: a program on PATH, with arguments, runs from its first row.
+  readonly property var runEntry: ({
+    id: Ui.FilterTokenKind.Run,
+    token: Ui.QueryPrefix.Run,
+    label: "Run a program",
+    example: root.exampleFor(Ui.QueryPrefix.Run),
+    hasExample: true
+  })
+
   // The teaching grid: the calculator first (not a daemon filter), then every
   // non-assistant filter (the assistant has its own prominent chip).
   // `includeCalculator` lets a caller opt out.
@@ -118,9 +129,9 @@ QtObject {
   }
 
   // The "?" palette lists every filter prefix, including the assistant, with the
-  // calculator offered alongside them.
+  // calculator and Run offered alongside them.
   function paletteEntries(descriptors, includeCalculator) {
-    const derived = root.entries(descriptors)
+    const derived = [root.runEntry].concat(root.entries(descriptors))
     return includeCalculator === false
       ? derived
       : [root.calculatorEntry].concat(derived)

@@ -73,6 +73,7 @@ public sealed partial class IndexCoordinator : IIndexCoordinator
         }
 
         StartOfflineChangeReconciliation( );
+        StartApplicationWatching( );
 
         if ( !_options.Indexing.EnableScheduledMaintenance )
         {
@@ -455,6 +456,7 @@ public sealed partial class IndexCoordinator : IIndexCoordinator
         _disposed = true;
         _lifetime.Cancel( );
         await BackgroundReindex.ConfigureAwait( false );
+        await StopApplicationWatchingAsync( ).ConfigureAwait( false );
         if ( _maintenanceTask is not null )
         {
             try

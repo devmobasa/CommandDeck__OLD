@@ -103,6 +103,26 @@ discard its rows. The coordinator deduplicates both catalog paths by the existin
 stable result ID, keeping the exact-alias copy on a tied score, and still applies
 source privacy gates and result budgets.
 
+Applications also match their program and desktop ID as low-weight keywords
+that are searched but not shown: `gnome-sound-recorder` and
+`org.gnome.SoundRecorder` both find Sound Recorder. The program is the basename
+of the first word of `Exec`, seen through `env` settings, `xdg-terminal-exec`,
+`flatpak run --command=`, and a plain `sh -c` script. A flatpak without
+`--command`, or a script with shell syntax, adds no program keyword. Wrapper
+words and other `Exec` arguments, such as `flatpak`, `env`, or `--branch=stable`,
+are not keywords.
+
+The catalog owner watches the XDG application directories, recursively, and
+replaces the application rows after any change in them, so an installed, upgraded,
+or removed application appears or leaves without a restart. Modification times play
+no part, so a package file with an old timestamp or one renamed into place is
+picked up too. It also rescans them once at start. This needs
+`indexing.indexDesktopApplications` and `indexing.enableIncrementalIndexing`.
+Known limits: an applications directory created or replaced after the daemon
+starts is watched after a restart. A standalone command such as
+`commanddeck search` run while the daemon is stopped can finish before the
+start rescan; start the daemon or run `commanddeck reindex` first.
+
 ## Query algebra and matching
 
 Multiple positive source filters form a union. Positive text clauses intersect.
@@ -140,7 +160,7 @@ a query preserves its expression; clipboard and HEY privacy checks still apply.
 | `ctl:` / `control:` / `controls:` | built-in desktop controls; they also match plain search |
 | `kill:` / `proc:` / `process:` / `processes:` | the user's own processes; plain search offers only a row that opens this list |
 | `=` | calculator |
-| `>` | command-oriented providers |
+| `>` | command mode: a **Run** row for a program on PATH, then command-oriented providers |
 | `@provider` | explicit provider ID |
 
 Field IDs are `title`, `metadata`, `path`, `content`, and `config`. Validated
@@ -167,6 +187,32 @@ history keeps the typed text only when it is on. Manage quicklinks in
 template, edit or remove user quicklinks, and enable or disable configured ones.
 Changes apply immediately to search aliases and web fallback choices. You can
 also define quicklinks in JSONC; see [quicklink configuration and CLI commands](configuration.md#quicklinks).
+
+### Run a program
+
+When the text after `>` starts with a program name found on the daemon's `PATH`,
+or with an absolute path to an executable file, the first row is
+**Run <command line>**. Other command-mode results follow it. A relative path
+such as `./tool`, or `~/bin/tool`, gets no row, and neither does an unknown
+program or a program path that contains `$`. Enter runs the program detached from the launcher, as applications are
+launched: through `uwsm-app`, or `systemd-run --user` without it. Ctrl+K offers
+**Run in Terminal**, the terminal that `Terminal=true` applications use (also
+Ctrl+Enter), and **Copy Command** (also Ctrl+Shift+C). Nothing runs without one of
+these actions on the visible row.
+
+The text is split into arguments without a shell, by the rules of application
+arguments: whitespace separates arguments, and an argument written wholly in
+double quotes, such as `"two words"`, is one argument without the quotes. Quotes
+inside an argument stay literal, and an unterminated quote gives no row. `~`,
+`$VARIABLES`, globs, pipes, redirection, and `&&` are passed as plain text; for
+them, run a shell explicitly, for example `> sh -c "ls | wc -l"`.
+
+The row's ID follows its argument vector, so an invocation runs only the command
+that the row showed. Accepted use is recorded under one fixed ID, never the
+command line; query history keeps the typed text only when it is on. The row
+belongs to the Commands & Quicklinks source: turn that source off to remove it.
+It is an explicit Top Match; with Top Matches off it stays in its source group.
+Assistant tools cannot invoke it.
 
 ## Final score and frequency
 

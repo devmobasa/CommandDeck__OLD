@@ -207,6 +207,13 @@ public static partial class Program
         await RunAsync(
             "desktop controls run literal argv and report tool failures",
             DesktopControlsRunLiteralArgvThroughRunArgvAsync );
+        Run( "run command arguments follow the invocation rules, never a shell", RunCommandArgumentsFollowTheInvocationRules );
+        await RunAsync( "run command row needs a program on PATH or an absolute executable and runs nothing",
+            RunCommandRowNeedsAnExecutableProgramAsync );
+        await RunAsync( "command mode lists the Run row first, keeps its results and denies assistant tools",
+            CommandModeListsTheRunRowFirstAsync );
+        await RunAsync( "run command launches its exact argv detached like an application",
+            RunCommandLaunchesDetachedLikeApplicationsAsync );
         await RunAsync(
             "color picker starts hyprpicker after the launcher closes and reports a missing tool",
             ColorPickerStartsAfterTheLauncherAndReportsAMissingToolAsync );

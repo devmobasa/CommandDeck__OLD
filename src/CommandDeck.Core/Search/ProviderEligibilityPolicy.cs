@@ -54,13 +54,14 @@ public static class ProviderEligibilityPolicy
         if ( query.IsCommandMode )
         {
             return candidates.Where( provider =>
-                provider.Id is ProviderIds.Catalog or ProviderIds.Extensions or ProviderIds.DesktopControls ||
+                provider.Id is ProviderIds.Catalog or ProviderIds.Extensions or ProviderIds.DesktopControls or
+                    ProviderIds.RunCommand ||
                 (liveSourcesEnabled && provider.Id == ProviderIds.Hyprland) );
         }
 
         var applicationsIncluded = IncludesApplications( query );
         return candidates.Where( provider =>
-            provider.Id != ProviderIds.Assistant &&
+            provider.Id is not (ProviderIds.Assistant or ProviderIds.RunCommand) &&
             (applicationsIncluded || provider.Id != SearchCoordinator.ApplicationFastPathProviderId) &&
             (query.HasExplicitFilter || liveSourcesEnabled || provider.Id != ProviderIds.Hyprland) );
     }

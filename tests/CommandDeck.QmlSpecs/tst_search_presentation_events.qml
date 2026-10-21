@@ -127,7 +127,7 @@ EventPathFixture {
       mouseClick(fixture.part_footerActions.prefixesControl)
       waitForCondition(function() { return fixture.part_eventFilterPalette.activeFocus })
       keyClick(Qt.Key_Down)
-      compare(fixture.part_eventFilterPalette.selectedToken(), "app:")
+      compare(fixture.part_eventFilterPalette.selectedToken(), ">")
       keyClick(Qt.Key_Tab)
       verify(fixture.part_eventFilterPalette.activeFocus, "the palette traps focus")
       keyClick(Qt.Key_Escape)

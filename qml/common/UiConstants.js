@@ -50,7 +50,7 @@ var MutationKind = Object.freeze({
   SavedSearch: "saved-search", Reorder: "reorder", Orphan: "orphan", Reset: "reset", Export: "export",
   Hidden: "hidden"
 });
-var FilterTokenKind = Object.freeze({ Prefix: "prefix", Calculator: "calculator" });
+var FilterTokenKind = Object.freeze({ Prefix: "prefix", Calculator: "calculator", Run: "run" });
 var ReservedShortcut = Object.freeze({ Home: "home", Settings: "settings" });
 var FocusReturnControl = Object.freeze({ FooterHelp: "footer-help", FooterPrefixes: "footer-prefixes" });
 var ReasoningEffort = Object.freeze({ Low: "low", Medium: "medium", High: "high", ExtraHigh: "xhigh", Max: "max", Ultra: "ultra" });
@@ -63,7 +63,7 @@ var QueryPrefix = Object.freeze({
   Projects: "proj:", Snippets: "snip:", Scripts: "script:", Clipboard: "clip:", Browse: "browse:",
   Omarchy: "oma:", HerdrTab: "htab:", Command: "cmd:", Quicklink: "link:", Unit: "unit:",
   Timezone: "tz:", Time: "time:", Web: "web:", Emoji: "emoji:", EmojiShort: "e:",
-  Calculator: "="
+  Calculator: "=", Run: ">"
 });
 // Launcher colours: the active Omarchy theme, or CommandDeck's own palette.
 var ColorThemeSource = Object.freeze({ Omarchy: "omarchy", CommandDeck: "commanddeck" });
