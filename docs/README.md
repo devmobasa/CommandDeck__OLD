@@ -5,7 +5,7 @@ Experimental features are labeled in their guides.
 
 ## Use CommandDeck
 
-- [Screenshot gallery: Search, Workflows, and AI](gallery.md)
+- [Screenshot gallery: Search, Workflows, Settings, and AI](gallery.md)
 - [Install, configure the desktop, troubleshoot, and roll back](install.md)
 - [Launcher workflows](launcher-workflows.md)
 - [Search filters and ranking](search-and-ranking.md)

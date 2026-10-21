@@ -46,6 +46,9 @@ sealed partial class GalleryCapture
         new( "assistant", "assistant.qml", 3, ["ai-answer.png", "ai-conversation.png", "ai-history.png", "ai-science.png"] ),
         new( "themes", "themes.qml", 3, ["themes.png"] ),
         new( "demo", "demo.qml", 2, ["demo.gif", "demo.mp4"] ),
+        new( "whats-new", "whats-new.qml", 2, ["whats-new.gif", "whats-new.mp4"] ),
+        new( "settings", "settings.qml", 3,
+            ["settings-display.png", "settings-layout.png", "settings-search.png", "settings-folders.png", "settings-quicklinks.png", "settings-quicklink-edit.png"] ),
         new( "social", "social.qml", 2, ["social-preview.png"] ),
         new( "sizing", "sizing.qml", 1, ["launcher.png", "settings.png", "layout.png", "help.png", "actions.png", "confirmation.png", "extension.png"] )
     ];
@@ -157,8 +160,9 @@ sealed partial class GalleryCapture
                     await FfmpegAsync( CollageArguments( frames, "themes.png" ) );
                     break;
                 case "demo":
+                case "whats-new":
                     await RenderAsync( scene, frames, theme: null );
-                    await EncodeAnimationAsync( frames );
+                    await EncodeAnimationAsync( frames, scene.Name );
                     break;
                 default:
                     await RenderAsync( scene, _output, theme: null );
@@ -203,7 +207,7 @@ sealed partial class GalleryCapture
                 start.Environment["COMMANDDECK_GALLERY_THEME"] = palette.ToJsonString( );
             }
 
-            await RunAsync( start, scene.Name == "demo" ? TimeSpan.FromMinutes( 3 ) : TimeSpan.FromSeconds( 60 ) );
+            await RunAsync( start, scene.Name is "demo" or "whats-new" ? TimeSpan.FromMinutes( 3 ) : TimeSpan.FromSeconds( 60 ) );
         }
         finally
         {
@@ -347,10 +351,12 @@ sealed partial class GalleryCapture
         return [.. arguments];
     }
 
-    // Frames are named frame-<index>-<hold ms>.png by demo.qml.
-    private async Task EncodeAnimationAsync( string frames )
+    // Animation scenes name frames frame-<index>-<hold ms>.png.
+    private async Task EncodeAnimationAsync( string frames, string name )
     {
         var list = new StringBuilder( );
+        var duration = 0.0;
+        var finalDelay = 0;
         string? last = null;
         foreach ( var frame in Directory.EnumerateFiles( frames, "frame-*.png" ).Order( StringComparer.Ordinal ) )
         {
@@ -361,25 +367,29 @@ sealed partial class GalleryCapture
             }
 
             var seconds = int.Parse( hold.Groups[1].Value, CultureInfo.InvariantCulture ) / 1000.0;
+            duration += seconds;
+            finalDelay = ( int ) Math.Round( seconds * 100 );
             list.Append( CultureInfo.InvariantCulture, $"file '{frame}'\nduration {seconds:0.###}\n" );
             last = frame;
         }
 
         if ( last is null )
         {
-            throw new InvalidOperationException( "The demo scene rendered no frames." );
+            throw new InvalidOperationException( $"The {name} scene rendered no frames." );
         }
 
         // The concat demuxer ignores the final duration unless the last file repeats.
         list.Append( CultureInfo.InvariantCulture, $"file '{last}'\n" );
         var manifest = Path.Combine( frames, "frames.txt" );
         await File.WriteAllTextAsync( manifest, list.ToString( ) );
+        var length = duration.ToString( "0.###", CultureInfo.InvariantCulture );
         await FfmpegAsync( ["-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", manifest, "-fps_mode", "vfr",
             "-vf", "scale=1280:-1:flags=lanczos,split[s0][s1];[s0]palettegen=max_colors=96:stats_mode=full[p];[s1][p]paletteuse=dither=none",
-            "-loop", "0", Path.Combine( _output, "demo.gif" )] );
+            "-t", length, "-final_delay", finalDelay.ToString( CultureInfo.InvariantCulture ),
+            "-loop", "0", Path.Combine( _output, name + ".gif" )] );
         await FfmpegAsync( ["-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", manifest,
             "-vf", "fps=30,scale=1920:-2:flags=lanczos", "-c:v", "libx264", "-preset", "slow", "-crf", "22",
-            "-pix_fmt", "yuv420p", "-movflags", "+faststart", Path.Combine( _output, "demo.mp4" )] );
+            "-t", length, "-pix_fmt", "yuv420p", "-movflags", "+faststart", Path.Combine( _output, name + ".mp4" )] );
     }
 
     private static async Task FfmpegAsync( string[] arguments )

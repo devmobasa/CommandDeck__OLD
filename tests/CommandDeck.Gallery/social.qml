@@ -8,8 +8,15 @@ ShellRoot {
 
   DemoStage {
     id: stage
+    logicalWorkspaceSize: Qt.size(1920, 1080)
     filters: Data.filters
     shots: [{ name: "social-preview.png", frame: { width: 640, height: 320 }, caption: "", show: root.showHome }]
+    onShotSaved: {
+      if (stage.panel.requestedWidth > stage.panel.width || stage.panel.requestedHeight > stage.panel.height) {
+        console.error("The social preview must show the complete launcher")
+        Qt.exit(1)
+      }
+    }
 
     Column {
       x: 30
