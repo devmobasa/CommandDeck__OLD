@@ -155,7 +155,7 @@ public static partial class Program
             }
         }
 
-        Console.WriteLine( $"Exclusions:       {inspection.TotalExclusionDiagnosticCount}" );
+        Console.WriteLine( $"Exclusions:       about {inspection.TotalExclusionDiagnosticCount}" );
         foreach ( var diagnostic in inspection.ExclusionDiagnostics )
         {
             var rule = string.IsNullOrWhiteSpace( diagnostic.Rule )

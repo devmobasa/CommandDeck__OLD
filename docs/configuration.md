@@ -567,9 +567,21 @@ incremental indexing disabled, run `commanddeck reindex` to apply file changes;
 a restart alone does not rescan roots.
 Configuration changes require a daemon restart.
 
-`commanddeck catalog inspect` reports skipped paths and matching rules, including
-`generated-directory` and `repository-ignore` reasons. `commanddeck status --json`
-includes `ignoredEventCount` in its incremental status, and scan reports count discovered,
+The index inspector shows an approximate exclusion count.
+`commanddeck catalog inspect` also lists skipped paths and matching rules from the last full scan,
+including `generated-directory` and `repository-ignore` reasons. Each inspection
+checks at most 256 recorded entries and omits path-level exclusions whose
+non-redacted paths no longer exist.
+Root-unavailable entries remain unchanged until a full scan. Existing paths are not
+rechecked against policy. Counts exclude omitted entries in that sample;
+additional stored entries remain counted until checked or rescanned.
+Entries with a root or relative path at the 512-character storage cap remain unchecked because the path may be truncated.
+Private entries have no stored path to check, so they remain unchanged until
+the next full scan or `commanddeck reindex`. New exclusions appear after a scan
+records them.
+
+`commanddeck status --json` includes `ignoredEventCount` in its incremental
+status, and scan reports count discovered,
 indexed, and skipped entries. A pruned directory counts as one skipped entry;
 its contents are not enumerated. Native recursive filesystem watches remain
 registered inside excluded directories; event filtering reduces journal and

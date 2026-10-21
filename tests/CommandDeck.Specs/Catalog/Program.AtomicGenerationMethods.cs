@@ -9,6 +9,7 @@ public static partial class Program
     {
         var root = SpecTemporaryFiles.PathFor( $"commanddeck-generation-{Guid.NewGuid( ):N}" );
         Directory.CreateDirectory( root );
+        await File.WriteAllTextAsync( Path.Combine( root, "excluded.txt" ), "excluded marker" );
         StorageOptions storage = new( )
         {
             DatabasePath = Path.Combine( root, "catalog.db" )
@@ -37,11 +38,11 @@ public static partial class Program
             await catalog.InitializeAsync( CancellationToken.None );
             await catalog.ReplaceGenerationAsync(
                 KnownGood( ),
-                static ( ) =>
+                ( ) =>
                 [
                     new IndexExclusionDiagnostic
                     {
-                        Root = "/known-good",
+                        Root = root,
                         RelativePath = "excluded.txt",
                         Reason = IndexExclusionReasons.RootGlob,
                         Rule = "*.txt"

@@ -133,7 +133,7 @@ FocusScope {
         Layout.fillWidth: true
         text: root.inspection
           ? "Files: Indexed " + root.inspection.stats.itemCount
-            + " · Excluded " + root.inspection.totalExclusionDiagnosticCount
+            + " · Excluded about " + root.inspection.totalExclusionDiagnosticCount
             + " · Failed " + root.countPrefix + root.inspection.failedItemCount
             + " · Stale " + root.countPrefix + root.inspection.staleItemCount
             + " · Pending " + root.countPrefix + root.inspection.pendingItemCount
