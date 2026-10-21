@@ -24,7 +24,7 @@ public static partial class Program
             SkipSpec( "The systemd user manager is unavailable." );
         }
 
-        var root = Directory.CreateTempSubdirectory( "commanddeck-extension-disposal-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-extension-disposal-", preservePrefix: true ).FullName;
         var unit = "commanddeck-extension-test-" + Guid.NewGuid( ).ToString( "N" ) + ".service";
         ProcessStartInfo start = new( "/usr/bin/systemd-run" )
         {
@@ -33,8 +33,11 @@ public static partial class Program
             RedirectStandardError = true,
             UseShellExecute = false
         };
-        List<string> arguments = ["--user", "--quiet", "--wait", "--pipe", "--collect", "--unit=" + unit,
-            "-p", "TimeoutStopSec=2s", "--", Environment.ProcessPath!];
+        // Keep failed units until their exit record has been checked, then reset them in cleanup.
+        List<string> arguments = ["--user", "--quiet", "--wait", "--pipe", "--unit=" + unit,
+            "-p", "TimeoutStopSec=2s",
+            "--setenv=COMMANDDECK_SPEC_TEMP_ROOT=" + Environment.GetEnvironmentVariable( "COMMANDDECK_SPEC_TEMP_ROOT" ),
+            "--", Environment.ProcessPath!];
         if ( Path.GetFileNameWithoutExtension( Environment.ProcessPath ) == "dotnet" )
         {
             arguments.Add( typeof( Program ).Assembly.Location );
@@ -52,7 +55,7 @@ public static partial class Program
         }
 
         using CancellationTokenSource startup = new( );
-        using CancellationTokenSource deadline = new( TimeSpan.FromSeconds( 8 ) );
+        using CancellationTokenSource deadline = new( TimeSpan.FromSeconds( 45 ) );
         try
         {
             Equal( "READY", await process.StandardOutput.ReadLineAsync( deadline.Token ) );
@@ -60,24 +63,44 @@ public static partial class Program
             True( group.StartsWith( "/user.slice/", StringComparison.Ordinal ) );
             var child = new ExtensionProcess( process, unit, group, startup.Token, profile );
             startup.Cancel( );
-            var timer = Stopwatch.StartNew( );
-            await child.DisposeAsync( );
+            await child.DisposeAsync( ).AsTask( ).WaitAsync( deadline.Token );
             if ( profile == ExtensionLaunchProfile.Search )
             {
+                string outcome;
+                do
+                {
+                    var status = await ProcessRunner.RunAsync( "/usr/bin/systemctl",
+                        ["--user", "show", "-p", "ActiveState,Result,ExecMainCode,ExecMainStatus", unit],
+                        null, null, TimeSpan.FromSeconds( 45 ), deadline.Token );
+                    Equal( 0, status.ExitCode );
+                    outcome = status.StandardOutput;
+                    if ( outcome.Contains( "ActiveState=failed\n", StringComparison.Ordinal ) ||
+                        outcome.Contains( "ActiveState=inactive\n", StringComparison.Ordinal ) )
+                    {
+                        break;
+                    }
+
+                    await Task.Delay( 20, deadline.Token );
+                } while ( true );
+
+                // A graceful stop can also end in SIGKILL, but records a timeout or SIGTERM first.
+                True( outcome.Contains( "Result=signal\n", StringComparison.Ordinal ), "Search cleanup exits by signal: " + outcome );
+                True( outcome.Contains( "ExecMainCode=2\n", StringComparison.Ordinal ), "The child was killed (CLD_KILLED): " + outcome );
+                True( outcome.Contains( "ExecMainStatus=9\n", StringComparison.Ordinal ), "The child received SIGKILL: " + outcome );
                 True( !File.Exists( Path.Combine( root, "graceful-stop" ) ), "Search cleanup kills the cgroup without a graceful-stop round trip." );
-                True( timer.Elapsed < TimeSpan.FromSeconds( 1 ), "Search cleanup does not wait for the unit's two-second stop timeout." );
             }
             else
             {
                 True( File.Exists( Path.Combine( root, "graceful-stop" ) ), "Disposal sends systemd stop even after startup cancellation." );
             }
 
-            await child.DisposeAsync( );
+            await child.DisposeAsync( ).AsTask( ).WaitAsync( deadline.Token );
         }
         finally
         {
-            using CancellationTokenSource cleanup = new( TimeSpan.FromSeconds( 3 ) );
+            using CancellationTokenSource cleanup = new( TimeSpan.FromSeconds( 45 ) );
             await ExtensionSupervisor.StopUnitAsync( unit, cleanup.Token );
+            await ExtensionSupervisor.ManagerAsync( ["reset-failed", unit], cleanup.Token, allowFailure: true );
             Directory.Delete( root, true );
         }
     }

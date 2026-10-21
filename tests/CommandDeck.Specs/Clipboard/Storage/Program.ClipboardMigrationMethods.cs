@@ -8,7 +8,7 @@ public static partial class Program
 {
     private static void ClipboardMigrationPreservesLegacyHistory( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-clipboard-migration-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-clipboard-migration-" ).FullName;
         var path = Path.Combine( root, "history.db" );
         ClipboardTestClock clock = new( );
         try
@@ -54,7 +54,7 @@ public static partial class Program
 
     private static void ClipboardMigrationRejectsUnknownAndExcessiveData( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-clipboard-invalid-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-clipboard-invalid-" ).FullName;
         var path = Path.Combine( root, "history.db" );
         try
         {
@@ -86,7 +86,7 @@ public static partial class Program
 
     private static void ClipboardPolicyPauseAndConsentPersist( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-clipboard-policy-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-clipboard-policy-" ).FullName;
         var path = Path.Combine( root, "history.db" );
         try
         {

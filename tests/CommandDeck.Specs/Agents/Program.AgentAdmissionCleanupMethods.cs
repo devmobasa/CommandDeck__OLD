@@ -8,7 +8,7 @@ public static partial class Program
     {
         foreach ( var disable in new[] { false, true } )
         {
-            var root = Path.Combine( Path.GetTempPath( ), $"commanddeck-agent-stale-save-{Guid.NewGuid( ):N}" );
+            var root = SpecTemporaryFiles.PathFor( $"commanddeck-agent-stale-save-{Guid.NewGuid( ):N}" );
             Directory.CreateDirectory( root );
             try
             {
@@ -51,7 +51,7 @@ public static partial class Program
     // keeps running, and a turn at the new epoch then completes on it.
     private static async Task AgentLosingPreparerCleansUpOnlyItsGenerationAsync( )
     {
-        var root = Path.Combine( Path.GetTempPath( ), $"commanddeck-agent-cleanup-{Guid.NewGuid( ):N}" );
+        var root = SpecTemporaryFiles.PathFor( $"commanddeck-agent-cleanup-{Guid.NewGuid( ):N}" );
         Directory.CreateDirectory( root );
         try
         {

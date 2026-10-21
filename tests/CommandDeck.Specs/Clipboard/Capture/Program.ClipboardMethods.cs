@@ -10,7 +10,7 @@ public static partial class Program
         {
             throw new SpecSkippedException( "This fixture requires Linux." );
         }
-        var directory = Directory.CreateTempSubdirectory( "commanddeck-clipboard-watch-" ).FullName;
+        var directory = SpecTemporaryFiles.CreateDirectory( "commanddeck-clipboard-watch-" ).FullName;
         var originalPath = Environment.GetEnvironmentVariable( "PATH" );
         var originalProbe = Environment.GetEnvironmentVariable( "COMMANDDECK_CLIPBOARD_WATCH_PROBE" );
         try
@@ -54,7 +54,7 @@ public static partial class Program
 
     private static async Task ClipboardHistoryIsOptInAndBoundedAsync( )
     {
-        var directory = Directory.CreateTempSubdirectory( "commanddeck-clipboard-" ).FullName;
+        var directory = SpecTemporaryFiles.CreateDirectory( "commanddeck-clipboard-" ).FullName;
         var database = Path.Combine( directory, "history.db" );
         try
         {

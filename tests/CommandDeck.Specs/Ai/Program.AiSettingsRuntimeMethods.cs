@@ -6,7 +6,7 @@ public static partial class Program
 {
     private static async Task AiSettingsRuntimeAppliesLiveMutationsAndPersistsAsync( )
     {
-        var root = Path.Combine( Path.GetTempPath( ), $"commanddeck-ai-settings-runtime-{Guid.NewGuid( ):N}" );
+        var root = SpecTemporaryFiles.PathFor( $"commanddeck-ai-settings-runtime-{Guid.NewGuid( ):N}" );
         Directory.CreateDirectory( root );
         await using ManagedAiFixtureServer fixture = await ManagedAiFixtureServer.StartAsync( );
         try
@@ -165,7 +165,7 @@ public static partial class Program
 
     private static async Task AiSettingsRuntimeCancelsAffectedGenerationsAsync( )
     {
-        var root = Path.Combine( Path.GetTempPath( ), $"commanddeck-ai-settings-cancel-{Guid.NewGuid( ):N}" );
+        var root = SpecTemporaryFiles.PathFor( $"commanddeck-ai-settings-cancel-{Guid.NewGuid( ):N}" );
         Directory.CreateDirectory( root );
         await using ManagedAiFixtureServer fixture = await ManagedAiFixtureServer.StartAsync( );
         try
@@ -227,7 +227,7 @@ public static partial class Program
         try
         {
             var config = await WriteManagedSpecConfigAsync( root, new AiOptions { Enabled = true, Providers = [] } );
-            var socket = Path.Combine( root, "commanddeck.sock" );
+            var socket = SpecTemporaryFiles.SocketPath( root, "commanddeck.sock" );
             await using var runtime = await CommandDeckRuntime.CreateAsync( config, CancellationToken.None );
             UnixProtocolServer server = new( runtime, socket );
             var serverTask = server.RunAsync( serverCancellation.Token );
@@ -310,7 +310,7 @@ public static partial class Program
             Equal( 0, removed.ExitCode );
             var afterRemove = JsonSerializer.Deserialize( removed.StandardOutput, CommandDeckJsonContext.Default.AiProviderSettings );
             True( afterRemove is { Revision: 4 } && afterRemove.Providers.All( static value => value.Id != "cli" ) );
-            var offline = await RunCommandDeckProcessAsync( "ai", "settings", "show", "--socket", Path.Combine( root, "missing.sock" ) );
+            var offline = await RunCommandDeckProcessAsync( "ai", "settings", "show", "--socket", SpecTemporaryFiles.SocketPath( root, "missing.sock" ) );
             Equal( 1, offline.ExitCode );
             True( offline.StandardError.Contains( "daemon", StringComparison.OrdinalIgnoreCase ) );
 

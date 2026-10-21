@@ -18,7 +18,7 @@ EventPathFixture {
       const surface = fixture.part_agentEventSurface
       surface.opened = true
       const composer = findChild(surface, "agentComposer")
-      tryVerify(function() { return composer.activeFocus })
+      waitForCondition(function() { return composer.activeFocus })
 
       const cycle = TabCycle.verifyCycle(trapCase, surface.Window.window, surface, composer, 40)
       verify(cycle.length > 1, "the conversation has more than one stop")
@@ -32,7 +32,7 @@ EventPathFixture {
       panel.showPage("ai")
       panel.openAiProviderEditor(null, panel.aiAddProviderControl)
       const editor = panel.aiProviderEditorControl
-      tryCompare(editor.typeControl, "activeFocus", true)
+      waitForValue(editor.typeControl, "activeFocus", true)
 
       const cycle = TabCycle.verifyCycle(trapCase, editor.Window.window, editor, editor.typeControl, 40)
       compare(cycle[1], editor.nameControl, "the display name follows the type")

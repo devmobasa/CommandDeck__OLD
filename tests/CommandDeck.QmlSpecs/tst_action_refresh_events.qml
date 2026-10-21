@@ -33,7 +33,7 @@ Item {
   property var selection: null
   Deck.InvocationController { id: invocation }
 
-  TestCase {
+  DeadlineTestCase {
     name: "ActionRefresh"
     when: windowShown
     function action() {
@@ -58,7 +58,7 @@ Item {
     function test_menu_refresh_preserves_meaning_and_keyboard_focus() {
       scene.opened = true
       panel.openFor(row(action(), "old"))
-      tryVerify(() => panel.filterControl.activeFocus)
+      waitForCondition(() => panel.filterControl.activeFocus)
       const next = row(action(), "fresh")
       next.actions[0].title = "New display title"
       verify(panel.retarget(next))
@@ -70,7 +70,7 @@ Item {
     function test_changed_menu_action_closes_before_activation() {
       scene.opened = true
       panel.openFor(row(action(), "old"))
-      tryVerify(() => panel.filterControl.activeFocus)
+      waitForCondition(() => panel.filterControl.activeFocus)
       const changed = action()
       changed.arguments.argv = "second"
       const host = refreshHost(row(changed, "fresh"))
@@ -111,7 +111,7 @@ Item {
       const before = action()
       before.inputs = [{name: "destination", label: "Destination"}]
       verify(invocation.requestInput(row(before, "old"), before, true))
-      tryVerify(() => inputs.rowAt(0) && inputs.rowAt(0).input.activeFocus)
+      waitForCondition(() => inputs.rowAt(0) && inputs.rowAt(0).input.activeFocus)
       for (const character of "keep my draft") keyClick(character)
       const fresh = JSON.parse(JSON.stringify(before))
       verify(invocation.retarget(row(fresh, "fresh")))
@@ -124,7 +124,7 @@ Item {
     function test_partial_commit_notice_survives_done() {
       scene.opened = true
       panel.openFor(row(action(), "old"))
-      tryVerify(() => panel.filterControl.activeFocus)
+      waitForCondition(() => panel.filterControl.activeFocus)
       const changed = action()
       changed.arguments.argv = "second"
       const fresh = row(changed, "fresh")
@@ -146,7 +146,7 @@ Item {
     function test_removed_menu_waits_for_completed_results() {
       scene.opened = true
       panel.openFor(row(action(), "old"))
-      tryVerify(() => panel.filterControl.activeFocus)
+      waitForCondition(() => panel.filterControl.activeFocus)
       const host = refreshHost(null)
 
       SearchActions.searchCommitted(host, [])

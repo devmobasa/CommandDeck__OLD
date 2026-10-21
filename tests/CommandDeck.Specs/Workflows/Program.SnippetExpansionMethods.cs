@@ -89,7 +89,7 @@ public static partial class Program
         True( previewed.Succeeded, previewed.Message );
         Equal( "Review review for Ada: REVIEW by 2026-09-07", previewed.DetailMarkdown );
 
-        var root = Directory.CreateTempSubdirectory( "commanddeck-action-payload-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-action-payload-", preservePrefix: true ).FullName;
         var originalPath = Environment.GetEnvironmentVariable( "PATH" );
         var originalFixture = Environment.GetEnvironmentVariable( ActionPayloadFixtureDirectory );
         try
@@ -116,7 +116,7 @@ public static partial class Program
 
     private static async Task SnippetClipboardHistoryOffsetsArePrivateAndNeedConsentAsync( )
     {
-        var directory = Directory.CreateTempSubdirectory( "commanddeck-snippet-history-" ).FullName;
+        var directory = SpecTemporaryFiles.CreateDirectory( "commanddeck-snippet-history-" ).FullName;
         try
         {
             SnippetClock clock = new( new DateTimeOffset( 2026, 9, 6, 14, 30, 0, TimeSpan.Zero ), TimeZoneInfo.Utc );

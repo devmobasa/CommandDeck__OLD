@@ -237,7 +237,7 @@ QtObject {
       return
     }
 
-    host.expect(events.waitForRendering(strip), "the production undo strip renders before its button is clicked")
+    host.expect(events.waitForFrame(strip), "the production undo strip renders before its button is clicked")
 
     const before = fixture.invokes().length
     events.mouseClick(strip.undoControl, strip.undoControl.width / 2, strip.undoControl.height / 2)

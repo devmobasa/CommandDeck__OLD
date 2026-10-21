@@ -8,10 +8,10 @@ public static partial class Program
 {
     private static async Task SocketAiClearIsACompletionBarrierAsync( )
     {
-        var root = Path.Combine( Path.GetTempPath( ), $"commanddeck-ai-clear-{Guid.NewGuid( ):N}" );
+        var root = SpecTemporaryFiles.PathFor( $"commanddeck-ai-clear-{Guid.NewGuid( ):N}" );
         Directory.CreateDirectory( root );
         await using var provider = await ScriptedOllamaServer.StartAsync( );
-        var socket = Path.Combine( root, "commanddeck.sock" );
+        var socket = SpecTemporaryFiles.SocketPath( root, "commanddeck.sock" );
         var config = Path.Combine( root, "config.json" );
         CommandDeckOptions options = new( )
         {

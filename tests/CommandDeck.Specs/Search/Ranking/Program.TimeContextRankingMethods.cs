@@ -4,9 +4,7 @@ public static partial class Program
 {
     private static async Task PerKindTimeAwareAndContextRankingAreControlledAsync( )
     {
-        var database = Path.Combine(
-            Path.GetTempPath( ),
-            $"commanddeck-time-context-{Guid.NewGuid( ):N}.db" );
+        var database = SpecTemporaryFiles.PathFor( $"commanddeck-time-context-{Guid.NewGuid( ):N}.db" );
         MutableTimeProvider clock = new(
             new DateTimeOffset( 2026, 1, 1, 12, 0, 0, TimeSpan.Zero ) );
         SearchOptions options = new( )

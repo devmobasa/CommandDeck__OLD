@@ -74,7 +74,7 @@ public static partial class Program
 
     private static async Task RuntimeAcceptedUsageSurvivesCancellationAndFailureAsync( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-accepted-usage-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-accepted-usage-" ).FullName;
         try
         {
             CommandDeckOptions options = new( )
@@ -134,7 +134,7 @@ public static partial class Program
 
     private static async Task AcceptedUsageBoundsRealSqliteContentionAsync( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-usage-contention-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-usage-contention-" ).FullName;
         try
         {
             CommandDeckOptions options = new( )
@@ -182,7 +182,7 @@ public static partial class Program
 
     private static async Task UsageAndQueryHistoryGatesRemainIndependentAsync( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-usage-gates-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-usage-gates-" ).FullName;
         try
         {
             foreach ( var learning in new[] { false, true } )

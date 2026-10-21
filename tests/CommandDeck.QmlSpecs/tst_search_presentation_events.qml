@@ -10,7 +10,7 @@ EventPathFixture {
     fixture: scene
     name: "CommandDeck_search_presentation"
     function test_search_loading_settles_and_respects_reduced_motion() {
-      tryCompare(fixture.part_searchLoading, "active", false)
+      waitForValue(fixture.part_searchLoading, "active", false)
       verify(!fixture.part_searchLoading.animating)
       fixture.part_searchLoading.loading = true
       verify(fixture.part_searchLoading.active)
@@ -18,14 +18,14 @@ EventPathFixture {
       fixture.part_searchLoading.loading = false
       verify(fixture.part_searchLoading.active, "brief gaps do not flash the loading line")
       fixture.part_searchLoading.loading = true
-      wait(120)
+      observeFor(120, () => fixture.part_searchLoading.active, "a replacement query cancels the pending hide")
       verify(fixture.part_searchLoading.active, "a replacement query cancels the pending hide")
       fixture.part_theme.reduceMotion = true
       verify(fixture.part_searchLoading.active)
       verify(!fixture.part_searchLoading.animating)
       compare(fixture.part_searchLoading.Accessible.name, "Searching")
       fixture.part_searchLoading.loading = false
-      tryCompare(fixture.part_searchLoading, "active", false)
+      waitForValue(fixture.part_searchLoading, "active", false)
       verify(!fixture.part_searchLoading.visible)
       verify(!fixture.part_searchLoading.animating)
     }
@@ -64,9 +64,9 @@ EventPathFixture {
       keyClick(Qt.Key_Escape)
       compare(fixture.part_controller.dismissCalls, previousDismissals + 1)
       keyClick(Qt.Key_F1)
-      tryVerify(function() { return fixture.part_eventHelpSheet.activeFocus })
+      waitForCondition(function() { return fixture.part_eventHelpSheet.activeFocus })
       keyClick(Qt.Key_Escape)
-      tryVerify(function() { return fixture.part_footerActions.primaryControl.activeFocus })
+      waitForCondition(function() { return fixture.part_footerActions.primaryControl.activeFocus })
       const requests = fixture.part_searchField.actionRequests
       keyClick(Qt.Key_K, Qt.ControlModifier)
       compare(fixture.part_searchField.actionRequests, requests + 1)
@@ -91,8 +91,8 @@ EventPathFixture {
       verify(fixture.part_searchField.inputControl.activeFocus)
       mouseMove(row, 20, 20)
       const tip = row.toolTipControl
-      tryCompare(tip, "visible", true, 2000)
-      verify(waitForRendering(row))
+      waitForValue(tip, "visible", true, 2000)
+      verify(waitForFrame(row))
       compare(tip.parent, row, "the tooltip belongs to the hovered row")
       compare(tip.text, title + "\nSignal - Private Messenger\nAliases: chat")
       compare(tip.contentItem.textFormat, Text.PlainText)
@@ -109,7 +109,7 @@ EventPathFixture {
       mouseClick(row, 20, 20)
       compare(row.activations, 1, "a visible tooltip does not block the row action")
       mouseMove(fixture, 5, fixture.height - 5)
-      tryCompare(tip, "visible", false)
+      waitForValue(tip, "visible", false)
     }
 
     function test_footer_discovery_is_persistent_and_restores_focus() {
@@ -121,31 +121,31 @@ EventPathFixture {
       verify(fixture.part_footerActions.prefixesControl.visible && fixture.part_footerActions.prefixesControl.enabled)
       verify(fixture.part_footerActions.helpControl.visible && fixture.part_footerActions.helpControl.enabled)
       compare(fixture.part_footerActions.firstControl, fixture.part_footerActions.prefixesControl)
-      verify(waitForRendering(fixture.part_footerActions))
+      verify(waitForFrame(fixture.part_footerActions))
       verify(fixture.part_footerActions.implicitWidth <= fixture.part_footerActions.availableWidth)
 
       mouseClick(fixture.part_footerActions.prefixesControl)
-      tryVerify(function() { return fixture.part_eventFilterPalette.activeFocus })
+      waitForCondition(function() { return fixture.part_eventFilterPalette.activeFocus })
       keyClick(Qt.Key_Down)
       compare(fixture.part_eventFilterPalette.selectedToken(), "app:")
       keyClick(Qt.Key_Tab)
       verify(fixture.part_eventFilterPalette.activeFocus, "the palette traps focus")
       keyClick(Qt.Key_Escape)
-      tryVerify(function() { return fixture.part_footerActions.prefixesControl.activeFocus })
+      waitForCondition(function() { return fixture.part_footerActions.prefixesControl.activeFocus })
       keyClick(Qt.Key_Right)
       verify(fixture.part_footerActions.helpControl.activeFocus)
       keyClick(Qt.Key_Return)
-      tryVerify(function() { return fixture.part_eventHelpSheet.activeFocus })
+      waitForCondition(function() { return fixture.part_eventHelpSheet.activeFocus })
       keyClick(Qt.Key_Backtab)
       verify(fixture.part_eventHelpSheet.activeFocus)
       keyClick(Qt.Key_Escape)
-      tryVerify(function() { return fixture.part_footerActions.helpControl.activeFocus })
+      waitForCondition(function() { return fixture.part_footerActions.helpControl.activeFocus })
       keyClick(Qt.Key_Left)
       verify(fixture.part_footerActions.prefixesControl.activeFocus)
       keyClick(Qt.Key_Space)
-      tryVerify(function() { return fixture.part_eventFilterPalette.activeFocus })
+      waitForCondition(function() { return fixture.part_eventFilterPalette.activeFocus })
       keyClick(Qt.Key_Escape)
-      tryVerify(function() { return fixture.part_footerActions.prefixesControl.activeFocus })
+      waitForCondition(function() { return fixture.part_footerActions.prefixesControl.activeFocus })
       keyClick(Qt.Key_Tab)
       verify(fixture.part_footerActions.helpControl.activeFocus)
       keyClick(Qt.Key_Tab)
@@ -153,9 +153,9 @@ EventPathFixture {
       keyClick(Qt.Key_Backtab)
       verify(fixture.part_footerActions.helpControl.activeFocus)
       mouseClick(fixture.part_footerActions.helpControl)
-      tryVerify(function() { return fixture.part_eventHelpSheet.activeFocus })
+      waitForCondition(function() { return fixture.part_eventHelpSheet.activeFocus })
       keyClick(Qt.Key_F1)
-      tryVerify(function() { return fixture.part_footerActions.helpControl.activeFocus })
+      waitForCondition(function() { return fixture.part_footerActions.helpControl.activeFocus })
     }
 
     function test_dialog_focus_return_resolves_the_current_control() {
@@ -165,17 +165,17 @@ EventPathFixture {
 
       help.returnFocusTarget = footer.helpControl
       help.opened = true
-      tryVerify(function() { return help.activeFocus })
+      waitForCondition(function() { return help.activeFocus })
       help.opened = false
       help.returnFocusTarget = footer.prefixesControl
-      tryVerify(function() { return footer.prefixesControl.activeFocus })
+      waitForCondition(function() { return footer.prefixesControl.activeFocus })
 
       filters.returnFocusTarget = footer.prefixesControl
       filters.opened = true
-      tryVerify(function() { return filters.activeFocus })
+      waitForCondition(function() { return filters.activeFocus })
       filters.opened = false
       filters.returnFocusTarget = footer.helpControl
-      tryVerify(function() { return footer.helpControl.activeFocus })
+      waitForCondition(function() { return footer.helpControl.activeFocus })
     }
 
     function test_dialog_focus_return_does_not_interrupt_a_new_surface() {
@@ -183,14 +183,14 @@ EventPathFixture {
       const filters = fixture.part_eventFilterPalette
       help.returnFocusTarget = fixture.part_footerActions.helpControl
       help.opened = true
-      tryVerify(function() { return help.activeFocus })
+      waitForCondition(function() { return help.activeFocus })
 
       help.opened = false
       help.focusReturnAllowed = false
       try {
         filters.opened = true
-        tryVerify(function() { return filters.activeFocus })
-        wait(20)
+        waitForCondition(function() { return filters.activeFocus })
+        waitForFrame(filters)
         verify(filters.activeFocus)
       } finally {
         filters.opened = false

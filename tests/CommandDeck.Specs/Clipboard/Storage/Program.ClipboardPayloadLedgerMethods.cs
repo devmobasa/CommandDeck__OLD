@@ -113,7 +113,7 @@ public static partial class Program
 
     private sealed class PayloadLedgerFixture : IDisposable
     {
-        internal string Root { get; } = System.IO.Directory.CreateTempSubdirectory( "commanddeck-payload-ledger-" ).FullName;
+        internal string Root { get; } = SpecTemporaryFiles.CreateDirectory( "commanddeck-payload-ledger-" ).FullName;
         internal SqliteConnection Connection { get; }
         internal ClipboardPayloadDirectory Directory { get; }
         internal ClipboardPayloadLedger Ledger { get; }

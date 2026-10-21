@@ -10,7 +10,7 @@ public static partial class Program
     // sources (emoji, timezone, web search, ...) that own no catalog rows.
     private static async Task CatalogSupplementsSkipSourcesWithoutRowsAsync( )
     {
-        var database = Path.Combine( Path.GetTempPath( ), $"commanddeck-supplements-{Guid.NewGuid( ):N}.db" );
+        var database = SpecTemporaryFiles.PathFor( $"commanddeck-supplements-{Guid.NewGuid( ):N}.db" );
         FixedTimeProvider clock = new( PromotionNow );
         try
         {
@@ -66,7 +66,7 @@ public static partial class Program
         var path = Path.Combine( AppContext.BaseDirectory, "fixtures", "ranking-corpus-v1.json" );
         using var document = JsonDocument.Parse( await File.ReadAllTextAsync( path ) );
         var fixture = ParseRelevanceFixture( document.RootElement.GetProperty( "relevanceCases" ) );
-        var database = Path.Combine( Path.GetTempPath( ), $"commanddeck-relevance-pruning-{Guid.NewGuid( ):N}.db" );
+        var database = SpecTemporaryFiles.PathFor( $"commanddeck-relevance-pruning-{Guid.NewGuid( ):N}.db" );
         FixedTimeProvider clock = new( PromotionNow );
         try
         {

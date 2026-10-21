@@ -61,7 +61,7 @@ public static partial class Program
 
     private static async Task HeyAiAttachmentsAreRejectedAsync( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-hey-ai-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-hey-ai-" ).FullName;
         try
         {
             await using SqliteCatalog catalog = new( new StorageOptions { DatabasePath = Path.Combine( root, "catalog.db" ) } );

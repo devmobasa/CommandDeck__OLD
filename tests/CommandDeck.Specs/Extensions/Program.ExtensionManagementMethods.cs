@@ -13,7 +13,7 @@ public static partial class Program
         {
             var config = await WriteManagedSpecConfigAsync( root, new AiOptions { Enabled = false } );
             await using var runtime = await CommandDeckRuntime.CreateAsync( config, lifetime.Token );
-            var socket = Path.Combine( root, "extensions.sock" );
+            var socket = SpecTemporaryFiles.SocketPath( root, "extensions.sock" );
             serverTask = new UnixProtocolServer( runtime, socket ).RunAsync( lifetime.Token );
             var archive = WritePackageFixture( root, PackageFixture( ) );
             var inspect = await RunCommandDeckProcessAsync( "extensions", "inspect", "--archive", archive, "--json", "--socket", socket );

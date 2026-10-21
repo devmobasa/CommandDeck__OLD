@@ -130,7 +130,7 @@ public static partial class Program
 
     private static string PrivateHandoffDirectory( )
     {
-        var directory = Directory.CreateTempSubdirectory( "commanddeck-handoff-" ).FullName;
+        var directory = SpecTemporaryFiles.CreateDirectory( "commanddeck-handoff-" ).FullName;
         if ( OperatingSystem.IsLinux( ) )
         {
             File.SetUnixFileMode( directory, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute );

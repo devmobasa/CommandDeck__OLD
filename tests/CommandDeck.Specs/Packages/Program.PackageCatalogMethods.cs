@@ -208,9 +208,7 @@ public static partial class Program
 
     private static string CreatePacmanDatabaseFixture( )
     {
-        var root = Path.Combine(
-            Path.GetTempPath( ),
-            $"commanddeck-pacman-{Guid.NewGuid( ):N}" );
+        var root = SpecTemporaryFiles.PathFor( $"commanddeck-pacman-{Guid.NewGuid( ):N}" );
         Directory.CreateDirectory( Path.Combine( root, "sync" ) );
         Directory.CreateDirectory( Path.Combine( root, "local" ) );
         File.WriteAllText( Path.Combine( root, "sync", "core.db" ), "core" );

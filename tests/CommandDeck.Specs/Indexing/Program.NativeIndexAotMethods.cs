@@ -16,7 +16,7 @@ public static partial class Program
             var documents = Directory.CreateDirectory( Path.Combine( root, "documents" ) ).FullName;
             var excluded = Directory.CreateDirectory( Path.Combine( documents, "excluded" ) ).FullName;
             var config = Path.Combine( root, "config.json" );
-            var socket = Path.Combine( root, "daemon.sock" );
+            var socket = SpecTemporaryFiles.SocketPath( root, "daemon.sock" );
             CommandDeckOptions options = new( )
             {
                 Storage = new StorageOptions { DatabasePath = Path.Combine( root, "catalog.db" ) },

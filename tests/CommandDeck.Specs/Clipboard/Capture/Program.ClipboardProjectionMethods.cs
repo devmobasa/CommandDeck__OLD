@@ -6,7 +6,7 @@ public static partial class Program
 {
     private static async Task ClipboardProjectionUsesVerifiedHeldPayloadsAsync( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-clipboard-projection-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-clipboard-projection-" ).FullName;
         try
         {
             var data = Path.Combine( root, "payloads" );
@@ -61,7 +61,7 @@ public static partial class Program
 
     private static async Task ClipboardProjectionSharesWorkerCapacityAsync( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-clipboard-projection-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-clipboard-projection-" ).FullName;
         try
         {
             using ClipboardPayloadDirectory directory = new( Path.Combine( root, "payloads" ) );

@@ -208,7 +208,7 @@ public static partial class Program
 
     private static async Task AiGenerationBindsPreflightStreamAndOutputToClientAsync( )
     {
-        var root = Path.Combine( Path.GetTempPath( ), $"commanddeck-ai-generation-{Guid.NewGuid( ):N}" );
+        var root = SpecTemporaryFiles.PathFor( $"commanddeck-ai-generation-{Guid.NewGuid( ):N}" );
         Directory.CreateDirectory( root );
         try
         {
@@ -298,7 +298,7 @@ public static partial class Program
 
     private static async Task AiGenerationCancellationHasOneTerminalAsync( )
     {
-        var root = Path.Combine( Path.GetTempPath( ), $"commanddeck-ai-cancel-{Guid.NewGuid( ):N}" );
+        var root = SpecTemporaryFiles.PathFor( $"commanddeck-ai-cancel-{Guid.NewGuid( ):N}" );
         Directory.CreateDirectory( root );
         try
         {

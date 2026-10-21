@@ -75,7 +75,7 @@ Item {
     models: scene.rows(30, index => ({ id: "model-" + index, displayName: "Model " + index }))
   }
 
-  TestCase {
+  DeadlineTestCase {
     name: "ListKeys"
     when: windowShown
 
@@ -169,7 +169,7 @@ Item {
     function test_every_list_answers_the_same_keys(data) {
       const list = lists()[data.list]
       const control = list.open()
-      waitForRendering(control)
+      waitForFrame(control)
       control.forceActiveFocus()
       verify(control.activeFocus, "the list's own control has focus")
       compare(list.index(), 0)

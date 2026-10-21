@@ -4,8 +4,7 @@ public static partial class Program
 {
     private static async Task FileAndConfigurationWorkflowsUseLiteralTypedActionsAsync( )
     {
-        var root = Path.Combine(
-            Path.GetTempPath( ), $"commanddeck-file-workflow-{Guid.NewGuid( ):N}" );
+        var root = SpecTemporaryFiles.PathFor( $"commanddeck-file-workflow-{Guid.NewGuid( ):N}" );
         Directory.CreateDirectory( root );
         var database = Path.Combine( root, "catalog.db" );
         var filePath = Path.Combine( root, "résumé notes.txt" );

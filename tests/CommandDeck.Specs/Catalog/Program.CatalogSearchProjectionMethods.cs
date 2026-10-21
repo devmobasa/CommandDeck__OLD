@@ -4,9 +4,7 @@ public static partial class Program
 {
     private static async Task CatalogSearchPreservesProjectionAcrossQueryShapesAsync( )
     {
-        var database = Path.Combine(
-            Path.GetTempPath( ),
-            $"commanddeck-search-projection-{Guid.NewGuid( ):N}.db" );
+        var database = SpecTemporaryFiles.PathFor( $"commanddeck-search-projection-{Guid.NewGuid( ):N}.db" );
         try
         {
             await using SqliteCatalog catalog = new(

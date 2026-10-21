@@ -7,9 +7,7 @@ public static partial class Program
     // id brings it back without touching the item.
     private static async Task HiddenItemsLeaveEveryCatalogPathAndRestoreAsync( )
     {
-        var database = Path.Combine(
-            Path.GetTempPath( ),
-            $"commanddeck-hidden-items-{Guid.NewGuid( ):N}.db" );
+        var database = SpecTemporaryFiles.PathFor( $"commanddeck-hidden-items-{Guid.NewGuid( ):N}.db" );
         try
         {
             await using SqliteCatalog catalog = new( new StorageOptions { DatabasePath = database } );
@@ -61,9 +59,7 @@ public static partial class Program
     // while unavailable, ride along in the export, and go with a confirmed reset.
     private static async Task HiddenItemsSurviveReindexExportAndResetAsync( )
     {
-        var database = Path.Combine(
-            Path.GetTempPath( ),
-            $"commanddeck-hidden-lifecycle-{Guid.NewGuid( ):N}.db" );
+        var database = SpecTemporaryFiles.PathFor( $"commanddeck-hidden-lifecycle-{Guid.NewGuid( ):N}.db" );
         try
         {
             await using SqliteCatalog catalog = new( new StorageOptions { DatabasePath = database } );
@@ -103,9 +99,7 @@ public static partial class Program
     // dropping an older entry, and non-customizable results are refused.
     private static async Task HiddenItemsAreBoundedAndRequireDurableIdentityAsync( )
     {
-        var database = Path.Combine(
-            Path.GetTempPath( ),
-            $"commanddeck-hidden-bounds-{Guid.NewGuid( ):N}.db" );
+        var database = SpecTemporaryFiles.PathFor( $"commanddeck-hidden-bounds-{Guid.NewGuid( ):N}.db" );
         try
         {
             await using SqliteCatalog catalog = new( new StorageOptions { DatabasePath = database } );
@@ -148,9 +142,7 @@ public static partial class Program
     // filtered by the coordinator against the same canonical id.
     private static async Task CoordinatorDropsHiddenCandidatesFromLiveProvidersAsync( )
     {
-        var database = Path.Combine(
-            Path.GetTempPath( ),
-            $"commanddeck-hidden-coordinator-{Guid.NewGuid( ):N}.db" );
+        var database = SpecTemporaryFiles.PathFor( $"commanddeck-hidden-coordinator-{Guid.NewGuid( ):N}.db" );
         try
         {
             await using SqliteCatalog catalog = new( new StorageOptions { DatabasePath = database } );

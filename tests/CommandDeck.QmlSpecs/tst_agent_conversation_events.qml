@@ -11,10 +11,10 @@ EventPathFixture {
     name: "CommandDeck_agent_conversation"
     function test_agent_composer_enter_starts_one_turn() {
       fixture.part_agentEventSurface.opened = true
-      wait(0)
+      nextTurn()
       const composer = findChild(fixture.part_agentEventSurface, "agentComposer")
       verify(composer !== null)
-      tryVerify(function() { return composer.activeFocus })
+      waitForCondition(function() { return composer.activeFocus })
       typeText("Rebuild the index")
       keyClick(Qt.Key_Return)
       compare(fixture.part_agentEventSurface.submitted, "Rebuild the index")
@@ -41,12 +41,12 @@ EventPathFixture {
       fixture.part_agentEventSurface.submitted = ""
       fixture.part_agentEventController.state = "running"
       fixture.part_agentEventSurface.opened = true
-      wait(0)
+      nextTurn()
       const composer = findChild(fixture.part_agentEventSurface, "agentComposer")
       const send = findChild(fixture.part_agentEventSurface, "agentSend")
       verify(composer !== null && send !== null)
       composer.forceActiveFocus()
-      tryVerify(function() { return composer.activeFocus })
+      waitForCondition(function() { return composer.activeFocus })
       typeText("Ask something else")
       verify(!send.enabled)
       keyClick(Qt.Key_Return)
@@ -78,11 +78,11 @@ EventPathFixture {
       controller.state = "idle"
       fixture.part_agentEventSurface.submitted = ""
       fixture.part_agentEventSurface.opened = true
-      wait(0)
+      nextTurn()
       const composer = findChild(fixture.part_agentEventSurface, "agentComposer")
       verify(composer !== null)
       composer.forceActiveFocus()
-      tryVerify(function() { return composer.activeFocus })
+      waitForCondition(function() { return composer.activeFocus })
       typeText("Rebuild the index again")
       keyClick(Qt.Key_Return)
       compare(controller.sentRequests.length, 1)
@@ -122,7 +122,7 @@ EventPathFixture {
       }
       fixture.part_agentEventController.state = "waiting"
       fixture.part_agentEventSurface.opened = true
-      wait(0)
+      nextTurn()
       verify(fixture.part_agentEventSurface.pendingCardVisible)
       const allowFolder = findChild(fixture.part_agentEventSurface, "agentContextAllowFolder")
       verify(!allowFolder.visible)
@@ -156,7 +156,7 @@ EventPathFixture {
 
     function test_agent_events_stream_into_the_transcript_and_trap_focus() {
       fixture.part_agentEventSurface.opened = true
-      wait(0)
+      nextTurn()
       fixture.part_agentEventController.startTurn(950, "Summarize the repository", "")
       const requestId = fixture.part_agentEventController.activeRequestId
       fixture.part_agentEventController.handleMessage({
@@ -176,9 +176,9 @@ EventPathFixture {
           kind: "reasoning", generation: 3, sequence: 3, text: "weighing options"
         }
       })
-      tryCompare(fixture.part_agentEventController, "activeText", "partial answer")
+      waitForValue(fixture.part_agentEventController, "activeText", "partial answer")
       compare(fixture.part_agentEventController.activeReasoning, "weighing options")
-      wait(0)
+      nextTurn()
 
       const reasoningToggle = findChild(fixture.part_agentEventSurface, "agentReasoningToggle")
       const reasoningBody = findChild(fixture.part_agentEventSurface, "agentReasoningBody")
@@ -204,7 +204,7 @@ EventPathFixture {
       compare(fixture.part_agentEventController.entries[1].role, "assistant")
       compare(fixture.part_agentEventController.entries[1].text, "partial answer")
       compare(fixture.part_agentEventController.activeText, "")
-      wait(0)
+      nextTurn()
 
       const composer = findChild(fixture.part_agentEventSurface, "agentComposer")
       composer.forceActiveFocus()
@@ -239,7 +239,7 @@ EventPathFixture {
       }
       fixture.part_agentEventController.state = "waiting"
       fixture.part_agentEventSurface.opened = true
-      wait(0)
+      nextTurn()
 
       const field = findChild(fixture.part_agentEventSurface, "agentQuestionText")
       verify(field !== null && field.visible)
@@ -270,7 +270,7 @@ EventPathFixture {
         decisions: []
       }
       fixture.part_agentEventController.state = "waiting"
-      wait(0)
+      nextTurn()
 
       const option = findChild(fixture.part_agentEventSurface, "agentQuestionOption0")
       verify(option !== null && option.visible)
@@ -379,7 +379,7 @@ EventPathFixture {
       }
       fixture.part_agentEventController.sentRequests = []
       fixture.part_agentEventSurface.opened = true
-      wait(0)
+      nextTurn()
       const codeField = findChild(fixture.part_agentEventSurface, "agentLoginCode")
       const submit = findChild(fixture.part_agentEventSurface, "agentLoginCodeSubmit")
       const deviceCode = findChild(fixture.part_agentEventSurface, "agentLoginDeviceCode")
@@ -389,7 +389,7 @@ EventPathFixture {
       verify(!submit.enabled)
       verify(!deviceCode.visible)
       verify(!browser.visible)
-      tryVerify(function() { return codeField.activeFocus })
+      waitForCondition(function() { return codeField.activeFocus })
       typeText("pasted-code")
       verify(submit.enabled)
       keyClick(Qt.Key_Return)
@@ -403,12 +403,12 @@ EventPathFixture {
         id: "claude.local", displayName: "Claude Code", processLocality: "local",
         inferenceLocality: "remote", authenticationState: "unauthenticated"
       }
-      wait(0)
+      nextTurn()
       verify(!codeField.visible)
       verify(browser.visible)
       verify(!deviceCode.visible)
       browser.forceActiveFocus()
-      tryVerify(function() { return browser.activeFocus })
+      waitForCondition(function() { return browser.activeFocus })
       keyClick(Qt.Key_Space)
       compare(fixture.part_agentEventSurface.loginMethod, "browser")
       fixture.part_agentEventSurface.opened = false
@@ -425,12 +425,12 @@ EventPathFixture {
         id: "codex.local", displayName: "Codex", authenticationState: "unauthenticated"
       }
       surface.opened = true
-      wait(0)
+      nextTurn()
       const deviceButton = findChild(surface, "agentLoginDeviceCode")
       const message = findChild(surface, "agentLoginMessage")
       const error = findChild(surface, "agentLoginError")
       const openButton = findChild(surface, "agentOpenLoginPage")
-      tryCompare(deviceButton, "activeFocus", true)
+      waitForValue(deviceButton, "activeFocus", true)
       keyClick(Qt.Key_Space)
       compare(controller.sentRequests.length, 1)
       compare(controller.sentRequests[0].operation, "agent.login.start")
@@ -446,7 +446,7 @@ EventPathFixture {
       verify(!controller.loginStarting)
       verify(error.visible)
       compare(error.text, "Codex could not start. Check the installation.")
-      wait(20)
+      waitForFrame(deviceButton)
       mouseClick(deviceButton)
       compare(controller.sentRequests.length, 2)
       verify(controller.loginStarting)
@@ -461,7 +461,7 @@ EventPathFixture {
       })
       compare(findChild(surface, "agentDeviceCode").text, "ABCD-1234")
       verify(openButton.enabled)
-      tryCompare(openButton, "activeFocus", true)
+      waitForValue(openButton, "activeFocus", true)
       keyClick(Qt.Key_Return)
       compare(surface.openLoginCount, 1)
       const openRequest = controller.sentRequests[controller.sentRequests.length - 1]
@@ -476,8 +476,8 @@ EventPathFixture {
       })
       compare(error.text, "The browser did not start.")
       verify(error.visible)
-      wait(20)
-      tryCompare(openButton, "activeFocus", true)
+      waitForFrame(openButton)
+      waitForValue(openButton, "activeFocus", true)
       mouseClick(openButton)
       compare(surface.openLoginCount, 2)
       const retryRequest = controller.sentRequests[controller.sentRequests.length - 1]
@@ -489,7 +489,7 @@ EventPathFixture {
       })
       compare(actionStatus.text, "The desktop accepted the request. Check your browser.")
       verify(actionStatus.visible)
-      wait(20)
+      waitForFrame(findChild(surface, "agentCopyCode"))
       mouseClick(findChild(surface, "agentCopyCode"))
       compare(surface.copyCodeCount, 1)
       const copyRequest = controller.sentRequests[controller.sentRequests.length - 1]
@@ -527,20 +527,20 @@ EventPathFixture {
       const choose = findChild(surface, "agentChooseBackend")
       verify(choose !== null && choose.visible)
       verify(surface.codexPathWarning.indexOf("launcher shim") >= 0)
-      tryVerify(function() { return choose.parent.parent.width > 0 && choose.parent.parent.height > 0 })
-      tryCompare(device, "activeFocus", true)
+      waitForCondition(function() { return choose.parent.parent.width > 0 && choose.parent.parent.height > 0 })
+      waitForValue(device, "activeFocus", true)
       keyClick(Qt.Key_Tab)
-      tryCompare(apiKey, "activeFocus", true)
+      waitForValue(apiKey, "activeFocus", true)
       keyClick(Qt.Key_Tab)
-      tryCompare(choose, "activeFocus", true)
+      waitForValue(choose, "activeFocus", true)
       keyClick(Qt.Key_Space)
       compare(surface.backendSettingsCount, 1)
 
       surface.opened = false
       surface.opened = true
-      tryVerify(function() { return choose.parent.parent.width > 0 && choose.parent.parent.height > 0 })
-      tryCompare(device, "activeFocus", true)
-      wait(20)
+      waitForCondition(function() { return choose.parent.parent.width > 0 && choose.parent.parent.height > 0 })
+      waitForValue(device, "activeFocus", true)
+      waitForFrame(choose)
       mouseClick(choose)
       compare(surface.backendSettingsCount, 2)
       controller.status = null

@@ -11,7 +11,7 @@ public static partial class Program
     // whoever reused that connection.
     private static async Task PooledCatalogConnectionsApplyTheirPragmasAsync( )
     {
-        var database = Path.Combine( Path.GetTempPath( ), $"commanddeck-pragmas-{Guid.NewGuid( ):N}.db" );
+        var database = SpecTemporaryFiles.PathFor( $"commanddeck-pragmas-{Guid.NewGuid( ):N}.db" );
         try
         {
             SqliteCatalog catalog = new( new StorageOptions
@@ -61,7 +61,7 @@ public static partial class Program
     // writer blocked for 1.4 s failed with "database is locked".
     private static async Task BlockedCatalogWriterWaitsForTheConfiguredTimeoutAsync( )
     {
-        var database = Path.Combine( Path.GetTempPath( ), $"commanddeck-busy-{Guid.NewGuid( ):N}.db" );
+        var database = SpecTemporaryFiles.PathFor( $"commanddeck-busy-{Guid.NewGuid( ):N}.db" );
         try
         {
             SqliteCatalog catalog = new( new StorageOptions

@@ -4,7 +4,7 @@ import "../../qml/common" as CommandDeck
 import "../../qml/common/Protocol.js" as Protocol
 import "../../qml/common/UiConstants.js" as Ui
 
-TestCase {
+DeadlineTestCase {
   required property var fixture
   when: windowShown
   function typeText(value) {

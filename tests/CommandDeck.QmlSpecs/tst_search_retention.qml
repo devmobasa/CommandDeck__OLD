@@ -2,7 +2,7 @@ import QtQuick
 import QtTest
 import "../../qml/common" as Deck
 
-TestCase {
+DeadlineTestCase {
   name: "SearchRetention"
   Component { id: factory; Deck.SearchRetentionController { keepMilliseconds: 30000 } }
   property var retention: null
@@ -142,7 +142,7 @@ TestCase {
     retention.begin(1)
     retention.retainedSearch = snapshot("alpha")
     if (data.closed) retention.closed()
-    tryCompare(retention, "retainedSearch", null)
+    waitForValue(retention, "retainedSearch", null)
     compare(retention.pending.length, data.closed ? 0 : 1)
 
     retention.complete(1, true)

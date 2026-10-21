@@ -6,7 +6,7 @@ public static partial class Program
 {
     private static async Task TopMatchesChoiceOverridesTheConfigurationAsync( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-top-matches-choice-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-top-matches-choice-" ).FullName;
         try
         {
             foreach ( var configured in new[] { false, true } )

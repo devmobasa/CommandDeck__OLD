@@ -9,7 +9,7 @@ public static partial class Program
     // 21-day window, both ranking resets and the search purpose all apply.
     private static async Task LearnedQueriesPromoteAbbreviationsAsync( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-learned-queries-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-learned-queries-" ).FullName;
         try
         {
             var now = DateTimeOffset.UnixEpoch.AddDays( 20_000 );
@@ -73,7 +73,7 @@ public static partial class Program
     // inside the 21-day window and before a write purges it.
     private static async Task LearnedQueriesFollowHistoryRetentionAsync( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-learned-retention-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-learned-retention-" ).FullName;
         try
         {
             SteppingTimeProvider clock = new( DateTimeOffset.UnixEpoch.AddDays( 20_000 ) );

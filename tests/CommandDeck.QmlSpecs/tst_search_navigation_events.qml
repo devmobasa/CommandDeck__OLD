@@ -17,7 +17,7 @@ EventPathFixture {
         actions: [{ id: "install", title: "Install", kind: "run-argv" }] }
       fixture.part_controller.replaceResults([signal, install], true)
       fixture.part_actionPanel.openFor(fixture.part_controller.selectedResult())
-      tryVerify(function() { return fixture.part_actionPanel.filterControl.activeFocus })
+      waitForCondition(function() { return fixture.part_actionPanel.filterControl.activeFocus })
       fixture.part_controller.replaceResults([install], false)
       compare(fixture.part_controller.selectedResult().id, "install")
       compare(fixture.part_actionPanel.result.id, "signal")
@@ -338,7 +338,7 @@ EventPathFixture {
         ] }
       fixture.part_controller.replaceResults([thread], true)
       fixture.part_actionPanel.openFor(fixture.part_controller.selectedResult())
-      tryVerify(function() { return fixture.part_actionPanel.filterControl.activeFocus })
+      waitForCondition(function() { return fixture.part_actionPanel.filterControl.activeFocus })
       compare(fixture.part_actionPanel.allActions().map(action => action.id).join(","), "open,mark-seen")
       for (let step = 0; step < 4; step++) keyClick(Qt.Key_Down)
       keyClick(Qt.Key_Return)

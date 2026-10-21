@@ -70,7 +70,7 @@ Item {
     start: 0
     length: 0
   }
-  TestCase {
+  DeadlineTestCase {
     name: "CommandDeck_clipboard"
     when: windowShown
     function entry(index, revision, presentation) {
@@ -102,7 +102,7 @@ Item {
       reply("settings", {policy: {revision: 1, consent: "None", paused: false, maximumEntries: 200, retentionHours: 168, quotaMiB: 256, clearOnStartup: false},
         migration: {required: false, storeRevision: 1, entryCount: 3, pinnedCount: 0}, status: "Disabled"})
       reply("query", page([entry(0), entry(1), entry(2)], "cursor1"))
-      tryCompare(surface.searchControl, "activeFocus", true)
+      waitForValue(surface.searchControl, "activeFocus", true)
     }
     function cleanup() {
       matchOverlay.start = 0
@@ -113,13 +113,13 @@ Item {
       rtlMatchOverlay.length = 0
       rtlMatchTarget.text = ""
       controller.close(false)
-      wait(0)
+      nextTurn()
     }
 
     function test_capture_status_poll_preserves_button_focus_and_stops_on_close() {
       for (let index = 0; index < 30 && !surface.copyControl.activeFocus; index++) keyClick(Qt.Key_Tab)
       verify(surface.copyControl.activeFocus)
-      tryVerify(function() { return Boolean(controller.pending.settings) }, 2000)
+      waitForCondition(function() { return Boolean(controller.pending.settings) }, 2000)
       reply("settings", Object.assign({}, controller.settings, {status: "Capturing text"}))
       compare(controller.settings.status, "Capturing text")
       verify(surface.copyControl.activeFocus)
@@ -127,25 +127,25 @@ Item {
       verify(Boolean(controller.pending.copy))
       controller.close(false)
       const count = scene.sent.length
-      wait(1100)
+      observeFor(1100, () => scene.sent.length === count, "a closed clipboard sends no polling requests")
       compare(scene.sent.length, count)
     }
 
     function test_query_free_navigation_opens_search_with_keyboard_and_mouse() {
       keyClick(Qt.Key_Escape)
-      tryCompare(invoker, "activeFocus", true)
+      waitForValue(invoker, "activeFocus", true)
       keyClick(Qt.Key_Tab)
-      tryCompare(navigation, "activeFocus", true)
+      waitForValue(navigation, "activeFocus", true)
       keyClick(Qt.Key_Return)
-      tryCompare(surface.searchControl, "activeFocus", true)
+      waitForValue(surface.searchControl, "activeFocus", true)
       compare(controller.query, "")
       typeText("keyboard")
       compare(controller.query, "keyboard")
       keyClick(Qt.Key_Escape)
       keyClick(Qt.Key_Escape)
-      tryCompare(invoker, "activeFocus", true)
+      waitForValue(invoker, "activeFocus", true)
       mouseClick(navigation, navigation.width / 2, navigation.height / 2)
-      tryCompare(surface.searchControl, "activeFocus", true)
+      waitForValue(surface.searchControl, "activeFocus", true)
       compare(controller.query, "")
       typeText("mouse")
       compare(controller.query, "mouse")
@@ -163,7 +163,7 @@ Item {
       compare(controller.opened, true)
       typeText("after")
       compare(controller.query, "after")
-      tryVerify(function() { return Boolean(controller.pending.query) })
+      waitForCondition(function() { return Boolean(controller.pending.query) })
       reply("query", page([entry(1)]))
       mouseClick(surface.listControl.itemAtIndex(0), 20, 20)
       mouseClick(surface.copyControl)
@@ -193,14 +193,14 @@ Item {
       reply("query", page([entry(2)]))
       controller.handleMessage({requestId: stale, type: Protocol.Messages.ClipboardResult, clipboard: {action: {succeeded: true}}})
       compare(controller.notice, "")
-      tryCompare(surface.searchControl, "activeFocus", true)
+      waitForValue(surface.searchControl, "activeFocus", true)
     }
 
     function test_copy_waits_for_new_query_and_preserves_input_editing() {
       typeText("new")
       keyClick(Qt.Key_Return)
       verify(!controller.pending.copy)
-      tryVerify(function() { return Boolean(controller.pending.query) })
+      waitForCondition(function() { return Boolean(controller.pending.query) })
       keyClick(Qt.Key_Return)
       verify(!controller.pending.copy)
       reply("query", page([entry(2)]))
@@ -220,7 +220,7 @@ Item {
       compare(controller.selectedIndex, 1)
       typeText("cafe")
       compare(surface.searchControl.text, "cafe")
-      tryVerify(function() { return Boolean(controller.pending.query) })
+      waitForCondition(function() { return Boolean(controller.pending.query) })
       reply("query", page([entry(1)], "next"))
       compare(controller.entries.length, 1)
       compare(surface.searchControl.activeFocus, true)
@@ -229,14 +229,14 @@ Item {
       reply("query", page([entry(1)], "next"))
       typeText("x")
       compare(controller.query, "cafex")
-      tryVerify(function() { return Boolean(controller.pending.query) })
+      waitForCondition(function() { return Boolean(controller.pending.query) })
       reply("query", page([entry(1)], "next"))
       mouseClick(surface.moreControl)
       reply("more", page([entry(2)]))
       compare(controller.entries.length, 2)
       typeText("y")
       compare(controller.query, "cafexy")
-      tryVerify(function() { return Boolean(controller.pending.query) })
+      waitForCondition(function() { return Boolean(controller.pending.query) })
       reply("query", page([entry(1)]))
       mouseClick(surface.refreshControl)
       reply("query", page([entry(1)]))
@@ -247,7 +247,7 @@ Item {
 
     function test_keyboard_button_focus_survives_replacement_and_keywords_restore() {
       keyClick(Qt.Key_Tab)
-      tryCompare(surface.kindControl, "activeFocus", true)
+      waitForValue(surface.kindControl, "activeFocus", true)
       keyClick(Qt.Key_Right)
       compare(controller.kindFilter, "text")
       compare(scene.sent[scene.sent.length - 1].clipboard.kindFilter, "text")
@@ -273,14 +273,14 @@ Item {
       compare(scene.sent[scene.sent.length - 1].clipboard.kindFilter, undefined)
       mouseClick(surface.listControl.itemAtIndex(0), 20, 20)
       keyClick(Qt.Key_E, Qt.ControlModifier)
-      tryCompare(surface.dialogControl.editorControl, "activeFocus", true)
+      waitForValue(surface.dialogControl.editorControl, "activeFocus", true)
       typeText("work")
       keyClick(Qt.Key_Tab)
       compare(surface.dialogControl.cancelControl.activeFocus, true)
       keyClick(Qt.Key_Tab)
       compare(surface.dialogControl.acceptControl.activeFocus, true)
       keyClick(Qt.Key_Space)
-      tryCompare(surface.searchControl, "activeFocus", true)
+      waitForValue(surface.searchControl, "activeFocus", true)
       const request = scene.sent[scene.sent.length - 1]
       compare(request.clipboard.action, "keywords")
       compare(request.clipboard.keywords[0], "work")
@@ -294,20 +294,20 @@ Item {
       const image = entry(5, 1, {kind: "images", imageWidth: 32, imageHeight: 16, destinationCount: 0, hasOpenDestination: false, reducedFidelity: false})
       const link = entry(6, 1, {kind: "links", imageWidth: null, imageHeight: null, destinationCount: 1, hasOpenDestination: true, reducedFidelity: false})
       typeText("img")
-      tryVerify(function() { return Boolean(controller.pending.query) })
+      waitForCondition(function() { return Boolean(controller.pending.query) })
       reply("query", page([image, link]))
       compare(controller.describe(image), "Image 32×16")
       compare(controller.describe(link), "Link")
       compare(surface.listControl.itemAtIndex(0).descriptionControl.text, "Image 32×16")
-      tryVerify(function() { return Boolean(controller.pending.preview) })
+      waitForCondition(function() { return Boolean(controller.pending.preview) })
       reply("preview", {preview: {id: "entry5", incarnation: "inc5", revision: 1, queryGeneration: controller.queryGeneration, slice: emptySlice(),
         presentation: image.presentation, openDestination: null, extractedText: false, truncated: false,
         imageSource: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAASElEQVR4nGNwi7r0fyAxw6gDRkNgNARGQ4BQCFAKKC6IiDGEEr2jDhgNgdEQGA2B0RAYGiEwoJXRaLN8NARGQ2A0BNxo3D0HAMBAGv92W3CjAAAAAElFTkSuQmCC"}})
-      tryCompare(surface.previewImageControl, "status", Image.Ready)
+      waitForValue(surface.previewImageControl, "status", Image.Ready)
       compare(surface.previewImageControl.visible, true)
       compare(surface.previewControl.visible, false)
       keyClick(Qt.Key_Down)
-      tryVerify(function() { return Boolean(controller.pending.preview) })
+      waitForCondition(function() { return Boolean(controller.pending.preview) })
       reply("preview", {preview: {id: "entry6", incarnation: "inc6", revision: 1, queryGeneration: controller.queryGeneration,
         slice: Object.assign(emptySlice(), {text: "https://example.invalid/page"}), presentation: link.presentation,
         openDestination: "https://example.invalid/page", extractedText: false, truncated: false, imageSource: null}})
@@ -322,9 +322,9 @@ Item {
       const link = entry(7, 1, {kind: "links", imageWidth: null, imageHeight: null, destinationCount: 1, hasOpenDestination: true, reducedFidelity: false})
       compare(surface.openControl.enabled, false)
       typeText("link")
-      tryVerify(function() { return Boolean(controller.pending.query) })
+      waitForCondition(function() { return Boolean(controller.pending.query) })
       reply("query", page([link]))
-      tryVerify(function() { return Boolean(controller.pending.preview) })
+      waitForCondition(function() { return Boolean(controller.pending.preview) })
       reply("preview", {preview: {id: "entry7", incarnation: "inc7", revision: 1, queryGeneration: controller.queryGeneration,
         slice: Object.assign(emptySlice(), {text: "https://example.invalid/page"}), presentation: link.presentation,
         openDestination: "https://example.invalid/page", extractedText: false, truncated: false, imageSource: null}})
@@ -370,20 +370,20 @@ Item {
         handlers: [{desktopId: "browser.desktop", label: "Browser", rank: "default", available: true, reason: null},
           {desktopId: "term.desktop", label: "Terminal", rank: "declared", available: false, reason: "UnsupportedTerminalLaunch"}],
         total: 2, moreAvailable: false, expiresInSeconds: 30, effectsAvailable: false, unavailableReason: "ReleaseBarrierUnavailable"}})
-      tryCompare(surface.dialogControl, "opened", true)
-      tryCompare(surface.dialogControl.cancelControl, "activeFocus", true)
+      waitForValue(surface.dialogControl, "opened", true)
+      waitForValue(surface.dialogControl.cancelControl, "activeFocus", true)
       compare(surface.dialogControl.handlersControl.count, 2)
       compare(surface.dialogControl.handlersControl.itemAt(0).text, "• Browser (default)")
       compare(surface.dialogControl.handlersControl.itemAt(1).text, "• Terminal · terminal launch unsupported")
       compare(surface.dialogControl.acceptControl.visible, false)
       verify(surface.dialogControl.explanation.indexOf("not available in this build") > 0)
       keyClick(Qt.Key_Escape)
-      tryCompare(surface.dialogControl, "opened", false)
+      waitForValue(surface.dialogControl, "opened", false)
       const abort = scene.sent[scene.sent.length - 1]
       compare(abort.operation, Protocol.Operations.ClipboardReleaseAbort)
       compare(abort.clipboard.releaseId, "abcdefabcdefabcdefabcdefabcdefab")
       reply("abort", {abort: {frontendInstance: controller.frontendInstance, openGeneration: 1, releaseId: "abcdefabcdefabcdefabcdefabcdefab", outcome: "RevokedBeforeDispatch"}})
-      tryCompare(surface.searchControl, "activeFocus", true)
+      waitForValue(surface.searchControl, "activeFocus", true)
       typeText("x")
       compare(controller.query, "linkx")
       compare(controller.openPreparation, null)
@@ -414,9 +414,9 @@ Item {
         slice: {text: "<a href='file:///secret'>literal</a>", ranges: [{startUtf16: 25, lengthUtf16: 7}], matchCount: 1, matchIndex: 0, selectedRange: 0}}})
       compare(surface.previewControl.textFormat, TextEdit.PlainText)
       compare(surface.previewControl.text, "<a href='file:///secret'>literal</a>")
-      tryCompare(surface.previewHighlightControl, "count", 1)
+      waitForValue(surface.previewHighlightControl, "count", 1)
       const overlay = surface.previewHighlightControl.itemAt(0)
-      tryCompare(overlay, "segmentCount", 1)
+      waitForValue(overlay, "segmentCount", 1)
       const expected = surface.previewControl.positionToRectangle(25)
       fuzzyCompare(overlay.segmentAt(0).x, expected.x, 1)
       fuzzyCompare(overlay.segmentAt(0).y, expected.y, 1)
@@ -425,33 +425,33 @@ Item {
       compare(surface.previewControl.cursorPosition, 25)
       controller.preview = {incarnation: "inc1", revision: 1, queryGeneration: controller.queryGeneration,
         slice: {text: "first line\nsecond line", ranges: [{startUtf16: 6, lengthUtf16: 11}], matchCount: 1, matchIndex: 0, selectedRange: 0}}
-      tryCompare(surface.previewHighlightControl, "count", 1)
-      tryVerify(function() {
+      waitForValue(surface.previewHighlightControl, "count", 1)
+      waitForCondition(function() {
         const wrappedOverlay = surface.previewHighlightControl.itemAt(0)
         return wrappedOverlay !== null && wrappedOverlay.segmentCount >= 2
       })
       controller.preview = {incarnation: "inc1", revision: 1, queryGeneration: controller.queryGeneration,
         slice: {text: "אבג", ranges: [{startUtf16: 0, lengthUtf16: 3}], matchCount: 1, matchIndex: 0, selectedRange: 0}}
-      tryCompare(surface.previewHighlightControl, "count", 1)
+      waitForValue(surface.previewHighlightControl, "count", 1)
       const rtlOverlay = surface.previewHighlightControl.itemAt(0)
-      tryCompare(rtlOverlay, "segmentCount", 1)
+      waitForValue(rtlOverlay, "segmentCount", 1)
       verify(rtlOverlay.segmentAt(0).width > 20, "RTL range uses both visual endpoints")
       controller.preview = {incarnation: "inc1", revision: 1, queryGeneration: controller.queryGeneration,
         slice: {text: "abc אבג xyz", ranges: [{startUtf16: 2, lengthUtf16: 4}], matchCount: 1, matchIndex: 0, selectedRange: 0}}
-      tryCompare(surface.previewHighlightControl, "count", 1)
-      tryVerify(function() {
+      waitForValue(surface.previewHighlightControl, "count", 1)
+      waitForCondition(function() {
         const mixedOverlay = surface.previewHighlightControl.itemAt(0)
         return mixedOverlay !== null && mixedOverlay.segmentCount === 2
       })
       controller.preview = null
-      tryCompare(surface.previewHighlightControl, "count", 0)
+      waitForValue(surface.previewHighlightControl, "count", 0)
       keyClick(Qt.Key_Escape)
       compare(controller.opened, false)
-      tryCompare(invoker, "activeFocus", true)
+      waitForValue(invoker, "activeFocus", true)
       controller.open("")
       reply("open", openResponse("second"))
       reply("query", page([entry(0)]))
-      tryCompare(surface.searchControl, "activeFocus", true)
+      waitForValue(surface.searchControl, "activeFocus", true)
       typeText("new")
       compare(controller.query, "new")
     }
@@ -460,11 +460,11 @@ Item {
       matchTarget.text = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
       matchOverlay.start = 30
       matchOverlay.length = 5
-      tryCompare(matchOverlay, "segmentCount", 1)
+      waitForValue(matchOverlay, "segmentCount", 1)
       const originalY = matchOverlay.segmentAt(0).y
 
       matchTarget.width = 80
-      tryVerify(function() {
+      waitForCondition(function() {
         return matchOverlay.segmentCount > 0 && Math.abs(matchOverlay.segmentAt(0).y - originalY) >= 1
       })
 
@@ -481,7 +481,7 @@ Item {
 
       matchOverlay.start = boundary
       matchOverlay.length = 1
-      tryCompare(matchOverlay, "segmentCount", 1)
+      waitForValue(matchOverlay, "segmentCount", 1)
       verify(matchOverlay.segmentAt(0).width > 2, "the boundary character receives its visual width")
     }
 
@@ -503,7 +503,7 @@ Item {
 
       rtlMatchOverlay.start = boundary
       rtlMatchOverlay.length = 1
-      tryCompare(rtlMatchOverlay, "segmentCount", 1)
+      waitForValue(rtlMatchOverlay, "segmentCount", 1)
       const boundaryHead = rtlMatchTarget.positionToRectangle(boundary)
       fuzzyCompare(rtlMatchOverlay.segmentAt(0).x, boundaryHead.x - glyphWidth, 1)
       fuzzyCompare(rtlMatchOverlay.segmentAt(0).width, glyphWidth, 1)
@@ -516,20 +516,20 @@ Item {
       compare(controller.query, "list")
       compare(surface.searchControl.activeFocus, true)
       mouseClick(surface.clearControl)
-      tryCompare(surface.dialogControl.cancelControl, "activeFocus", true)
+      waitForValue(surface.dialogControl.cancelControl, "activeFocus", true)
       keyClick(Qt.Key_Backtab)
       compare(surface.dialogControl.acceptControl.activeFocus, true)
       keyClick(Qt.Key_Tab)
       compare(surface.dialogControl.cancelControl.activeFocus, true)
       keyClick(Qt.Key_Escape)
-      tryCompare(surface.searchControl, "activeFocus", true)
+      waitForValue(surface.searchControl, "activeFocus", true)
       verify(!scene.sent.some(value => value.clipboard && value.clipboard.action === "clear"))
     }
 
     function test_limits_preview_is_explicit_and_restores_search_after_apply() {
       mouseClick(surface.limitsControl)
       const dialog = surface.limitsDialogControl
-      tryCompare(dialog.countControl.contentItem, "activeFocus", true)
+      waitForValue(dialog.countControl.contentItem, "activeFocus", true)
       keyClick(Qt.Key_A, Qt.ControlModifier)
       typeText("100")
       keyClick(Qt.Key_Tab)
@@ -545,7 +545,7 @@ Item {
       reply("settingsSet", {policy: snapshot.policy, migration: snapshot.migration, status: "Disabled",
         policyReview: {token: "review-token", policyRevision: 1, storeRevision: 1,
           proposed: {maximumEntries: 100, retentionHours: 168, quotaMiB: 256, clearOnStartup: false}, deleteCount: 5, pinnedCount: 1}})
-      tryCompare(dialog.cancelControl, "activeFocus", true)
+      waitForValue(dialog.cancelControl, "activeFocus", true)
       keyClick(Qt.Key_Tab)
       compare(dialog.saveControl.activeFocus, true)
       keyClick(Qt.Key_Return)
@@ -555,7 +555,7 @@ Item {
       verify(confirm.confirmed)
       reply("settingsSet", {policy: {revision: 2, consent: "None", maximumEntries: 100, retentionHours: 168, quotaMiB: 256},
         migration: snapshot.migration, status: "Disabled"})
-      tryCompare(surface.searchControl, "activeFocus", true)
+      waitForValue(surface.searchControl, "activeFocus", true)
       typeText("after limits")
       compare(controller.query, "after limits")
     }

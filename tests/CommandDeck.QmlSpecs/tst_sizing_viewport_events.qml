@@ -43,7 +43,7 @@ Item {
       previousTabStop: search
     }
   }
-  TestCase {
+  DeadlineTestCase {
     name: "SizingViewport_events"
     when: windowShown
 
@@ -55,27 +55,27 @@ Item {
     }
 
     function test_resize_reveals_existing_footer_focus() {
-      tryCompare(search, "activeFocus", true)
+      waitForValue(search, "activeFocus", true)
       keyClick(Qt.Key_Backtab)
-      tryCompare(footer.helpControl, "activeFocus", true)
+      waitForValue(footer.helpControl, "activeFocus", true)
       verify(visibleInViewport(footer.helpControl))
       verify(!panel.viewport.interactive)
 
       display.height = 240
-      tryCompare(panel.viewport, "interactive", true)
-      tryVerify(() => visibleInViewport(footer.helpControl))
+      waitForValue(panel.viewport, "interactive", true)
+      waitForCondition(() => visibleInViewport(footer.helpControl))
       verify(footer.helpControl.activeFocus, "resizing must retain Help focus")
 
       display.height = 200
-      tryCompare(display, "configuredSize", Qt.size(1280, 200))
-      tryVerify(() => visibleInViewport(footer.helpControl))
+      waitForValue(display, "configuredSize", Qt.size(1280, 200))
+      waitForCondition(() => visibleInViewport(footer.helpControl))
       verify(footer.helpControl.activeFocus, "further resizing reveals the same focused control")
       keyClick(Qt.Key_Tab)
-      tryCompare(search, "activeFocus", true)
-      tryVerify(() => visibleInViewport(search))
+      waitForValue(search, "activeFocus", true)
+      waitForCondition(() => visibleInViewport(search))
 
       display.height = 720
-      tryCompare(panel.viewport, "interactive", false)
+      waitForValue(panel.viewport, "interactive", false)
       compare(panel.viewport.contentY, 0)
       verify(search.activeFocus)
     }

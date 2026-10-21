@@ -25,7 +25,7 @@ public static partial class Program
 
     private static async Task SparseFuzzyLookupIgnoresDisabledCatalogGrowthAsync( )
     {
-        var database = Path.Combine( Path.GetTempPath( ), $"commanddeck-sparse-fuzzy-{Guid.NewGuid( ):N}.db" );
+        var database = SpecTemporaryFiles.PathFor( $"commanddeck-sparse-fuzzy-{Guid.NewGuid( ):N}.db" );
         try
         {
             await using SqliteCatalog catalog = new( new StorageOptions { DatabasePath = database } );

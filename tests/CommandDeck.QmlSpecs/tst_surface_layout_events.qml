@@ -80,7 +80,7 @@ Item {
     filterDescriptors: root.teachingFilters
   }
 
-  TestCase {
+  DeadlineTestCase {
     name: "SurfaceLayout"
     when: windowShown
 
@@ -132,18 +132,18 @@ Item {
       verify(theme.background.a < 1, "the fallback palette is translucent")
 
       actionPanel.result = { id: "app:firefox", title: "Firefox", actions: [{ id: "launch", title: "Launch" }] }
-      verify(waitForRendering(actionPanel))
+      verify(waitForFrame(actionPanel))
       verifyOpaqueAt(actionPanel.x + 5, actionPanel.y + actionPanel.height / 2, "the action panel")
       actionPanel.result = null
 
       helpSheet.opened = true
-      verify(waitForRendering(helpSheet))
+      verify(waitForFrame(helpSheet))
       const helpWidth = Math.min(Math.round(760 * theme.scale), root.width - 48)
       verifyOpaqueAt((root.width - helpWidth) / 2 + 5, root.height / 2, "the help sheet")
       helpSheet.opened = false
 
       filterPalette.opened = true
-      verify(waitForRendering(filterPalette))
+      verify(waitForFrame(filterPalette))
       const paletteWidth = Math.min(Math.round(560 * theme.scale), root.width - 48)
       verifyOpaqueAt((root.width - paletteWidth) / 2 + 5, root.height / 2, "the filter palette")
     }
@@ -151,7 +151,7 @@ Item {
     function test_action_filter_matches_launcher_inputs() {
       actionPanel.openFor({ id: "app:firefox", title: "Firefox", actions: [{ id: "launch", title: "Launch" }] })
       const filter = actionPanel.filterControl
-      tryVerify(function() { return filter.activeFocus })
+      waitForCondition(function() { return filter.activeFocus })
       compare(filter.font.family, theme.fontFamily)
       verify(Qt.colorEqual(filter.background.color, theme.surfaceStrong), "the field uses the launcher surface")
       verify(Qt.colorEqual(filter.background.border.color, theme.accent), "the focused field shows the accent ring")
@@ -177,7 +177,7 @@ Item {
     function test_filter_palette_teaches_without_repeating_tokens() {
       filterPalette.filterDescriptors = root.teachingFilters
       filterPalette.opened = true
-      tryVerify(function() { return renderedTexts(filterPalette).indexOf("Projects") >= 0 })
+      waitForCondition(function() { return renderedTexts(filterPalette).indexOf("Projects") >= 0 })
       const texts = renderedTexts(filterPalette)
       compare(occurrences(texts, "herdr:"), 1, "a filter without an example shows its token once")
       verify(texts.indexOf("proj: dotfiles") >= 0, "built-in filters show a runnable example")
@@ -189,7 +189,7 @@ Item {
 
     function test_empty_state_chips_do_not_repeat_tokens() {
       emptyState.visible = true
-      tryVerify(function() { return renderedTexts(emptyState).indexOf("proj: dotfiles") >= 0 })
+      waitForCondition(function() { return renderedTexts(emptyState).indexOf("proj: dotfiles") >= 0 })
       const texts = renderedTexts(emptyState)
       verify(texts.indexOf("herdr:") < 0, "a chip without an example has no second line")
       verify(texts.indexOf("herdr:  Herdr") >= 0, "the chip still names its token")
@@ -204,7 +204,7 @@ Item {
     function test_dialog_inputs_match_launcher_inputs() {
       aliasDialog.openFor({ id: "app:firefox", title: "Firefox", aliases: [] })
       const alias = aliasDialog.inputControl
-      tryVerify(function() { return alias.activeFocus })
+      waitForCondition(function() { return alias.activeFocus })
       verifyLauncherInput(alias, "the alias field")
       keyClick(Qt.Key_F)
       compare(alias.text, "f")
@@ -212,7 +212,7 @@ Item {
 
       inputDialog.opened = true
       const input = inputDialog.rowAt(0).input
-      tryVerify(function() { return input.activeFocus })
+      waitForCondition(function() { return input.activeFocus })
       verifyLauncherInput(input, "the action input")
       keyClick(Qt.Key_M)
       compare(input.text, "m")
@@ -220,14 +220,14 @@ Item {
 
     function test_full_palette_surfaces_keep_the_frame_and_hide_results() {
       queryHistory.opened = true
-      verify(waitForRendering(queryHistory))
+      verify(waitForFrame(queryHistory))
       const image = grabImage(root)
       verify(Qt.colorEqual(image.pixel(1, 1), "white"), "the corner falls outside the rounded frame")
       verifyOpaqueAt(4, root.height / 2, "query history")
     }
 
     function test_no_results_buttons_fit_their_labels() {
-      tryVerify(function() { return noResults.assistantControl.width > 0 })
+      waitForCondition(function() { return noResults.assistantControl.width > 0 })
       verifyLabelsInside(noResults.assistantControl, 4)
       verifyLabelsInside(noResults.filtersControl, 4)
     }

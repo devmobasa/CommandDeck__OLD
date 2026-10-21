@@ -97,9 +97,7 @@ public static partial class Program
 
     private static string CreateCliSpecRoot( )
     {
-        var root = Path.Combine(
-            Path.GetTempPath( ),
-            $"commanddeck-cli-spec-{Guid.NewGuid( ):N}" );
+        var root = SpecTemporaryFiles.PathFor( $"commanddeck-cli-spec-{Guid.NewGuid( ):N}" );
         Directory.CreateDirectory( root );
         return root;
     }

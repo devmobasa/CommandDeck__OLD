@@ -79,7 +79,7 @@ Item {
     property var lastIpcObject: ({})
   }
 
-  TestCase {
+  DeadlineTestCase {
     name: "WorkspacePreview"
     when: windowShown
 
@@ -114,10 +114,10 @@ Item {
       preview.mode = "layout"
       navigation.clear()
       preview.eligible = true
-      tryCompare(search.inputControl, "activeFocus", true)
-      tryCompare(preview.model, "totalCount", 1)
+      waitForValue(search.inputControl, "activeFocus", true)
+      waitForValue(preview.model, "totalCount", 1)
       refreshMetadata()
-      tryCompare(preview.model, "layoutAvailable", true)
+      waitForValue(preview.model, "layoutAvailable", true)
     }
     function cleanup() { preview.eligible = false }
 
@@ -131,7 +131,7 @@ Item {
       compare(first.width, canvas.width)
 
       workspace.toplevels = { values: [client, client] }
-      tryCompare(preview.model, "totalCount", 2)
+      waitForValue(preview.model, "totalCount", 2)
       compare(findChild(preview, "workspacePreviewOutline0").width, canvas.width / 2)
       const second = findChild(preview, "workspacePreviewOutline1")
       verify(second !== null)
@@ -155,33 +155,46 @@ Item {
     }
 
     function test_expiry_without_notification_and_one_refresh_per_open() {
-      tryCompare(backend, "requests", 1)
-      tryCompare(preview.model, "layoutAvailable", false, 2300)
+      waitForValue(backend, "requests", 1)
+      waitForValue(preview.model, "layoutAvailable", false, 2300)
       compare(preview.model.status, "Layout unavailable")
       compare(preview.model.descriptors.length, 1)
       compare(backend.requests, 1)
       refreshMetadata()
-      tryCompare(preview.model, "layoutAvailable", true)
+      waitForValue(preview.model, "layoutAvailable", true)
       compare(backend.requests, 1)
       backend.invalidated()
       compare(preview.model.layoutAvailable, false)
     }
 
     function test_idle_layout_recomputes_only_when_it_expires() {
-      let recomputations = 0
-      const count = () => recomputations++
+      // Capture the transition times rather than requiring the test thread to
+      // wake before expiry on a busy machine.
+      refreshMetadata()
+      verify(preview.model.layoutAvailable)
+      const started = Date.now()
+      const recomputations = []
+      let invalidatedAt = 0
+      const count = () => recomputations.push(Date.now() - started)
+      const invalidated = () => { if (!preview.model.layoutAvailable) invalidatedAt = Date.now() - started }
       preview.model.descriptorsChanged.connect(count)
-      wait(700)
-      preview.model.descriptorsChanged.disconnect(count)
-      compare(recomputations, 0, "an idle layout preview does not recompute its windows")
-      verify(preview.model.layoutAvailable, "geometry stays valid until it expires")
-      tryCompare(preview.model, "layoutAvailable", false, 2000)
-      compare(preview.model.status, "Layout unavailable")
+      preview.model.layoutAvailableChanged.connect(invalidated)
+      try {
+        waitForValue(preview.model, "layoutAvailable", false)
+        verify(invalidatedAt >= 700, "geometry stays valid for at least 700 ms; expired at " + invalidatedAt)
+        compare(recomputations.filter(elapsed => elapsed < 700).length, 0,
+          "an idle layout preview does not recompute its windows before expiry")
+        compare(recomputations.length, 1, "an idle layout recomputes once at expiry, without polling")
+        compare(preview.model.status, "Layout unavailable")
+      } finally {
+        preview.model.descriptorsChanged.disconnect(count)
+        preview.model.layoutAvailableChanged.disconnect(invalidated)
+      }
     }
 
     function test_recycled_workspace_requires_search_started_after_removal() {
       backend.workspaces = []
-      tryCompare(preview.model, "workspace", null)
+      waitForValue(preview.model, "workspace", null)
       backend.workspaces = [replacement]
       client.workspace = replacement
       preview.result = result()
@@ -189,9 +202,9 @@ Item {
       preview.issuedRequestId++
       compare(preview.model.workspace, null)
       preview.resultRequestId = preview.issuedRequestId
-      tryCompare(preview.model, "workspace", replacement)
+      waitForValue(preview.model, "workspace", replacement)
       refreshMetadata()
-      tryCompare(preview.model, "layoutAvailable", true)
+      waitForValue(preview.model, "layoutAvailable", true)
     }
 
     function test_recycled_workspace_fence_survives_navigation_and_reopen() {
@@ -199,7 +212,7 @@ Item {
       const oldRequest = preview.resultRequestId
       const pendingRequest = ++preview.issuedRequestId
       backend.workspaces = []
-      tryCompare(preview.model, "workspace", null)
+      waitForValue(preview.model, "workspace", null)
       backend.workspaces = [replacement]
       client.workspace = replacement
 
@@ -228,9 +241,9 @@ Item {
       preview.result = result()
       compare(preview.model.workspace, null)
       preview.resultRequestId = preview.issuedRequestId
-      tryCompare(preview.model, "workspace", replacement)
+      waitForValue(preview.model, "workspace", replacement)
       refreshMetadata()
-      tryCompare(preview.model, "layoutAvailable", true)
+      waitForValue(preview.model, "layoutAvailable", true)
     }
 
     function test_unselected_workspace_removal_invalidates_old_results() {
@@ -242,7 +255,7 @@ Item {
       otherResult.metadata.workspaceId = "2"
       otherResult.metadata.workspaceName = "2"
       preview.result = otherResult
-      tryCompare(preview.model, "workspace", otherWorkspace)
+      waitForValue(preview.model, "workspace", otherWorkspace)
 
       backend.workspaces = [otherWorkspace]
       backend.workspaces = [replacement, otherWorkspace]
@@ -253,7 +266,7 @@ Item {
 
       preview.issuedRequestId++
       preview.resultRequestId = preview.issuedRequestId
-      tryCompare(preview.model, "workspace", replacement)
+      waitForValue(preview.model, "workspace", replacement)
     }
 
     function test_special_missing_and_conflicting_identity() {
@@ -272,22 +285,22 @@ Item {
 
     function test_inventory_bounds_hidden_members_resize_and_monitor_move() {
       workspace.toplevels = { values: Array(100).fill(client) }
-      tryCompare(preview.model, "totalCount", 100)
+      waitForValue(preview.model, "totalCount", 100)
       compare(preview.model.descriptors.length, 64)
       compare(preview.model.overflow, 76)
       const hidden = snapshot()
       hidden.hidden = true
       client.lastIpcObject = hidden
-      tryCompare(preview.model, "descriptors", [])
+      waitForValue(preview.model, "descriptors", [])
       workspace.toplevels = { values: [client] }
       refreshMetadata()
-      tryCompare(preview.model, "layoutAvailable", true)
+      waitForValue(preview.model, "layoutAvailable", true)
       const resized = snapshot()
       resized.size = [384, 216]
       client.lastIpcObject = resized
       compare(preview.model.descriptors[0].rect.width, 0.25)
       monitor.name = "DP-2"
-      tryCompare(preview.model, "workspace", null)
+      waitForValue(preview.model, "workspace", null)
       compare(preview.model.status, "Workspace unavailable")
     }
 
@@ -334,10 +347,10 @@ Item {
       preview.eligible = false
       compare(preview.model.descriptors.length, 0)
       const requests = backend.requests
-      wait(150)
+      observeFor(150, () => backend.requests === requests, "ineligible previews do not refresh")
       compare(backend.requests, requests)
       preview.eligible = true
-      tryCompare(search.inputControl, "activeFocus", true)
+      waitForValue(search.inputControl, "activeFocus", true)
       compare(preview.model.layoutAvailable, false)
       keyClick(Qt.Key_A)
       compare(navigation.queryText, "ws:a")

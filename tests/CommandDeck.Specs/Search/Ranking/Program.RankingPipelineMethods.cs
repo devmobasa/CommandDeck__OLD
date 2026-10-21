@@ -4,9 +4,7 @@ public static partial class Program
 {
     private static async Task CatalogRankingExposesContributionsFieldsCapsAndFairnessAsync( )
     {
-        var database = Path.Combine(
-            Path.GetTempPath( ),
-            $"commanddeck-ranking-pipeline-{Guid.NewGuid( ):N}.db" );
+        var database = SpecTemporaryFiles.PathFor( $"commanddeck-ranking-pipeline-{Guid.NewGuid( ):N}.db" );
         try
         {
             SearchOptions searchOptions = new( )

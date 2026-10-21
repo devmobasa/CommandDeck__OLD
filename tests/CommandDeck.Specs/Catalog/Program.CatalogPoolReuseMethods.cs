@@ -6,7 +6,7 @@ public static partial class Program
 {
     private static async Task OldCatalogTokenCannotInterruptLaterBorrowerAsync( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-pool-token-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-pool-token-" ).FullName;
         try
         {
             await using SqliteCatalog catalog = new( new StorageOptions { DatabasePath = Path.Combine( root, "catalog.db" ) } );

@@ -6,9 +6,7 @@ public static partial class Program
 {
     private static async Task IntegrityAcceptsFieldsExcludedFromSearchAsync( )
     {
-        var database = Path.Combine(
-            Path.GetTempPath( ),
-            $"commanddeck-policy-integrity-{Guid.NewGuid( ):N}.db" );
+        var database = SpecTemporaryFiles.PathFor( $"commanddeck-policy-integrity-{Guid.NewGuid( ):N}.db" );
         try
         {
             await using SqliteCatalog catalog = new( new StorageOptions { DatabasePath = database } );
@@ -40,9 +38,7 @@ public static partial class Program
 
     private static async Task RepairKeepsExcludedFieldsOutOfSearchAsync( )
     {
-        var database = Path.Combine(
-            Path.GetTempPath( ),
-            $"commanddeck-policy-repair-{Guid.NewGuid( ):N}.db" );
+        var database = SpecTemporaryFiles.PathFor( $"commanddeck-policy-repair-{Guid.NewGuid( ):N}.db" );
         try
         {
             await using SqliteCatalog catalog = new( new StorageOptions { DatabasePath = database } );
@@ -68,9 +64,7 @@ public static partial class Program
 
     private static async Task CatalogMigrationRestoresSearchInclusionFromPolicyAsync( )
     {
-        var database = Path.Combine(
-            Path.GetTempPath( ),
-            $"commanddeck-policy-migration-{Guid.NewGuid( ):N}.db" );
+        var database = SpecTemporaryFiles.PathFor( $"commanddeck-policy-migration-{Guid.NewGuid( ):N}.db" );
         try
         {
             await using ( SqliteCatalog current = new( new StorageOptions { DatabasePath = database } ) )
@@ -108,9 +102,7 @@ public static partial class Program
 
     private static async Task FuzzySearchKeepsExcludedNamesOutOfMatchesAsync( )
     {
-        var database = Path.Combine(
-            Path.GetTempPath( ),
-            $"commanddeck-policy-fuzzy-{Guid.NewGuid( ):N}.db" );
+        var database = SpecTemporaryFiles.PathFor( $"commanddeck-policy-fuzzy-{Guid.NewGuid( ):N}.db" );
         try
         {
             // Equal field weights let a path or subtitle alone pass the fuzzy

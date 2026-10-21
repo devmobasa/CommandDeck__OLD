@@ -15,7 +15,7 @@ Item {
     onBackRequested: opened = false
   }
   SignalSpy { id: actions; target: host; signalName: "actionRequested" }
-  TestCase {
+  DeadlineTestCase {
     name: "ExtensionNavigation"
     when: windowShown
     function list(revision, page) {
@@ -52,17 +52,17 @@ Item {
       page.content.items[0].imageSource = image
       host.snapshot = page
       mouseClick(opener)
-      tryCompare(host.inputControl, "activeFocus", true)
-      verify(waitForRendering(host))
+      waitForValue(host.inputControl, "activeFocus", true)
+      verify(waitForFrame(host))
       const rowImage = findChild(host.listControl.itemsControl.itemAtIndex(0), "packageImage")
       verify(rowImage !== null)
-      tryCompare(rowImage, "status", Image.Ready)
+      waitForValue(rowImage, "status", Image.Ready)
       const next = detail(2)
       next.content.imageSource = image
       host.snapshot = next
-      tryCompare(host.detailControl.bodyControl, "activeFocus", true)
+      waitForValue(host.detailControl.bodyControl, "activeFocus", true)
       const detailImage = findChild(host.detailControl, "packageImage")
-      tryCompare(detailImage, "status", Image.Ready)
+      waitForValue(detailImage, "status", Image.Ready)
       host.snapshot = { revision: 3, content: Object.assign({}, next.content, { imageSource: "https://example.com/image.png" }) }
       compare(detailImage.source.toString(), "")
     }
@@ -70,37 +70,37 @@ Item {
       mouseClick(opener)
       host.busy = true
       host.noView = true
-      tryCompare(host.completionControl, "activeFocus", true)
+      waitForValue(host.completionControl, "activeFocus", true)
       keyClick(Qt.Key_Escape)
       compare(host.opened, false)
-      tryCompare(opener, "activeFocus", true)
+      waitForValue(opener, "activeFocus", true)
     }
     function test_no_view_completion_focus_and_dismissal() {
       mouseClick(opener)
       host.noView = true
-      tryCompare(host.completionControl, "activeFocus", true)
+      waitForValue(host.completionControl, "activeFocus", true)
       compare(host.completionControl.text, "Cancel · Esc")
       mouseClick(host, 20, 20)
       verify(host.completionControl.activeFocus)
       host.completed = true
-      tryCompare(host.completionControl, "activeFocus", true)
+      waitForValue(host.completionControl, "activeFocus", true)
       compare(host.listControl.opened, false)
       keyClick(Qt.Key_Return)
       compare(host.opened, false)
-      tryCompare(opener, "activeFocus", true)
+      waitForValue(opener, "activeFocus", true)
       host.completed = false
       host.noView = false
       mouseClick(opener)
-      tryCompare(host.inputControl, "activeFocus", true)
+      waitForValue(host.inputControl, "activeFocus", true)
       host.completed = true
-      tryCompare(host.completionControl, "activeFocus", true)
+      waitForValue(host.completionControl, "activeFocus", true)
       mouseClick(host.completionControl)
       compare(host.opened, false)
-      tryCompare(opener, "activeFocus", true)
+      waitForValue(opener, "activeFocus", true)
     }
     function test_pushed_list_starts_fresh_and_back_restores_parent() {
       mouseClick(opener)
-      tryCompare(host.inputControl, "activeFocus", true)
+      waitForValue(host.inputControl, "activeFocus", true)
       keyClick(Qt.Key_B)
       keyClick(Qt.Key_Tab)
       keyClick(Qt.Key_Tab)
@@ -111,15 +111,15 @@ Item {
       child.content.depth = 2
       child.content.backHandle = "back-2"
       host.snapshot = child
-      tryCompare(host.inputControl, "text", "")
+      waitForValue(host.inputControl, "text", "")
       compare(host.selectedId, "gamma")
-      tryCompare(host.inputControl, "activeFocus", true)
+      waitForValue(host.inputControl, "activeFocus", true)
       keyClick(Qt.Key_Escape)
       compare(actions.signalArguments[1][2], "back-2")
       host.snapshot = list(3, 1)
-      tryCompare(host.inputControl, "text", "b")
+      waitForValue(host.inputControl, "text", "b")
       compare(host.selectedId, "beta")
-      tryVerify(function() { return host.viewActionsControl.itemAt(0).activeFocus })
+      waitForCondition(function() { return host.viewActionsControl.itemAt(0).activeFocus })
     }
     function longDetail(revision, depth) {
       const view = detail(revision)
@@ -130,24 +130,24 @@ Item {
     }
     function test_new_detail_resets_scroll_after_returning_to_list() {
       mouseClick(opener)
-      tryCompare(host.inputControl, "activeFocus", true)
+      waitForValue(host.inputControl, "activeFocus", true)
       host.snapshot = longDetail(2, 2)
-      tryCompare(host.detailControl.bodyControl, "activeFocus", true)
-      verify(waitForRendering(host.detailControl))
+      waitForValue(host.detailControl.bodyControl, "activeFocus", true)
+      verify(waitForFrame(host.detailControl))
       keyClick(Qt.Key_PageDown)
       verify(host.detailControl.captureState().scroll > 0)
       keyClick(Qt.Key_Escape)
       host.snapshot = list(3, 1)
-      tryCompare(host.inputControl, "activeFocus", true)
+      waitForValue(host.inputControl, "activeFocus", true)
       host.snapshot = longDetail(4, 2)
-      tryCompare(host.detailControl.bodyControl, "activeFocus", true)
-      tryVerify(function() { return host.detailControl.captureState().scroll === 0 })
+      waitForValue(host.detailControl.bodyControl, "activeFocus", true)
+      waitForCondition(function() { return host.detailControl.captureState().scroll === 0 })
     }
     function test_nested_detail_resets_scroll_and_back_restores_parent() {
       mouseClick(opener)
       host.snapshot = longDetail(2, 2)
-      tryCompare(host.detailControl.bodyControl, "activeFocus", true)
-      verify(waitForRendering(host.detailControl))
+      waitForValue(host.detailControl.bodyControl, "activeFocus", true)
+      verify(waitForFrame(host.detailControl))
       keyClick(Qt.Key_PageDown)
       const parentScroll = host.detailControl.captureState().scroll
       verify(parentScroll > 0)
@@ -155,16 +155,16 @@ Item {
       verify(host.detailControl.actionsControl.itemAt(0).activeFocus)
       keyClick(Qt.Key_Space)
       host.snapshot = longDetail(3, 3)
-      tryVerify(function() { return host.detailControl.captureState().scroll === 0 })
-      tryCompare(host.detailControl.bodyControl, "activeFocus", true)
+      waitForCondition(function() { return host.detailControl.captureState().scroll === 0 })
+      waitForValue(host.detailControl.bodyControl, "activeFocus", true)
       keyClick(Qt.Key_Escape)
       host.snapshot = longDetail(4, 2)
-      tryVerify(function() { return host.detailControl.captureState().scroll === parentScroll })
-      tryVerify(function() { return host.detailControl.actionsControl.itemAt(0).activeFocus })
+      waitForCondition(function() { return host.detailControl.captureState().scroll === parentScroll })
+      waitForCondition(function() { return host.detailControl.actionsControl.itemAt(0).activeFocus })
     }
     function test_list_detail_back_restores_filter_selection_and_action_focus() {
       mouseClick(opener)
-      tryCompare(host.inputControl, "activeFocus", true)
+      waitForValue(host.inputControl, "activeFocus", true)
       keyClick(Qt.Key_B)
       compare(host.selectedId, "beta")
       keyClick(Qt.Key_Tab)
@@ -176,7 +176,7 @@ Item {
       host.busy = true
       host.snapshot = detail(2)
       host.busy = false
-      tryCompare(host.detailControl.bodyControl, "activeFocus", true)
+      waitForValue(host.detailControl.bodyControl, "activeFocus", true)
       verify(host.detailControl.bodyControl.text.indexOf("<img") < 0)
       verify(host.detailControl.bodyControl.text.indexOf("<a ") < 0)
       keyClick(Qt.Key_Return)
@@ -188,30 +188,30 @@ Item {
       host.busy = true
       host.snapshot = list(3, 1)
       host.busy = false
-      tryCompare(host.inputControl, "text", "b")
+      waitForValue(host.inputControl, "text", "b")
       compare(host.selectedId, "beta")
-      tryVerify(function() { return host.viewActionsControl.itemAt(0).activeFocus })
+      waitForCondition(function() { return host.viewActionsControl.itemAt(0).activeFocus })
       keyClick(Qt.Key_Space)
       compare(actions.signalArguments[3][2], "detail-beta-3")
       host.snapshot = detail(4)
-      tryCompare(host.detailControl.bodyControl, "activeFocus", true)
+      waitForValue(host.detailControl.bodyControl, "activeFocus", true)
       mouseClick(host.detailControl.actionsControl.itemAt(0))
       compare(actions.signalArguments[4][2], "detail-copy-4")
       mouseClick(host.detailControl.backControl)
       compare(actions.signalArguments[5][2], "back-4")
       host.snapshot = list(5, 1)
-      tryVerify(function() { return host.viewActionsControl.itemAt(0).activeFocus })
+      waitForCondition(function() { return host.viewActionsControl.itemAt(0).activeFocus })
       keyClick(Qt.Key_Escape)
       compare(host.inputControl.text, "")
       keyClick(Qt.Key_Escape)
       compare(host.opened, false)
-      tryCompare(opener, "activeFocus", true)
+      waitForValue(opener, "activeFocus", true)
       keyClick(Qt.Key_Return)
-      tryCompare(host.inputControl, "activeFocus", true)
+      waitForValue(host.inputControl, "activeFocus", true)
     }
     function test_pages_replace_and_use_the_latest_local_filter() {
       mouseClick(opener)
-      tryCompare(host.inputControl, "activeFocus", true)
+      waitForValue(host.inputControl, "activeFocus", true)
       keyClick(Qt.Key_Backtab)
       keyClick(Qt.Key_Backtab)
       verify(host.listControl.nextPageControl.activeFocus)
@@ -230,7 +230,7 @@ Item {
       keyClick(Qt.Key_Return)
       compare(actions.signalArguments[1][2], "copy-gamma-2")
       keyClick(Qt.Key_Escape)
-      verify(waitForRendering(host))
+      verify(waitForFrame(host))
       mouseClick(host.listControl.previousPageControl)
       compare(actions.signalArguments[2][2], "previous-2")
       host.snapshot = list(3, 1)
@@ -240,25 +240,25 @@ Item {
       compare(host.filtered.length, 2)
       host.externalError = ""
       mouseClick(host.listControl.backControl)
-      tryCompare(opener, "activeFocus", true)
+      waitForValue(opener, "activeFocus", true)
     }
     function test_mouse_pagination_keeps_typing_in_search() {
       mouseClick(opener)
-      tryCompare(host.inputControl, "activeFocus", true)
-      verify(waitForRendering(host))
+      waitForValue(host.inputControl, "activeFocus", true)
+      verify(waitForFrame(host))
       mouseClick(host.listControl.nextPageControl)
       compare(actions.signalArguments[0][2], "next-1")
       host.busy = true
       host.snapshot = list(2, 2)
       host.busy = false
-      tryCompare(host.inputControl, "activeFocus", true)
+      waitForValue(host.inputControl, "activeFocus", true)
       keyClick(Qt.Key_G)
       compare(host.inputControl.text, "g")
       compare(host.selectedId, "gamma")
     }
     function test_last_page_keeps_keyboard_focus_in_pagination() {
       mouseClick(opener)
-      tryCompare(host.inputControl, "activeFocus", true)
+      waitForValue(host.inputControl, "activeFocus", true)
       keyClick(Qt.Key_Backtab)
       keyClick(Qt.Key_Backtab)
       verify(host.listControl.nextPageControl.activeFocus)
@@ -266,13 +266,13 @@ Item {
       host.busy = true
       host.snapshot = list(2, 2)
       host.busy = false
-      tryCompare(host.listControl.previousPageControl, "activeFocus", true)
+      waitForValue(host.listControl.previousPageControl, "activeFocus", true)
       keyClick(Qt.Key_Space)
       compare(actions.signalArguments[1][2], "previous-2")
       host.busy = true
       host.snapshot = list(3, 1)
       host.busy = false
-      tryCompare(host.listControl.nextPageControl, "activeFocus", true)
+      waitForValue(host.listControl.nextPageControl, "activeFocus", true)
     }
   }
 }

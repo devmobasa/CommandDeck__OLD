@@ -92,9 +92,7 @@ public static partial class Program
     private static async Task<RankingQualityMeasurement> MeasurePipelineCorpusAsync(
         JsonElement pipeline )
     {
-        var database = Path.Combine(
-            Path.GetTempPath( ),
-            $"commanddeck-ranking-corpus-{Guid.NewGuid( ):N}.db" );
+        var database = SpecTemporaryFiles.PathFor( $"commanddeck-ranking-corpus-{Guid.NewGuid( ):N}.db" );
         try
         {
             await using SqliteCatalog catalog = new( new StorageOptions { DatabasePath = database } );

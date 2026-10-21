@@ -29,7 +29,7 @@ Item {
   }
   SignalSpy { id: detailActions; target: detail; signalName: "actionRequested" }
   LiteralTextProbe { id: literal }
-  TestCase {
+  DeadlineTestCase {
     name: "ExtensionNativeViews"
     when: windowShown
     function snapshot(revision, suffix) {
@@ -51,13 +51,13 @@ Item {
     }
     function test_keyboard_open_type_select_refresh_activate_back_reopen() {
       mouseClick(openButton)
-      tryCompare(view.inputControl, "activeFocus", true)
-      tryCompare(presentations, "count", 1)
+      waitForValue(view.inputControl, "activeFocus", true)
+      waitForValue(presentations, "count", 1)
       keyClick(Qt.Key_Down)
       compare(view.selectedId, "beta")
       for (let i = 2; i <= 6; i++) {
         view.snapshot = snapshot(i, "refresh " + i)
-        waitForRendering(view)
+        waitForFrame(view)
         compare(view.selectedId, "beta")
         keyClick(Qt.Key_Return)
         compare(actions.signalArguments[actions.count - 1][2], "beta-" + i)
@@ -71,16 +71,16 @@ Item {
       compare(view.inputControl.text, "")
       keyClick(Qt.Key_Escape)
       compare(view.opened, false)
-      tryCompare(openButton, "activeFocus", true)
+      waitForValue(openButton, "activeFocus", true)
       keyClick(Qt.Key_Return)
-      tryCompare(view.inputControl, "activeFocus", true)
+      waitForValue(view.inputControl, "activeFocus", true)
       keyClick(Qt.Key_B)
       compare(view.inputControl.text, "b")
     }
     function test_mouse_selection_and_copy_keep_search_ready() {
       mouseClick(openButton)
-      tryCompare(view.inputControl, "activeFocus", true)
-      verify(waitForRendering(view))
+      waitForValue(view.inputControl, "activeFocus", true)
+      verify(waitForFrame(view))
       mouseClick(view.itemsControl.itemAtIndex(1))
       keyClick(Qt.Key_B)
       compare(view.inputControl.text, "b")
@@ -101,8 +101,8 @@ Item {
       next.content.actions = [{ id: "generate", title: viewAction, handle: "generate-1" }]
       view.snapshot = next
       mouseClick(openButton)
-      tryCompare(view.inputControl, "activeFocus", true)
-      verify(waitForRendering(view))
+      waitForValue(view.inputControl, "activeFocus", true)
+      verify(waitForFrame(view))
 
       compare(literal.problem(view.primaryControl, title), "")
       compare(literal.problem(view.viewActionsControl.itemAt(0), itemAction), "")
@@ -122,8 +122,8 @@ Item {
       const title = "<h1>Open</h1> <a href='https://example.invalid'>site</a>"
       detail.snapshot = { revision: 1, content: { title: "Detail", body: "Body", actions: [{ id: "open", title: title, handle: "open-1" }] } }
       detail.opened = true
-      tryCompare(detail.bodyControl, "activeFocus", true)
-      verify(waitForRendering(detail))
+      waitForValue(detail.bodyControl, "activeFocus", true)
+      verify(waitForFrame(detail))
 
       compare(literal.problem(detail.actionsControl.itemAt(0), title), "")
       keyClick(Qt.Key_Tab)
@@ -133,7 +133,7 @@ Item {
     }
     function test_typing_from_keyboard_list_focus_edits_search() {
       mouseClick(openButton)
-      tryCompare(view.inputControl, "activeFocus", true)
+      waitForValue(view.inputControl, "activeFocus", true)
       keyClick(Qt.Key_Tab)
       keyClick(Qt.Key_B)
       compare(view.inputControl.text, "b")
@@ -141,7 +141,7 @@ Item {
     }
     function test_mouse_primary_back_and_tab_order() {
       mouseClick(openButton)
-      tryCompare(view.inputControl, "activeFocus", true)
+      waitForValue(view.inputControl, "activeFocus", true)
       keyClick(Qt.Key_Tab)
       keyClick(Qt.Key_Down)
       compare(view.selectedId, "beta")
@@ -154,14 +154,14 @@ Item {
       compare(actions.count, 2)
       mouseClick(view.backControl)
       compare(view.opened, false)
-      tryCompare(openButton, "activeFocus", true)
+      waitForValue(openButton, "activeFocus", true)
     }
     function test_callback_busy_escape_and_recovery_keyboard() {
       const next = snapshot(1, "")
       next.content.actions = [{ id: "generate", title: "Generate again", handle: "generate-1" }]
       view.snapshot = next
       mouseClick(openButton)
-      tryCompare(view.inputControl, "activeFocus", true)
+      waitForValue(view.inputControl, "activeFocus", true)
       keyClick(Qt.Key_A)
       keyClick(Qt.Key_Tab)
       keyClick(Qt.Key_Tab)
@@ -184,13 +184,13 @@ Item {
       compare(actions.count, 1)
       view.recoveryVisible = true
       view.disableAvailable = true
-      tryCompare(view.restartControl, "activeFocus", true)
+      waitForValue(view.restartControl, "activeFocus", true)
       keyClick(Qt.Key_Right)
       compare(view.disableControl.activeFocus, true)
       keyClick(Qt.Key_Left)
       compare(view.restartControl.activeFocus, true)
       keyClick(Qt.Key_Escape)
-      tryCompare(openButton, "activeFocus", true)
+      waitForValue(openButton, "activeFocus", true)
     }
     function test_regeneration_restores_action_identity_or_search() {
       function generated(revision, includeGenerate) {
@@ -202,7 +202,7 @@ Item {
       }
       view.snapshot = generated(1, true)
       mouseClick(openButton)
-      tryCompare(view.inputControl, "activeFocus", true)
+      waitForValue(view.inputControl, "activeFocus", true)
       keyClick(Qt.Key_Tab)
       keyClick(Qt.Key_Tab)
       keyClick(Qt.Key_Tab)
@@ -211,34 +211,34 @@ Item {
       compare(actions.signalArguments[0][2], "generate-1")
       view.busy = true
       view.snapshot = generated(2, true)
-      waitForRendering(view)
+      waitForFrame(view)
       view.busy = false
-      tryVerify(function() { return view.viewActionsControl.itemAt(1).activeFocus })
+      waitForCondition(function() { return view.viewActionsControl.itemAt(1).activeFocus })
       keyClick(Qt.Key_Space)
       compare(actions.signalArguments[1][2], "generate-2")
       view.busy = true
       view.snapshot = generated(3, false)
       view.busy = false
-      tryCompare(view.inputControl, "activeFocus", true)
+      waitForValue(view.inputControl, "activeFocus", true)
       keyClick(Qt.Key_B)
       compare(view.selectedId, "beta")
       view.snapshot = generated(4, true)
-      tryCompare(view.inputControl, "activeFocus", true)
-      verify(waitForRendering(view))
+      waitForValue(view.inputControl, "activeFocus", true)
+      verify(waitForFrame(view))
       mouseClick(view.viewActionsControl.itemAt(0))
       compare(actions.signalArguments[2][2], "generate-4")
       view.busy = true
       view.snapshot = generated(5, true)
       view.busy = false
-      tryCompare(view.inputControl, "activeFocus", true)
+      waitForValue(view.inputControl, "activeFocus", true)
       keyClick(Qt.Key_E)
       compare(view.inputControl.text, "be")
       keyClick(Qt.Key_Escape)
       compare(view.inputControl.text, "")
       keyClick(Qt.Key_Escape)
-      tryCompare(openButton, "activeFocus", true)
+      waitForValue(openButton, "activeFocus", true)
       keyClick(Qt.Key_Return)
-      tryCompare(view.inputControl, "activeFocus", true)
+      waitForValue(view.inputControl, "activeFocus", true)
     }
   }
 }

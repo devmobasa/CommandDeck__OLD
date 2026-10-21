@@ -8,7 +8,7 @@ public static partial class Program
     // stored untouched, while Settings can still save source preferences.
     private static async Task UnreadableExtensionRegistryKeepsSourcePreferencesEditableAsync( )
     {
-        var root = Path.Combine( Path.GetTempPath( ), "commanddeck-registry-recovery-" + Guid.NewGuid( ).ToString( "N" ) );
+        var root = SpecTemporaryFiles.PathFor( "commanddeck-registry-recovery-" + Guid.NewGuid( ).ToString( "N" ) );
         Directory.CreateDirectory( root );
         try
         {

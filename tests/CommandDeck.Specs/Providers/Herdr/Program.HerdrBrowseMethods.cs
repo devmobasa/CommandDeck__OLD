@@ -31,7 +31,7 @@ public static partial class Program
 
     private static async Task HerdrCoordinatorPreservesBrowseOrderWithUsageAsync( )
     {
-        var database = Path.Combine( Path.GetTempPath( ), $"commanddeck-herdr-browse-{Guid.NewGuid( ):N}.db" );
+        var database = SpecTemporaryFiles.PathFor( $"commanddeck-herdr-browse-{Guid.NewGuid( ):N}.db" );
         try
         {
             await using SqliteCatalog catalog = new( new StorageOptions { DatabasePath = database } );

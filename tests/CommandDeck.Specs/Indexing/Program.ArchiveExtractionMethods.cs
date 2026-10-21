@@ -8,9 +8,7 @@ public static partial class Program
 {
     private static async Task ArchiveExtractionIsBoundedAsync( )
     {
-        var temporary = Path.Combine(
-            Path.GetTempPath( ),
-            $"commanddeck-archive-{Guid.NewGuid( ):N}" );
+        var temporary = SpecTemporaryFiles.PathFor( $"commanddeck-archive-{Guid.NewGuid( ):N}" );
         var root = Path.Combine( temporary, "root" );
         Directory.CreateDirectory( root );
         var zip = Path.Combine( root, "notes.zip" );

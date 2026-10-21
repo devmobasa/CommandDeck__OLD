@@ -40,7 +40,7 @@ Item {
       scene.preferences, navigation.queryText, navigation.activeFilters)
   }
 
-  TestCase {
+  DeadlineTestCase {
     name: "WorkspacePreviewRouting"
     when: windowShown
 
@@ -55,7 +55,7 @@ Item {
       navigation.clear()
       setPreferences(false, true)
       scene.opened = true
-      tryCompare(search.inputControl, "activeFocus", true)
+      waitForValue(search.inputControl, "activeFocus", true)
     }
 
     function cleanup() { scene.opened = false }
@@ -98,7 +98,7 @@ Item {
       verify(preview.hasContent)
       scene.opened = false
       scene.opened = true
-      tryCompare(search.inputControl, "activeFocus", true)
+      waitForValue(search.inputControl, "activeFocus", true)
       typeWorkspacePrefix()
       verify(!preview.hasContent)
     }

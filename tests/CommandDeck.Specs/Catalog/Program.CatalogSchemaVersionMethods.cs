@@ -28,9 +28,7 @@ public static partial class Program
 
     private static async Task CatalogRefusesNewerSchemaAsync( )
     {
-        var database = Path.Combine(
-            Path.GetTempPath( ),
-            $"commanddeck-newer-schema-{Guid.NewGuid( ):N}.db" );
+        var database = SpecTemporaryFiles.PathFor( $"commanddeck-newer-schema-{Guid.NewGuid( ):N}.db" );
         try
         {
             await using ( SqliteCatalog current = new( new StorageOptions { DatabasePath = database } ) )

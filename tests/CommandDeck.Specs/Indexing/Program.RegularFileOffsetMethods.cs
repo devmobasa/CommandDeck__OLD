@@ -4,7 +4,7 @@ public static partial class Program
 {
     private static async Task RegularFileHandlesPreserveOffsetsAsync( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-regular-offsets-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-regular-offsets-" ).FullName;
         try
         {
             var bytes = "first half - second half"u8.ToArray( );

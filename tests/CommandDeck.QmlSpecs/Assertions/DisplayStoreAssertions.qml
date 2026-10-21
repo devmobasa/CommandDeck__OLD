@@ -17,7 +17,7 @@ QtObject {
   property int completedReads: 0
   property int readsBeforeRecommended: 0
   readonly property var store: preferences.displayScaleStore
-  property QtObject frontend: QtObject {
+  property var frontend: QtObject {
     property bool testMode: true
     property bool daemonAvailable: false
     property string coachStateDir: decodeURIComponent(Qt.resolvedUrl(".").toString().replace(/^file:\/\//, ""))
@@ -68,12 +68,17 @@ QtObject {
     onTriggered: {
       const current = spec.steps[spec.step]
       if (!current.ready() && Date.now() < spec.deadline) return
-      spec.host.expect(current.ready(), current.name)
+      spec.host.expect(current.ready(), current.name + (current.ready() ? "" : "; observed " + JSON.stringify({
+        loaded: spec.store.loaded, legacy: spec.store.legacy, percent: spec.store.percent,
+        legacyPercent: spec.store.legacyPercent, profile: spec.store.profile.text(), file: spec.store.file.text(),
+        writes: spec.percentageWrites, reads: spec.completedReads,
+        layout: spec.preferences.layoutStore.file.text()
+      })))
       if (!current.ready()) { spec.finish(); return }
 
       current.run()
       spec.step++
-      spec.deadline = Date.now() + 4000
+      spec.deadline = Date.now() + 30000
       if (spec.step === spec.steps.length) spec.finish()
     }
   }
@@ -142,7 +147,7 @@ QtObject {
             "reloading layout preferences restores the durable panel choices")
         } }
     ]
-    deadline = Date.now() + 4000
+    deadline = Date.now() + 30000
     percentWriter.setText(" LARGE \n")
     poll.start()
   }

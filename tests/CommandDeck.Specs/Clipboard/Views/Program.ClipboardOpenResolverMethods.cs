@@ -51,7 +51,7 @@ public static partial class Program
             throw new SpecSkippedException( "This fixture requires Linux." );
         }
 
-        var root = Directory.CreateTempSubdirectory( "commanddeck-clipboard-xdg-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-clipboard-xdg-" ).FullName;
         try
         {
             var bin = Directory.CreateDirectory( Path.Combine( root, "bin" ) ).FullName;

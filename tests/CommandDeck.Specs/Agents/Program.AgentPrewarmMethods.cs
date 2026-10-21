@@ -24,7 +24,7 @@ public static partial class Program
 
     private static async Task AgentPrewarmStartsTheSessionWithoutRunningATurnAsync( )
     {
-        var root = Path.Combine( Path.GetTempPath( ), $"commanddeck-agent-prewarm-{Guid.NewGuid( ):N}" );
+        var root = SpecTemporaryFiles.PathFor( $"commanddeck-agent-prewarm-{Guid.NewGuid( ):N}" );
         Directory.CreateDirectory( root );
         try
         {
@@ -86,7 +86,7 @@ public static partial class Program
 
     private static async Task AgentSweepKeepsTheProcessWarmPastTheConversationTtlAsync( )
     {
-        var root = Path.Combine( Path.GetTempPath( ), $"commanddeck-agent-keepalive-{Guid.NewGuid( ):N}" );
+        var root = SpecTemporaryFiles.PathFor( $"commanddeck-agent-keepalive-{Guid.NewGuid( ):N}" );
         Directory.CreateDirectory( root );
         try
         {
@@ -135,7 +135,7 @@ public static partial class Program
 
     private static async Task AgentSweepDoesNotStopASessionThatIsStillPreparingAsync( )
     {
-        var root = Path.Combine( Path.GetTempPath( ), $"commanddeck-agent-reclaim-race-{Guid.NewGuid( ):N}" );
+        var root = SpecTemporaryFiles.PathFor( $"commanddeck-agent-reclaim-race-{Guid.NewGuid( ):N}" );
         Directory.CreateDirectory( root );
         try
         {
@@ -178,7 +178,7 @@ public static partial class Program
 
     private static async Task AgentSweepEndsAnUnrestrictedTurnWhenItsLeaseExpiresAsync( )
     {
-        var root = Path.Combine( Path.GetTempPath( ), $"commanddeck-agent-lease-{Guid.NewGuid( ):N}" );
+        var root = SpecTemporaryFiles.PathFor( $"commanddeck-agent-lease-{Guid.NewGuid( ):N}" );
         Directory.CreateDirectory( root );
         try
         {

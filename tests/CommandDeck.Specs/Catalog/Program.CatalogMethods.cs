@@ -6,9 +6,7 @@ public static partial class Program
 {
     private static async Task CatalogMigratesPreviousSchemaAsync( )
     {
-        var database = Path.Combine(
-            Path.GetTempPath( ),
-            $"commanddeck-migration-spec-{Guid.NewGuid( ):N}.db" );
+        var database = SpecTemporaryFiles.PathFor( $"commanddeck-migration-spec-{Guid.NewGuid( ):N}.db" );
         try
         {
             await using ( SqliteConnection connection = new( $"Data Source={database}" ) )
@@ -84,9 +82,7 @@ public static partial class Program
 
     private static async Task CatalogRepairsMigrationTwoWithoutStateAsync( )
     {
-        var database = Path.Combine(
-            Path.GetTempPath( ),
-            $"commanddeck-migration-repair-spec-{Guid.NewGuid( ):N}.db" );
+        var database = SpecTemporaryFiles.PathFor( $"commanddeck-migration-repair-spec-{Guid.NewGuid( ):N}.db" );
         try
         {
             await using ( SqliteConnection connection = new( $"Data Source={database}" ) )
@@ -154,9 +150,7 @@ public static partial class Program
 
     private static async Task WindowIconsFollowDesktopEntryMatchOrderAsync( )
     {
-        var database = Path.Combine(
-            Path.GetTempPath( ),
-            $"commanddeck-icon-spec-{Guid.NewGuid( ):N}.db" );
+        var database = SpecTemporaryFiles.PathFor( $"commanddeck-icon-spec-{Guid.NewGuid( ):N}.db" );
         try
         {
             SqliteCatalog catalog = new( new StorageOptions { DatabasePath = database } );

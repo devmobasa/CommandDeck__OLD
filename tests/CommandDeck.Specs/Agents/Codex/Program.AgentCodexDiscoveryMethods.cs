@@ -9,7 +9,7 @@ public static partial class Program
             throw new SpecSkippedException( "This fixture requires Linux." );
         }
 
-        var root = Path.Combine( Path.GetTempPath( ), $"commanddeck-codex-shim-{Guid.NewGuid( ):N}" );
+        var root = SpecTemporaryFiles.PathFor( $"commanddeck-codex-shim-{Guid.NewGuid( ):N}" );
         var shimDirectory = Path.Combine( root, "shim" );
         var directDirectory = Path.Combine( root, "direct" );
         Directory.CreateDirectory( shimDirectory );

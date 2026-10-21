@@ -18,9 +18,7 @@ public static partial class Program
 
     private static async Task ConfigInitWritesSchemaHintAsync( )
     {
-        var directory = Path.Combine(
-            Path.GetTempPath( ),
-            $"commanddeck-schema-init-{Guid.NewGuid( ):N}" );
+        var directory = SpecTemporaryFiles.PathFor( $"commanddeck-schema-init-{Guid.NewGuid( ):N}" );
         Directory.CreateDirectory( directory );
         var path = Path.Combine( directory, "commanddeck.jsonc" );
         try
@@ -67,9 +65,7 @@ public static partial class Program
             }
         }
 
-        var aliasRoot = Path.Combine(
-            Path.GetTempPath( ),
-            $"commanddeck-schema-alias-{Guid.NewGuid( ):N}" );
+        var aliasRoot = SpecTemporaryFiles.PathFor( $"commanddeck-schema-alias-{Guid.NewGuid( ):N}" );
         Directory.CreateDirectory( aliasRoot );
         var aliasDirectory = Path.Combine( aliasRoot, "alias" );
         var aliasConfig = Path.Combine( aliasDirectory, $"commanddeck-init-{Guid.NewGuid( ):N}.jsonc" );

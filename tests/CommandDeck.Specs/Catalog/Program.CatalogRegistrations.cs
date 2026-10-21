@@ -63,9 +63,7 @@ public static partial class Program
 
         await RunAsync( "SQLite FTS5 smoke test", async ( ) =>
         {
-            var database = Path.Combine(
-                Path.GetTempPath( ),
-                $"commanddeck-spec-{Guid.NewGuid( ):N}.db" );
+            var database = SpecTemporaryFiles.PathFor( $"commanddeck-spec-{Guid.NewGuid( ):N}.db" );
             try
             {
                 SqliteCatalog catalog = new( new StorageOptions { DatabasePath = database } );
@@ -107,9 +105,7 @@ public static partial class Program
 
         await RunAsync( "universal catalog search tolerates string line numbers", async ( ) =>
         {
-            var database = Path.Combine(
-                Path.GetTempPath( ),
-                $"commanddeck-spec-{Guid.NewGuid( ):N}.db" );
+            var database = SpecTemporaryFiles.PathFor( $"commanddeck-spec-{Guid.NewGuid( ):N}.db" );
             try
             {
                 SqliteCatalog catalog = new( new StorageOptions { DatabasePath = database } );
@@ -196,9 +192,7 @@ public static partial class Program
 
         await RunAsync( "desktop scanner applies user masking and desktop visibility", async ( ) =>
         {
-            var root = Path.Combine(
-                Path.GetTempPath( ),
-                $"commanddeck-desktop-spec-{Guid.NewGuid( ):N}" );
+            var root = SpecTemporaryFiles.PathFor( $"commanddeck-desktop-spec-{Guid.NewGuid( ):N}" );
             var userData = Path.Combine( root, "user" );
             var systemData = Path.Combine( root, "system" );
             var userApplications = Path.Combine( userData, "applications" );

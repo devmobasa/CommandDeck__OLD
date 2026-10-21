@@ -7,9 +7,7 @@ public static partial class Program
 {
     private static async Task AgentContextProtectsConfiguredCredentialDirectoriesAsync( )
     {
-        var home = Environment.GetFolderPath( Environment.SpecialFolder.UserProfile );
-        var fixture = Path.Combine( home, $"commanddeck-credential-boundary-{Guid.NewGuid( ):N}" );
-        Directory.CreateDirectory( fixture );
+        var fixture = SpecTemporaryFiles.CreateHomeDirectory( "commanddeck-credential-boundary-" ).FullName;
         var originalStateHome = Environment.GetEnvironmentVariable( "XDG_STATE_HOME" );
         try
         {
@@ -110,7 +108,7 @@ public static partial class Program
 
     private static async Task AgentContextHidesConfiguredCredentialsAsync( )
     {
-        var home = Path.Combine( Path.GetTempPath( ), $"commanddeck-context-exclusions-{Guid.NewGuid( ):N}" );
+        var home = SpecTemporaryFiles.PathFor( $"commanddeck-context-exclusions-{Guid.NewGuid( ):N}" );
         var actual = Path.Combine( home, "actual" );
         var alias = Path.Combine( home, "alias" );
         Directory.CreateDirectory( actual );
@@ -160,7 +158,7 @@ public static partial class Program
 
     private static async Task AgentTextSearchesShareTheContextBudgetAsync( )
     {
-        var root = Path.Combine( Path.GetTempPath( ), $"commanddeck-context-budget-{Guid.NewGuid( ):N}" );
+        var root = SpecTemporaryFiles.PathFor( $"commanddeck-context-budget-{Guid.NewGuid( ):N}" );
         var searchDirectory = Path.Combine( root, "notes" );
         Directory.CreateDirectory( searchDirectory );
         var file = Path.Combine( root, "large.txt" );

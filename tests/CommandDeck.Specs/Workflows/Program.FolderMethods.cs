@@ -4,7 +4,7 @@ public static partial class Program
 {
     private static async Task FolderBrowsingAndSelectionAsync( )
     {
-        var directory = Directory.CreateTempSubdirectory( "commanddeck-browse-" ).FullName;
+        var directory = SpecTemporaryFiles.CreateDirectory( "commanddeck-browse-" ).FullName;
         try
         {
             var child = Directory.CreateDirectory( Path.Combine( directory, "nested folder" ) ).FullName;

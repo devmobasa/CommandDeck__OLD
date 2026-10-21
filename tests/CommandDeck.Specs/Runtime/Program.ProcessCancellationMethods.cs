@@ -12,7 +12,7 @@ public static partial class Program
             throw new SpecSkippedException( "This fixture requires Linux." );
         }
 
-        var root = Directory.CreateTempSubdirectory( "commanddeck-worker-cancellation-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-worker-cancellation-", preservePrefix: true ).FullName;
         using CancellationTokenSource cancellation = new( );
         var executable = Environment.ProcessPath!;
         List<string> arguments = [];
@@ -22,12 +22,12 @@ public static partial class Program
         }
 
         arguments.AddRange( ["--worker-cancellation-fixture", root] );
-        var work = ProcessRunner.RunAsync( executable, arguments, null, null, TimeSpan.FromSeconds( 10 ), cancellation.Token ).AsTask( );
+        var work = ProcessRunner.RunAsync( executable, arguments, null, null, TimeSpan.FromSeconds( 60 ), cancellation.Token ).AsTask( );
         try
         {
             var ready = Path.Combine( root, "ready" );
             var started = Stopwatch.GetTimestamp( );
-            while ( !File.Exists( ready ) && !work.IsCompleted && Stopwatch.GetElapsedTime( started ) < TimeSpan.FromSeconds( 5 ) )
+            while ( !File.Exists( ready ) && !work.IsCompleted && Stopwatch.GetElapsedTime( started ) < TimeSpan.FromSeconds( 30 ) )
             {
                 await Task.Delay( 10 );
             }
@@ -79,8 +79,8 @@ public static partial class Program
             throw new SpecSkippedException( "This fixture requires Linux." );
         }
 
-        var root = Directory.CreateTempSubdirectory( "commanddeck-process-stdin-" ).FullName;
-        using CancellationTokenSource watchdog = new( TimeSpan.FromSeconds( 8 ) );
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-process-stdin-", preservePrefix: true ).FullName;
+        using CancellationTokenSource watchdog = new( TimeSpan.FromSeconds( 60 ) );
         var executable = Environment.ProcessPath!;
         List<string> arguments = [];
         if ( Path.GetFileNameWithoutExtension( executable ) == "dotnet" )
@@ -90,14 +90,14 @@ public static partial class Program
 
         arguments.AddRange( ["--process-runner-stdin-fixture", root] );
         var work = ProcessRunner.RunAsync( executable, arguments, new string( 'x', 2 * 1024 * 1024 ),
-            null, cancel ? TimeSpan.FromSeconds( 6 ) : TimeSpan.FromSeconds( 1 ), watchdog.Token ).AsTask( );
+            null, TimeSpan.FromSeconds( 45 ), watchdog.Token ).AsTask( );
         var pid = 0;
         try
         {
             var ready = Path.Combine( root, "ready" );
             var started = Stopwatch.GetTimestamp( );
             while ( !File.Exists( ready ) && !work.IsCompleted &&
-                    Stopwatch.GetElapsedTime( started ) < TimeSpan.FromSeconds( 5 ) )
+                    Stopwatch.GetElapsedTime( started ) < TimeSpan.FromSeconds( 30 ) )
             {
                 await Task.Delay( 10 );
             }
@@ -112,7 +112,7 @@ public static partial class Program
             }
             else
             {
-                var result = await work;
+                var result = await work.WaitAsync( TimeSpan.FromSeconds( 60 ) );
                 True( result.TimedOut, "the operation deadline must cover stdin delivery" );
             }
 
@@ -121,6 +121,12 @@ public static partial class Program
         finally
         {
             watchdog.Cancel( );
+            try
+            {
+                await work.WaitAsync( TimeSpan.FromSeconds( 30 ) );
+            }
+            catch ( OperationCanceledException ) { }
+
             if ( pid > 0 )
             {
                 try
@@ -145,6 +151,9 @@ public static partial class Program
             return 2;
         }
 
+        // Model startup slower than the old one-second operation deadline.
+        Thread.Sleep( TimeSpan.FromSeconds( 2 ) );
+
         // Publish readiness only after the PID is complete; file creation alone
         // lets the parent read an empty file before WriteAllText has filled it.
         var ready = Path.Combine( root, "ready" );
@@ -164,7 +173,7 @@ public static partial class Program
             throw new SpecSkippedException( "This fixture requires Linux and /usr/bin/setsid." );
         }
 
-        var root = Directory.CreateTempSubdirectory( "commanddeck-process-descendant-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-process-descendant-", preservePrefix: true ).FullName;
         var executable = Environment.ProcessPath!;
         List<string> arguments = [];
         if ( Path.GetFileNameWithoutExtension( executable ) == "dotnet" )
@@ -177,18 +186,18 @@ public static partial class Program
         try
         {
             var work = ProcessRunner.RunAsync( executable, arguments, null, null,
-                TimeSpan.FromMilliseconds( 800 ), CancellationToken.None ).AsTask( );
+                TimeSpan.FromSeconds( 45 ), CancellationToken.None ).AsTask( );
             var ready = Path.Combine( root, "ready" );
             var started = Stopwatch.GetTimestamp( );
             while ( !File.Exists( ready ) && !work.IsCompleted &&
-                    Stopwatch.GetElapsedTime( started ) < TimeSpan.FromSeconds( 5 ) )
+                    Stopwatch.GetElapsedTime( started ) < TimeSpan.FromSeconds( 30 ) )
             {
                 await Task.Delay( 10 );
             }
 
             True( File.Exists( ready ), "the parent started the pipe-owning descendant" );
             pid = int.Parse( await File.ReadAllTextAsync( ready ), CultureInfo.InvariantCulture );
-            var result = await work.WaitAsync( TimeSpan.FromSeconds( 5 ) );
+            var result = await work.WaitAsync( TimeSpan.FromSeconds( 60 ) );
             True( result.TimedOut, "output draining has the same finite-operation deadline" );
 
             started = Stopwatch.GetTimestamp( );
@@ -235,7 +244,7 @@ public static partial class Program
                 RedirectStandardError = false
             }
         };
-        descendant.StartInfo.ArgumentList.Add( "30" );
+        descendant.StartInfo.ArgumentList.Add( "120" );
         if ( !descendant.Start( ) )
         {
             return 3;

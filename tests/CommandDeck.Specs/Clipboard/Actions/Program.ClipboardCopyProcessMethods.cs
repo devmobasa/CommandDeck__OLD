@@ -7,7 +7,7 @@ public static partial class Program
 {
     private static async Task ClipboardCopyProcessCancelsAndReapsAsync( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-copy-process-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-copy-process-", preservePrefix: true ).FullName;
         try
         {
             using CancellationTokenSource cancelled = new( );

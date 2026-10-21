@@ -31,7 +31,7 @@ public static partial class Program
             throw new SpecSkippedException( "This fixture requires Linux." );
         }
 
-        var root = Path.Combine( Path.GetTempPath( ), "commanddeck-native-" + Guid.NewGuid( ).ToString( "N" ) );
+        var root = SpecTemporaryFiles.PathFor( "commanddeck-native-" + Guid.NewGuid( ).ToString( "N" ) );
         Directory.CreateDirectory( root, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute );
         var serverStart = ClipboardPrivateFixtureStart( "--clipboard-wayland-server", root );
         serverStart.RedirectStandardInput = true;
@@ -211,7 +211,7 @@ public static partial class Program
         start.ArgumentList.RemoveAt( start.ArgumentList.Count - 1 );
         start.ArgumentList.RemoveAt( start.ArgumentList.Count - 1 );
         start.ArgumentList.Add( command );
-        start.Environment["XDG_RUNTIME_DIR"] = root;
+        start.Environment["XDG_RUNTIME_DIR"] = SpecTemporaryFiles.CreateSocketDirectory( root ).FullName;
         start.Environment.Remove( "WAYLAND_DISPLAY" );
         start.Environment.Remove( "WAYLAND_SOCKET" );
         start.Environment.Remove( "DISPLAY" );

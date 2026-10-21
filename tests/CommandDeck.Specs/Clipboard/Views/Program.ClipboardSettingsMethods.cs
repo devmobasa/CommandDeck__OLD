@@ -4,7 +4,7 @@ public static partial class Program
 {
     private static void ClipboardSettingsPreviewsAreAtomicAndRevisionBound( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-clipboard-settings-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-clipboard-settings-" ).FullName;
         try
         {
             using ClipboardHistoryStore store = new( Path.Combine( root, "history.db" ), new( ) );
@@ -64,7 +64,7 @@ public static partial class Program
 
     private static void ClipboardSettingsPreviewTokensAreOwnerBoundAndOneUse( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-clipboard-settings-token-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-clipboard-settings-token-" ).FullName;
         try
         {
             using ClipboardHistoryStore store = new( Path.Combine( root, "history.db" ), new( ) );
@@ -119,7 +119,7 @@ public static partial class Program
 
     private static void ClipboardStartupClearWaitsForMigrationReviewAndRunsOnce( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-clipboard-startup-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-clipboard-startup-" ).FullName;
         var path = Path.Combine( root, "history.db" );
         ClipboardTestClock clock = new( );
         try

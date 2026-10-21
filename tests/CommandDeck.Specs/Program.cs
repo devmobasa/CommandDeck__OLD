@@ -7,18 +7,9 @@ public static partial class Program
 
     public static async Task<int> Main( string[] args )
     {
-        var originalStateHome = Environment.GetEnvironmentVariable( "XDG_STATE_HOME" );
-        var stateHome = Directory.CreateTempSubdirectory( "commanddeck-spec-state-" );
-        Environment.SetEnvironmentVariable( "XDG_STATE_HOME", stateHome.FullName );
-        try
-        {
-            return await RunInIsolatedStateAsync( args );
-        }
-        finally
-        {
-            Environment.SetEnvironmentVariable( "XDG_STATE_HOME", originalStateHome );
-            stateHome.Delete( recursive: true );
-        }
+        using var temporaryFiles = SpecTemporaryFiles.Create( );
+        using var termination = SpecTemporaryFiles.HandleTermination( args );
+        return await RunInIsolatedStateAsync( args );
     }
 
     private static async Task<int> RunInIsolatedStateAsync( string[] args )
@@ -37,6 +28,12 @@ public static partial class Program
             return await RunExtensionDisposalFixtureAsync( root, profile );
         }
 
+        if ( args is ["--spec-lifetime-fixture"] )
+        {
+            await RunSpecLifetimeFixtureAsync( );
+            return 0;
+        }
+
         var clipboardFixture = TryRunClipboardFixtureAsync( args );
         if ( clipboardFixture is not null )
         {
@@ -46,6 +43,12 @@ public static partial class Program
         if ( !ConfigureSpecSelection( args ) )
         {
             return 2;
+        }
+
+        if ( args.Contains( "--spec-storage-fixture", StringComparer.Ordinal ) )
+        {
+            await RunSpecStorageFixtureAsync( );
+            return FinishSpecs( );
         }
 
         if ( args.Contains( "--spec-reporting-fixture", StringComparer.Ordinal ) )
@@ -185,6 +188,7 @@ public static partial class Program
         catch ( Exception exception )
         {
             _failed++;
+            SpecTemporaryFiles.ReportStorageFailure( exception );
             Console.WriteLine( $"FAIL {name}: {exception.Message}" );
             RecordSpec( name, registration, started, exception );
         }
@@ -213,6 +217,7 @@ public static partial class Program
         catch ( Exception exception )
         {
             _failed++;
+            SpecTemporaryFiles.ReportStorageFailure( exception );
             Console.WriteLine( $"FAIL {name}: {exception.Message}" );
             RecordSpec( name, registration, started, exception );
         }

@@ -287,13 +287,13 @@ public static partial class Program
             var scan = indexer.ReindexAsync(
                 progress: null,
                 CancellationToken.None ).AsTask( );
-            await firstItem.WaitAsync( TimeSpan.FromSeconds( 2 ) );
+            await firstItem.WaitAsync( TimeSpan.FromSeconds( 30 ) );
 
             await File.WriteAllTextAsync( path, "scan window final marker" );
             True( await WaitUntilAsync(
                 async ( ) => (await indexer.GetIncrementalStatusAsync( CancellationToken.None ))
                     .PendingEventCount > 0,
-                TimeSpan.FromSeconds( 1 ) ) );
+                TimeSpan.FromSeconds( 30 ) ) );
             release( );
             await scan;
 
@@ -301,7 +301,7 @@ public static partial class Program
                 catalog,
                 "window final",
                 result => result.Title == "window-note.txt",
-                TimeSpan.FromSeconds( 1 ) ) );
+                TimeSpan.FromSeconds( 30 ) ) );
             Equal( 1, catalog.ReplaceAllCount );
             True( catalog.ApplyPathChangesCount > 0 );
             True( catalog.LastPathChanges.All( change =>

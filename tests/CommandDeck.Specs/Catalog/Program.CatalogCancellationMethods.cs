@@ -10,9 +10,7 @@ public static partial class Program
     // one saturated. Budgets are relative to an uncancelled search on this machine.
     private static async Task CancelledCatalogSearchReleasesProviderSlotsAsync( )
     {
-        var database = Path.Combine(
-            Path.GetTempPath( ),
-            $"commanddeck-catalog-interrupt-{Guid.NewGuid( ):N}.db" );
+        var database = SpecTemporaryFiles.PathFor( $"commanddeck-catalog-interrupt-{Guid.NewGuid( ):N}.db" );
         SqliteCatalog catalog = new( new StorageOptions { DatabasePath = database } );
         SearchCoordinator search = new(
             [new CatalogSearchProvider( catalog )],

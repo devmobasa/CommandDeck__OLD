@@ -7,9 +7,7 @@ public static partial class Program
 {
     private static async Task FailedGenerationPreservesKnownGoodCatalogAsync( )
     {
-        var root = Path.Combine(
-            Path.GetTempPath( ),
-            $"commanddeck-generation-{Guid.NewGuid( ):N}" );
+        var root = SpecTemporaryFiles.PathFor( $"commanddeck-generation-{Guid.NewGuid( ):N}" );
         Directory.CreateDirectory( root );
         StorageOptions storage = new( )
         {
@@ -84,7 +82,7 @@ public static partial class Program
 
     private static async Task GenerationStagingKeepsReadersAndWritersAvailableAsync( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-generation-writers-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-generation-writers-" ).FullName;
         StorageOptions storage = new( )
         {
             DatabasePath = Path.Combine( root, "catalog.db" )

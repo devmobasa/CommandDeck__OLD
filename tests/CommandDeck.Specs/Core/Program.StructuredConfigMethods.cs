@@ -39,9 +39,7 @@ public static partial class Program
         Equal( 10, sameLineUnicode.KeyColumn );
         Equal( 17, sameLineUnicode.ValueColumn );
 
-        var temporary = Path.Combine(
-            Path.GetTempPath( ),
-            $"commanddeck-json-location-{Guid.NewGuid( ):N}" );
+        var temporary = SpecTemporaryFiles.PathFor( $"commanddeck-json-location-{Guid.NewGuid( ):N}" );
         Directory.CreateDirectory( temporary );
         var path = Path.Combine( temporary, "settings.jsonc" );
         await File.WriteAllTextAsync( path, jsonc );

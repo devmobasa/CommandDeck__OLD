@@ -13,7 +13,7 @@ public static partial class Program
 
         foreach ( var mode in new[] { "disabled", "paused", "capturing" } )
         {
-            var root = Directory.CreateTempSubdirectory( "commanddeck-capture-idle-" ).FullName;
+            var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-capture-idle-" ).FullName;
             var start = ClipboardPrivateFixtureStart( "--clipboard-idle-parent-fixture", root );
             start.ArgumentList.Add( root );
             start.ArgumentList.Add( mode );

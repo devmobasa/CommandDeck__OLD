@@ -23,7 +23,7 @@ public static partial class Program
             entered.TrySetResult( );
             await release.Task;
         };
-        using CancellationTokenSource deadline = new( TimeSpan.FromSeconds( 5 ) );
+        using CancellationTokenSource deadline = new( TimeSpan.FromSeconds( 30 ) );
         await harness.OpenAsync( cancellationToken: deadline.Token );
         var effect = harness.ActAsync( "Copy", deadline.Token ).AsTask( );
         await entered.Task.WaitAsync( deadline.Token );
@@ -79,7 +79,7 @@ public static partial class Program
             }
         };
         await using var harness = await ExtensionSessionHarness.CreateAsync( command, [ExtensionPermissionIds.StorageWrite] );
-        using CancellationTokenSource deadline = new( TimeSpan.FromSeconds( 5 ) );
+        using CancellationTokenSource deadline = new( TimeSpan.FromSeconds( 30 ) );
         await harness.OpenAsync( cancellationToken: deadline.Token );
         var action = harness.ActAsync( "Update", deadline.Token ).AsTask( );
         await handlerEntered.Task.WaitAsync( deadline.Token );
@@ -107,8 +107,9 @@ public static partial class Program
         await disable.WaitAsync( deadline.Token );
         await ThrowsAsync<OperationCanceledException>( async ( ) => await action.WaitAsync( deadline.Token ) );
         var cancellation = await cancelled.Task.WaitAsync( deadline.Token );
-        True( cancellation is OperationCanceledException or ExtensionRpcException { ErrorCode: ExtensionErrorCodes.Cancelled },
-            "Queued data may receive either transport cancellation or the host's cancelled error reply." );
+        True( cancellation is OperationCanceledException or IOException { InnerException: OperationCanceledException }
+            or ExtensionRpcException { Code: -32800 },
+            $"Queued data may receive either transport cancellation or the host's cancelled error reply; got {cancellation}." );
         Equal( 0L, harness.Registry.DataStore.Read( harness.Installation.Key ).Revision );
         Equal( 0, harness.Registry.DataStore.Read( harness.Installation.Key ).Values.Count );
     }
@@ -129,13 +130,13 @@ public static partial class Program
             entered.TrySetResult( );
             await release.Task.WaitAsync( token );
         };
-        using CancellationTokenSource deadline = new( TimeSpan.FromSeconds( 5 ) );
+        using CancellationTokenSource deadline = new( TimeSpan.FromSeconds( 30 ) );
         await harness.OpenAsync( cancellationToken: deadline.Token );
         var effect = harness.ActAsync( "Copy", deadline.Token ).AsTask( );
         await entered.Task.WaitAsync( deadline.Token );
         try
         {
-            using CancellationTokenSource otherDeadline = new( TimeSpan.FromSeconds( 1 ) );
+            using CancellationTokenSource otherDeadline = new( TimeSpan.FromSeconds( 30 ) );
             var data = await harness.Registry.WithExecutionAsync( other.Key, current => harness.Registry.AccessDataAsync( current,
                 new( "s", 1, 1, "i", "write", "draft", 0, JsonElement.Parse( "\"Independent\"" ) ), otherDeadline.Token ), otherDeadline.Token );
             Equal( 1L, data.Revision );

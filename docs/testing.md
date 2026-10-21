@@ -118,6 +118,34 @@ including environment and log-sink fixtures; list mode executes no fixtures.
 The harness sets `COMMANDDECK_HEY=off` before any fixture, so runtimes under
 test never use the developer's own HEY CLI; HEY specs inject their own runner.
 
+Specs place temporary files in a fresh `tmp/` run directory on the checkout's
+filesystem, so SQLite fixtures do not compete for shared `/tmp` tmpfs capacity.
+Use `SpecTemporaryFiles.CreateDirectory` and `SpecTemporaryFiles.PathFor` for
+fixture names. Unix endpoints use `SpecTemporaryFiles.SocketPath` (or `PathFor`
+for `.sock` files) under a private, short `/tmp/cds-*` directory, independent of
+checkout length. Private Wayland fixtures use `CreateSocketDirectory` for their
+runtime sockets; databases remain on the checkout filesystem. The harness removes
+both directories on normal exit, Ctrl+C, and SIGTERM and reports filesystem free
+bytes for SQLite I/O/full errors. On the next run it reclaims marked directories
+older than one day only when their exclusive owner lease is unlocked. Live runs,
+unmarked directories, and directory symlinks are left alone.
+Child fixture directories nest beneath that run, including children deliberately
+terminated by crash tests. Sandboxed children receive only that synthetic writable
+root. Home-authority fixtures use it when it is under the user's home; otherwise
+they retain a dedicated home fixture to preserve the trust-boundary test.
+An empty `.git` directory isolates fixtures from the checkout's ignore rules,
+while each indexing fixture still supplies and tests its own rules.
+
+QML event readiness uses `DeadlineTestCase` conditions and comparisons with a
+30-second minimum deadline; failures include observed values. Component journeys
+use the same deadline and report search, focus, geometry and request state.
+Their windows reject compositor pointer input through an empty input region;
+QtTest still sends real key and mouse events directly to the production controls.
+Negative checks observe an interval deliberately, and the slow search-retention
+regression deliberately crosses two minutes. These are elapsed-time contracts,
+rather than readiness sleeps. The component harness has a separate 300-second
+hang limit, configurable with `COMMANDDECK_QML_COMPONENT_TIMEOUT`.
+
 Fixtures must contain synthetic data only. Never commit a real home directory,
 browser database, prompt, token, or private config. Security boundaries are
 covered by rejection and containment specs; see

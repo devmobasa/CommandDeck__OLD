@@ -7,7 +7,7 @@ public static partial class Program
 {
     private static async Task HeyOpenTargetPersistsAsync( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-hey-target-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-hey-target-" ).FullName;
         try
         {
             StorageOptions options = new( )
@@ -81,7 +81,7 @@ public static partial class Program
             throw new SpecSkippedException( "This fixture requires Linux." );
         }
 
-        var root = Directory.CreateTempSubdirectory( "commanddeck-hey-terminal-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-hey-terminal-" ).FullName;
         try
         {
             await using SqliteCatalog catalog = new( new StorageOptions { DatabasePath = Path.Combine( root, "catalog.db" ) } );

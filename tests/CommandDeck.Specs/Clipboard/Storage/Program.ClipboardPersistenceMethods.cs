@@ -7,7 +7,7 @@ public static partial class Program
 {
     private static async Task ClipboardQueriesNeverPersistAsync( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-private-query-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-private-query-" ).FullName;
         try
         {
             await using SqliteCatalog catalog = new( new StorageOptions { DatabasePath = Path.Combine( root, "catalog.db" ) },
@@ -50,7 +50,7 @@ public static partial class Program
 
     private static async Task ClipboardSavedSearchesAreQuarantinedAsync( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-private-saved-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-private-saved-" ).FullName;
         var path = Path.Combine( root, "catalog.db" );
         try
         {

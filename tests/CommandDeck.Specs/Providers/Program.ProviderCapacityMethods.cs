@@ -116,7 +116,7 @@ public static partial class Program
 
     private static async Task AssertHomeProviderDeadlineAsync( string providerId, string sourceId )
     {
-        var directory = Directory.CreateTempSubdirectory( "commanddeck-home-deadline-" ).FullName;
+        var directory = SpecTemporaryFiles.CreateDirectory( "commanddeck-home-deadline-" ).FullName;
         CapacityProvider blocked = new( providerId );
         SearchCoordinator? search = null;
         SqliteCatalog catalog = new( new StorageOptions { DatabasePath = Path.Combine( directory, "catalog.db" ) } );

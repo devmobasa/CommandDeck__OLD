@@ -49,10 +49,10 @@ public static partial class Program
 
     private static async Task ClipboardProtocolBindsLiveConnectionsAsync( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-clipboard-wire-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-clipboard-wire-" ).FullName;
         var database = Path.Combine( root, "catalog.db" );
         var config = Path.Combine( root, "config.json" );
-        var socket = Path.Combine( root, "commanddeck.sock" );
+        var socket = SpecTemporaryFiles.SocketPath( root, "commanddeck.sock" );
         using CancellationTokenSource stopping = new( );
         using CancellationTokenSource timeout = new( TimeSpan.FromSeconds( 30 ) );
         try

@@ -15,7 +15,7 @@ EventPathFixture {
       const expression = findChild(card, "calculatorExpression")
       const value = findChild(card, "calculatorValue")
       const copy = findChild(card, "calculatorCopyButton")
-      wait(0)
+      nextTurn()
       verify(!card.stacked)
       compare(expression.text, "5 + 5")
       compare(value.text, "10")
@@ -27,9 +27,9 @@ EventPathFixture {
       card.width = 280
       card.expression = "105 °F to °C"
       card.value = "40.555555555555555555555555555555555555555555555555555555555555 °C"
-      wait(0)
+      nextTurn()
       verify(card.stacked)
-      tryVerify(() => expression.mapToItem(card, 0, 0).y < value.mapToItem(card, 0, 0).y)
+      waitForCondition(() => expression.mapToItem(card, 0, 0).y < value.mapToItem(card, 0, 0).y)
       verify(value.height > value.font.pixelSize * 2)
       verify(value.width <= card.width)
       compare(value.textFormat, Text.PlainText)
@@ -63,7 +63,7 @@ EventPathFixture {
       keyClick(Qt.Key_Tab)
       compare(fixture.part_searchField.settingsControl.activeFocus, true)
       keyClick(Qt.Key_Tab)
-      tryCompare(banner, "activeFocus", true)
+      waitForValue(banner, "activeFocus", true)
 
       compare(banner.inspectorRequests, 0)
       keyClick(Qt.Key_Return)
@@ -89,7 +89,7 @@ EventPathFixture {
 
       fixture.part_controller.activeFilters = []
       banner.status = { providers: [] }
-      tryCompare(banner, "visible", false)
+      waitForValue(banner, "visible", false)
       keyClick(Qt.Key_Tab)
       compare(fixture.part_searchField.settingsControl.activeFocus, true)
       keyClick(Qt.Key_Tab)

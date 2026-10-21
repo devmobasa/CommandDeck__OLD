@@ -3,7 +3,7 @@ import QtTest
 import "../../qml/common" as Deck
 import "../../qml/common/Protocol.js" as Protocol
 
-TestCase {
+DeadlineTestCase {
   name: "SearchSessionController"
 
   property int sequence: 0
@@ -135,7 +135,7 @@ TestCase {
   function test_loading_feedback_waits_and_failure_releases_it() {
     session.search()
     verify(!session.pending, "a fast search never dims the list")
-    tryVerify(() => session.pending, 1000)
+    waitForCondition(() => session.pending, 1000)
 
     session.handleMessage({ type: Protocol.Messages.Error, requestId: session.activeRequestId, error: "Search interrupted" })
     verify(!session.pending && !session.inFlight)
@@ -151,13 +151,13 @@ TestCase {
     session.schedule()
     verify(session.searching)
     compare(searches().length, 0)
-    tryVerify(() => searches().length === 1, 1000)
+    waitForCondition(() => searches().length === 1, 1000)
     compare(searches()[0].query, "no")
 
     session.schedule()
     session.search()
     verify(!session.debounce.running, "a search sent now replaces the scheduled one")
-    wait(session.debounce.interval * 2)
+    observeFor(session.debounce.interval * 2, () => searches().length === 2, "an immediate search leaves no duplicate debounce")
     compare(searches().length, 2)
   }
 
@@ -166,7 +166,7 @@ TestCase {
     session.search()
     session.handleMessage({ type: Protocol.Messages.Result, requestId: session.activeRequestId, result: { id: "one" } })
     verify(session.commitDelay.running)
-    tryVerify(() => published.length === 1, 1000)
+    waitForCondition(() => published.length === 1, 1000)
     verify(published[0].reset && !published[0].completed)
     verify(session.inFlight, "a batch does not finish the search")
   }

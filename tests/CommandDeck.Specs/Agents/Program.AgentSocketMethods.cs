@@ -8,7 +8,7 @@ public static partial class Program
         StartAgentRuntimeAsync( ScriptedAgentBackend backend, CancellationToken serverToken,
             RuntimeConstructionOptions? constructionOptions = null, AgentOptions? agentOptions = null )
     {
-        var root = Path.Combine( Path.GetTempPath( ), $"commanddeck-agent-socket-{Guid.NewGuid( ):N}" );
+        var root = SpecTemporaryFiles.PathFor( $"commanddeck-agent-socket-{Guid.NewGuid( ):N}" );
         Directory.CreateDirectory( root );
         var config = Path.Combine( root, "config.json" );
         CommandDeckOptions options = new( )
@@ -29,7 +29,7 @@ public static partial class Program
                 AgentClock = constructionOptions?.AgentClock,
                 PackageHelperFactory = constructionOptions?.PackageHelperFactory
             }, CancellationToken.None );
-        UnixProtocolServer server = new( runtime, Path.Combine( root, "commanddeck.sock" ) );
+        UnixProtocolServer server = new( runtime, SpecTemporaryFiles.SocketPath( root, "commanddeck.sock" ) );
         _ = server.RunAsync( serverToken );
         return (runtime, server, root, backend);
     }
@@ -116,7 +116,7 @@ public static partial class Program
         {
             await using ( runtime )
             {
-                var socket = Path.Combine( root, "commanddeck.sock" );
+                var socket = SpecTemporaryFiles.SocketPath( root, "commanddeck.sock" );
                 await using var client = await ConnectWithRetryAsync( socket );
                 await client.SendAsync( new ProtocolRequest { RequestId = 1, Operation = ProtocolOperations.AgentTurnStart, Query = "hi" }, default );
                 var disabled = await CollectUntilDoneAsync( client, 1 );
@@ -191,7 +191,7 @@ public static partial class Program
         {
             await using ( runtime )
             {
-                await using var client = await ConnectWithRetryAsync( Path.Combine( root, "commanddeck.sock" ) );
+                await using var client = await ConnectWithRetryAsync( SpecTemporaryFiles.SocketPath( root, "commanddeck.sock" ) );
                 await client.SendAsync( new ProtocolRequest
                 {
                     RequestId = 1,
@@ -269,7 +269,7 @@ public static partial class Program
         {
             await using ( runtime )
             {
-                await using var client = await ConnectWithRetryAsync( Path.Combine( root, "commanddeck.sock" ) );
+                await using var client = await ConnectWithRetryAsync( SpecTemporaryFiles.SocketPath( root, "commanddeck.sock" ) );
                 await client.SendAsync( new ProtocolRequest
                 {
                     RequestId = 1,

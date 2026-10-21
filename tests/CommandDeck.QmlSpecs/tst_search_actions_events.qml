@@ -19,7 +19,7 @@ EventPathFixture {
       verify(fixture.part_searchField.inputControl.activeFocus)
 
       fixture.part_eventHelpSheet.opened = true
-      tryVerify(function() { return fixture.part_eventHelpSheet.activeFocus })
+      waitForCondition(function() { return fixture.part_eventHelpSheet.activeFocus })
 
       keyClick(Qt.Key_Tab)
       verify(fixture.part_eventHelpSheet.activeFocus)
@@ -31,12 +31,12 @@ EventPathFixture {
       verify(!fixture.part_eventHelpSheet.opened)
 
       fixture.part_eventHelpSheet.opened = true
-      tryVerify(function() { return fixture.part_eventHelpSheet.activeFocus })
+      waitForCondition(function() { return fixture.part_eventHelpSheet.activeFocus })
       keyClick(Qt.Key_F1)
       compare(fixture.part_eventHelpSheet.dismissals, 2)
 
       fixture.part_eventHelpSheet.opened = true
-      tryVerify(function() { return fixture.part_eventHelpSheet.activeFocus })
+      waitForCondition(function() { return fixture.part_eventHelpSheet.activeFocus })
       keyClick(Qt.Key_Escape)
       compare(fixture.part_eventHelpSheet.dismissals, 3)
     }
@@ -49,7 +49,7 @@ EventPathFixture {
       fixture.part_eventFilterPalette.dismissals = 0
       fixture.part_eventFilterPalette.selectedIndex = 0
       fixture.part_eventFilterPalette.opened = true
-      tryVerify(function() { return fixture.part_eventFilterPalette.activeFocus })
+      waitForCondition(function() { return fixture.part_eventFilterPalette.activeFocus })
       compare(fixture.part_eventFilterPalette.selectedIndex, 0)
 
       // Arrow keys move the highlight and stay trapped inside the palette.
@@ -67,7 +67,7 @@ EventPathFixture {
 
       // Esc closes the palette.
       fixture.part_eventFilterPalette.opened = true
-      tryVerify(function() { return fixture.part_eventFilterPalette.activeFocus })
+      waitForCondition(function() { return fixture.part_eventFilterPalette.activeFocus })
       keyClick(Qt.Key_Escape)
       compare(fixture.part_eventFilterPalette.dismissals, 1)
       verify(!fixture.part_eventFilterPalette.opened)
@@ -80,7 +80,7 @@ EventPathFixture {
       fixture.part_eventFirstRunCoach.suppressed = false
       fixture.part_eventFirstRunCoach.opened = true
       verify(fixture.part_eventFirstRunCoach.shouldShow)
-      tryVerify(function() { return fixture.part_eventFirstRunCoach.activeFocus })
+      waitForCondition(function() { return fixture.part_eventFirstRunCoach.activeFocus })
       keyClick(Qt.Key_A)
       compare(fixture.part_eventFirstRunCoach.dismissals, 1)
       verify(!fixture.part_eventFirstRunCoach.opened)
@@ -190,7 +190,7 @@ EventPathFixture {
       fixture.part_actionPanel.shortcuts = shortcuts
       fixture.part_actionPanel.openFor(target)
       compare(fixture.part_actionPanel.shortcutLabel(fixture.part_actionPanel.filteredActions[1], 1), "Alt+Shift+R")
-      tryVerify(function() { return fixture.part_actionPanel.filterControl.activeFocus })
+      waitForCondition(function() { return fixture.part_actionPanel.filterControl.activeFocus })
       keyClick(Qt.Key_R, Qt.AltModifier | Qt.ShiftModifier)
       compare(fixture.part_actionPanel.chosen, "reset-ranking")
     }
@@ -220,7 +220,7 @@ EventPathFixture {
 
       fixture.part_actionPanel.shortcuts = shortcuts
       fixture.part_actionPanel.openFor(target)
-      tryVerify(function() { return fixture.part_actionPanel.filterControl.activeFocus })
+      waitForCondition(function() { return fixture.part_actionPanel.filterControl.activeFocus })
       const labels = fixture.part_actionPanel.filteredActions.map((action, index) =>
         action.id + "=" + fixture.part_actionPanel.shortcutLabel(action, index))
       compare(labels.join(","), "edit=Ctrl+1,copy-value=Ctrl+Shift+C,copy-key=Ctrl+Shift+↵,"
@@ -248,7 +248,7 @@ EventPathFixture {
         { id: "copy-path", title: "Copy Path", keyLabel: "Ctrl+Shift+↵", slot: Ui.ShortcutSlot.Tertiary }
       ]
       fixture.part_footerActions.compact = true
-      wait(30)
+      waitForValue(fixture.part_footerActions.firstShortcutControl, "visible", false)
       verify(fixture.part_footerActions.primaryControl.visible)
       verify(fixture.part_footerActions.actionsControl.visible)
       verify(fixture.part_footerActions.helpControl.visible)
@@ -280,7 +280,8 @@ EventPathFixture {
       ]
       fixture.part_footerActions.directActions = actions
       fixture.part_searchField.directActions = actions
-      wait(30)
+      waitForCondition(() => fixture.part_footerActions.firstShortcutControl.visible && fixture.part_footerActions.firstShortcutControl.width > 0)
+      waitForFrame(fixture.part_footerActions.firstShortcutControl)
       mouseClick(fixture.part_footerActions.firstShortcutControl)
       compare(fixture.part_footerActions.shortcutId, "reveal")
       fixture.part_footerActions.primaryControl.forceActiveFocus()
@@ -297,7 +298,9 @@ EventPathFixture {
       fixture.part_footerActions.availableWidth = fixture.part_footerActions.primaryControl.implicitWidth
         + fixture.part_footerActions.firstShortcutControl.implicitWidth + fixture.part_footerActions.actionsControl.implicitWidth
         + fixture.part_footerActions.spacing * 3 + fixture.part_footerActions.discoveryWidth + 1
-      wait(30)
+      waitForCondition(() => fixture.part_footerActions.firstShortcutControl.visible
+        && !fixture.part_footerActions.secondShortcutControl.visible
+        && fixture.part_footerActions.width <= fixture.part_footerActions.availableWidth)
       verify(fixture.part_footerActions.firstShortcutControl.visible)
       verify(!fixture.part_footerActions.secondShortcutControl.visible)
       verify(fixture.part_footerActions.width <= fixture.part_footerActions.availableWidth)
@@ -334,17 +337,17 @@ EventPathFixture {
       })
       banner.inspectorRequested.connect(() => inspector.opened = true)
       inspector.dismissed.connect(() => inspector.opened = false)
-      waitForRendering(banner)
+      waitForFrame(banner)
       mouseClick(banner)
-      tryCompare(inspector, "opened", true)
+      waitForValue(inspector, "opened", true)
       compare(inspector.heading, "Index inspector · 3 index issues")
       compare(inspector.visibleWorkItemCount, 2)
       verify(inspector.healthDetails.indexOf("Index root unavailable") >= 0)
-      tryVerify(() => inspector.activeFocus)
+      waitForCondition(() => inspector.activeFocus)
       keyClick(Qt.Key_Escape)
-      tryCompare(inspector, "opened", false)
+      waitForValue(inspector, "opened", false)
       mouseClick(banner)
-      tryCompare(inspector, "opened", true)
+      waitForValue(inspector, "opened", true)
       compare(inspector.heading, "Index inspector · 3 index issues")
     }
 
@@ -386,7 +389,7 @@ EventPathFixture {
 
       fixture.part_searchField.filterChipAt(0).forceActiveFocus()
       keyClick(Qt.Key_Space)
-      tryCompare(fixture.part_searchField, "filterChipCount", 0)
+      waitForValue(fixture.part_searchField, "filterChipCount", 0)
       fixture.part_searchField.inputControl.text = ""
       fixture.part_searchField.inputControl.forceActiveFocus()
       typeText("-htabs: release")
@@ -397,7 +400,7 @@ EventPathFixture {
 
       fixture.part_searchField.filterChipAt(0).forceActiveFocus()
       keyClick(Qt.Key_Space)
-      tryCompare(fixture.part_searchField, "filterChipCount", 0)
+      waitForValue(fixture.part_searchField, "filterChipCount", 0)
       fixture.part_searchField.inputControl.text = ""
       compare(fixture.part_controller.activeFilterId, "")
     }
@@ -415,12 +418,12 @@ EventPathFixture {
 
       fixture.part_searchField.filterChipAt(0).forceActiveFocus()
       keyClick(Qt.Key_Space)
-      tryCompare(fixture.part_searchField, "filterChipCount", 1)
+      waitForValue(fixture.part_searchField, "filterChipCount", 1)
       fixture.part_searchField.inputControl.text = ""
       fixture.part_searchField.inputControl.cursorPosition = 0
       fixture.part_searchField.inputControl.forceActiveFocus()
       keyClick(Qt.Key_Backspace)
-      tryCompare(fixture.part_searchField, "filterChipCount", 0)
+      waitForValue(fixture.part_searchField, "filterChipCount", 0)
     }
 
     function test_search_focus_order_and_accessibility_states() {

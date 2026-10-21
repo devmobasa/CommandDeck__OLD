@@ -6,7 +6,7 @@ public static partial class Program
 {
     private static async Task RepositoryIgnorePatternsAgreeWithGitAsync( )
     {
-        var root = Path.Combine( Path.GetTempPath( ), $"commanddeck-gitignore-{Guid.NewGuid( ):N}" );
+        var root = SpecTemporaryFiles.PathFor( $"commanddeck-gitignore-{Guid.NewGuid( ):N}" );
         Directory.CreateDirectory( root );
         string[] paths =
         [
@@ -67,7 +67,7 @@ public static partial class Program
 
     private static async Task NestedRepositoryIgnoresAndOverridesAreConsistentAsync( )
     {
-        var root = Path.Combine( Path.GetTempPath( ), $"commanddeck-nested-ignore-{Guid.NewGuid( ):N}" );
+        var root = SpecTemporaryFiles.PathFor( $"commanddeck-nested-ignore-{Guid.NewGuid( ):N}" );
         Directory.CreateDirectory( Path.Combine( root, "nested" ) );
         try
         {

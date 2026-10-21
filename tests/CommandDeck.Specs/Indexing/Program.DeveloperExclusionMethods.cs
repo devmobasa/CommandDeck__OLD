@@ -4,7 +4,7 @@ public static partial class Program
 {
     private static async Task NestedRootsAndSymlinksPreserveExclusionPolicyAsync( )
     {
-        var root = Path.Combine( Path.GetTempPath( ), $"commanddeck-exclusion-roots-{Guid.NewGuid( ):N}" );
+        var root = SpecTemporaryFiles.PathFor( $"commanddeck-exclusion-roots-{Guid.NewGuid( ):N}" );
         var nested = Path.Combine( root, "node_modules/kept" );
         Directory.CreateDirectory( nested );
         try
@@ -41,7 +41,7 @@ public static partial class Program
 
     private static async Task DeveloperDirectoryDefaultsAreProjectScopedAsync( )
     {
-        var root = Path.Combine( Path.GetTempPath( ), $"commanddeck-exclusions-{Guid.NewGuid( ):N}" );
+        var root = SpecTemporaryFiles.PathFor( $"commanddeck-exclusions-{Guid.NewGuid( ):N}" );
         string[] markers =
         [
             "js/package.json", "rust/Cargo.toml", "dotnet/App.csproj", "python/pyproject.toml",
@@ -105,7 +105,7 @@ public static partial class Program
 
     private static async Task DirectoryExclusionsApplyToDirectUpdatesAndPreviewsAsync( )
     {
-        var root = Path.Combine( Path.GetTempPath( ), $"commanddeck-root-glob-{Guid.NewGuid( ):N}" );
+        var root = SpecTemporaryFiles.PathFor( $"commanddeck-root-glob-{Guid.NewGuid( ):N}" );
         var path = Path.Combine( root, "node_modules/library/index.txt" );
         Directory.CreateDirectory( Path.GetDirectoryName( path )! );
         await File.WriteAllTextAsync( path, "must stay out of search and previews" );

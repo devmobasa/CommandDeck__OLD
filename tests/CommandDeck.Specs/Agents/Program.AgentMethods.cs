@@ -179,7 +179,7 @@ public static partial class Program
         {
             throw new SpecSkippedException( "This fixture requires Linux." );
         }
-        var root = Path.Combine( Path.GetTempPath( ), $"commanddeck-codex-version-{Guid.NewGuid( ):N}" );
+        var root = SpecTemporaryFiles.PathFor( $"commanddeck-codex-version-{Guid.NewGuid( ):N}" );
         Directory.CreateDirectory( root );
         try
         {
@@ -221,7 +221,7 @@ public static partial class Program
 
     private static void AgentCredentialStoreOwnsAPrivateFile( )
     {
-        var root = Path.Combine( Path.GetTempPath( ), $"commanddeck-agent-cred-{Guid.NewGuid( ):N}" );
+        var root = SpecTemporaryFiles.PathFor( $"commanddeck-agent-cred-{Guid.NewGuid( ):N}" );
         Directory.CreateDirectory( root );
         try
         {
@@ -264,7 +264,7 @@ public static partial class Program
 
     private static async Task AgentContextBrokerEnforcesLevelsAndProtectedPathsAsync( )
     {
-        var root = Path.Combine( Path.GetTempPath( ), $"commanddeck-agent-ctx-{Guid.NewGuid( ):N}" );
+        var root = SpecTemporaryFiles.PathFor( $"commanddeck-agent-ctx-{Guid.NewGuid( ):N}" );
         var home = Path.Combine( root, "home" );
         Directory.CreateDirectory( Path.Combine( home, "notes" ) );
         Directory.CreateDirectory( Path.Combine( home, ".ssh" ) );
@@ -346,7 +346,7 @@ public static partial class Program
         {
             throw new SpecSkippedException( "This fixture requires Linux." );
         }
-        var root = Path.Combine( Path.GetTempPath( ), $"commanddeck-agent-ctx-link-{Guid.NewGuid( ):N}" );
+        var root = SpecTemporaryFiles.PathFor( $"commanddeck-agent-ctx-link-{Guid.NewGuid( ):N}" );
         var home = Path.Combine( root, "home" );
         var safe = Path.Combine( home, "safe" );
         var protectedDirectory = Path.Combine( home, ".ssh" );
@@ -387,7 +387,7 @@ public static partial class Program
 
     private static async Task AgentCommandToolPlansLiteralArgvAsync( )
     {
-        var root = Path.Combine( Path.GetTempPath( ), $"commanddeck-agent-cmd-{Guid.NewGuid( ):N}" );
+        var root = SpecTemporaryFiles.PathFor( $"commanddeck-agent-cmd-{Guid.NewGuid( ):N}" );
         Directory.CreateDirectory( root );
         try
         {
@@ -430,7 +430,7 @@ public static partial class Program
 
     private static async Task AgentTrustServiceBindsChallengesAndLeasesAsync( )
     {
-        var root = Path.Combine( Path.GetTempPath( ), $"commanddeck-agent-trust-{Guid.NewGuid( ):N}" );
+        var root = SpecTemporaryFiles.PathFor( $"commanddeck-agent-trust-{Guid.NewGuid( ):N}" );
         Directory.CreateDirectory( root );
         try
         {

@@ -15,7 +15,7 @@ EventPathFixture {
         session: { prompt: "Choose", choices: [{ value: "a", label: "Alpha" }, { value: "b", label: "Beta" }, { value: "c", label: "Beta two" }] }
       })
       verify(picker !== null)
-      tryCompare(picker.inputControl, "activeFocus", true)
+      waitForValue(picker.inputControl, "activeFocus", true)
       typeText("beta")
       compare(picker.filtered.length, 2)
       keyClick(Qt.Key_Down)
@@ -50,7 +50,7 @@ EventPathFixture {
         action: { title: "Copy snippet", inputs: [{ name: "topic" }] }, opened: true
       })
       verify(dialog !== null)
-      wait(30)
+      waitForCondition(() => dialog.Window.activeFocusItem !== null, 30000, "action input receives focus")
       dialog.submit()
       verify(dialog.errorText.indexOf("topic") >= 0)
       typeText("literal {clipboard}")
@@ -60,7 +60,7 @@ EventPathFixture {
 
     function test_alias_validation_and_save_use_real_enter_events() {
       fixture.part_aliasDialog.openFor({ title: "Browser", aliases: [] })
-      tryCompare(fixture.part_aliasDialog.inputControl, "activeFocus", true)
+      waitForValue(fixture.part_aliasDialog.inputControl, "activeFocus", true)
       mouseClick(fixture, 5, 5)
       compare(fixture.part_backgroundTarget.clicks, 0)
       typeText("file")
@@ -80,7 +80,7 @@ EventPathFixture {
         aliases: [],
         actions: [{ id: "launch", title: "Launch", kind: "launch-desktop" }]
       })
-      tryCompare(fixture.part_actionPanel.filterControl, "activeFocus", true)
+      waitForValue(fixture.part_actionPanel.filterControl, "activeFocus", true)
       keyClick(Qt.Key_Down)
       compare(fixture.part_actionPanel.selectedIndex, 1)
       keyClick(Qt.Key_1, Qt.AltModifier)
@@ -97,7 +97,7 @@ EventPathFixture {
 
       fixture.part_actionPanel.selectedIndex = 0
       fixture.part_actionPanel.restoreActionFocus()
-      tryCompare(fixture.part_actionPanel.actionItemAt(0), "activeFocus", true)
+      waitForValue(fixture.part_actionPanel.actionItemAt(0), "activeFocus", true)
       fixture.part_actionPanel.chosen = ""
       keyClick(Qt.Key_1, Qt.ControlModifier | Qt.ShiftModifier)
       compare(fixture.part_actionPanel.chosen, "")
@@ -119,13 +119,13 @@ EventPathFixture {
           aliases: [],
           actions: [{ id: "launch", title: "Launch", kind: "launch-desktop" }]
         })
-        tryCompare(fixture.part_actionPanel.filterControl, "activeFocus", true)
+        waitForValue(fixture.part_actionPanel.filterControl, "activeFocus", true)
         keyClick(Qt.Key_Down)
         keyClick(Qt.Key_Down)
         keyClick(Qt.Key_Return)
-        tryCompare(fixture.part_aliasDialog.inputControl, "activeFocus", true)
+        waitForValue(fixture.part_aliasDialog.inputControl, "activeFocus", true)
         keyClick(Qt.Key_Escape)
-        tryCompare(fixture.part_actionPanel.actionItemAt(2), "activeFocus", true)
+        waitForValue(fixture.part_actionPanel.actionItemAt(2), "activeFocus", true)
       }
 
     function test_fallback_action_is_rendered_without_personalization_actions() {

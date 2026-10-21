@@ -188,7 +188,7 @@ public static partial class Program
     {
         public DesktopDoctorFixture( )
         {
-            Root = Path.Combine( Path.GetTempPath( ), $"commanddeck-doctor-spec-{Guid.NewGuid( ):N}" );
+            Root = SpecTemporaryFiles.PathFor( $"commanddeck-doctor-spec-{Guid.NewGuid( ):N}" );
             RuntimeDirectory = Path.Combine( Root, "runtime" );
             Environment = new( StringComparer.Ordinal )
             {

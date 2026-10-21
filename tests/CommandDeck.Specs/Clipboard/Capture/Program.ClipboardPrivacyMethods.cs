@@ -37,7 +37,7 @@ public static partial class Program
 
     private static async Task ClipboardRuntimeDeniesAssistantCacheAsync( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-clipboard-private-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-clipboard-private-" ).FullName;
         try
         {
             var config = await WriteManagedSpecConfigAsync( root, new AiOptions { Enabled = false } );
@@ -66,7 +66,7 @@ public static partial class Program
 
     private static async Task ClipboardAiAttachmentsAreRejectedAsync( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-clipboard-ai-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-clipboard-ai-" ).FullName;
         try
         {
             await using SqliteCatalog catalog = new( new StorageOptions { DatabasePath = Path.Combine( root, "catalog.db" ) } );

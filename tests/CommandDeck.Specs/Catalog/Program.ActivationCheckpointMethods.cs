@@ -10,7 +10,7 @@ public static partial class Program
 
     private static async Task GenerationActivationTruncatesWalAndKeepsResultsAsync( )
     {
-        var database = Path.Combine( Path.GetTempPath( ), $"commanddeck-generation-wal-{Guid.NewGuid( ):N}.db" );
+        var database = SpecTemporaryFiles.PathFor( $"commanddeck-generation-wal-{Guid.NewGuid( ):N}.db" );
         try
         {
             await using SqliteCatalog catalog = new( new StorageOptions { DatabasePath = database } );
@@ -51,9 +51,7 @@ public static partial class Program
     private static async Task ActivationCheckpointDoesNotWaitForReadersAsync( )
     {
         const long busyTimeoutMilliseconds = 10_000;
-        var database = Path.Combine(
-            Path.GetTempPath( ),
-            $"commanddeck-activation-checkpoint-{Guid.NewGuid( ):N}.db" );
+        var database = SpecTemporaryFiles.PathFor( $"commanddeck-activation-checkpoint-{Guid.NewGuid( ):N}.db" );
         try
         {
             // Every connection the catalog opens gets this busy timeout, so

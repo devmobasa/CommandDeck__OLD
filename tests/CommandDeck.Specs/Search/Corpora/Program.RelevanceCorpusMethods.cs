@@ -53,9 +53,7 @@ public static partial class Program
         bool writeReport = false )
     {
         var fixture = ParseRelevanceFixture( relevance );
-        var database = Path.Combine(
-            Path.GetTempPath( ),
-            $"commanddeck-relevance-corpus-{Guid.NewGuid( ):N}.db" );
+        var database = SpecTemporaryFiles.PathFor( $"commanddeck-relevance-corpus-{Guid.NewGuid( ):N}.db" );
         FixedTimeProvider clock = new( PromotionNow );
         try
         {

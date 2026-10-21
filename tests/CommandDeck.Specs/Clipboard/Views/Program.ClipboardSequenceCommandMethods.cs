@@ -4,7 +4,7 @@ public static partial class Program
 {
     private static async Task ClipboardSequenceCommandsArePrivateRowsAsync( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-clipboard-sequence-rows-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-clipboard-sequence-rows-" ).FullName;
         try
         {
             // Consent stays off, so the runtime never starts a capture helper or touches a clipboard.

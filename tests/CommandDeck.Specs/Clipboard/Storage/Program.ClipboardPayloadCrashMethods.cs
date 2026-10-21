@@ -14,7 +14,7 @@ public static partial class Program
 
         foreach ( var stage in new[] { "reserved", "writing", "files-published", "entry-committed" } )
         {
-            var root = Directory.CreateTempSubdirectory( "commanddeck-payload-crash-" ).FullName;
+            var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-payload-crash-", preservePrefix: true ).FullName;
             File.SetUnixFileMode( root, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute );
             try
             {

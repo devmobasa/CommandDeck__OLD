@@ -8,14 +8,14 @@ public static partial class Program
         {
             throw new SpecSkippedException( "This fixture requires Linux." );
         }
-        var root = Directory.CreateTempSubdirectory( "commanddeck-desktop-launch-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-desktop-launch-" ).FullName;
         var originalPath = Environment.GetEnvironmentVariable( "PATH" );
         var release = Path.Combine( root, "release" );
+        var started = Path.Combine( root, "started" );
+        var exited = Path.Combine( root, "exited" );
         try
         {
             var capture = Path.Combine( root, "argv" );
-            var started = Path.Combine( root, "started" );
-            var exited = Path.Combine( root, "exited" );
             var launcher = Path.Combine( root, "uwsm-app" );
             var gio = Path.Combine( root, "gio" );
             var gtk = Path.Combine( root, "gtk-launch" );
@@ -81,20 +81,16 @@ public static partial class Program
                 using CancellationTokenSource timeout = new( TimeSpan.FromSeconds( 2 ) );
                 var outcome = await runtime.InvokeAsync( result.Id, action.Id, false, timeout.Token );
                 True( outcome.Succeeded, "desktop launch is acknowledged while the application is still running" );
-                for ( var attempt = 0; attempt < 200 && !File.Exists( started ); attempt++ )
-                {
-                    await Task.Delay( 10 );
-                }
+                True( await WaitUntilAsync( ( ) => Task.FromResult( File.Exists( started ) ), TimeSpan.FromSeconds( 30 ) ),
+                    "the acknowledged application publishes readiness" );
                 True( File.Exists( started ) && !File.Exists( exited ), "the application remains active after acknowledgement" );
                 var usage = await catalog.UsageHistory.GetUsageSignalsAsync( [result.Id], default );
                 Equal( launchMode + 1L, usage[result.Id].UseCount );
                 var argv = await File.ReadAllLinesAsync( capture );
                 Equal( useGio ? "launch|" + desktopFile : "signal", string.Join( '|', argv ) );
                 await File.WriteAllTextAsync( release, "" );
-                for ( var attempt = 0; attempt < 200 && !File.Exists( exited ); attempt++ )
-                {
-                    await Task.Delay( 10 );
-                }
+                True( await WaitUntilAsync( ( ) => Task.FromResult( File.Exists( exited ) ), TimeSpan.FromSeconds( 30 ) ),
+                    "the released fixture publishes exit" );
                 True( File.Exists( exited ), "fixture application exits after release" );
             }
         }
@@ -102,8 +98,69 @@ public static partial class Program
         {
             Environment.SetEnvironmentVariable( "PATH", originalPath );
             await File.WriteAllTextAsync( release, "" );
-            await Task.Delay( 100 );
+            if ( File.Exists( started ) )
+            {
+                await WaitUntilAsync( ( ) => Task.FromResult( File.Exists( exited ) ), TimeSpan.FromSeconds( 30 ) );
+            }
+
             Directory.Delete( root, recursive: true );
         }
     }
+
+    private static async Task ApplicationArgumentsRemainLiteralAsync( )
+    {
+        if ( !OperatingSystem.IsLinux( ) )
+        {
+            throw new SpecSkippedException( "This fixture requires Linux." );
+        }
+
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-literal-arguments-" ).FullName;
+        var originalPath = Environment.GetEnvironmentVariable( "PATH" );
+        try
+        {
+            var launcher = Path.Combine( root, "uwsm-app" );
+            File.CreateSymbolicLink( Path.Combine( root, "touch" ), "/usr/bin/touch" );
+            await File.WriteAllTextAsync( launcher, "#!/bin/sh\nwhile [ \"$1\" != -- ]; do shift; done\nshift\nexec \"$@\"\n" );
+            File.SetUnixFileMode( launcher, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute );
+            Environment.SetEnvironmentVariable( "PATH", root );
+
+            var marker = SpecTemporaryFiles.PathFor( $"commanddeck-shell-marker-{Guid.NewGuid( ):N}" );
+            SearchResult result = new( )
+            {
+                Id = "app:literal.desktop",
+                Kind = ResultKinds.Application,
+                Title = "Literal",
+                SourceId = SourceIds.Applications,
+                Actions = []
+            };
+            CommandAction action = new( )
+            {
+                Id = "launch",
+                Title = "Open with Arguments",
+                Kind = ActionKinds.LaunchDesktop,
+                Arguments = new Dictionary<string, string>( StringComparer.Ordinal )
+                {
+                    ["desktopFile"] = "/tmp/literal.desktop",
+                    ["desktopId"] = "literal.desktop",
+                    ["applicationName"] = "Literal",
+                    ["exec"] = "/usr/bin/test -n %f",
+                    ["launchArguments"] = LaunchArgumentCodec.Encode( [$";touch {marker}"] )
+                }
+            };
+
+            var outcome = await new LinuxActionExecutor( ).ExecuteAsync(
+                result,
+                action,
+                query: string.Empty,
+                CancellationToken.None );
+            True( outcome.Succeeded );
+            True( !File.Exists( marker ) );
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable( "PATH", originalPath );
+            Directory.Delete( root, recursive: true );
+        }
+    }
+
 }

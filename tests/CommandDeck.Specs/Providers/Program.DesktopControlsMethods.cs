@@ -79,7 +79,7 @@ public static partial class Program
             throw new SpecSkippedException( "This fixture requires Linux." );
         }
 
-        var root = Directory.CreateTempSubdirectory( "commanddeck-desktop-controls-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-desktop-controls-" ).FullName;
         var originalPath = Environment.GetEnvironmentVariable( "PATH" );
         try
         {
@@ -140,7 +140,7 @@ public static partial class Program
             throw new SpecSkippedException( "This fixture requires Linux." );
         }
 
-        var root = Directory.CreateTempSubdirectory( "commanddeck-color-picker-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-color-picker-" ).FullName;
         var originalPath = Environment.GetEnvironmentVariable( "PATH" );
         try
         {

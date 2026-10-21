@@ -4,7 +4,7 @@ public static partial class Program
 {
     private static async Task ProjectCheckoutsAsync( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-projects-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-projects-" ).FullName;
         try
         {
             var first = Directory.CreateDirectory( Path.Combine( root, "one checkout" ) ).FullName;

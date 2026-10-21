@@ -4,7 +4,7 @@ public static partial class Program
 {
     private static async Task AiFileAuthorityIsHandleFirstAsync( )
     {
-        var root = Path.Combine( Path.GetTempPath( ), $"commanddeck-ai-handle-{Guid.NewGuid( ):N}" );
+        var root = SpecTemporaryFiles.PathFor( $"commanddeck-ai-handle-{Guid.NewGuid( ):N}" );
         var allowed = Path.Combine( root, "allowed" );
         var outside = Path.Combine( root, "outside" );
         Directory.CreateDirectory( allowed );
@@ -51,7 +51,7 @@ public static partial class Program
 
     private static async Task AiPreflightCapacityIsPerClientAsync( )
     {
-        var root = Path.Combine( Path.GetTempPath( ), $"commanddeck-ai-capacity-{Guid.NewGuid( ):N}" );
+        var root = SpecTemporaryFiles.PathFor( $"commanddeck-ai-capacity-{Guid.NewGuid( ):N}" );
         Directory.CreateDirectory( root );
         try
         {
@@ -222,7 +222,7 @@ public static partial class Program
             True( queuedHandler.Started is 2 or 3 );
         }
 
-        var root = Path.Combine( Path.GetTempPath( ), $"commanddeck-ai-overall-{Guid.NewGuid( ):N}" );
+        var root = SpecTemporaryFiles.PathFor( $"commanddeck-ai-overall-{Guid.NewGuid( ):N}" );
         Directory.CreateDirectory( root );
         try
         {
@@ -298,7 +298,7 @@ public static partial class Program
 
     private static async Task AiAttachmentsAreReauthorizedBeforeTransmissionAsync( )
     {
-        var root = Path.Combine( Path.GetTempPath( ), $"commanddeck-ai-reauthorize-{Guid.NewGuid( ):N}" );
+        var root = SpecTemporaryFiles.PathFor( $"commanddeck-ai-reauthorize-{Guid.NewGuid( ):N}" );
         Directory.CreateDirectory( root );
         var file = Path.Combine( root, "attachment.txt" );
         await File.WriteAllTextAsync( file, "reviewed bytes" );

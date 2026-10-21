@@ -4,8 +4,7 @@ public static partial class Program
 {
     private static async Task SearchPlanFreezesCatalogSourcesAsync( )
     {
-        var database = Path.Combine( Path.GetTempPath( ),
-            $"commanddeck-search-plan-{Guid.NewGuid( ):N}.db" );
+        var database = SpecTemporaryFiles.PathFor( $"commanddeck-search-plan-{Guid.NewGuid( ):N}.db" );
         try
         {
             await using SqliteCatalog catalog = new( new StorageOptions { DatabasePath = database } );
@@ -48,8 +47,7 @@ public static partial class Program
 
     private static async Task CatalogSourceSnapshotDistinguishesOmittedAndEmptyAsync( )
     {
-        var database = Path.Combine( Path.GetTempPath( ),
-            $"commanddeck-source-snapshot-{Guid.NewGuid( ):N}.db" );
+        var database = SpecTemporaryFiles.PathFor( $"commanddeck-source-snapshot-{Guid.NewGuid( ):N}.db" );
         try
         {
             await using SqliteCatalog catalog = new( new StorageOptions { DatabasePath = database } );

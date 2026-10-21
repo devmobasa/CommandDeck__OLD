@@ -6,7 +6,7 @@ public static partial class Program
 {
     private static async Task CodexLogoutDoesNotWaitForAccountReadAsync( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-codex-logout-read-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-codex-logout-read-" ).FullName;
         try
         {
             var options = CreateAgentOptions( root, CreateFakeCodexBinary( root ) );
@@ -48,7 +48,7 @@ public static partial class Program
 
     private static async Task CodexStartupAccountReadHasDeadlineAsync( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-codex-start-read-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-codex-start-read-" ).FullName;
         try
         {
             var options = CreateAgentOptions( root, CreateFakeCodexBinary( root ) );
@@ -84,7 +84,7 @@ public static partial class Program
 
     private static async Task AssertCodexLogoutRetiresCredentialsAsync( string outcome )
     {
-        var root = Path.Combine( Path.GetTempPath( ), $"commanddeck-codex-logout-{Guid.NewGuid( ):N}" );
+        var root = SpecTemporaryFiles.PathFor( $"commanddeck-codex-logout-{Guid.NewGuid( ):N}" );
         Directory.CreateDirectory( root );
         try
         {

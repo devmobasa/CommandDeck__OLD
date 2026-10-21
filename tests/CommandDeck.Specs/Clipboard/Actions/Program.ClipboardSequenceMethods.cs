@@ -10,7 +10,7 @@ public static partial class Program
 
     private static async Task ClipboardSequenceRestartCopiesLaterEntriesInOrderAsync( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-clipboard-sequence-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-clipboard-sequence-" ).FullName;
         try
         {
             ClipboardSequenceClock clock = new( new DateTimeOffset( 2026, 9, 6, 12, 0, 0, TimeSpan.Zero ) );
@@ -83,7 +83,7 @@ public static partial class Program
 
     private static async Task ClipboardSequenceStartsAtBrowserAndSearchEntriesAsync( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-clipboard-sequence-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-clipboard-sequence-" ).FullName;
         try
         {
             ClipboardSequenceClock clock = new( new DateTimeOffset( 2026, 9, 6, 12, 0, 0, TimeSpan.Zero ) );
@@ -155,7 +155,7 @@ public static partial class Program
             return;
         }
 
-        var root = Directory.CreateTempSubdirectory( "commanddeck-action-payload-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-action-payload-", preservePrefix: true ).FullName;
         var originalPath = Environment.GetEnvironmentVariable( "PATH" );
         var originalFixture = Environment.GetEnvironmentVariable( ActionPayloadFixtureDirectory );
         try

@@ -4,9 +4,7 @@ public static partial class Program
 {
     private static async Task AdaptiveRankingLifecycleIsReversibleAsync( )
     {
-        var database = Path.Combine(
-            Path.GetTempPath( ),
-            $"commanddeck-adaptive-ranking-{Guid.NewGuid( ):N}.db" );
+        var database = SpecTemporaryFiles.PathFor( $"commanddeck-adaptive-ranking-{Guid.NewGuid( ):N}.db" );
         MutableTimeProvider clock = new( new DateTimeOffset( 2026, 1, 1, 12, 0, 0, TimeSpan.Zero ) );
         SearchOptions options = new( )
         {

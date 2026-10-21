@@ -6,7 +6,7 @@ public static partial class Program
 {
     private static async Task ScriptCommandsRespectInputsAndBoundsAsync( )
     {
-        var directory = Directory.CreateTempSubdirectory( "commanddeck-scripts-" ).FullName;
+        var directory = SpecTemporaryFiles.CreateDirectory( "commanddeck-scripts-" ).FullName;
         try
         {
             var script = Path.Combine( directory, "echo.sh" );

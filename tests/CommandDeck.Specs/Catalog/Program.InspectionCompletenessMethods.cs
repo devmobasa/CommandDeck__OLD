@@ -15,7 +15,7 @@ public static partial class Program
 
     private static async Task InspectionPagesBeyondStoredSampleAsync( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-inspection-completeness-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-inspection-completeness-" ).FullName;
         try
         {
             CommandDeckOptions options = new( )

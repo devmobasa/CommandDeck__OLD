@@ -63,7 +63,7 @@ Item {
     clipboardShortcut: shortcut.availableChord
     returnFocusTarget: search
   }
-  TestCase {
+  DeadlineTestCase {
     name: "ClipboardShortcut"
     when: windowShown
     function init() {
@@ -76,23 +76,23 @@ Item {
       scene.settingsShown = false
       search.forceActiveFocus()
     }
-    function cleanup() { help.opened = false; controller.close(false); wait(0) }
+    function cleanup() { help.opened = false; controller.close(false); nextTurn() }
     function test_default_opens_empty_search_and_restores_focus() {
       keyClick(Qt.Key_V, Qt.ControlModifier)
       verify(!controller.opened, "normal Paste does not open history")
       keyClick(Qt.Key_V, Qt.ControlModifier | Qt.ShiftModifier)
-      tryCompare(controller, "opened", true)
+      waitForValue(controller, "opened", true)
       compare(controller.query, "")
-      tryCompare(browser.searchControl, "activeFocus", true)
+      waitForValue(browser.searchControl, "activeFocus", true)
       keyClick(Qt.Key_A)
       compare(controller.query, "a")
       keyClick(Qt.Key_Escape)
       keyClick(Qt.Key_Escape)
-      tryCompare(controller, "opened", false)
-      tryCompare(search, "activeFocus", true)
+      waitForValue(controller, "opened", false)
+      waitForValue(search, "activeFocus", true)
       keyClick(Qt.Key_V, Qt.ControlModifier | Qt.ShiftModifier)
-      tryCompare(controller, "opened", true)
-      tryCompare(browser.searchControl, "activeFocus", true)
+      waitForValue(controller, "opened", true)
+      waitForValue(browser.searchControl, "activeFocus", true)
     }
     function test_settings_apply_rebind_disable_and_block_modal() {
       scene.settingsShown = true
@@ -111,7 +111,7 @@ Item {
       keyClick(Qt.Key_V, Qt.ControlModifier | Qt.ShiftModifier)
       verify(!controller.opened, "old binding is removed")
       keyClick(Qt.Key_V, Qt.ControlModifier | Qt.AltModifier)
-      tryCompare(controller, "opened", true)
+      waitForValue(controller, "opened", true)
       controller.close(false)
       scene.settingsShown = true
       mouseClick(editor.field)
@@ -131,7 +131,7 @@ Item {
       verify(shortcut.conflict)
       scene.savedSearches = []
       keyClick(Qt.Key_V, Qt.ControlModifier | Qt.ShiftModifier)
-      tryCompare(controller, "opened", true)
+      waitForValue(controller, "opened", true)
     }
     function test_pending_validation_after_settings_closes_data() {
       return [{tag: "accepted", accepted: true}, {tag: "rejected", accepted: false}]
@@ -165,8 +165,8 @@ Item {
         verify(!controller.opened, "rejected chord remains disabled")
       }
       keyClick(Qt.Key_V, Qt.ControlModifier | (data.accepted ? Qt.AltModifier : Qt.ShiftModifier))
-      tryCompare(controller, "opened", true)
-      tryCompare(browser.searchControl, "activeFocus", true)
+      waitForValue(controller, "opened", true)
+      waitForValue(browser.searchControl, "activeFocus", true)
     }
     function test_help_writes_the_chord_like_its_other_keys() {
       help.opened = true
@@ -207,7 +207,7 @@ Item {
       keyClick(Qt.Key_V, Qt.ControlModifier | Qt.ShiftModifier)
       verify(!controller.opened)
       keyClick(Qt.Key_V, Qt.ControlModifier | Qt.AltModifier)
-      tryCompare(controller, "opened", true)
+      waitForValue(controller, "opened", true)
     }
     function test_bootstrap_handler_requires_both_payloads() {
       const ignored = {handleMessage: function() { return false }}

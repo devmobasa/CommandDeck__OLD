@@ -64,7 +64,7 @@ public static partial class Program
     {
         using var document = JsonDocument.Parse( File.ReadAllText( Path.Combine( AppContext.BaseDirectory, "fixtures", "ranking-corpus-v1.json" ) ) );
         var fixture = document.RootElement.GetProperty( "learnedTopMatches" );
-        var database = Path.Combine( Path.GetTempPath( ), $"commanddeck-learned-corpus-{Guid.NewGuid( ):N}.db" );
+        var database = SpecTemporaryFiles.PathFor( $"commanddeck-learned-corpus-{Guid.NewGuid( ):N}.db" );
         FixedTimeProvider clock = new( PromotionNow );
         try
         {

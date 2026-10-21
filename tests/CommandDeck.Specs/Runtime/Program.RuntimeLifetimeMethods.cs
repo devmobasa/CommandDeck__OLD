@@ -16,7 +16,7 @@ public static partial class Program
         await resources.DisposeAsync( );
         Equal( 3, order.Count );
 
-        var directory = Path.Combine( Path.GetTempPath( ), $"commanddeck-startup-rollback-{Guid.NewGuid( ):N}" );
+        var directory = SpecTemporaryFiles.PathFor( $"commanddeck-startup-rollback-{Guid.NewGuid( ):N}" );
         Directory.CreateDirectory( directory );
         ScriptedAgentBackend backend = new( );
         try

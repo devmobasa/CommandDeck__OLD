@@ -12,7 +12,7 @@ EventPathFixture {
     function test_source_rows_fill_the_visible_settings_page() {
       fixture.part_settingsPanel.visible = true
       fixture.part_settingsPanel.showPage("search")
-      tryVerify(function() { return fixture.part_settingsPanel.renderedSourceWidthAt(0) > 400 })
+      waitForCondition(function() { return fixture.part_settingsPanel.renderedSourceWidthAt(0) > 400 })
     }
 
     function test_assistant_sign_in_works_with_keyboard_and_mouse() {
@@ -24,20 +24,20 @@ EventPathFixture {
         login: { state: "unauthenticated", supportedMethods: ["device-code"] }
       }
       panel.visible = true
-      tryCompare(panel.searchControl, "activeFocus", true)
+      waitForValue(panel.searchControl, "activeFocus", true)
       typeText("sign in")
       compare(panel.currentPage, "ai")
       compare(panel.part_aiHub.section, "assistant")
       keyClick(Qt.Key_Return)
-      tryCompare(panel.navigationControl, "activeFocus", true)
+      waitForValue(panel.navigationControl, "activeFocus", true)
       keyClick(Qt.Key_Tab)
-      tryCompare(findChild(panel, "aiAssistantSection"), "activeFocus", true)
+      waitForValue(findChild(panel, "aiAssistantSection"), "activeFocus", true)
       keyClick(Qt.Key_Tab)
-      tryCompare(findChild(panel, "aiQuickSection"), "activeFocus", true)
+      waitForValue(findChild(panel, "aiQuickSection"), "activeFocus", true)
       keyClick(Qt.Key_Tab)
-      tryCompare(panel.agentEnableControl, "activeFocus", true)
+      waitForValue(panel.agentEnableControl, "activeFocus", true)
       keyClick(Qt.Key_Tab)
-      tryCompare(panel.agentLoginControl, "activeFocus", true)
+      waitForValue(panel.agentLoginControl, "activeFocus", true)
       const previous = panel.agentLogins
       keyClick(Qt.Key_Space)
       compare(panel.agentLogins, previous + 1)
@@ -48,7 +48,7 @@ EventPathFixture {
     function test_workspace_snapshots_require_capability_and_explicit_choice() {
       fixture.part_settingsPanel.workspaceSnapshotsAvailable = false
       fixture.part_settingsPanel.visible = true
-      tryCompare(fixture.part_settingsPanel.searchControl, "activeFocus", true)
+      waitForValue(fixture.part_settingsPanel.searchControl, "activeFocus", true)
       typeText("workspace")
       const toggle = findChild(fixture.part_settingsPanel, "workspaceSnapshotsToggle")
       verify(toggle.visible)
@@ -66,13 +66,13 @@ EventPathFixture {
     }
     function test_workspace_preview_setting_keyboard_and_mouse_preserve_other_preferences() {
       fixture.part_settingsPanel.visible = true
-      tryCompare(fixture.part_settingsPanel.searchControl, "activeFocus", true)
+      waitForValue(fixture.part_settingsPanel.searchControl, "activeFocus", true)
       typeText("layout previews")
       compare(fixture.part_settingsPanel.currentPage, "search")
       const toggle = findChild(fixture.part_settingsPanel, "workspacePreviewToggle")
       verify(toggle.visible)
       // Filtering re-lays out every page; click where the toggle settles.
-      waitForRendering(fixture.part_settingsPanel)
+      waitForFrame(fixture.part_settingsPanel)
       mouseClick(toggle)
       compare(fixture.part_settingsPanel.changedPreferences.workspacePreviewMode, "off")
       compare(fixture.part_settingsPanel.changedPreferences.sources.length, 2)
@@ -86,21 +86,21 @@ EventPathFixture {
     }
     function test_settings_close_button_emphasizes_hover_and_keyboard_focus() {
       fixture.part_settingsPanel.visible = true
-      tryCompare(fixture.part_settingsPanel.searchControl, "activeFocus", true)
+      waitForValue(fixture.part_settingsPanel.searchControl, "activeFocus", true)
       const close = fixture.part_settingsPanel.closeControl
       compare(close.background.border.width, 1)
       compare(close.background.children[0].visible, false)
 
       mouseMove(close, close.width / 2, close.height / 2)
-      tryCompare(close, "hovered", true)
+      waitForValue(close, "hovered", true)
       compare(close.background.border.width, 3)
       compare(close.background.border.color, fixture.part_theme.text)
       compare(close.background.color, Qt.rgba(fixture.part_theme.accent.r, fixture.part_theme.accent.g, fixture.part_theme.accent.b, 0.38))
 
       mouseMove(fixture.part_settingsPanel, 2, fixture.part_settingsPanel.height - 2)
-      tryCompare(close, "hovered", false)
+      waitForValue(close, "hovered", false)
       close.forceActiveFocus()
-      tryCompare(close, "activeFocus", true)
+      waitForValue(close, "activeFocus", true)
       compare(close.focusRingVisible, true)
       compare(close.background.border.width, 3)
       compare(close.background.border.color, fixture.part_theme.text)
@@ -113,7 +113,7 @@ EventPathFixture {
     function test_settings_search_filters_cards_and_activates_controls() {
       fixture.part_theme.background = "#33090909"
       fixture.part_settingsPanel.visible = true
-      tryCompare(fixture.part_settingsPanel.searchControl, "activeFocus", true)
+      waitForValue(fixture.part_settingsPanel.searchControl, "activeFocus", true)
       compare(fixture.part_settingsPanel.backgroundControl.color.a, 1)
       compare(fixture.part_settingsPanel.backgroundControl.color.r, fixture.part_theme.background.r)
       typeText("  TRANSPARENCY  ")
@@ -124,12 +124,12 @@ EventPathFixture {
       keyClick(Qt.Key_Return)
       compare(fixture.part_settingsPanel.navigationControl.activeFocus, true)
       keyClick(Qt.Key_Tab)
-      tryCompare(fixture.part_settingsPanel.panelTransparencyControl, "activeFocus", true)
+      waitForValue(fixture.part_settingsPanel.panelTransparencyControl, "activeFocus", true)
       const checked = fixture.part_settingsPanel.panelTransparencyControl.checked
       keyClick(Qt.Key_Space)
       compare(fixture.part_settingsPanel.panelTransparencyControl.checked, !checked)
       keyClick(Qt.Key_F, Qt.ControlModifier)
-      tryCompare(fixture.part_settingsPanel.searchControl, "activeFocus", true)
+      waitForValue(fixture.part_settingsPanel.searchControl, "activeFocus", true)
       compare(fixture.part_settingsPanel.searchControl.selectedText, "  TRANSPARENCY  ")
       keyClick(Qt.Key_Escape)
       compare(fixture.part_settingsPanel.searchControl.text, "")
@@ -137,9 +137,9 @@ EventPathFixture {
       verify(fixture.part_settingsPanel.searchControl.activeFocus)
       compare(fixture.part_settingsPanel.dismissals, 0)
       keyClick(Qt.Key_Backtab)
-      tryCompare(fixture.part_settingsPanel.closeControl, "activeFocus", true)
+      waitForValue(fixture.part_settingsPanel.closeControl, "activeFocus", true)
       keyClick(Qt.Key_Tab)
-      tryCompare(fixture.part_settingsPanel.searchControl, "activeFocus", true)
+      waitForValue(fixture.part_settingsPanel.searchControl, "activeFocus", true)
       keyClick(Qt.Key_Escape)
       compare(fixture.part_settingsPanel.dismissals, 1)
       verify(!fixture.part_settingsPanel.visible)
@@ -148,7 +148,7 @@ EventPathFixture {
     function test_settings_search_navigates_matches_and_handles_empty_results() {
       fixture.part_settingsPanel.theme = fixture.part_compactSettingsTheme
       fixture.part_settingsPanel.visible = true
-      tryCompare(fixture.part_settingsPanel.searchControl, "activeFocus", true)
+      waitForValue(fixture.part_settingsPanel.searchControl, "activeFocus", true)
       typeText("model")
       compare(fixture.part_settingsPanel.filteredPages.map(page => page.id).join(","), "ai")
       compare(fixture.part_settingsPanel.currentPage, "ai")
@@ -158,13 +158,13 @@ EventPathFixture {
       keyClick(Qt.Key_Tab)
       const assistantSection = findChild(fixture.part_settingsPanel, "aiAssistantSection")
       const quickSection = findChild(fixture.part_settingsPanel, "aiQuickSection")
-      tryCompare(assistantSection, "activeFocus", true)
+      waitForValue(assistantSection, "activeFocus", true)
       keyClick(Qt.Key_Right)
-      tryCompare(quickSection, "activeFocus", true)
+      waitForValue(quickSection, "activeFocus", true)
       keyClick(Qt.Key_Space)
       compare(fixture.part_settingsPanel.part_aiHub.section, "quick")
       keyClick(Qt.Key_Left)
-      tryCompare(assistantSection, "activeFocus", true)
+      waitForValue(assistantSection, "activeFocus", true)
       keyClick(Qt.Key_Return)
       compare(fixture.part_settingsPanel.part_aiHub.section, "assistant")
       mouseClick(quickSection)
@@ -183,9 +183,9 @@ EventPathFixture {
       keyClick(Qt.Key_Return)
       verify(fixture.part_settingsPanel.searchControl.activeFocus)
       keyClick(Qt.Key_Tab)
-      tryCompare(fixture.part_settingsPanel.closeControl, "activeFocus", true)
+      waitForValue(fixture.part_settingsPanel.closeControl, "activeFocus", true)
       keyClick(Qt.Key_Backtab)
-      tryCompare(fixture.part_settingsPanel.searchControl, "activeFocus", true)
+      waitForValue(fixture.part_settingsPanel.searchControl, "activeFocus", true)
       keyClick(Qt.Key_Escape)
       compare(fixture.part_settingsPanel.filteredPages.length, 6)
       verify(fixture.part_settingsPanel.searchControl.activeFocus)
@@ -195,11 +195,11 @@ EventPathFixture {
       fixture.part_settingsPanel.theme = fixture.part_compactSettingsTheme
       fixture.width = 480
       fixture.part_settingsPanel.visible = true
-      tryCompare(fixture.part_settingsPanel.searchControl, "activeFocus", true)
+      waitForValue(fixture.part_settingsPanel.searchControl, "activeFocus", true)
       verify(fixture.part_settingsPanel.railCollapsed)
       typeText("model")
       keyClick(Qt.Key_Return)
-      tryCompare(fixture.part_settingsPanel.pagePickerControl, "activeFocus", true)
+      waitForValue(fixture.part_settingsPanel.pagePickerControl, "activeFocus", true)
       keyClick(Qt.Key_PageDown, Qt.ControlModifier)
       compare(fixture.part_settingsPanel.currentPage, "ai")
       compare(fixture.part_settingsPanel.pagePickerControl.currentIndex, 0)
@@ -214,14 +214,14 @@ EventPathFixture {
       keyClick(Qt.Key_Escape)
       verify(!fixture.part_settingsPanel.visible)
       fixture.part_settingsPanel.visible = true
-      tryCompare(fixture.part_settingsPanel.searchControl, "activeFocus", true)
+      waitForValue(fixture.part_settingsPanel.searchControl, "activeFocus", true)
       compare(fixture.part_settingsPanel.searchControl.text, "")
       typeText("retention")
       compare(fixture.part_settingsPanel.currentPage, "ai")
       mouseClick(fixture.part_settingsPanel.closeControl)
       verify(!fixture.part_settingsPanel.visible)
       fixture.part_settingsPanel.visible = true
-      tryCompare(fixture.part_settingsPanel.searchControl, "activeFocus", true)
+      waitForValue(fixture.part_settingsPanel.searchControl, "activeFocus", true)
       compare(fixture.part_settingsPanel.searchControl.text, "")
     }
 
@@ -229,7 +229,7 @@ EventPathFixture {
       const baseline = JSON.parse(JSON.stringify(fixture.part_settingsPanel.snapshot))
       fixture.part_settingsPanel.queueChanges = true
       fixture.part_settingsPanel.visible = true
-      tryCompare(fixture.part_settingsPanel, "activeFocus", true)
+      waitForValue(fixture.part_settingsPanel, "activeFocus", true)
       compare(fixture.part_settingsPanel.Accessible.role, Accessible.Dialog)
       for (let index = 0; index < 20; index++) keyClick(Qt.Key_Tab)
       verify(fixture.part_settingsPanel.activeFocus)
@@ -275,14 +275,14 @@ EventPathFixture {
       fixture.part_settingsPersonalization.resetPreferences(preferences)
       fixture.part_settingsPanel.queueChanges = true
       fixture.part_settingsPanel.visible = true
-      tryCompare(fixture.part_settingsPanel.searchControl, "activeFocus", true)
+      waitForValue(fixture.part_settingsPanel.searchControl, "activeFocus", true)
       typeText("motion")
       compare(fixture.part_settingsPanel.currentPage, "search")
       keyClick(Qt.Key_Escape)
       // Clearing the search re-lays out every card; click where the row settles.
       verify(waitForPolish(fixture.Window.window))
       const firstRow = fixture.part_settingsPanel.renderedSourceAt(0)
-      verify(waitForRendering(firstRow.searchToggleControl))
+      verify(waitForFrame(firstRow.searchToggleControl))
       mouseClick(firstRow.searchToggleControl)
       const first = fixture.part_settingsPersonalization.dispatched
       verify(first.sourcePatch !== undefined, "Source toggle dispatched " + JSON.stringify(first))
@@ -295,7 +295,7 @@ EventPathFixture {
       // A second user change is queued while the first save is in flight.
       verify(waitForPolish(fixture.Window.window))
       const secondToggle = fixture.part_settingsPanel.renderedSourceAt(1).searchToggleControl
-      verify(waitForRendering(secondToggle))
+      verify(waitForFrame(secondToggle))
       mouseClick(secondToggle)
       compare(fixture.part_settingsPersonalization.dispatched.requestId, first.requestId)
       fixture.part_settingsPersonalization.acceptPreferences(acknowledged)
@@ -319,7 +319,7 @@ EventPathFixture {
       fixture.part_settingsPanel.showPage("search")
       fixture.part_settingsPanel.queueChanges = true
       const toggle = fixture.part_settingsPanel.homeFolderOnlyControl
-      wait(0)
+      nextTurn()
       toggle.forceActiveFocus()
       verify(toggle.activeFocus)
       verify(!toggle.checked)
@@ -365,9 +365,9 @@ EventPathFixture {
     function test_filter_alias_settings_acknowledge_and_roll_back_with_real_events() {
       fixture.part_settingsPanel.visible = true
       fixture.part_settingsPanel.showPage("filters")
-      wait(0)
+      nextTurn()
       fixture.part_settingsPanel.filterAliasInputControl.forceActiveFocus()
-      tryVerify(function() { return fixture.part_settingsPanel.filterAliasInputControl.activeFocus })
+      waitForCondition(function() { return fixture.part_settingsPanel.filterAliasInputControl.activeFocus })
       typeText("docs")
       fixture.part_settingsPanel.filterAliasTargetControl.forceActiveFocus()
       keyClick(Qt.Key_Down)
@@ -419,7 +419,7 @@ EventPathFixture {
 
     function test_quarantined_saved_search_allows_only_delete() {
       fixture.part_settingsPanel.visible = true
-      tryCompare(fixture.part_settingsPanel.searchControl, "activeFocus", true)
+      waitForValue(fixture.part_settingsPanel.searchControl, "activeFocus", true)
       typeText("saved searches")
       fixture.part_settingsPanel.savedSearches = [{
         id: "saved-search:quarantined", name: "Unsupported clipboard saved search",

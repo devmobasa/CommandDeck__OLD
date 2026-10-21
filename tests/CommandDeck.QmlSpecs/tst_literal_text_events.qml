@@ -22,8 +22,8 @@ EventPathFixture {
           { id: "hide", title: "<s>Hide</s> &lt;this&gt;", kind: "hide" }] }
       fixture.part_controller.replaceResults([result], true)
       fixture.part_actionPanel.openFor(fixture.part_controller.selectedResult())
-      tryVerify(function() { return fixture.part_actionPanel.filterControl.activeFocus })
-      verify(waitForRendering(fixture.part_actionPanel))
+      waitForCondition(function() { return fixture.part_actionPanel.filterControl.activeFocus })
+      verify(waitForFrame(fixture.part_actionPanel))
 
       compare(literal.problem(fixture.part_actionPanel.actionItemAt(0), payTitle), "")
       compare(literal.problem(fixture.part_actionPanel.actionItemAt(1), "<s>Hide</s> &lt;this&gt;"), "")
@@ -36,7 +36,7 @@ EventPathFixture {
     function test_the_footer_shows_the_primary_action_title_as_written() {
       const title = "<b>Open</b> &amp; <i>close</i>"
       fixture.part_footerActions.primaryActionTitle = title
-      verify(waitForRendering(fixture.part_footerActions))
+      verify(waitForFrame(fixture.part_footerActions))
       compare(literal.problem(fixture.part_footerActions, title), "")
     }
 
@@ -46,7 +46,7 @@ EventPathFixture {
         width: 800, theme: fixture.part_theme, entries: [{ id: "file:a", title: name, path: "/tmp/a" }]
       })
       verify(bar !== null)
-      verify(waitForRendering(bar))
+      verify(waitForFrame(bar))
       compare(literal.problem(bar, name + " ×"), "")
 
       bar.firstControl.forceActiveFocus()

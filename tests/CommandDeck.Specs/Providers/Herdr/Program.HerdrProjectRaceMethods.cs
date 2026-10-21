@@ -4,7 +4,7 @@ public static partial class Program
 {
     private static async Task HerdrProjectValidatesPaneCountsAsync( )
     {
-        var directory = Directory.CreateTempSubdirectory( "commanddeck-herdr-snapshot-" ).FullName;
+        var directory = SpecTemporaryFiles.CreateDirectory( "commanddeck-herdr-snapshot-" ).FullName;
         try
         {
             const string pane = """{"pane_id":"p1","workspace_id":"w1","cwd":"/some/other/project"}""";
@@ -36,7 +36,7 @@ public static partial class Program
 
     private static async Task HerdrProjectGateCoversActivationAsync( )
     {
-        var directory = Directory.CreateTempSubdirectory( "commanddeck-herdr-activation-gate-" ).FullName;
+        var directory = SpecTemporaryFiles.CreateDirectory( "commanddeck-herdr-activation-gate-" ).FullName;
         try
         {
             foreach ( var cancel in new[] { false, true } )

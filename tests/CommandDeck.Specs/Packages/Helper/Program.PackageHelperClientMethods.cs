@@ -8,9 +8,7 @@ public static partial class Program
 {
     private static void PackageDatabaseIdentityMatchesTheSharedDefinition( )
     {
-        var root = Path.Combine(
-            Path.GetTempPath( ),
-            $"commanddeck-package-identity-{Guid.NewGuid( ):N}" );
+        var root = SpecTemporaryFiles.PathFor( $"commanddeck-package-identity-{Guid.NewGuid( ):N}" );
         try
         {
             Directory.CreateDirectory( Path.Combine( root, "sync" ) );

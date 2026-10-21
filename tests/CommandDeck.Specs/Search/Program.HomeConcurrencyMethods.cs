@@ -8,7 +8,7 @@ public static partial class Program
     // the first waits until its deadline and Home reports it incomplete.
     private static async Task HomeRunsLiveSectionsConcurrentlyAsync( )
     {
-        var directory = Directory.CreateTempSubdirectory( "commanddeck-home-concurrency-" ).FullName;
+        var directory = SpecTemporaryFiles.CreateDirectory( "commanddeck-home-concurrency-" ).FullName;
         SqliteCatalog catalog = new( new StorageOptions { DatabasePath = Path.Combine( directory, "catalog.db" ) } );
         SearchCoordinator? search = null;
         try

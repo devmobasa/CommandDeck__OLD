@@ -27,7 +27,7 @@ Item {
     onRemoteDecided: confirmed => controller.decideRemote(confirmed)
     onActionRequested: (revision, itemId, handle) => controller.activate(revision, itemId, handle)
   }
-  TestCase {
+  DeadlineTestCase {
     name: "ExtensionSessionLifecycle"
     when: windowShown
     function open() { controller.open({ id: "extension:package:uuids", title: "UUID Tools" }); return requestId }
@@ -73,24 +73,24 @@ Item {
       state(request, "session", "view", 1)
       state(request, "session", "ready", 1)
       controller.handleMessage({ requestId: request, type: Protocol.Messages.Done })
-      tryCompare(host.inputControl, "activeFocus", true)
+      waitForValue(host.inputControl, "activeFocus", true)
       controller.handleMessage({ requestId: request, type: Protocol.Messages.ExtensionSession, extensionSession: {
         sessionId: "session", packageKey: "package", title: "Tasks", status: "confirmation",
         confirmation: { id: "exact-request", connection: "tasks", method: "POST", destination: "https://example.com/tasks", body: "create", idempotencyKey: "one-request" }
       } })
-      tryCompare(host.remoteCancelControl, "activeFocus", true)
+      waitForValue(host.remoteCancelControl, "activeFocus", true)
       keyClick(Qt.Key_Tab)
-      tryCompare(host.remoteApproveControl, "activeFocus", true)
+      waitForValue(host.remoteApproveControl, "activeFocus", true)
       keyClick(Qt.Key_Tab)
-      tryCompare(host.remoteBodyControl, "activeFocus", true)
+      waitForValue(host.remoteBodyControl, "activeFocus", true)
       keyClick(Qt.Key_Tab)
-      tryCompare(host.remoteCancelControl, "activeFocus", true)
+      waitForValue(host.remoteCancelControl, "activeFocus", true)
       keyClick(Qt.Key_Escape)
       compare(sent[sent.length - 1].extensionInput.confirmationId, "exact-request")
       compare(sent[sent.length - 1].extensionInput.confirmed, false)
-      tryCompare(host.inputControl, "activeFocus", true)
+      waitForValue(host.inputControl, "activeFocus", true)
       controller.confirmation = { id: "another-request", connection: "tasks", method: "POST", destination: "https://example.com/tasks", body: "second", idempotencyKey: "another-key" }
-      tryCompare(host.remoteCancelControl, "activeFocus", true)
+      waitForValue(host.remoteCancelControl, "activeFocus", true)
       mouseClick(host.remoteApproveControl)
       compare(sent[sent.length - 1].extensionInput.confirmationId, "another-request")
       compare(sent[sent.length - 1].extensionInput.confirmed, true)
@@ -120,7 +120,7 @@ Item {
       controller.snapshot = { revision: 1, content: { kind: "list", id: "urls", title: "Links", items: [
         { id: "row", title: "Specification", actions: [{ id: "open", title: "Open specification", kind: Protocol.ExtensionActionKinds.OpenUrl, handle: "url" }] }
       ] } }
-      tryCompare(host.inputControl, "activeFocus", true)
+      waitForValue(host.inputControl, "activeFocus", true)
       if (data.mouse) mouseClick(host.primaryControl)
       else keyClick(Qt.Key_Return)
       compare(sent[sent.length - 1].operation, "extension.action")
@@ -129,7 +129,7 @@ Item {
       const action = requestId
       controller.handleMessage({ requestId: action, type: Protocol.Messages.Error, error: "Denied" })
       controller.handleMessage({ requestId: action, type: Protocol.Messages.Done })
-      tryCompare(host.inputControl, "activeFocus", true)
+      waitForValue(host.inputControl, "activeFocus", true)
       keyClick(Qt.Key_S)
       compare(host.inputControl.text, "s", "failed handoff restores typing without a click")
     }

@@ -13,7 +13,7 @@ public static partial class Program
             throw new SpecSkippedException( "This fixture requires Linux." );
         }
 
-        var root = Directory.CreateTempSubdirectory( "commanddeck-action-payload-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-action-payload-", preservePrefix: true ).FullName;
         var originalPath = Environment.GetEnvironmentVariable( "PATH" );
         var originalFixture = Environment.GetEnvironmentVariable( ActionPayloadFixtureDirectory );
         try
@@ -74,7 +74,7 @@ public static partial class Program
             throw new SpecSkippedException( "This fixture requires Linux." );
         }
 
-        var root = Directory.CreateTempSubdirectory( "commanddeck-action-payload-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-action-payload-", preservePrefix: true ).FullName;
         var originalPath = Environment.GetEnvironmentVariable( "PATH" );
         var originalFixture = Environment.GetEnvironmentVariable( ActionPayloadFixtureDirectory );
         try

@@ -64,7 +64,7 @@ public static partial class Program
 
     private static string FakeProcessTable( string prefix )
     {
-        var root = Directory.CreateTempSubdirectory( prefix ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( prefix ).FullName;
         WriteFakeProcess( root, 100, "firefox", residentKilobytes: 512_000, executable: "/usr/lib/firefox/firefox" );
         WriteFakeProcess( root, 101, "sshd", uid: 0, effectiveUid: 0 );
         WriteFakeProcess( root, 102, "kworker/0:1", flags: 0x00208040 );

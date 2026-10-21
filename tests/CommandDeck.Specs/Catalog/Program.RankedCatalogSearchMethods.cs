@@ -11,7 +11,7 @@ public static partial class Program
     // near the top, and runs every case with the Home-only scope off and on.
     private static async Task RankedCatalogSearchMatchesTheSingleStatementQueryAsync( )
     {
-        var database = Path.Combine( Path.GetTempPath( ), $"commanddeck-ranked-equivalence-{Guid.NewGuid( ):N}.db" );
+        var database = SpecTemporaryFiles.PathFor( $"commanddeck-ranked-equivalence-{Guid.NewGuid( ):N}.db" );
         var home = PathExpansion.Expand( "~" );
         if ( CanonicalPathBoundary.TryCreate( home, out var boundary ) )
         {
@@ -77,7 +77,7 @@ public static partial class Program
     // the Home-only scope; the ranked page's items are read afterwards.
     private static async Task RankedCatalogQuerySeeksItemsOnlyForTheHomeScopeAsync( )
     {
-        var database = Path.Combine( Path.GetTempPath( ), $"commanddeck-ranked-plan-{Guid.NewGuid( ):N}.db" );
+        var database = SpecTemporaryFiles.PathFor( $"commanddeck-ranked-plan-{Guid.NewGuid( ):N}.db" );
         try
         {
             await using SqliteCatalog catalog = new( new StorageOptions { DatabasePath = database } );

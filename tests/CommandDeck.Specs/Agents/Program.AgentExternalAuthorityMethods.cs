@@ -12,7 +12,7 @@ public static partial class Program
             await using ( runtime )
             {
                 await runtime.SetAgentPreferencesAsync( new AgentPreferences { Enabled = true }, default );
-                await using var client = await ConnectWithRetryAsync( Path.Combine( root, "commanddeck.sock" ) );
+                await using var client = await ConnectWithRetryAsync( SpecTemporaryFiles.SocketPath( root, "commanddeck.sock" ) );
                 await client.SendAsync( new ProtocolRequest
                 {
                     RequestId = 1,
@@ -48,7 +48,7 @@ public static partial class Program
 
     private static async Task AgentAuthorityObservesExternalRevocationAsync( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-external-authority-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-external-authority-" ).FullName;
         try
         {
             await using SqliteCatalog catalog = new( new StorageOptions { DatabasePath = Path.Combine( root, "catalog.db" ) } );

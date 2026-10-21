@@ -7,13 +7,11 @@ public static partial class Program
 {
     private static async Task DaemonAndBridgeRestartSoakAsync( )
     {
-        var root = Path.Combine(
-            Path.GetTempPath( ),
-            $"commanddeck-recovery-soak-{Guid.NewGuid( ):N}" );
+        var root = SpecTemporaryFiles.PathFor( $"commanddeck-recovery-soak-{Guid.NewGuid( ):N}" );
         var documents = Path.Combine( root, "documents" );
         var database = Path.Combine( root, "catalog.db" );
         var config = Path.Combine( root, "config.json" );
-        var socket = Path.Combine( root, "commanddeck.sock" );
+        var socket = SpecTemporaryFiles.SocketPath( root, "commanddeck.sock" );
         Directory.CreateDirectory( documents );
         await File.WriteAllTextAsync(
             Path.Combine( documents, "recovery-note.txt" ),

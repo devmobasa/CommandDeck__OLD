@@ -21,12 +21,12 @@ public static partial class Program
 
     private static async Task DuplicateActiveRequestClosesSocketAsync( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-duplicate-request-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-duplicate-request-" ).FullName;
         using CancellationTokenSource serverCancellation = new( );
         BlockingProtocolProvider provider = new( );
         try
         {
-            var socket = Path.Combine( root, "daemon.sock" );
+            var socket = SpecTemporaryFiles.SocketPath( root, "daemon.sock" );
             CommandDeckOptions options = new( )
             {
                 Storage = new StorageOptions { DatabasePath = Path.Combine( root, "catalog.db" ) },

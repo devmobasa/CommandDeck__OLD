@@ -23,7 +23,7 @@ EventPathFixture {
         aiPreflight: fixture.part_aiPreflightSurface.preflight
       })
       fixture.part_aiPreflightSurface.opened = true
-      wait(0)
+      nextTurn()
       const send = findChild(fixture.part_aiPreflightSurface, "aiPreflightSend")
       send.forceActiveFocus()
       keyClick(Qt.Key_Space)
@@ -64,9 +64,9 @@ EventPathFixture {
         }
       })
       compare(fixture.part_aiSurfaceController.output, "streamed output")
-      wait(0)
+      nextTurn()
       const save = findChild(fixture.part_aiStreamingSurface, "aiOutputSave")
-      tryCompare(fixture.part_aiSurfaceController, "state", "completed")
+      waitForValue(fixture.part_aiSurfaceController, "state", "completed")
       fixture.part_aiStreamingSurface.saveDirectory = "/tmp"
       verify(save.visible && save.enabled)
       verify(fixture.part_aiStreamingSurface.defaultSavePath().indexOf("/tmp/commanddeck-answer-") === 0)
@@ -84,7 +84,7 @@ EventPathFixture {
           confirmationToken: "server-owned-token"
         }
       })
-      wait(0)
+      nextTurn()
       const overwrite = findChild(fixture.part_aiStreamingSurface, "aiOutputOverwrite")
       overwrite.forceActiveFocus()
       keyClick(Qt.Key_Space)
@@ -96,7 +96,7 @@ EventPathFixture {
         requestId: fixture.part_aiSurfaceController.sentRequests[3].requestId,
         actionResult: { succeeded: true, message: "Saved" }
       })
-      wait(0)
+      nextTurn()
       const open = findChild(fixture.part_aiStreamingSurface, "aiOutputOpen")
       const copy = findChild(fixture.part_aiStreamingSurface, "aiOutputCopy")
       verify(open.visible && open.enabled)
@@ -120,7 +120,7 @@ EventPathFixture {
         aiPreflight: fixture.part_aiPreflightSurface.preflight
       })
       fixture.part_aiPreflightSurface.opened = true
-      wait(0)
+      nextTurn()
       findChild(fixture.part_aiPreflightSurface, "aiPreflightSend").forceActiveFocus()
       keyClick(Qt.Key_Space)
       fixture.part_aiPreflightSurface.opened = false
@@ -139,7 +139,7 @@ EventPathFixture {
         aiDone: { generation: 77, outcome: "cancelled" }
       })
       compare(fixture.part_aiSurfaceController.state, "cancelled")
-      wait(0)
+      nextTurn()
       const retryButton = findChild(fixture.part_aiStreamingSurface, "aiOutputRetry")
       retryButton.forceActiveFocus()
       keyClick(Qt.Key_Space)
@@ -226,7 +226,7 @@ EventPathFixture {
       }
       fixture.part_settingsPanel.visible = true
       fixture.part_settingsPanel.showPage("ai")
-      wait(0)
+      nextTurn()
       fixture.part_settingsPanel.synchronizeAiChoices()
       compare(fixture.part_settingsPanel.aiProviderControl.currentIndex, 0)
 

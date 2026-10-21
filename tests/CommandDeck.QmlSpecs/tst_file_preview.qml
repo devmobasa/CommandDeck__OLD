@@ -33,7 +33,7 @@ Item {
     onOpenRequested: root.openCount++
   }
 
-  TestCase {
+  DeadlineTestCase {
     name: "FilePreviewEventPaths"
     when: windowShown
 
@@ -45,8 +45,8 @@ Item {
         matchIndex: 0, matchCount: 2, openResultId: "preview:cached" }
       navigation.clear()
       navigation.focusRevision++
-      tryCompare(search.inputControl, "activeFocus", true)
-      verify(waitForRendering(root))
+      waitForValue(search.inputControl, "activeFocus", true)
+      verify(waitForFrame(root))
     }
 
     function test_mouse_navigation_keeps_search_ready() {
@@ -93,8 +93,8 @@ Item {
       const source = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAASElEQVR4nGNwi7r0fyAxw6gDRkNgNARGQ4BQCFAKKC6IiDGEEr2jDhgNgdEQGA2B0RAYGiEwoJXRaLN8NARGQ2A0BNxo3D0HAMBAGv92W3CjAAAAAElFTkSuQmCC"
       preview.preview = { imageSource: source, imageWidth: 32, imageHeight: 32, language: "png", text: "" }
       const image = findChild(preview, "filePreviewImage")
-      tryCompare(image, "status", Image.Ready)
-      verify(waitForRendering(image))
+      waitForValue(image, "status", Image.Ready)
+      verify(waitForFrame(image))
       verify(image.paintedWidth > 0 && image.paintedHeight > 0)
       compare(image.fillMode, Image.PreserveAspectFit)
       compare(preview.firstControl, null)
@@ -103,14 +103,14 @@ Item {
       compare(navigation.queryText, "p")
       verify(search.inputControl.activeFocus)
       preview.loading = true
-      tryCompare(image, "source", "")
+      waitForValue(image, "source", "")
       preview.preview = { text: "next text file", language: "text" }
       preview.loading = false
       verify(!preview.isImage)
       keyClick(Qt.Key_N)
       compare(navigation.queryText, "pn")
       preview.preview = { imageSource: source, imageWidth: 32, imageHeight: 32, language: "png", text: "" }
-      tryCompare(image, "status", Image.Ready)
+      waitForValue(image, "status", Image.Ready)
       verify(search.inputControl.activeFocus)
     }
 
@@ -121,7 +121,7 @@ Item {
       verify(findChild(preview, "imagePreviewError").visible)
       ignoreWarning(/.*Error decoding.*Unsupported image format/)
       preview.preview = { imageSource: "data:image/png;base64,bad", imageWidth: 32, imageHeight: 32 }
-      tryCompare(image, "status", Image.Error)
+      waitForValue(image, "status", Image.Error)
       verify(findChild(preview, "imagePreviewError").visible)
       keyClick(Qt.Key_E)
       compare(navigation.queryText, "e")

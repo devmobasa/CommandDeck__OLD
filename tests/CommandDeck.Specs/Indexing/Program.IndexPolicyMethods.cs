@@ -4,9 +4,7 @@ public static partial class Program
 {
     private static async Task FileTypePoliciesSeparateSearchFieldsAsync( )
     {
-        var temporary = Path.Combine(
-            Path.GetTempPath( ),
-            $"commanddeck-index-policy-{Guid.NewGuid( ):N}" );
+        var temporary = SpecTemporaryFiles.PathFor( $"commanddeck-index-policy-{Guid.NewGuid( ):N}" );
         var root = Path.Combine( temporary, "root" );
         var metadataDirectory = Path.Combine( root, "UniqueMetadataMarker" );
         Directory.CreateDirectory( metadataDirectory );

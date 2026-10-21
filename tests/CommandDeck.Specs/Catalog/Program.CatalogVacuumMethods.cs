@@ -4,9 +4,7 @@ public static partial class Program
 {
     private static async Task CatalogOptimizeVacuumsOnlyWhenItFreesSpaceAsync( )
     {
-        var database = Path.Combine(
-            Path.GetTempPath( ),
-            $"commanddeck-vacuum-{Guid.NewGuid( ):N}.db" );
+        var database = SpecTemporaryFiles.PathFor( $"commanddeck-vacuum-{Guid.NewGuid( ):N}.db" );
         try
         {
             await using SqliteCatalog catalog = new( new StorageOptions { DatabasePath = database } );

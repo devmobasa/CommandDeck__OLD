@@ -8,7 +8,7 @@ public static partial class Program
         {
             throw new SpecSkippedException( "This fixture requires Linux." );
         }
-        var root = Path.Combine( Path.GetTempPath( ), $"commanddeck-codemode-{Guid.NewGuid( ):N}" );
+        var root = SpecTemporaryFiles.PathFor( $"commanddeck-codemode-{Guid.NewGuid( ):N}" );
         Directory.CreateDirectory( Path.Combine( root, "bin" ) );
         try
         {

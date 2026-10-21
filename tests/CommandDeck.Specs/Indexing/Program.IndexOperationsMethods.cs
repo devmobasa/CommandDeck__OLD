@@ -100,9 +100,7 @@ public static partial class Program
 
     private static async Task PerRootStatusPauseAndResumeConvergeAsync( )
     {
-        var temporary = Path.Combine(
-            Path.GetTempPath( ),
-            $"commanddeck-root-operations-{Guid.NewGuid( ):N}" );
+        var temporary = SpecTemporaryFiles.PathFor( $"commanddeck-root-operations-{Guid.NewGuid( ):N}" );
         var firstRoot = Path.Combine( temporary, "first" );
         var secondRoot = Path.Combine( temporary, "second" );
         Directory.CreateDirectory( firstRoot );
@@ -173,9 +171,7 @@ public static partial class Program
 
     private static async Task ScopedReindexPreservesUnrelatedRowsAndPersonalizationAsync( )
     {
-        var temporary = Path.Combine(
-            Path.GetTempPath( ),
-            $"commanddeck-scoped-reindex-{Guid.NewGuid( ):N}" );
+        var temporary = SpecTemporaryFiles.PathFor( $"commanddeck-scoped-reindex-{Guid.NewGuid( ):N}" );
         var firstRoot = Path.Combine( temporary, "first" );
         var secondRoot = Path.Combine( temporary, "second" );
         Directory.CreateDirectory( firstRoot );
@@ -281,9 +277,7 @@ public static partial class Program
 
     private static async Task EventStormReconcilesOnlyAffectedRootWithinBatchBudgetAsync( )
     {
-        var temporary = Path.Combine(
-            Path.GetTempPath( ),
-            $"commanddeck-event-storm-{Guid.NewGuid( ):N}" );
+        var temporary = SpecTemporaryFiles.PathFor( $"commanddeck-event-storm-{Guid.NewGuid( ):N}" );
         var stormRoot = Path.Combine( temporary, "storm" );
         var quietRoot = Path.Combine( temporary, "quiet" );
         Directory.CreateDirectory( stormRoot );

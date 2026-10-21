@@ -6,9 +6,7 @@ public static partial class Program
 {
     private static async Task ProjectionConsistencyAvoidsNestedSearchScansAsync( )
     {
-        var database = Path.Combine(
-            Path.GetTempPath( ),
-            $"commanddeck-projection-plan-{Guid.NewGuid( ):N}.db" );
+        var database = SpecTemporaryFiles.PathFor( $"commanddeck-projection-plan-{Guid.NewGuid( ):N}.db" );
         try
         {
             await using SqliteCatalog catalog = new( new StorageOptions { DatabasePath = database } );
@@ -32,9 +30,7 @@ public static partial class Program
 
     private static async Task ProjectionConsistencyDetectsEveryDriftAsync( )
     {
-        var database = Path.Combine(
-            Path.GetTempPath( ),
-            $"commanddeck-projection-drift-{Guid.NewGuid( ):N}.db" );
+        var database = SpecTemporaryFiles.PathFor( $"commanddeck-projection-drift-{Guid.NewGuid( ):N}.db" );
         (string Sql, string Counts)[] drifts =
         [
             ("DELETE FROM catalog_fts WHERE stable_id = 'file:drift-a';",
@@ -117,9 +113,7 @@ public static partial class Program
     private static async Task IntegrityCheckAndRepairScaleLinearlyAsync( )
     {
         const int itemCount = 12_000;
-        var database = Path.Combine(
-            Path.GetTempPath( ),
-            $"commanddeck-projection-scale-{Guid.NewGuid( ):N}.db" );
+        var database = SpecTemporaryFiles.PathFor( $"commanddeck-projection-scale-{Guid.NewGuid( ):N}.db" );
         try
         {
             await using SqliteCatalog catalog = new( new StorageOptions { DatabasePath = database } );

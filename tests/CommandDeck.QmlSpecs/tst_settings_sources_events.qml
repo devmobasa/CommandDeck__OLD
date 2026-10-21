@@ -33,9 +33,9 @@ EventPathFixture {
       panel.snapshot = snapshot
       panel.changedPreferences = null
       panel.visible = true
-      tryCompare(panel.searchControl, "activeFocus", true)
+      waitForValue(panel.searchControl, "activeFocus", true)
       panel.showPage("search")
-      waitForRendering(panel)
+      waitForFrame(panel)
       compare(panel.renderedSourceCount, 4)
       scrollIntoView(panel.part_sourceList)
       return panel
@@ -53,7 +53,7 @@ EventPathFixture {
       verify(page !== null, "the list sits in a scrolling page")
       const top = item.mapToItem(page.contentItem, 0, 0).y
       page.contentY = Math.max(0, Math.min(top - 20, page.contentHeight - page.height))
-      waitForRendering(fixture.part_settingsPanel)
+      waitForFrame(fixture.part_settingsPanel)
     }
 
     function cleanup() {
@@ -97,7 +97,7 @@ EventPathFixture {
     function placeRow(page, row, offset) {
       page.contentY = row.mapToItem(page.contentItem, 0, 0).y - offset
       verify(page.contentY >= 0 && page.contentY <= page.contentHeight - page.height, "the page can scroll there")
-      waitForRendering(fixture.part_settingsPanel)
+      waitForFrame(fixture.part_settingsPanel)
     }
 
     function test_holding_a_row_still_does_not_scroll_the_page() {
@@ -110,7 +110,7 @@ EventPathFixture {
       verify(panel.part_sourceList.mapToItem(page, 0, 0).y < 0)
       const middle = page.contentY
       mousePress(grip, grip.width / 2, grip.height / 2)
-      wait(150)
+      observeFor(150, () => page.contentY === middle, "a stationary middle press does not scroll")
       compare(page.contentY, middle, "a press in the middle of the page leaves it where it is")
       mouseRelease(grip, grip.width / 2, grip.height / 2)
 
@@ -119,12 +119,12 @@ EventPathFixture {
       placeRow(page, panel.renderedSourceAt(1), 4)
       const edge = page.contentY
       mousePress(edgeGrip, edgeGrip.width / 2, edgeGrip.height / 2)
-      wait(150)
+      observeFor(150, () => page.contentY === edge, "a stationary edge press does not scroll")
       compare(page.contentY, edge, "a click near the edge is not a drag")
 
       const dragY = edgeGrip.height / 2 - edgeGrip.drag.threshold - 4
       mouseMove(edgeGrip, edgeGrip.width / 2, dragY)
-      tryVerify(() => page.contentY < edge, 2000, "a real drag near the edge scrolls")
+      waitForCondition(() => page.contentY < edge, 2000, "a real drag near the edge scrolls")
       mouseRelease(edgeGrip, edgeGrip.width / 2, dragY)
       compare(panel.part_sourceList.dragIndex, -1)
     }
@@ -264,7 +264,7 @@ EventPathFixture {
       compare(sourceIds(panel.changedPreferences), "web-search,applications,windows-workspaces,files")
       applyChange(panel)
       compare(panel.renderedSourceLabelAt(3), panel.sourceLabel("files"))
-      tryVerify(() => panel.renderedSourceAt(3).homeToggleControl.activeFocus, 5000,
+      waitForCondition(() => panel.renderedSourceAt(3).homeToggleControl.activeFocus, 5000,
         "focus stays on the moved source's Home cell")
 
       keyClick(Qt.Key_Down, Qt.AltModifier)
@@ -276,7 +276,7 @@ EventPathFixture {
       keyClick(Qt.Key_Return)
       compare(sourceIds(panel.changedPreferences), "applications,web-search,windows-workspaces,files")
       applyChange(panel)
-      tryVerify(() => panel.renderedSourceAt(0).moveDownControl.activeFocus)
+      waitForCondition(() => panel.renderedSourceAt(0).moveDownControl.activeFocus)
       compare(tabStops(panel).length, 1)
     }
 
@@ -293,8 +293,8 @@ EventPathFixture {
       compare(list.moveAnnouncement, panel.sourceLabel("files") + " moved to position 4 of 4")
       compare(list.Accessible.description, list.moveAnnouncement)
       applyChange(panel)
-      tryVerify(() => panel.renderedSourceAt(3).homeToggleControl.activeFocus)
-      waitForRendering(panel)
+      waitForCondition(() => panel.renderedSourceAt(3).homeToggleControl.activeFocus)
+      waitForFrame(panel)
 
       mouseClick(panel.renderedSourceAt(1).moveUpControl)
       compare(list.moveAnnouncement, panel.sourceLabel("applications") + " moved to position 1 of 4")
@@ -317,7 +317,7 @@ EventPathFixture {
       mouseClick(panel.renderedSourceAt(0).moveDownControl)
       panel.extensionsControl.forceActiveFocus()
       applyChange(panel)
-      wait(0)
+      nextTurn()
       verify(panel.extensionsControl.activeFocus)
       verify(!gridHasFocus(panel))
     }
@@ -398,9 +398,9 @@ EventPathFixture {
       panel.snapshot = snapshot
       panel.changedPreferences = null
       panel.visible = true
-      tryCompare(panel.searchControl, "activeFocus", true)
+      waitForValue(panel.searchControl, "activeFocus", true)
       panel.showPage("search")
-      waitForRendering(panel)
+      waitForFrame(panel)
 
       const hey = panel.renderedSourceAt(1)
       compare(hey.label, "HEY")

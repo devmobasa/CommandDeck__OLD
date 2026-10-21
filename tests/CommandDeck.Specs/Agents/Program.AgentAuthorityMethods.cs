@@ -113,7 +113,7 @@ public static partial class Program
     // supersedes it: no trust, lease, setting, or grant written before survives.
     private static async Task AgentAuthorityResetWaitsForAnInFlightWriteAsync( )
     {
-        var root = Path.Combine( Path.GetTempPath( ), $"commanddeck-agent-reset-race-{Guid.NewGuid( ):N}" );
+        var root = SpecTemporaryFiles.PathFor( $"commanddeck-agent-reset-race-{Guid.NewGuid( ):N}" );
         Directory.CreateDirectory( root );
         try
         {
@@ -166,7 +166,7 @@ public static partial class Program
     // change that finished while it was reading.
     private static async Task AgentLeaseEnforcementKeepsAFreshRaiseAsync( )
     {
-        var root = Path.Combine( Path.GetTempPath( ), $"commanddeck-agent-lease-race-{Guid.NewGuid( ):N}" );
+        var root = SpecTemporaryFiles.PathFor( $"commanddeck-agent-lease-race-{Guid.NewGuid( ):N}" );
         Directory.CreateDirectory( root );
         try
         {

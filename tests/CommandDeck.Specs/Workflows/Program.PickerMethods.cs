@@ -16,7 +16,7 @@ public static partial class Program
         {
             throw new SpecSkippedException( "This fixture requires Linux." );
         }
-        var directory = Directory.CreateTempSubdirectory( "commanddeck-picker-test-" ).FullName;
+        var directory = SpecTemporaryFiles.CreateDirectory( "commanddeck-picker-test-" ).FullName;
         var originalPath = Environment.GetEnvironmentVariable( "PATH" );
         try
         {
@@ -60,7 +60,7 @@ public static partial class Program
         True( delivered.Contains( "shell.qml" ), "the build delivers the picker entry point" );
         AssertPickerDependenciesDelivered( built );
 
-        var root = Directory.CreateTempSubdirectory( "commanddeck-picker-install-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-picker-install-" ).FullName;
         try
         {
             var scripts = Path.Combine( root, "scripts" );

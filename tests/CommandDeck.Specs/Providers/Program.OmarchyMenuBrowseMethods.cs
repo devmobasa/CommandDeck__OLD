@@ -73,7 +73,7 @@ public static partial class Program
         True( rows.ContainsKey( "omarchy-route:root" ) && rows.ContainsKey( "omarchy-route:system" ) );
         Equal( "Zeta custom", rows["omarchy:style.zeta"].Title );
 
-        var root = Directory.CreateTempSubdirectory( "commanddeck-omarchy-rows-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-omarchy-rows-" ).FullName;
         try
         {
             await using SqliteCatalog catalog = new( new StorageOptions { DatabasePath = Path.Combine( root, "catalog.db" ) } );
@@ -103,7 +103,7 @@ public static partial class Program
     private static async Task OmarchyMenuBrowseListsChildrenInOmarchyOrderAsync( )
     {
         var menu = BrowseMenu( 70 );
-        var root = Directory.CreateTempSubdirectory( "commanddeck-omarchy-browse-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-omarchy-browse-" ).FullName;
         try
         {
             await using SqliteCatalog catalog = new( new StorageOptions { DatabasePath = Path.Combine( root, "catalog.db" ) } );
@@ -250,7 +250,7 @@ public static partial class Program
     // The browser re-reads the menu files only after one of them changes.
     private static async Task OmarchyMenuSourceReparsesChangedFilesAsync( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-omarchy-source-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-omarchy-source-" ).FullName;
         try
         {
             var path = Path.Combine( root, "omarchy-menu.jsonc" );

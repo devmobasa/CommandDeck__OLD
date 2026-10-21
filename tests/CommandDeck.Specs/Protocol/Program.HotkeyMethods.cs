@@ -286,7 +286,7 @@ public static partial class Program
     {
         public HotkeyFixture( )
         {
-            Root = Path.Combine( Path.GetTempPath( ), $"commanddeck-hotkey-spec-{Guid.NewGuid( ):N}" );
+            Root = SpecTemporaryFiles.PathFor( $"commanddeck-hotkey-spec-{Guid.NewGuid( ):N}" );
             Paths = new HyprlandHotkeyPaths
             {
                 HyprDirectory = Path.Combine( Root, "config", "hypr" ),

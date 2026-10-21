@@ -17,7 +17,7 @@ public static partial class Program
         {
             await using ( runtime )
             {
-                await using var client = await ConnectWithRetryAsync( Path.Combine( root, "commanddeck.sock" ) );
+                await using var client = await ConnectWithRetryAsync( SpecTemporaryFiles.SocketPath( root, "commanddeck.sock" ) );
                 string[] lookalikes = ["agent.logout.all", "agent.grants.list", "ai.providers.retest", "files.toggle", "index.restart"];
                 long requestId = 0;
                 foreach ( var operation in lookalikes )
@@ -59,7 +59,7 @@ public static partial class Program
         {
             await using ( runtime )
             {
-                await using var client = await ConnectWithRetryAsync( Path.Combine( root, "commanddeck.sock" ) );
+                await using var client = await ConnectWithRetryAsync( SpecTemporaryFiles.SocketPath( root, "commanddeck.sock" ) );
                 long requestId = 0;
                 List<string> unknown = [];
                 foreach ( var operation in ProtocolRoutes.All.Keys.Order( StringComparer.Ordinal ) )

@@ -14,7 +14,7 @@ public static partial class Program
 
     private static async Task AgentToolFailureFinishesTheActivityAsync( Exception failure )
     {
-        var root = Path.Combine( Path.GetTempPath( ), $"commanddeck-agent-tool-failure-{Guid.NewGuid( ):N}" );
+        var root = SpecTemporaryFiles.PathFor( $"commanddeck-agent-tool-failure-{Guid.NewGuid( ):N}" );
         Directory.CreateDirectory( root );
         try
         {

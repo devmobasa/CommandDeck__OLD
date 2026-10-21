@@ -59,7 +59,7 @@ public static partial class Program
 
     private static async Task InvocationSnapshotRejectsReplacedActionAsync( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-invocation-snapshot-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-invocation-snapshot-" ).FullName;
         try
         {
             CommandDeckOptions options = new( )
@@ -157,7 +157,7 @@ public static partial class Program
 
     private static async Task PreviewMatchingLineInheritsQueryPrivacyAsync( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-preview-privacy-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-preview-privacy-" ).FullName;
         try
         {
             var path = Path.Combine( root, "notes.md" );
@@ -198,7 +198,7 @@ public static partial class Program
 
     private static async Task FileSelectionAdmitsOnlyOwnedSnapshotsAsync( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-selection-owner-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-selection-owner-" ).FullName;
         try
         {
             var path = Path.Combine( root, "notes.md" );
@@ -282,7 +282,7 @@ public static partial class Program
     // returned still reaches that one undo, for that client only.
     private static async Task InvocationUndoSurvivesTheRefreshAsync( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-invocation-undo-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-invocation-undo-" ).FullName;
         try
         {
             CommandDeckOptions options = new( )

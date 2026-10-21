@@ -11,7 +11,7 @@ public static partial class Program
 {
     private static void ExtensionRejectedAssetsPreserveNavigationAndAllowRecovery( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-asset-recovery-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-asset-recovery-" ).FullName;
         try
         {
             Directory.CreateDirectory( Path.Combine( root, "assets" ) );
@@ -66,7 +66,7 @@ public static partial class Program
 
     private static void ExtensionAssetsRejectPathsAndBoundDecodedImages( )
     {
-        var root = Directory.CreateTempSubdirectory( "commanddeck-assets-" ).FullName;
+        var root = SpecTemporaryFiles.CreateDirectory( "commanddeck-assets-" ).FullName;
         try
         {
             Directory.CreateDirectory( Path.Combine( root, "assets" ) );

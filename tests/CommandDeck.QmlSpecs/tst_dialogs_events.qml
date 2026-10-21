@@ -30,7 +30,7 @@ EventPathFixture {
       const confirmation = fixture.part_confirmation
       confirmation.destructive = true
       confirmation.opened = true
-      tryVerify(function() { return confirmation.cancelControl.activeFocus })
+      waitForCondition(function() { return confirmation.cancelControl.activeFocus })
       compare(confirmation.confirmControl.kind, Ui.ButtonVariant.Danger)
       compare(confirmation.confirmControl.Accessible.description, "Destructive action. Requires confirmation")
       confirmation.destructive = false
@@ -59,7 +59,7 @@ EventPathFixture {
     function test_settings_keeps_the_rounded_palette_frame() {
       const panel = fixture.part_settingsPanel
       panel.visible = true
-      verify(waitForRendering(panel))
+      verify(waitForFrame(panel))
       const image = grabImage(panel)
       const corner = image.pixel(1, 1)
       const inside = image.pixel(panel.width / 2, 2)
@@ -71,7 +71,7 @@ EventPathFixture {
 
     function test_confirmation_traps_focus_and_handles_real_keys() {
       fixture.part_confirmation.opened = true
-      tryCompare(fixture.part_confirmation.cancelControl, "activeFocus", true)
+      waitForValue(fixture.part_confirmation.cancelControl, "activeFocus", true)
       mouseClick(fixture, 5, 5)
       compare(fixture.part_backgroundTarget.clicks, 0)
       compare(fixture.part_confirmation.cancelControl.kind, "primary")
@@ -99,7 +99,7 @@ EventPathFixture {
 
     function test_detail_dialog_is_pointer_modal_and_traps_focus() {
       fixture.part_detailDialog.opened = true
-      tryCompare(fixture.part_detailDialog.closeControl, "activeFocus", true)
+      waitForValue(fixture.part_detailDialog.closeControl, "activeFocus", true)
       compare(fixture.part_detailDialog.Accessible.role, Accessible.Dialog)
       compare(fixture.part_detailDialog.Accessible.name, "AI response")
       mouseClick(fixture, 5, 5)
@@ -107,7 +107,7 @@ EventPathFixture {
       compare(fixture.part_detailDialog.dismissals, 1)
 
       fixture.part_detailDialog.opened = true
-      tryCompare(fixture.part_detailDialog.closeControl, "activeFocus", true)
+      waitForValue(fixture.part_detailDialog.closeControl, "activeFocus", true)
       keyClick(Qt.Key_Tab)
       compare(fixture.part_detailDialog.closeControl.activeFocus, true)
       keyClick(Qt.Key_Backtab)
@@ -118,21 +118,21 @@ EventPathFixture {
 
     function test_query_history_uses_real_confirmed_modal_events() {
       fixture.part_queryHistory.opened = true
-      tryCompare(fixture.part_queryHistory.closeControl, "activeFocus", true)
+      waitForValue(fixture.part_queryHistory.closeControl, "activeFocus", true)
       compare(fixture.part_queryHistory.Accessible.role, Accessible.Dialog)
       mouseClick(fixture, 5, 5)
       compare(fixture.part_backgroundTarget.clicks, 0)
 
       mouseClick(fixture.part_queryHistory.entryItemAt(0).deleteControl)
       compare(fixture.part_queryHistory.pendingDeleteId, 7)
-      tryCompare(fixture.part_queryHistory.confirmationControl.cancelControl, "activeFocus", true)
+      waitForValue(fixture.part_queryHistory.confirmationControl.cancelControl, "activeFocus", true)
       keyClick(Qt.Key_Tab)
       keyClick(Qt.Key_Return)
       compare(fixture.part_queryHistory.deletedId, 7)
 
       mouseClick(fixture.part_queryHistory.resetControl)
       verify(fixture.part_queryHistory.pendingReset)
-      tryCompare(fixture.part_queryHistory.confirmationControl.cancelControl, "activeFocus", true)
+      waitForValue(fixture.part_queryHistory.confirmationControl.cancelControl, "activeFocus", true)
       keyClick(Qt.Key_Escape)
       compare(fixture.part_queryHistory.resets, 0)
 
@@ -143,7 +143,7 @@ EventPathFixture {
 
     function test_ai_modals_disclose_authority_and_trap_focus() {
       fixture.part_aiPreflightSurface.opened = true
-      wait(0)
+      nextTurn()
       verify(fixture.part_aiPreflightSurface.disclosureText.indexOf("Provider: cloud") >= 0)
       verify(fixture.part_aiPreflightSurface.disclosureText.indexOf("Model: model-safe") >= 0)
       verify(fixture.part_aiPreflightSurface.disclosureText.indexOf(
@@ -166,7 +166,7 @@ EventPathFixture {
       fixture.part_aiPreflightSurface.opened = false
 
       fixture.part_aiStreamingSurface.opened = true
-      wait(0)
+      nextTurn()
       verify(fixture.part_aiStreamingSurface.activeFocus || findChild(fixture.part_aiStreamingSurface, "aiOutputSave") !== null)
       keyClick(Qt.Key_Tab)
       verify(fixture.part_aiStreamingSurface.focusTargets().some(item => item.activeFocus))
