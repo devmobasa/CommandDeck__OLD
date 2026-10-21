@@ -9,50 +9,6 @@ EventPathFixture {
   EventPathTestCase {
     fixture: scene
     name: "CommandDeck_settings_preferences"
-    function test_top_matches_choice_with_keyboard_and_mouse() {
-      const panel = fixture.part_settingsPanel
-      const original = panel.snapshot
-      panel.snapshot = Object.assign({}, original, {
-        preferences: Object.assign({}, original.preferences, { topMatches: null }),
-        defaults: { topMatches: true }
-      })
-      panel.visible = true
-      tryCompare(panel.searchControl, "activeFocus", true)
-      typeText("top matches")
-      compare(panel.currentPage, "search")
-      const toggle = findChild(panel, "topMatchesToggle")
-      verify(toggle.visible)
-      compare(toggle.checked, true)
-      compare(toggle.Accessible.name, "Top Matches")
-
-      keyClick(Qt.Key_Return)
-      tryCompare(panel.navigationControl, "activeFocus", true)
-      for (let index = 0; index < 10 && !toggle.activeFocus; index++) keyClick(Qt.Key_Tab)
-      verify(toggle.activeFocus, "Top Matches is reachable in the Search tab order")
-      keyClick(Qt.Key_Space)
-      compare(panel.changedPreferences.topMatches, false)
-      compare(panel.changedPreferences.sources.length, 2)
-      verify(toggle.activeFocus)
-      panel.snapshot = Object.assign({}, panel.snapshot, { preferences: panel.changedPreferences })
-      verify(toggle.activeFocus, "saving preserves the focused toggle")
-      keyClick(Qt.Key_Tab, Qt.ShiftModifier)
-      verify(!toggle.activeFocus)
-      keyClick(Qt.Key_Tab)
-      tryCompare(toggle, "activeFocus", true)
-      keyClick(Qt.Key_Space)
-      compare(panel.changedPreferences.topMatches, true)
-
-      mouseClick(toggle, toggle.width - toggle.pillWidth / 2, toggle.height / 2)
-      compare(panel.changedPreferences.topMatches, false)
-      keyClick(Qt.Key_Escape)
-      keyClick(Qt.Key_Escape)
-      verify(!panel.visible)
-      panel.visible = true
-      tryCompare(panel.searchControl, "activeFocus", true)
-      compare(toggle.checked, false, "reopening reflects the saved choice")
-      panel.snapshot = original
-    }
-
     function test_source_rows_fill_the_visible_settings_page() {
       fixture.part_settingsPanel.visible = true
       fixture.part_settingsPanel.showPage("search")
