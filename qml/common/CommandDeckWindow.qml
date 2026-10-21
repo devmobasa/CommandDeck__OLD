@@ -33,13 +33,7 @@ PanelWindow {
   WindowDisplay {
     id: display
     host: launcherWindow.host
-    width: launcherWindow.width
-    height: launcherWindow.height
-    legacyHeight: {
-      const monitor = (launcherWindow.host.compositor.monitors || [])
-        .find(value => value.name === launcherWindow.modelData.name)
-      return monitor ? monitor.height : launcherWindow.height
-    }
+    window: launcherWindow
   }
 
   required property var modelData

@@ -8,6 +8,9 @@ QtObject {
   id: journey
   required property var host
   readonly property var deck: host.part_integratedDeck
+  property point restingPosition
+  property real restingScroll: 0
+  property int originalPercent: 100
 
   function latestSearch(query) {
     const searches = deck.sentRequests.filter(request => request.operation === Protocol.Operations.Search)
@@ -80,6 +83,34 @@ QtObject {
           host.expect(deck.currentResult.title === "beta.txt",
             "a row appearing under a resting pointer keeps the keyboard selection")
           host.expect(deck.testSearchInput.activeFocus, "row delivery keeps search focused")
+
+          const target = row(3)
+          host.part_hostEvents.mouseMove(target, 60, target.height / 2)
+          host.part_hostEvents.keyClick(Qt.Key_Up)
+          host.part_hostEvents.keyClick(Qt.Key_Up)
+          host.expect(deck.currentResult.title === "alpha.txt", "keys select the first row before re-layout")
+          restingPosition = target.mapToItem(null, 60, target.height / 2)
+          restingScroll = deck.testSurfaceWindow.part_resultList.contentY
+          originalPercent = deck.displaySizePercent
+          deck.applyDisplaySizePercent(125)
+        }
+      },
+      {
+        ready: () => deck.testSurfaceWindow.part_palette.width === deck.testSurfaceWindow.displaySizing.panelWidth
+          && row(3).height === deck.testSurfaceWindow.part_appTheme.rowHeight,
+        message: "zoom lays out the production rows beneath the resting pointer",
+        action: () => {
+          const events = host.part_hostEvents
+          const surface = deck.testSurfaceWindow.contentItem
+          host.expect(events.waitForPolish(surface.Window.window), "zoom completes layout polish")
+          host.expect(events.waitForFrame(surface), "zoom renders before the hover update")
+          events.mouseMove(surface, restingPosition.x, restingPosition.y)
+          host.expect(events.waitForFrame(surface), "the hover update renders before selection is checked")
+          host.expect(deck.currentResult.title === "alpha.txt"
+              && deck.testSurfaceWindow.part_resultList.contentY === restingScroll,
+            "re-layout under a resting pointer keeps the first row selected without scrolling")
+          host.expect(deck.testSearchInput.activeFocus, "re-layout leaves search focused")
+          deck.applyDisplaySizePercent(originalPercent)
           host.part_hostEvents.keyClick(Qt.Key_X)
           host.expect(deck.testSearchInput.text === "x" && deck.queryText === "x",
             "typing right after hovering edits the query")
