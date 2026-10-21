@@ -4,6 +4,10 @@ public static partial class Program
 {
     private static async Task RunIncrementalIndexRegistrationsAsync( )
     {
+        await RunAsync( "exclusion listing omits a deleted file and preserves existing and redacted entries", ( ) => ExclusionListingOmitsMissingPathsAsync( directory: false, renamed: null ) );
+        await RunAsync( "exclusion listing omits a deleted subtree and preserves existing and redacted entries", ( ) => ExclusionListingOmitsMissingPathsAsync( directory: true, renamed: null ) );
+        await RunAsync( "exclusion listing omits a renamed visible file until a scan", ( ) => ExclusionListingOmitsMissingPathsAsync( directory: false, renamed: "visible.txt" ) );
+        await RunAsync( "exclusion listing omits a renamed hidden file until a scan records it", ( ) => ExclusionListingOmitsMissingPathsAsync( directory: false, renamed: ".renamed.txt" ) );
         await RunAsync( "full scan exclusion diagnostics survive incremental edits and refresh with changed paths", FullScanExclusionDiagnosticsSurviveIncrementalEditsAsync );
         await RunAsync( "full scan exclusion diagnostics retire removed roots after incremental edits", ( ) => ExerciseExclusionDiagnosticsRootChangeAsync( configured: false ) );
         await RunAsync( "full scan exclusion diagnostics retire disabled roots after incremental edits", ( ) => ExerciseExclusionDiagnosticsRootChangeAsync( configured: true ) );

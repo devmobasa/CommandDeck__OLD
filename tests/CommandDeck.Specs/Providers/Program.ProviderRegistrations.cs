@@ -144,6 +144,10 @@ public static partial class Program
         await RunAsync(
             "systemd provider stays silent on failure or malformed output",
             SystemdProviderStaysSilentOnFailureAsync );
+        await RunAsync( "currency conversions retain qalc precision for large signed amounts", CurrencyConversionsRetainQalcPrecisionAsync );
+        await RunAsync( "currency conversions preserve nondecimal qalc output", CurrencyConversionsPreserveNondecimalOutputAsync );
+        await RunAsync( "inline calculator never starts qalc, including complete conversions", InlineCalculatorNeverStartsQalcAsync );
+        await RunAsync( "date calculator resolves local dates and missing years offline", DateCalculatorUsesLocalClockAndResolvesYearsAsync );
         await RunAsync(
             "calculator delegates units to qalc and keeps arithmetic local",
             CalculatorProviderDelegatesUnitsToQalcAndKeepsArithmeticLocalAsync );
@@ -207,6 +211,13 @@ public static partial class Program
         await RunAsync(
             "desktop controls run literal argv and report tool failures",
             DesktopControlsRunLiteralArgvThroughRunArgvAsync );
+        Run( "run command arguments follow the invocation rules, never a shell", RunCommandArgumentsFollowTheInvocationRules );
+        await RunAsync( "run command row needs a program on PATH or an absolute executable and runs nothing",
+            RunCommandRowNeedsAnExecutableProgramAsync );
+        await RunAsync( "command mode lists the Run row first, keeps its results and denies assistant tools",
+            CommandModeListsTheRunRowFirstAsync );
+        await RunAsync( "run command launches its exact argv detached like an application",
+            RunCommandLaunchesDetachedLikeApplicationsAsync );
         await RunAsync(
             "color picker starts hyprpicker after the launcher closes and reports a missing tool",
             ColorPickerStartsAfterTheLauncherAndReportsAMissingToolAsync );

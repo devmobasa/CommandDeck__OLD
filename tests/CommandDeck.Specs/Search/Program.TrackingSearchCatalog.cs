@@ -100,6 +100,11 @@ public static partial class Program
             return inner.ApplyPathChangesAsync( changes, cancellationToken );
         }
 
+        public ValueTask ReplaceApplicationsAsync(
+            IReadOnlyList<IndexedItem> items,
+            CancellationToken cancellationToken ) =>
+            inner.ReplaceApplicationsAsync( items, cancellationToken );
+
         public ValueTask<IReadOnlyList<string>> GetPathsRequiringExtractorVersionAsync(
             string extractorVersion,
             int limit,

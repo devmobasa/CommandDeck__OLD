@@ -47,6 +47,13 @@ use literal vectors, not arbitrary renderer-supplied shell text. Result/session
 identity and confirmation are checked at admission; a displayed label is not
 authority. Command/script definitions remain trusted user configuration.
 
+A `>` Run row is built by the daemon from the typed text: it splits the text
+into a literal argument vector without a shell, and offers the row only when the
+program is on `PATH` or is an absolute executable path. The row's ID follows that
+vector, the frontend invokes it by result reference without arguments, and the
+launch uses the same detached path as applications. Assistant tools cannot
+invoke it.
+
 Omarchy menu rows can carry `when` and `checked` bash conditions from Omarchy's
 own menu files and your menu extension file, the same trust as the row's action.
 With Omarchy menu state on (Settings > Search; until chosen there it follows

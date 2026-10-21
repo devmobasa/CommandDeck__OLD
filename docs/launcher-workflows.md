@@ -122,6 +122,22 @@ skipped. Execution defaults to 30 seconds (configurable from 1 to 300), with
 64 KiB stdout and 16 KiB stderr limits. Timeout, cancellation, and output overflow
 stop the process tree. Output is shown as plain text.
 
+## Run a program
+
+Type `>` and a program with its arguments, for example `> htop` or
+`> notify-send "Build done"`. When the program is on `PATH`, or is an absolute
+path to an executable file, the first row is **Run notify-send 'Build done'**.
+Press Enter to run it detached, the way applications start; the launcher then
+closes as set by **Hide after opening an item**. Ctrl+K lists **Run in Terminal**
+and **Copy Command**; Ctrl+Enter and Ctrl+Shift+C run them directly. An unknown
+program, a relative path such as `./build.sh`, and `~/bin/tool` get no Run row,
+so Enter never runs typed text without the row.
+
+No shell reads the text. Whitespace separates arguments, and double quotes around
+a whole argument keep its spaces. `~`, `$HOME`, globs, pipes, and redirection are
+passed literally; use `> sh -c "make 2>&1 | tee build.log"` when you need them.
+See [Run a program](search-and-ranking.md#run-a-program) for the exact rules.
+
 ## Clipboard history
 
 The in-launcher shortcut waits for preferences and saved-search ownership to load.
@@ -374,3 +390,12 @@ changes a row, the helper uses the refreshed row and reference.
 The executable spec suite covers input limits, literal expansion, timeouts,
 retention, paging, and selection ownership. QML tests cover the input form,
 file-selection controls, picker keyboard behavior, and launcher protocol wiring.
+
+## Calculator
+
+Type `100 * 5` to show `500` above normal results, then press Enter to copy it.
+Type `days until 11 sep` for an offline date count, or `weeks until 11 sep` for
+weeks and remaining days. The subtitle shows the resolved dates. Use `=` for an
+explicit expression. Unit and currency conversions need `=` and optional qalc for now.
+See [calculator and date rules](search-and-ranking.md#calculator-and-date-counts).
+Settings > Search > **Inline calculator** turns bare calculations on or off.

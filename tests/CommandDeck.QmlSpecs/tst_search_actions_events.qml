@@ -52,15 +52,23 @@ EventPathFixture {
       waitForCondition(function() { return fixture.part_eventFilterPalette.activeFocus })
       compare(fixture.part_eventFilterPalette.selectedIndex, 0)
 
-      // Arrow keys move the highlight and stay trapped inside the palette.
+      // Arrow keys move the highlight and stay trapped inside the palette. Run
+      // (">") follows the calculator, ahead of the daemon filters.
       keyClick(Qt.Key_Down)
       compare(fixture.part_eventFilterPalette.selectedIndex, 1)
-      compare(fixture.part_eventFilterPalette.selectedToken(), "app:")
+      compare(fixture.part_eventFilterPalette.selectedToken(), ">")
       verify(fixture.part_eventFilterPalette.activeFocus)
       keyClick(Qt.Key_Up)
       compare(fixture.part_eventFilterPalette.selectedIndex, 0)
 
       // Enter inserts the highlighted token.
+      keyClick(Qt.Key_Down)
+      keyClick(Qt.Key_Return)
+      compare(fixture.part_eventFilterPalette.inserted, ">")
+      fixture.part_eventFilterPalette.opened = false
+      fixture.part_eventFilterPalette.opened = true
+      waitForCondition(function() { return fixture.part_eventFilterPalette.activeFocus })
+      keyClick(Qt.Key_Down)
       keyClick(Qt.Key_Down)
       keyClick(Qt.Key_Return)
       compare(fixture.part_eventFilterPalette.inserted, "app:")

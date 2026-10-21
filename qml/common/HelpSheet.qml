@@ -38,6 +38,7 @@ Rectangle {
       items: [
         { keys: ["↵"], text: "Run the primary action" },
         { keys: ["Ctrl+1", "Ctrl+9"], text: "Run the numbered result" },
+        { keys: [">"], text: "Start with > to run a program on PATH, such as > htop" },
         { keys: ["Tab"], text: "Complete a filter hint or the selected result, or fill its inputs" }
       ]
     },
@@ -55,6 +56,13 @@ Rectangle {
         { keys: ["Alt+Shift+D"], text: "Don't show this result" },
         { keys: ["Alt+Shift+R"], text: "Reset the result's ranking" },
         { keys: ["←", "Esc"], text: "Close the action panel" }
+      ]
+    },
+    {
+      title: "Calculator",
+      items: [
+        { keys: [], text: "Type 100 * 5 or days until 11 sep; Enter copies the answer." },
+        { keys: ["="], text: "Explicit expression; works when Inline calculator is off in Search settings." }
       ]
     },
     {

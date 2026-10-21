@@ -37,39 +37,12 @@ public sealed partial class SqliteCatalog
         removeItems.Transaction = transaction;
         await removeItems.PrepareAsync( cancellationToken ).ConfigureAwait( false );
 
-        await using var insertFts = connection.CreateCommand( );
+        await using var insertFts = CreateInsertSearchRowCommand( connection );
         insertFts.Transaction = transaction;
-        insertFts.CommandText = """
-            INSERT INTO catalog_fts(
-                stable_id, kind, source_id, title, subtitle, path, body, config_keys)
-            VALUES(
-                $stable_id, $kind, $source_id, $title, $subtitle, $path, $body, $config_keys);
-            """;
-        AddParameters( insertFts,
-            "$stable_id", "$kind", "$source_id", "$title", "$subtitle", "$path", "$body", "$config_keys" );
         await insertFts.PrepareAsync( cancellationToken ).ConfigureAwait( false );
 
-        // Runs directly after insertFts on this connection, so last_insert_rowid()
-        // is the rowid of the search row that belongs to this catalog row.
-        await using var insertItem = connection.CreateCommand( );
+        await using var insertItem = CreateInsertItemCommand( connection );
         insertItem.Transaction = transaction;
-        insertItem.CommandText = """
-            INSERT INTO catalog_items(
-                stable_id, kind, title, subtitle, path, icon, payload_json,
-                size_bytes, modified_unix_ms, provider_id, startup_wm_class, source_id,
-                extractor_version, index_policy_json, title_in_search, metadata_in_search,
-                fts_rowid)
-            VALUES(
-                $stable_id, $kind, $title, $subtitle, $path, $icon, $payload_json,
-                $size_bytes, $modified_unix_ms, $provider_id, $startup_wm_class, $source_id,
-                $extractor_version, $index_policy_json, $title_in_search, $metadata_in_search,
-                last_insert_rowid());
-            """;
-        AddParameters( insertItem,
-            "$stable_id", "$kind", "$title", "$subtitle", "$path", "$icon",
-            "$payload_json", "$size_bytes", "$modified_unix_ms", "$provider_id",
-            "$startup_wm_class", "$source_id", "$extractor_version", "$index_policy_json",
-            "$title_in_search", "$metadata_in_search" );
         await insertItem.PrepareAsync( cancellationToken ).ConfigureAwait( false );
 
         foreach ( var change in changes )
@@ -99,6 +72,93 @@ public sealed partial class SqliteCatalog
         }
 
         await transaction.CommitAsync( cancellationToken ).ConfigureAwait( false );
+    }
+
+    // Desktop entries are rescanned as a whole, because a user entry shadows a
+    // system entry with the same ID. Their rows are replaced as one set in one
+    // transaction; other sources and personalization keyed by ID are untouched.
+    public async ValueTask ReplaceApplicationsAsync(
+        IReadOnlyList<IndexedItem> items,
+        CancellationToken cancellationToken )
+    {
+        ArgumentNullException.ThrowIfNull( items );
+        if ( items.Any( static item => item.SourceId != SourceIds.Applications ) )
+        {
+            throw new InvalidOperationException( "Only application rows can replace the application source." );
+        }
+
+        await InitializeAsync( cancellationToken ).ConfigureAwait( false );
+        await using var connection = await OpenAsync( cancellationToken ).ConfigureAwait( false );
+        await using var transaction =
+            ( SqliteTransaction ) await connection.BeginTransactionAsync( cancellationToken ).ConfigureAwait( false );
+
+        await using ( var remove = connection.CreateCommand( ) )
+        {
+            remove.Transaction = transaction;
+            remove.CommandText = """
+                DELETE FROM catalog_fts
+                WHERE rowid IN (SELECT fts_rowid FROM catalog_items WHERE source_id = $source_id);
+                DELETE FROM catalog_items WHERE source_id = $source_id;
+                """;
+            remove.Parameters.AddWithValue( "$source_id", SourceIds.Applications );
+            await remove.ExecuteNonQueryAsync( cancellationToken ).ConfigureAwait( false );
+        }
+
+        await using var insertFts = CreateInsertSearchRowCommand( connection );
+        insertFts.Transaction = transaction;
+        await using var insertItem = CreateInsertItemCommand( connection );
+        insertItem.Transaction = transaction;
+        foreach ( var item in items )
+        {
+            BindFts( insertFts, item );
+            await insertFts.ExecuteNonQueryAsync( cancellationToken ).ConfigureAwait( false );
+            BindItem( insertItem, item );
+            await insertItem.ExecuteNonQueryAsync( cancellationToken ).ConfigureAwait( false );
+        }
+
+        await transaction.CommitAsync( cancellationToken ).ConfigureAwait( false );
+        await InvalidateFileHandlersAsync( ).ConfigureAwait( false );
+    }
+
+    private static SqliteCommand CreateInsertSearchRowCommand( SqliteConnection connection )
+    {
+        var command = connection.CreateCommand( );
+        command.CommandText = """
+            INSERT INTO catalog_fts(
+                stable_id, kind, source_id, title, subtitle, path, body, config_keys)
+            VALUES(
+                $stable_id, $kind, $source_id, $title, $subtitle, $path, $body, $config_keys);
+            """;
+        AddParameters( command,
+            "$stable_id", "$kind", "$source_id", "$title", "$subtitle", "$path", "$body", "$config_keys" );
+
+        return command;
+    }
+
+    // Runs directly after the search row insert on the same connection, so
+    // last_insert_rowid() is the rowid of the search row of this catalog row.
+    private static SqliteCommand CreateInsertItemCommand( SqliteConnection connection )
+    {
+        var command = connection.CreateCommand( );
+        command.CommandText = """
+            INSERT INTO catalog_items(
+                stable_id, kind, title, subtitle, path, icon, payload_json,
+                size_bytes, modified_unix_ms, provider_id, startup_wm_class, source_id,
+                extractor_version, index_policy_json, title_in_search, metadata_in_search,
+                fts_rowid)
+            VALUES(
+                $stable_id, $kind, $title, $subtitle, $path, $icon, $payload_json,
+                $size_bytes, $modified_unix_ms, $provider_id, $startup_wm_class, $source_id,
+                $extractor_version, $index_policy_json, $title_in_search, $metadata_in_search,
+                last_insert_rowid());
+            """;
+        AddParameters( command,
+            "$stable_id", "$kind", "$title", "$subtitle", "$path", "$icon",
+            "$payload_json", "$size_bytes", "$modified_unix_ms", "$provider_id",
+            "$startup_wm_class", "$source_id", "$extractor_version", "$index_policy_json",
+            "$title_in_search", "$metadata_in_search" );
+
+        return command;
     }
 
     internal static SqliteCommand CreateRemovePathSearchRowsCommand( SqliteConnection connection )

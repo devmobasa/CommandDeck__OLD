@@ -57,6 +57,14 @@ public static partial class Program
             CatalogOptimizeVacuumsOnlyWhenItFreesSpaceAsync );
         await RunAsync( "inspection pages beyond the stored work sample",
             InspectionPagesBeyondStoredSampleAsync );
+        await RunAsync( "exclusion listing retains paths at the root length cap after a fresh scan",
+            ( ) => ExclusionListingRetainsCappedPathsAsync( longRoot: true ) );
+        await RunAsync( "exclusion listing retains paths at the relative path length cap after a fresh scan",
+            ( ) => ExclusionListingRetainsCappedPathsAsync( longRoot: false ) );
+        await RunAsync( "exclusion listing filters only the bounded sample and retains root diagnostics",
+            ( ) => ExclusionListingKeepsItsSampleBoundAsync( rootExists: true ) );
+        await RunAsync( "exclusion listing retains missing root diagnostics and bounded sample counts",
+            ( ) => ExclusionListingKeepsItsSampleBoundAsync( rootExists: false ) );
         await RunAsync( "pooled catalog connections apply the configured pragmas on every open",
             PooledCatalogConnectionsApplyTheirPragmasAsync );
         await RunAsync( "a briefly blocked catalog writer waits for the configured busy timeout",
@@ -191,6 +199,18 @@ public static partial class Program
             }
         } );
 
+        Run( "desktop Exec program names see through env flatpak and shell launchers", DesktopExecProgramNamesSeeThroughLaunchers );
+        await RunAsync( "applications are found by command name and desktop ID but not by wrapper words",
+            ApplicationsAreFoundByCommandNameAsync );
+        await RunAsync( "replacing applications keeps other rows and refreshes Open With handlers",
+            ReplacingApplicationsKeepsOtherRowsAndRefreshesOpenWithAsync );
+        await RunAsync( "an application renamed into place with an old modification time becomes searchable",
+            InstalledApplicationBecomesSearchableAsync );
+        await RunAsync( "a removed or masked application leaves search without a restart", RemovedApplicationLeavesSearchAsync );
+        await RunAsync( "an application change after a purge waits for the full scan",
+            ApplicationRefreshLeavesAPurgedCatalogToTheFullScanAsync );
+        await RunAsync( "an application installed while stopped appears after start",
+            ApplicationInstalledWhileStoppedAppearsAfterStartAsync );
         await RunAsync( "desktop scanner applies user masking and desktop visibility", async ( ) =>
         {
             var root = SpecTemporaryFiles.PathFor( $"commanddeck-desktop-spec-{Guid.NewGuid( ):N}" );

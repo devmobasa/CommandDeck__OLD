@@ -6,6 +6,8 @@ public sealed partial class CalculatorProvider : ICommandProvider
 {
     private readonly QalcEvaluator _qalc;
     private readonly bool _useQalc;
+    private readonly Func<bool> _inlineEnabled;
+    private readonly TimeProvider _clock;
 
     public CalculatorProvider( )
         : this( runner: null, available: null, options: null, clock: null )
@@ -16,10 +18,13 @@ public sealed partial class CalculatorProvider : ICommandProvider
         ExternalProcessRunner? runner,
         Func<bool>? available,
         CalculatorOptions? options = null,
-        TimeProvider? clock = null )
+        TimeProvider? clock = null,
+        Func<bool>? inlineEnabled = null )
     {
         var resolved = options ?? new( );
         _useQalc = resolved.AllowsQalc( );
+        _inlineEnabled = inlineEnabled ?? (( ) => resolved.Inline);
+        _clock = clock ?? TimeProvider.System;
         var qalcAvailable = resolved.RequiresQalc( )
             ? static ( ) => true
             : available;
@@ -34,7 +39,18 @@ public sealed partial class CalculatorProvider : ICommandProvider
         CancellationToken cancellationToken )
     {
         cancellationToken.ThrowIfCancellationRequested( );
-        if ( !query.IsCalculator || string.IsNullOrWhiteSpace( query.Text ) )
+        var inline = CalculatorInput.IsInlineCandidate( query );
+        var text = query.IsCalculator ? query.Text : query.Original;
+        if ( (!query.IsCalculator && !(inline && _inlineEnabled( ))) || string.IsNullOrWhiteSpace( text ) )
+        {
+            return [];
+        }
+
+        if ( DateCounting.TryEvaluate( text, _clock, out var date ) && date is not null )
+        {
+            return [CreateResult( text, date.Title, date.Subtitle, date.CopyText )];
+        }
+        if ( DateCounting.IsCandidate( text ) )
         {
             return [];
         }
@@ -44,21 +60,26 @@ public sealed partial class CalculatorProvider : ICommandProvider
         // coulomb and `in` as inches. Non-temperature input is returned unchanged,
         // and the normalized text is what we display so the interpretation is
         // transparent to the user.
-        var expression = NormalizeTemperatureConversion( query.Text );
+        var expression = NormalizeTemperatureConversion( text );
 
         if ( Calculator.TryEvaluate( expression, out var value, out _ ) )
         {
             return [CreateResult( expression, Calculator.Format( value ) )];
         }
 
-        if ( !_useQalc )
+        if ( !_useQalc || inline )
         {
             return [];
         }
 
         var qalcValue = await _qalc.TryEvaluateAsync( expression, cancellationToken )
             .ConfigureAwait( false );
-        return qalcValue is null ? [] : [CreateResult( expression, qalcValue )];
+        if ( qalcValue is null )
+        {
+            return [];
+        }
+
+        return [CreateResult( expression, QalcEvaluator.FormatDisplay( expression, qalcValue ), exact: qalcValue )];
     }
 
     // Matches a whole-string temperature conversion of the form
@@ -93,17 +114,18 @@ public sealed partial class CalculatorProvider : ICommandProvider
         _ => letter
     };
 
-    private SearchResult CreateResult( string expression, string formatted ) => new( )
+    private SearchResult CreateResult( string expression, string formatted, string? subtitle = null, string? copyText = null, string? exact = null ) => new( )
     {
         Id = $"calculator:{expression}",
         Kind = ResultKinds.Calculator,
         Title = formatted,
-        Subtitle = expression,
+        Subtitle = subtitle ?? expression,
         Icon = "accessories-calculator",
         ProviderId = Id,
         SourceId = SourceIds.Calculator,
         Score = 1,
-        Details = [new DetailField( "Expression", expression, Monospace: true )],
+        Details = [new DetailField( "Expression", expression, Monospace: true ),
+            .. exact is null ? Array.Empty<DetailField>( ) : [new DetailField( "Exact value", exact, Monospace: true )]],
         Actions =
         [
             new CommandAction
@@ -113,7 +135,7 @@ public sealed partial class CalculatorProvider : ICommandProvider
                 Kind = ActionKinds.CopyText,
                 Arguments = new Dictionary<string, string>(StringComparer.Ordinal)
                 {
-                    ["text"] = formatted
+                    ["text"] = copyText ?? formatted
                 }
             }
         ]

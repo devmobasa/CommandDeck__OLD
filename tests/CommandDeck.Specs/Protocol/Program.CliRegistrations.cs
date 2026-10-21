@@ -13,6 +13,8 @@ public static partial class Program
         await RunAsync(
             "picker build and installer deliver every relative QML dependency",
             PickerDeliveryCarriesEveryRelativeDependencyAsync );
+        await RunAsync( "catalog inspection CLI labels unchecked exclusion totals as approximate",
+            CatalogInspectionCliLabelsApproximateExclusionsAsync );
         await RunAsync(
             "catalog maintenance CLI is inspectable confirmed and customization-safe",
             CatalogMaintenanceCliIsSafeAsync );

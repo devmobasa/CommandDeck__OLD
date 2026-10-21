@@ -113,6 +113,9 @@
           "type": "object",
           "additionalProperties": false,
           "properties": {
+            "inline": {
+              "type": "boolean"
+            },
             "useQalc": {
               "type": "string",
               "enum": [

@@ -200,6 +200,7 @@ object. Detailed guidance remains in the hand-written sections that follow.
 | `search.learnFromInvocations` | `boolean` | `true` |
 | `search.omarchyMenuState` | `boolean` | `true` |
 | `search.calculator` | `CalculatorOptions` | object |
+| `search.calculator.inline` | `boolean` | `true` |
 | `search.calculator.useQalc` | `string` | `auto` |
 | `search.ranking` | `RankingOptions` | object |
 | `search.ranking.titleWeight` | `number` | `7` |
@@ -360,6 +361,7 @@ database on a local filesystem. Do not place it on a network mount.
     "providerTimeoutMilliseconds": 350,
     "learnFromInvocations": true,
     "calculator": {
+      "inline": true,
       "useQalc": "auto"
     }
   }
@@ -370,14 +372,21 @@ database on a local filesystem. Do not place it on a network mount.
 - `maximumLimit`: server-side cap.
 - `providerTimeoutMilliseconds`: shared search deadline.
 - `learnFromInvocations`: usage/recency updates after successful actions.
+- `calculator.inline`: `true` (default) shows a clear calculation above the normal
+  search results without `=`. Settings > Search > **Inline calculator** overrides
+  this default without a restart. Explicit `=` expressions work with either choice.
 - `calculator.useQalc`: `auto` (default) uses `qalc` when it is on PATH for
   unit, currency, constant, and function expressions; `never` keeps the
-  managed arithmetic evaluator only; `always` still tries `qalc` when PATH
+  managed arithmetic and date evaluators only; `always` still tries `qalc` when PATH
   detection is negative, and Doctor fails if `qalc` is missing. Arithmetic
   such as `=2+2` never shells out. Currency queries evaluate against cached
   rates in one fast `qalc` run; a background `-e` refresh with a 3 s budget
   runs at most once per 15 minutes after a successful fetch. The expression
-  is a single argv token after `--`.
+  is a single argv token after `--`. Unit and currency conversions require `=`
+  for now, for example `=100 usd to eur`, `=5 km to miles`, or `=105F in C`.
+  Bare arithmetic, date counts, and ordinary searches never start qalc.
+  Currency rows round to two decimals; the details pane keeps the unrounded
+  evaluator output.
 
 `search.ranking` controls FTS field weights, optional per-source multipliers,
 per-source result caps, and first-page source diversity. Its nested `adaptive`
@@ -567,9 +576,21 @@ incremental indexing disabled, run `commanddeck reindex` to apply file changes;
 a restart alone does not rescan roots.
 Configuration changes require a daemon restart.
 
-`commanddeck catalog inspect` reports skipped paths and matching rules, including
-`generated-directory` and `repository-ignore` reasons. `commanddeck status --json`
-includes `ignoredEventCount` in its incremental status, and scan reports count discovered,
+The index inspector shows an approximate exclusion count.
+`commanddeck catalog inspect` also lists skipped paths and matching rules from the last full scan,
+including `generated-directory` and `repository-ignore` reasons. Each inspection
+checks at most 256 recorded entries and omits path-level exclusions whose
+non-redacted paths no longer exist.
+Root-unavailable entries remain unchanged until a full scan. Existing paths are not
+rechecked against policy. Counts exclude omitted entries in that sample;
+additional stored entries remain counted until checked or rescanned.
+Entries with a root or relative path at the 512-character storage cap remain unchecked because the path may be truncated.
+Private entries have no stored path to check, so they remain unchanged until
+the next full scan or `commanddeck reindex`. New exclusions appear after a scan
+records them.
+
+`commanddeck status --json` includes `ignoredEventCount` in its incremental
+status, and scan reports count discovered,
 indexed, and skipped entries. A pruned directory counts as one skipped entry;
 its contents are not enumerated. Native recursive filesystem watches remain
 registered inside excluded directories; event filtering reduces journal and
@@ -607,6 +628,12 @@ size and modification time recorded in the catalog. It then indexes files create
 or changed while it was stopped and removes rows for deleted files, without a
 full rebuild. A root that was missing at start is watched again after it exists
 and is resumed or reindexed.
+
+With `indexDesktopApplications` on, the same owner watches the XDG applications
+directories and replaces the application rows after any change there, after the
+same debounce. It rescans them once at start as well. Modification times are
+not compared, so packages that keep old file times are found. A directory
+created or replaced after start is watched after a restart.
 
 Scheduled maintenance is enabled by default every 360 minutes. The interval is
 validated from 1 minute through 7 days. Each run removes catalog rows for files
@@ -652,10 +679,11 @@ These are defaults that Settings can override without editing this file:
 **Learn from what you open** overrides `search.learnFromInvocations` together
 with `storeUsageHistory`, **Omarchy menu state** (Search) overrides
 `search.omarchyMenuState`, and **Top Matches** (Search) overrides
-`search.ranking.topMatches.enabled`. Until you change one in Settings, the configuration
+`search.ranking.topMatches.enabled`. **Inline calculator** (Search) overrides
+`search.calculator.inline`. Until you change one in Settings, the configuration
 applies; once changed, the choice is stored with the launcher preferences and
 takes effect from the next search, without a restart. Resetting customizations
-returns all four to the configuration. `search.ranking.adaptive.enabled` still
+returns these choices to the configuration. `search.ranking.adaptive.enabled` still
 gates usage learning, and `commanddeck preferences` shows each value and where
 it comes from.
 

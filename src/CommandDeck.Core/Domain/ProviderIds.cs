@@ -28,6 +28,7 @@ public static class ProviderIds
     public const string Processes = "processes";
     public const string Projects = "projects";
     public const string Quicklinks = "quicklinks";
+    public const string RunCommand = "run-command";
     public const string SavedSearch = "saved-search";
     public const string Scripts = "scripts";
     public const string Snippets = "snippets";

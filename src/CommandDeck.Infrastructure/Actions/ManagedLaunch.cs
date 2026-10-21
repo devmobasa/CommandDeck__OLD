@@ -20,8 +20,7 @@ internal static class ManagedLaunch
             }
 
             arguments.Add( "--" );
-            arguments.Add( command.Executable );
-            arguments.AddRange( command.Arguments );
+            arguments.AddRange( LiteralWords( command ) );
             return await RunAndReportAsync(
                 "uwsm-app",
                 arguments,
@@ -49,8 +48,7 @@ internal static class ManagedLaunch
             fallbackArguments.Add( "--" );
         }
 
-        fallbackArguments.Add( command.Executable );
-        fallbackArguments.AddRange( command.Arguments );
+        fallbackArguments.AddRange( LiteralWords( command ) );
         return await RunAndReportAsync(
             "systemd-run",
             fallbackArguments,
@@ -58,6 +56,13 @@ internal static class ManagedLaunch
             cancellationToken,
             TimeSpan.FromSeconds( 15 ) ).ConfigureAwait( false );
     }
+
+    // Both routes start a transient unit, whose service manager expands $NAME
+    // and ${NAME} in the arguments; "$$" is its literal dollar sign. systemd-run
+    // resolves the executable itself, so the executable stays as it is.
+    private static IEnumerable<string> LiteralWords( DesktopEntryCommand command ) =>
+        command.Arguments.Select( static word => word.Replace( "$", "$$", StringComparison.Ordinal ) )
+            .Prepend( command.Executable );
 
     public static async ValueTask<ActionExecutionResult> RunAndReportAsync(
         string executable,

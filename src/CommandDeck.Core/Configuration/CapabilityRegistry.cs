@@ -12,7 +12,7 @@ public static class CapabilityRegistry
 {
     public static IReadOnlyList<CapabilityDescriptor> All { get; } =
     [
-        new("Application discovery", "On", "XDG `.desktop` entries", "Catalog metadata", "Search", "Disable provider"),
+        new("Application discovery", "On", "XDG `.desktop` entries, rescanned when their directories change", "Catalog metadata", "Search", "Disable provider"),
         new("Omarchy commands", "On", "Omarchy menu JSONC", "Catalog metadata", "Search/action", "Disable provider"),
         new("Filename indexing", "On for effective roots", "Names, paths, stat data", "SQLite catalog and indexed folder preferences", "Background reindex; Settings > Search > Indexed folders or index CLI", "Remove added roots; disable/enable configured roots; privacy exclusions always apply"),
         new("Text content indexing", "Configurable", "Eligible local text", "FTS5 body", "Background reindex", "Content mode/root/exclusions"),
@@ -25,7 +25,8 @@ public static class CapabilityRegistry
         new("Process signals", "On", "Name, state, start time, owner, memory, and CPU time of the user's own processes from /proc, only for a `kill:` search", "SIGTERM or SIGKILL through a pidfd to the chosen process after its PID, start time, and owner are checked again", "Confirmed Terminate or Force kill naming the PID and process", "Cancel the confirmation; disable the Processes source"),
         new("Color picker", "On when hyprpicker is installed", "Screen pixels, inside hyprpicker after the launcher closes", "The picked color to the clipboard through hyprpicker --autocopy", "Explicit Enter on Pick Color; a 300 ms user timer starts hyprpicker", "Escape in hyprpicker; disable the Desktop controls source"),
         new("Desktop controls", "On", "Whether wpctl, playerctl, and rfkill are on PATH", "Literal wpctl, playerctl, or rfkill argv for the default audio sink/source, the active media player, or the Wi-Fi/Bluetooth soft block", "Explicit Enter/action on a matching search row or `ctl:`", "Disable the Desktop controls source"),
-        new("Calculator", "On", "Query expression", "None for arithmetic and units; optional qalc exchange-rate fetch on currency expressions at most once per 15 minutes", "`=` prefix", "Disable provider; `search.calculator.useQalc=never`"),
+        new("Run a program", "On", "Whether the first word after `>` is a program on PATH or an absolute executable path", "The typed literal argv, launched detached like an application or in the terminal; Copy Command sends its text to wl-copy", "Explicit Enter or action on the `>` Run row", "Disable the Commands & Quicklinks source"),
+        new("Calculator", "On", "Query expression", "None for arithmetic and units; optional qalc exchange-rate fetch on currency expressions at most once per 15 minutes", "Inline arithmetic and date counts; `=` for conversions and explicit expressions", "`search.calculator.inline=false`; disable provider; `search.calculator.useQalc=never`"),
         new("Quicklinks", "On", "User config/query", "URL to browser", "Explicit action", "Remove quicklink"),
         new("Custom commands", "Configurable", "User command config", "Executes configured argv", "Explicit action", "Remove/disable command"),
         new("Usage frequency", "On", "Selected result/action", "SQLite counters/timestamps", "Successful invocation", "Disable/reset"),

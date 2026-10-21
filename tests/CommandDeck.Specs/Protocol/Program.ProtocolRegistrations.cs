@@ -4,6 +4,7 @@ public static partial class Program
 {
     private static async Task RunProtocolRegistrationsAsync( )
     {
+        await RunAsync( "inline calculator accepts launcher and saved search payloads over the protocol", InlineCalculatorAcceptsLauncherProtocolAsync );
         await RunAsync( "indexed folder process restart serves search and settings during recovery", IndexedFolderProcessRestartServesDuringRecoveryAsync );
         await RunAsync( "indexed folder blocked scan keeps same connection search listing and edits responsive", IndexedFolderScanKeepsConnectionResponsiveAsync );
         await RunAsync( "indexed folder shutdown cancels committed blocked scan before request draining", IndexedFolderShutdownCancelsCommittedScanAsync );
@@ -33,6 +34,7 @@ public static partial class Program
         await RunAsync( "image previews preserve EXIF orientation and PNG WebP transparency", ImagePreviewsPreserveOrientationAndAlphaAsync );
         await RunAsync( "image previews confine decoder filesystem writes and network access", ImagePreviewsConfineDecoderAsync );
         await RunAsync( "socket connection waits for a delayed daemon startup", SocketConnectionWaitsForDelayedDaemonAsync );
+        await RunAsync( "run command row travels the protocol and launches only its own argv", RunCommandRowTravelsTheProtocolAsync );
         await RunAsync(
             "daemon and bridge restart soak converges without stale state",
             DaemonAndBridgeRestartSoakAsync );
@@ -212,6 +214,7 @@ public static partial class Program
                     client,
                     Path.Combine( files, "project-b" ),
                     timeout.Token );
+                await File.WriteAllTextAsync( Path.Combine( files, "excluded.tmp" ), "excluded marker", timeout.Token );
                 await runtime.Catalog.ReplaceExclusionDiagnosticsAsync(
                 [
                     new IndexExclusionDiagnostic

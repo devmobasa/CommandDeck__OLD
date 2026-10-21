@@ -122,7 +122,7 @@ public sealed partial class SqliteCatalog
         }
 
         await transaction.CommitAsync( cancellationToken ).ConfigureAwait( false );
-        _fileHandlerCache = null;
+        await InvalidateFileHandlersAsync( ).ConfigureAwait( false );
 
         // The generation is published; cancelling the cleanup would report a
         // failure for it.

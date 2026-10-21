@@ -98,6 +98,8 @@ public static class ActionKinds
     public const string OpenUrl = "open-url";
     public const string LaunchDesktop = "launch-desktop";
     public const string RunArgv = "run-argv";
+    // A literal argv launched detached, like an application; "terminal" opens it in one.
+    public const string LaunchArgv = "launch-argv";
     public const string RunTrustedShell = "run-trusted-shell";
     public const string HyprlandDispatch = "hyprland-dispatch";
     public const string HerdrFocus = "herdr-focus";

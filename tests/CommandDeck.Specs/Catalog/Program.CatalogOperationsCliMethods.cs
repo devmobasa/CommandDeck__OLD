@@ -5,6 +5,36 @@ namespace CommandDeck.Specs;
 
 public static partial class Program
 {
+    private static async Task CatalogInspectionCliLabelsApproximateExclusionsAsync( )
+    {
+        var root = CreateCliSpecRoot( );
+        try
+        {
+            (var config, var database) = await CreateCliCatalogAsync( root, "CLI notes" );
+            await using ( SqliteCatalog catalog = new( new StorageOptions { DatabasePath = database } ) )
+            {
+                await catalog.ReplaceExclusionDiagnosticsAsync(
+                    Enumerable.Range( 0, 512 ).Select( number => new IndexExclusionDiagnostic
+                    {
+                        Root = root,
+                        RelativePath = $"missing-{number}",
+                        Reason = IndexExclusionReasons.Hidden
+                    } ).ToArray( ), CancellationToken.None );
+            }
+
+            var inspected = await RunCommandDeckProcessAsync(
+                "catalog", "inspect", "--config", config );
+
+            Equal( 0, inspected.ExitCode );
+            True( inspected.StandardOutput.Contains( "Exclusions:       about 256", StringComparison.Ordinal ) );
+            True( !inspected.StandardOutput.Contains( "missing-", StringComparison.Ordinal ) );
+        }
+        finally
+        {
+            Directory.Delete( root, recursive: true );
+        }
+    }
+
     private static async Task CatalogMaintenanceCliIsSafeAsync( )
     {
         var root = CreateCliSpecRoot( );

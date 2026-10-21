@@ -91,6 +91,7 @@ public sealed class CalculatorOptions
     public const string UseQalcNever = "never";
     public const string UseQalcAlways = "always";
 
+    public bool Inline { get; init; } = true;
     public string UseQalc { get; init; } = UseQalcAuto;
 
     public bool AllowsQalc( ) =>

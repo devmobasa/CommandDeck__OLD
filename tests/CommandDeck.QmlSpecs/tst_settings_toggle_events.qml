@@ -12,6 +12,7 @@ EventPathFixture {
     function test_choice_with_keyboard_and_mouse_data() {
       const rows = []
       for (const choice of [
+        { field: "inlineCalculator", label: "Inline calculator", page: "search", initial: true },
         { field: "topMatches", label: "Top Matches", page: "search", initial: true },
         { field: "rememberSearches", label: "Remember searches", page: "customization", initial: false }
       ]) {
@@ -40,7 +41,8 @@ EventPathFixture {
       typeText(data.label.toLowerCase())
       compare(panel.currentPage, data.page)
       const toggle = data.field === "topMatches"
-        ? findChild(panel, "topMatchesToggle") : panel.rememberSearchesControl
+        ? findChild(panel, "topMatchesToggle") : data.field === "inlineCalculator"
+          ? findChild(panel, "inlineCalculatorToggle") : panel.rememberSearchesControl
       verify(toggle.visible)
       compare(toggle.checked, data.initial)
       compare(toggle.Accessible.name, data.label)

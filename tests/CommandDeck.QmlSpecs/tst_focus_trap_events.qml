@@ -11,6 +11,7 @@ Item {
   height: 700
 
   CommandDeck.Theme { id: appTheme; loadShellTokens: false }
+  LiteralTextProbe { id: literal }
 
   function workItems(count) {
     const values = []
@@ -53,6 +54,10 @@ Item {
       compare(focused(), inspector.closeControl, "Tab keeps focus on Close")
       keyClick(Qt.Key_Tab, Qt.ShiftModifier)
       compare(focused(), inspector.closeControl, "Shift+Tab keeps focus on Close")
+      verify(literal.labelShowing(inspector,
+        "Files: Indexed 10 · Excluded about 0 · Failed 2 · Stale 0 · Pending 0") !== null)
+      keyClick(Qt.Key_Escape)
+      verify(!inspector.opened)
     }
 
     function test_inspector_tab_skips_the_disabled_page_button_and_wraps() {
