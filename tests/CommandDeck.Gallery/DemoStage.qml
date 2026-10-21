@@ -19,6 +19,9 @@ Scope {
   property var shots: []
   property string defaultCaption: "CommandDeck · demonstration data"
   property string caption: stage.defaultCaption
+  property int captionSize: 12
+  // A miniature can use desktop geometry before scaling down for composition.
+  property size logicalWorkspaceSize: Qt.size(view.width, view.height)
   property var filters: []
   property int shotIndex: -1
   readonly property var palette: stage.parseJson(Quickshell.env("COMMANDDECK_GALLERY_THEME"), null)
@@ -176,8 +179,8 @@ Scope {
   Deck.WindowDisplay {
     id: display
     host: deck
-    width: view.width
-    height: view.height
+    width: stage.logicalWorkspaceSize.width
+    height: stage.logicalWorkspaceSize.height
   }
 
   Window {
@@ -231,7 +234,7 @@ Scope {
       text: stage.caption
       color: stage.palette ? stage.palette.caption : "#8492a8"
       font.family: deck.part_appTheme.fontFamily
-      font.pixelSize: 12
+      font.pixelSize: stage.captionSize
       z: 4
     }
   }

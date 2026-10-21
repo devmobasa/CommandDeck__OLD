@@ -1,5 +1,6 @@
 .pragma library
 .import "components/Protocol.js" as Protocol
+.import "components/QuicklinkValidation.js" as QuicklinkValidation
 
 // Demonstration results in the shapes the daemon's providers send. Paths sit
 // under /home/demo; window addresses, Herdr IDs, and file contents are invented.
@@ -9,6 +10,49 @@
 var K = Protocol.ResultKinds
 var A = Protocol.ActionKinds
 var hyprConfig = "/home/demo/.config/hypr/looknfeel.lua"
+
+function indexRoots() {
+  return [
+    { id: "demo-documents", path: "/home/demo/Documents", source: "configuration",
+      enabled: true, status: "Indexed", issue: "" },
+    { id: "demo-projects", path: "/home/demo/Projects", source: "added",
+      enabled: true, status: "Indexed", issue: "" },
+    { id: "demo-archive", path: "/home/demo/Archive", source: "configuration",
+      enabled: true, status: "Needs attention", issue: "Folder does not exist." },
+    { id: "demo-downloads", path: "/home/demo/Downloads", source: "configuration",
+      enabled: false, status: "Disabled", issue: null }
+  ]
+}
+
+function quicklinks() {
+  const entries = [
+    { source: "configuration", enabled: true,
+      quicklink: { id: "demo-search", title: "Web search", alias: "find", urlTemplate: "https://example.org/search?q={query}" } },
+    { source: "user", enabled: true,
+      quicklink: { id: "demo-docs", title: "Team docs", alias: "docs", icon: "text-markdown",
+        urlTemplate: "https://docs.example.org/search?q={query}" } },
+    { source: "user", enabled: true,
+      quicklink: { id: "demo-project", title: "Project board", alias: "board", urlTemplate: "https://projects.example.org/board" } }
+  ]
+
+  for (const entry of entries) {
+    const error = QuicklinkValidation.validate(entry.quicklink, entries)
+    if (error) {
+      throw new Error("Invalid gallery quicklink: " + error)
+    }
+  }
+
+  return entries
+}
+
+// Prepared ranking responses illustrate a learned abbreviation, without a daemon.
+function learnedFirefox(icon, query) {
+  const placement = section("applications", "Applications", 6)
+  const firefox = app(icon("firefox"), "firefox", "Firefox", "Browse the web", "firefox %u",
+    query === "ff" ? section("top-match", "Top Matches", 0) : placement)
+  const files = app(icon("org.gnome.Nautilus"), "org.gnome.Nautilus", "Files", "Browse folders and files", "nautilus %U", placement)
+  return query === "ff" ? [firefox] : [files, firefox]
+}
 
 function section(id, title, order) {
   return { id: id, title: title, order: order }

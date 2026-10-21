@@ -1,3 +1,4 @@
+pragma ComponentBehavior: Bound
 import QtQuick
 import Quickshell
 import "./components" as Deck
@@ -133,7 +134,7 @@ ShellRoot {
         keywords: ["docs"], presentation: { kind: "links", hasOpenDestination: true } },
       { id: "demo-image", incarnation: "demo-three", revision: 1, pinned: false,
         copiedUnixSeconds: now - 300, summary: "Calculator screenshot", keywords: ["demo", "screenshot"],
-        presentation: { kind: "images", imageWidth: 3660, imageHeight: 2400, hasOpenDestination: false } },
+        presentation: { kind: "images", imageWidth: 2940, imageHeight: 2040, hasOpenDestination: false } },
       { id: "demo-note", incarnation: "demo-four", revision: 1, pinned: false,
         copiedUnixSeconds: now - 540, summary: "Share the draft, then collect feedback.", keywords: [],
         presentation: { kind: "text", hasOpenDestination: false } }
@@ -158,8 +159,13 @@ ShellRoot {
         inputs: [{ name: "version" }, { name: "highlights" }] }]
     }], "1 snippet")
     Qt.callLater(function() {
-      snippetInputs.item.rowAt(0).input.text = "0.4.0"
-      snippetInputs.item.rowAt(1).input.text = "Faster search and clearer errors."
+      const dialog = snippetInputs.item as Deck.ActionInputDialog
+      if (!dialog) {
+        throw new Error("The snippet input fixture did not load")
+      }
+
+      dialog.rowAt(0).input.text = "0.4.0"
+      dialog.rowAt(1).input.text = "Faster search and clearer errors."
     })
   }
 

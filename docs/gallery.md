@@ -1,10 +1,10 @@
 # Gallery
 
 [Demo](#demo) · [Search](#search) · [Omarchy and Hyprland](#omarchy-and-hyprland) ·
-[Workflows](#workflows) · [AI](#ai)
+[Workflows](#workflows) · [Settings](#settings) · [AI](#ai)
 
-CommandDeck's shared interface, rendered with demonstration data. Every image
-is a lossless PNG rendered at 3× pixel density; select one to open it at full resolution.
+CommandDeck's shared interface, rendered with demonstration data. Still images
+are lossless PNGs rendered at 3× pixel density; select one to open it at full resolution.
 AI answers are prepared samples. The captures use no personal files, clipboard
 contents, accounts, or desktop windows. `dotnet scripts/capture-gallery.cs`
 regenerates them; the [capture notes](screenshots/README.md) explain how.
@@ -20,6 +20,15 @@ windows. An [MP4 version](screenshots/demo.mp4) is also available.
 
 ![Animated demo of Home, a gaps search, the action menu, the Omarchy DNS submenu, snippet input pills, and the window list](screenshots/demo.gif)
 
+The captioned **What's new** tour shows the active DNS provider, snippet input
+pills, and `f` → `ff` promoting Firefox to Top Matches after learning from use.
+It also shows **↑** recalling a previous search, **Ctrl+I** hiding the preview,
+compact rows, and the Folders and Quicklinks cards in Settings. Learning and
+recall use prepared demonstration responses. The tour lasts about 27 seconds;
+an [MP4 version](screenshots/whats-new.mp4) is also available.
+
+![Captioned tour of the active DNS checkmark, snippet pills, learned Firefox Top Match, search recall, preview toggle, compact rows, and Settings cards](screenshots/whats-new.gif)
+
 ## Search
 
 ### Home
@@ -28,7 +37,7 @@ Press **Ctrl+Space** with nothing typed to see bookmarks, recent and frequent
 items, open windows, and Omarchy controls. Settings chooses which sections
 appear. See [Home and keyboard behavior](search-and-ranking.md#home-and-keyboard-behavior).
 
-[![Home with a bookmark, recent files and config keys, open windows, and an Omarchy control](screenshots/overview.png)](screenshots/overview.png)
+[![Home with source labels and icons for a bookmark, recent files and config keys, windows, and an Omarchy control](screenshots/overview.png)](screenshots/overview.png)
 
 ### Launch apps
 
@@ -168,6 +177,57 @@ paths; **Open all** opens the selection. See
 [folder browsing and file selection](launcher-workflows.md#folder-navigation-and-file-selections).
 
 [![Folder results with two selected files and Copy paths and Open all controls](screenshots/file-selection.png)](screenshots/file-selection.png)
+
+## Settings
+
+Open Settings with the gear button. Search the cards to find a control.
+These captures use fictional paths under `/home/demo` and example web addresses.
+
+### Display size
+
+**Display size** scales text and controls together. **Recommended** follows the
+workspace and Omarchy font settings.
+
+[![Settings Display size card with a percentage slider and Recommended control](screenshots/settings-display.png)](screenshots/settings-display.png)
+
+### Window size and layout
+
+Set the launcher's width and height independently. These controls change panel
+space while keeping text and controls the same size. **Compact layout** uses
+one line per result. **Preview pane**, also toggled with **Ctrl+I**, shows or
+hides result details.
+
+[![Settings Layout card with width and height sliders, reset buttons, Compact layout, and Preview pane](screenshots/settings-layout.png)](screenshots/settings-layout.png)
+
+### Top Matches
+
+**Top Matches** shows the best one to three results above the source groups.
+Turn it off to keep results in their source groups.
+
+[![Settings Behavior card with Top Matches enabled](screenshots/settings-search.png)](screenshots/settings-search.png)
+
+### Folders
+
+The **Indexed folders** card shows configured Documents, added Projects, an enabled
+missing Archive folder with a warning and **Disable**, and disabled Downloads
+without a warning. Add a folder, remove an added folder, or enable and disable
+configuration folders here. Privacy exclusions still apply.
+
+[![Indexed folders with configured Documents, added Projects, enabled missing Archive with a warning and Disable, and disabled Downloads without a warning](screenshots/settings-folders.png)](screenshots/settings-folders.png)
+
+### Quicklinks
+
+Keep web searches and links in the **Quicklinks** card. A URL template can use
+`{query}` for the search text. User quicklinks can be edited or removed;
+configuration quicklinks can be enabled or disabled.
+The configured web search uses the alias `find`.
+
+[![Quicklinks card with a configured web search using alias find and two user links, Team docs and Project board](screenshots/settings-quicklinks.png)](screenshots/settings-quicklinks.png)
+
+Edit the title, URL template, alias, and icon, then inspect the sample URL
+before saving.
+
+[![Editing the Team docs quicklink with title, URL template, alias, icon, sample query, preview, Save, and Cancel](screenshots/settings-quicklink-edit.png)](screenshots/settings-quicklink-edit.png)
 
 ## AI
 

@@ -9,7 +9,7 @@ A keyboard-first command palette for **Omarchy and Hyprland**. Press
 **Ctrl+Space** to launch apps, find files and Hyprland config keys, switch
 windows, run Omarchy actions, and ask optional AI tools from one search field.
 
-[![CommandDeck: Home, typing gaps to find an Omarchy toggle and Hyprland keys, the action menu, browsing the Omarchy DNS submenu, filling a snippet's inputs inline, and the window list](docs/screenshots/demo.gif)](docs/gallery.md)
+[![CommandDeck: Home, typing gaps to find an Omarchy toggle and Hyprland keys, the action menu, browsing the Omarchy DNS submenu, typing Sam into a snippet input pill, and the window list](docs/screenshots/demo.gif)](docs/gallery.md)
 
 > [!NOTE]
 > **Working preview.** Build from source; there are no packages yet. The desktop
@@ -50,7 +50,7 @@ launcher in place, so you can try both side by side.
 <table>
   <tr>
     <td width="33%" valign="top">
-      <a href="docs/gallery.md#home"><img src="docs/screenshots/overview.png" alt="Home with bookmarks, recent files and config keys, open windows, and Omarchy" width="100%"></a>
+      <a href="docs/gallery.md#home"><img src="docs/screenshots/overview.png" alt="Home with source labels and icons for bookmarks, recent files and config keys, windows, and Omarchy" width="100%"></a>
       <br><b>Home</b>
     </td>
     <td width="33%" valign="top">
@@ -58,7 +58,7 @@ launcher in place, so you can try both side by side.
       <br><b>Omarchy and Hyprland</b>
     </td>
     <td width="33%" valign="top">
-      <a href="docs/gallery.md#act-on-a-result"><img src="docs/screenshots/actions.png" alt="The action menu for a Hyprland config key" width="100%"></a>
+      <a href="docs/gallery.md#act-on-a-result"><img src="docs/screenshots/actions.png" alt="Ctrl+K actions for a Hyprland config key" width="100%"></a>
       <br><b>Ctrl+K actions</b>
     </td>
   </tr>
