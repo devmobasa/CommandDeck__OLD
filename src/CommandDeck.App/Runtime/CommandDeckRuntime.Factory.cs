@@ -93,7 +93,8 @@ public sealed partial class CommandDeckRuntime
                     new CalculatorProvider(
                 runner: null,
                 available: null,
-                options: options.Search.Calculator),
+                options: options.Search.Calculator,
+                inlineEnabled: () => catalog.History.InlineCalculator),
             new ApplicationSearchProvider(catalog),
             new CatalogSearchProvider(catalog, catalog.LauncherPreferences, omarchyState),
             new ExtensionCommandProvider(extensions, catalog.LauncherPreferences),

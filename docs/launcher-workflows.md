@@ -390,3 +390,12 @@ changes a row, the helper uses the refreshed row and reference.
 The executable spec suite covers input limits, literal expansion, timeouts,
 retention, paging, and selection ownership. QML tests cover the input form,
 file-selection controls, picker keyboard behavior, and launcher protocol wiring.
+
+## Calculator
+
+Type `100 * 5` to show `500` above normal results, then press Enter to copy it.
+Type `days until 11 sep` for an offline date count, or `weeks until 11 sep` for
+weeks and remaining days. The subtitle shows the resolved dates. Use `=` for an
+explicit expression. Unit and currency conversions need `=` and optional qalc for now.
+See [calculator and date rules](search-and-ranking.md#calculator-and-date-counts).
+Settings > Search > **Inline calculator** turns bare calculations on or off.

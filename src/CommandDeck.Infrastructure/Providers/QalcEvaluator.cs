@@ -1,6 +1,7 @@
 using System.Buffers;
 using System.Globalization;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace CommandDeck;
 
@@ -10,7 +11,7 @@ namespace CommandDeck;
 /// no shell. Currency rate fetches run in the background with a 15-minute
 /// success cooldown so search stays on cached rates.
 /// </summary>
-public sealed class QalcEvaluator
+public sealed partial class QalcEvaluator
 {
     public static readonly TimeSpan ExchangeRateCooldown = TimeSpan.FromMinutes( 15 );
 
@@ -179,6 +180,34 @@ public sealed class QalcEvaluator
         return false;
     }
 
+    internal static string FormatDisplay( string expression, string exact )
+    {
+        if ( !LooksLikeCurrency( expression ) )
+        {
+            return exact;
+        }
+
+        var match = CurrencyAmountRegex( ).Match( exact );
+        if ( !match.Success )
+        {
+            return exact;
+        }
+
+        var number = match.Groups["amount"];
+        if ( !decimal.TryParse( number.ValueSpan, NumberStyles.AllowDecimalPoint,
+            CultureInfo.InvariantCulture, out var amount ) )
+        {
+            return exact;
+        }
+
+        return exact[..number.Index] + amount.ToString( "F2", CultureInfo.InvariantCulture );
+    }
+
+    [GeneratedRegex(
+        @"\A(?:[+−-]?(?:[$€£¥₹₽₩₪₿]|[A-Z]{3})\s*|(?:[$€£¥₹₽₩₪₿]|[A-Z]{3})\s*[+−-])(?<amount>[0-9]+(?:\.[0-9]*)?|\.[0-9]+)\z",
+        RegexOptions.CultureInvariant )]
+    private static partial Regex CurrencyAmountRegex( );
+
     private static IReadOnlyList<string> BuildEvaluateArguments( string expression ) =>
     [
         "-t",
@@ -186,9 +215,14 @@ public sealed class QalcEvaluator
         EvaluateTimeoutMilliseconds.ToString(CultureInfo.InvariantCulture),
         "-s",
         "update_exchange_rates 0",
-        .. LooksLikeCurrency( expression )
-            ? new[] { "-s", "min decimals 2", "-s", "max decimals 2" }
-            : Array.Empty<string>( ),
+        "-s", "decimal comma off",
+        "-s", "digit grouping 0",
+        // qalc's currency defaults discard decimals on large amounts. Keep
+        // extra digits for details and round only the displayed title.
+        .. LooksLikeCurrency( expression ) ? new[]
+        {
+            "-s", "precision 30", "-s", "max_decimals 20", "-s", "min_decimals 0"
+        } : Array.Empty<string>( ),
         "--",
         expression
     ];

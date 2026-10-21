@@ -148,7 +148,8 @@ interaction. Settings controls which sources appear in Search and Home.
 | `cfg: gaps_out` | Indexed configuration keys |
 | `win: terminal` | Hyprland windows |
 | `oma: theme` | Omarchy controls |
-| `= 100 km to miles` | Calculator and unit conversion |
+| `100 * 5` / `days until 11 sep` | Calculator and date counts |
+| `=100 km to miles` | Unit conversion with optional qalc |
 | `ai: explain this` | Optional AI assistant |
 
 <details>

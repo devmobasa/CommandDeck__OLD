@@ -4,6 +4,7 @@ public static partial class Program
 {
     private static async Task RunProtocolRegistrationsAsync( )
     {
+        await RunAsync( "inline calculator accepts launcher and saved search payloads over the protocol", InlineCalculatorAcceptsLauncherProtocolAsync );
         await RunAsync( "indexed folder process restart serves search and settings during recovery", IndexedFolderProcessRestartServesDuringRecoveryAsync );
         await RunAsync( "indexed folder blocked scan keeps same connection search listing and edits responsive", IndexedFolderScanKeepsConnectionResponsiveAsync );
         await RunAsync( "indexed folder shutdown cancels committed blocked scan before request draining", IndexedFolderShutdownCancelsCommittedScanAsync );
