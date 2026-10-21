@@ -120,6 +120,20 @@ ColumnLayout {
       model: launcherContent.host.host.part_rows
       highlightMoveDuration: launcherContent.host.part_appTheme.highlightMoveDuration
 
+      // Track headers, gaps and empty space too; row layout changes alone
+      // must never turn a resting pointer into a new selection.
+      HoverHandler {
+        acceptedButtons: Qt.NoButton
+        onPointChanged: {
+          const position = resultList.mapToItem(null, point.position.x, point.position.y)
+          if (!resultPointerGate.moved(position.x, position.y)) return
+          const contentPosition = resultList.mapToItem(resultList.contentItem, point.position.x, point.position.y)
+          const index = resultList.indexAt(contentPosition.x, contentPosition.y)
+          const row = resultList.itemAtIndex(index) as ResultListDelegate
+          if (row && !row.isHeader) launcherContent.host.host.selectedIndex = index
+        }
+      }
+
       delegate: ResultListDelegate {
         id: listRow
         width: resultList.width
@@ -134,10 +148,8 @@ ColumnLayout {
           launcherContent.host.host.selectedIndex = listRow.index
           launcherContent.host.openActionPanel()
         }
-        pointerGate: resultPointerGate
         compactLayout: launcherContent.host.host.compactLayout
         controlHeld: searchBar.controlHeld
-        onHoverSelected: launcherContent.host.host.selectedIndex = listRow.index
       }
     }
 

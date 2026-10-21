@@ -21,13 +21,8 @@ Loader {
   property bool compactLayout: false
   property bool controlHeld: false
 
-  // Set by the list: a hover over a row selects it only after a real pointer
-  // move, never because the row moved under a resting pointer.
-  property PointerMoveGate pointerGate: null
-
   signal activated()
   signal actionsRequested()
-  signal hoverSelected()
 
   sourceComponent: root.isHeader ? headerComponent : resultComponent
 
@@ -54,9 +49,6 @@ Loader {
       controlHeld: root.controlHeld
       onActivated: root.activated()
       onActionsRequested: root.actionsRequested()
-      onPointerMoved: (x, y) => {
-        if (root.pointerGate && root.pointerGate.moved(x, y)) root.hoverSelected()
-      }
     }
   }
 }
