@@ -81,11 +81,11 @@ public static partial class Program
     {
         HistoryPolicy policy = new( new PrivacyOptions { StoreQueryHistory = false } );
         var version = policy.Version;
-        policy.Apply( new LauncherPreferences( ) { RememberSearches = false } );
-        policy.ApplyRead( new LauncherPreferences( ) { RememberSearches = true }, version );
-        True( !policy.RememberSearches );
-        policy.ApplyRead( new LauncherPreferences( ) { RememberSearches = true }, policy.Version );
-        True( policy.RememberSearches );
+        policy.Apply( new LauncherPreferences( ) { RememberSearches = false, TopMatches = false } );
+        policy.ApplyRead( new LauncherPreferences( ) { RememberSearches = true, TopMatches = true }, version );
+        True( !policy.RememberSearches && !policy.TopMatches );
+        policy.ApplyRead( new LauncherPreferences( ) { RememberSearches = true, TopMatches = true }, policy.Version );
+        True( policy.RememberSearches && policy.TopMatches );
 
         var root = Directory.CreateTempSubdirectory( "commanddeck-history-reads-" ).FullName;
         try

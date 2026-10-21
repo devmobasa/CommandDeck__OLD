@@ -43,7 +43,7 @@ public sealed partial class SearchCoordinator
             registry = _contributions?.Snapshot;
         }
 
-        // Settings choices about history apply from this search on, wherever
+        // Settings choices apply from this search on, wherever
         // they were saved from.
         if ( _preferences is not null )
         {

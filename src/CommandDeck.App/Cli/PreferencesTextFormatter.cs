@@ -27,6 +27,7 @@ public static class PreferencesTextFormatter
         lines.Add( $"Remember searches: {Choice( snapshot.Preferences.RememberSearches, defaults.RememberSearches )}" );
         lines.Add( $"Learn from use: {Choice( snapshot.Preferences.LearnFromUse, defaults.LearnFromUse )}" );
         lines.Add( $"Omarchy menu state: {Choice( snapshot.Preferences.OmarchyMenuState, defaults.OmarchyMenuState )}" );
+        lines.Add( $"Top Matches: {Choice( snapshot.Preferences.TopMatches, defaults.TopMatches )}" );
         lines.Add(
             $"Web fallback: {EscapeTerminalText( snapshot.Preferences.WebFallbackQuicklinkId ?? "none" )}" );
         lines.Add( $"Preferred editor: {snapshot.Preferences.PreferredEditor}" );

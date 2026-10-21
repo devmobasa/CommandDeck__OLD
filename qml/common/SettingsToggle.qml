@@ -15,6 +15,14 @@ Switch {
   // Tab and Shift+Tab stay inside the settings dialog.
   Keys.priority: Keys.BeforeItem
   Keys.onPressed: event => TabFence.route(root.parent, event)
+  Keys.onReturnPressed: event => root.pressFromKeyboard(event)
+  Keys.onEnterPressed: event => root.pressFromKeyboard(event)
+
+  // Consume Enter before Qt's platform theme handles it, so it clicks once.
+  function pressFromKeyboard(event) {
+    if (!event.isAutoRepeat) root.click()
+    event.accepted = true
+  }
 
   readonly property int pillWidth: Math.round(42 * root.theme.scale)
   readonly property int pillHeight: Math.round(24 * root.theme.scale)
@@ -23,7 +31,7 @@ Switch {
   implicitWidth: labelColumn.implicitWidth + root.pillWidth + spacing
   spacing: Math.round(14 * root.theme.scale)
   hoverEnabled: true
-  focusPolicy: Qt.StrongFocus
+  focusPolicy: Qt.TabFocus
 
   indicator: Rectangle {
     x: root.width - width

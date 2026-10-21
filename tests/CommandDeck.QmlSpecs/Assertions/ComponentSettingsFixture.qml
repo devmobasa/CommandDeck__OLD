@@ -56,8 +56,10 @@ CommandDeck.SettingsPanel {
         { sourceId: "omarchy-system", enabledInSearch: false, enabledOnHome: false, position: 3 }
       ],
       reduceMotion: false,
+      topMatches: null,
       webFallbackQuicklinkId: null
     },
+    defaults: { topMatches: true },
     shortcuts: [],
     customizations: []
   })

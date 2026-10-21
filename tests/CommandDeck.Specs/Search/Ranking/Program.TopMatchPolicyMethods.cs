@@ -200,7 +200,7 @@ public static partial class Program
         }
         SearchCoordinator rollback = new( [new PromotionProvider( rows.Take( 5 ).Select( row => PromotionRow( row.Id, "Signal" ) ).ToArray( ) )], new SearchOptions { Ranking = new RankingOptions { TopMatches = new TopMatchesOptions { Enabled = false }, MaximumResultsPerSource = 1 } }, usageHistory: history );
         result = await rollback.SearchAsync( new SearchRequest { Query = "signal", Limit = 9 }, default );
-        Equal( 5, result.Count ); // Deliberately restore the previous unbounded exact policy.
-        True( result.All( value => value.Section!.Title == "Top Match" ) );
+        Equal( 1, result.Count );
+        True( result.All( value => value.Section!.Id == SourceIds.Applications ) );
     }
 }

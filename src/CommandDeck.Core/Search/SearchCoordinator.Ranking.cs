@@ -18,7 +18,7 @@ public sealed partial class SearchCoordinator
         List<SearchResult> remaining = [];
         foreach ( var result in results )
         {
-            if ( IsTopMatch( result, query ) )
+            if ( _history.TopMatches && IsTopMatch( result, query ) )
             {
                 exact.Add( WithSection(
                     result,

@@ -198,6 +198,12 @@ snapshot. Other workspace providers retain the ordinary title tie-break.
 
 ## Top Matches and source groups
 
+**Top Matches** in Settings > Search overrides `search.ranking.topMatches.enabled`
+from the next search, without a restart. Until you make a choice, the configuration
+applies (default `true`). Resetting customizations clears the choice. Turning it
+off keeps results in their source groups, including exact matches, and retains
+usage and query history.
+
 The `top-match` section is titled **Top Matches** and holds at most three results,
 bounded further by the request limit and each source's allowance. Its ordered
 tiers are:
@@ -251,9 +257,9 @@ second copy of an earlier group on later pages.
 Bare Home, filter-only queries, and folder browsing retain their prior assembly.
 Filtered text such as `app: sig` can promote within its allowed sources.
 
-Set `search.ranking.topMatches.enabled=false` and restart the daemon to restore
-the previous exact-only assembly, including its unbounded exact section and old
-quota behavior. The switch defaults to `true` and requires no database migration.
+Set `search.ranking.topMatches.enabled=false` and restart the daemon to keep all
+results in their source groups unless Settings overrides it. Source caps still
+apply. The switch defaults to `true` and requires no database migration.
 
 ## Accepted invocation and privacy
 
