@@ -40,7 +40,7 @@ ColumnLayout {
         Layout.fillWidth: true
         text: root.expression
         textFormat: Text.PlainText
-        wrapMode: Text.WrapAnywhere
+        wrapMode: Text.Wrap
         horizontalAlignment: Text.AlignHCenter
         color: root.theme.text
         font.family: "monospace"
@@ -73,7 +73,7 @@ ColumnLayout {
         Layout.fillWidth: true
         text: root.value
         textFormat: Text.PlainText
-        wrapMode: Text.WrapAnywhere
+        wrapMode: Text.Wrap
         horizontalAlignment: Text.AlignHCenter
         color: root.theme.accent
         font.family: "monospace"
@@ -96,7 +96,7 @@ ColumnLayout {
     visible: root.exactValue.length > 0
     text: "Exact value: " + root.exactValue
     textFormat: Text.PlainText
-    wrapMode: Text.WrapAnywhere
+    wrapMode: Text.Wrap
     color: root.theme.textMuted
     font.family: "monospace"
     font.pixelSize: root.theme.fontBody
