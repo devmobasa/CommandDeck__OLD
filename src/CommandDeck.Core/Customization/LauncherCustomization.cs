@@ -26,11 +26,12 @@ public sealed class LauncherPreferences
     // Settings choices over the configuration's defaults; null follows the
     // configuration (privacy.storeQueryHistory; search.learnFromInvocations
     // with privacy.storeUsageHistory; search.omarchyMenuState;
-    // search.ranking.topMatches.enabled).
+    // search.ranking.topMatches.enabled; search.calculator.inline).
     public bool? RememberSearches { get; init; }
     public bool? LearnFromUse { get; init; }
     public bool? OmarchyMenuState { get; init; }
     public bool? TopMatches { get; init; }
+    public bool? InlineCalculator { get; init; }
 
     public static LauncherPreferences CreateDefault( ) => new( )
     {
@@ -271,6 +272,7 @@ public sealed class PreferenceDefaults
     public bool LearnFromUse { get; init; }
     public bool OmarchyMenuState { get; init; }
     public bool TopMatches { get; init; } = true;
+    public bool InlineCalculator { get; init; } = true;
 }
 
 public sealed class PreferencesSnapshot

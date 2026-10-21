@@ -205,7 +205,7 @@ QtObject {
     host.expect(host.part_settings.favoriteReorderDispatches === 0,
       "legacy overflow cannot dispatch an incomplete favorite permutation")
     host.part_settings.snapshot = ordinarySnapshot
-    host.expect(host.part_helpSheet.renderedSectionCount === 5
+    host.expect(host.part_helpSheet.renderedSectionCount === 6
         && host.part_helpSheet.renderedFilterCount === 3,
       "help sheet lists every shortcut section and filter")
     host.expect(host.part_helpSheet.renderedFilterTokensAt(1) === "file:  text:  files:"

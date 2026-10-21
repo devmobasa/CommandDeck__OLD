@@ -26,7 +26,8 @@ public sealed class HistoryPolicy
         RememberSearches = _privacy.StoreQueryHistory,
         LearnFromUse = _search.LearnFromInvocations && _privacy.StoreUsageHistory,
         OmarchyMenuState = _search.OmarchyMenuState,
-        TopMatches = _search.Ranking.TopMatches.Enabled
+        TopMatches = _search.Ranking.TopMatches.Enabled,
+        InlineCalculator = _search.Calculator.Inline
     };
 
     // Query history: the searches a result was accepted after.
@@ -39,6 +40,8 @@ public sealed class HistoryPolicy
     public bool OmarchyMenuState => _preferences?.OmarchyMenuState ?? _search.OmarchyMenuState;
 
     public bool TopMatches => _preferences?.TopMatches ?? _search.Ranking.TopMatches.Enabled;
+
+    public bool InlineCalculator => _preferences?.InlineCalculator ?? _search.Calculator.Inline;
 
     // Taken before reading preferences, for ApplyRead.
     public long Version => Interlocked.Read( ref _version );

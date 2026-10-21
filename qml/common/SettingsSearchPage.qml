@@ -83,7 +83,7 @@ ScrollView {
     SettingsCard {
       id: behaviorCard
       searchQuery: searchScroll.host.part_settingsSearch.text
-      searchTerms: "search top matches ranking best grouped sections web fallback hide after opening item close copying reduce motion animation workspace layout previews snapshots"
+      searchTerms: "search inline calculator arithmetic dates days weeks top matches ranking best grouped sections web fallback hide after opening item close copying reduce motion animation workspace layout previews snapshots"
       theme: searchScroll.host.theme
       title: "Behavior"
 
@@ -97,6 +97,18 @@ ScrollView {
         enabled: !searchScroll.host.loading
         Accessible.name: "Top Matches"
         onClicked: searchScroll.host.setHistoryChoice("topMatches", checked)
+      }
+
+      SettingsToggle {
+        objectName: "inlineCalculatorToggle"
+        theme: searchScroll.host.theme
+        Layout.fillWidth: true
+        text: "Inline calculator"
+        help: "Show calculations and date counts above search results without an = prefix."
+        checked: searchScroll.host.historyChoice("inlineCalculator")
+        enabled: !searchScroll.host.loading
+        Accessible.name: "Inline calculator"
+        onClicked: searchScroll.host.setHistoryChoice("inlineCalculator", checked)
       }
 
       SettingsRow {

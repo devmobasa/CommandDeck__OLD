@@ -144,6 +144,10 @@ public static partial class Program
         await RunAsync(
             "systemd provider stays silent on failure or malformed output",
             SystemdProviderStaysSilentOnFailureAsync );
+        await RunAsync( "currency conversions retain qalc precision for large signed amounts", CurrencyConversionsRetainQalcPrecisionAsync );
+        await RunAsync( "currency conversions preserve nondecimal qalc output", CurrencyConversionsPreserveNondecimalOutputAsync );
+        await RunAsync( "inline calculator never starts qalc, including complete conversions", InlineCalculatorNeverStartsQalcAsync );
+        await RunAsync( "date calculator resolves local dates and missing years offline", DateCalculatorUsesLocalClockAndResolvesYearsAsync );
         await RunAsync(
             "calculator delegates units to qalc and keeps arithmetic local",
             CalculatorProviderDelegatesUnitsToQalcAndKeepsArithmeticLocalAsync );

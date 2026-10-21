@@ -200,6 +200,7 @@ object. Detailed guidance remains in the hand-written sections that follow.
 | `search.learnFromInvocations` | `boolean` | `true` |
 | `search.omarchyMenuState` | `boolean` | `true` |
 | `search.calculator` | `CalculatorOptions` | object |
+| `search.calculator.inline` | `boolean` | `true` |
 | `search.calculator.useQalc` | `string` | `auto` |
 | `search.ranking` | `RankingOptions` | object |
 | `search.ranking.titleWeight` | `number` | `7` |
@@ -360,6 +361,7 @@ database on a local filesystem. Do not place it on a network mount.
     "providerTimeoutMilliseconds": 350,
     "learnFromInvocations": true,
     "calculator": {
+      "inline": true,
       "useQalc": "auto"
     }
   }
@@ -370,14 +372,21 @@ database on a local filesystem. Do not place it on a network mount.
 - `maximumLimit`: server-side cap.
 - `providerTimeoutMilliseconds`: shared search deadline.
 - `learnFromInvocations`: usage/recency updates after successful actions.
+- `calculator.inline`: `true` (default) shows a clear calculation above the normal
+  search results without `=`. Settings > Search > **Inline calculator** overrides
+  this default without a restart. Explicit `=` expressions work with either choice.
 - `calculator.useQalc`: `auto` (default) uses `qalc` when it is on PATH for
   unit, currency, constant, and function expressions; `never` keeps the
-  managed arithmetic evaluator only; `always` still tries `qalc` when PATH
+  managed arithmetic and date evaluators only; `always` still tries `qalc` when PATH
   detection is negative, and Doctor fails if `qalc` is missing. Arithmetic
   such as `=2+2` never shells out. Currency queries evaluate against cached
   rates in one fast `qalc` run; a background `-e` refresh with a 3 s budget
   runs at most once per 15 minutes after a successful fetch. The expression
-  is a single argv token after `--`.
+  is a single argv token after `--`. Unit and currency conversions require `=`
+  for now, for example `=100 usd to eur`, `=5 km to miles`, or `=105F in C`.
+  Bare arithmetic, date counts, and ordinary searches never start qalc.
+  Currency rows round to two decimals; the details pane keeps the unrounded
+  evaluator output.
 
 `search.ranking` controls FTS field weights, optional per-source multipliers,
 per-source result caps, and first-page source diversity. Its nested `adaptive`
@@ -664,10 +673,11 @@ These are defaults that Settings can override without editing this file:
 **Learn from what you open** overrides `search.learnFromInvocations` together
 with `storeUsageHistory`, **Omarchy menu state** (Search) overrides
 `search.omarchyMenuState`, and **Top Matches** (Search) overrides
-`search.ranking.topMatches.enabled`. Until you change one in Settings, the configuration
+`search.ranking.topMatches.enabled`. **Inline calculator** (Search) overrides
+`search.calculator.inline`. Until you change one in Settings, the configuration
 applies; once changed, the choice is stored with the launcher preferences and
 takes effect from the next search, without a restart. Resetting customizations
-returns all four to the configuration. `search.ranking.adaptive.enabled` still
+returns these choices to the configuration. `search.ranking.adaptive.enabled` still
 gates usage learning, and `commanddeck preferences` shows each value and where
 it comes from.
 

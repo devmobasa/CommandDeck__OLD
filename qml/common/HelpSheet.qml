@@ -58,6 +58,13 @@ Rectangle {
       ]
     },
     {
+      title: "Calculator",
+      items: [
+        { keys: [], text: "Type 100 * 5 or days until 11 sep; Enter copies the answer." },
+        { keys: ["="], text: "Explicit expression; works when Inline calculator is off in Search settings." }
+      ]
+    },
+    {
       title: "Filters",
       items: [
         { keys: ["⌫"], text: "Remove the filter on an empty query" },
