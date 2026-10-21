@@ -113,6 +113,7 @@ public sealed partial class CommandDeckRuntime
             new WebSearchProvider(options.Search.WebEngines),
             new EmojiProvider(),
             new DesktopControlsProvider(),
+            new RunCommandProvider(),
             new ProcessProvider()
                 ];
                 if ( clipboardProvider is not null )

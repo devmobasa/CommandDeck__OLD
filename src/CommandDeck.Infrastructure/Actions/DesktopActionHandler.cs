@@ -2,8 +2,9 @@ using System.Globalization;
 
 namespace CommandDeck;
 
-// Opening paths and URLs, launching desktop entries, editing at a line, and
-// running commands and scripts: the actions of indexed and configured rows.
+// Opening paths and URLs, launching desktop entries and typed programs, editing
+// at a line, and running commands and scripts: the actions of indexed,
+// configured and command-mode rows.
 internal sealed class DesktopActionHandler( EditorLauncher editor ) : ILinuxActionHandler
 {
     private static readonly string[] OwnedKinds =
@@ -13,6 +14,7 @@ internal sealed class DesktopActionHandler( EditorLauncher editor ) : ILinuxActi
         ActionKinds.EditAtLine,
         ActionKinds.OpenUrl,
         ActionKinds.LaunchDesktop,
+        ActionKinds.LaunchArgv,
         ActionKinds.RunArgv,
         ActionKinds.RunTrustedShell,
         ActionKinds.RunScript
@@ -31,6 +33,7 @@ internal sealed class DesktopActionHandler( EditorLauncher editor ) : ILinuxActi
             ActionKinds.EditAtLine => await editor.EditAtLineAsync( action, cancellationToken ).ConfigureAwait( false ),
             ActionKinds.OpenUrl => await OpenUrlAsync( query, action, cancellationToken ).ConfigureAwait( false ),
             ActionKinds.LaunchDesktop => await LaunchDesktopAsync( action, cancellationToken ).ConfigureAwait( false ),
+            ActionKinds.LaunchArgv => await LaunchArgvAsync( action, cancellationToken ).ConfigureAwait( false ),
             ActionKinds.RunArgv => await RunArgvAsync( action, cancellationToken ).ConfigureAwait( false ),
             ActionKinds.RunTrustedShell => await RunTrustedShellAsync( action, cancellationToken ).ConfigureAwait( false ),
             ActionKinds.RunScript => await ScriptCommandProvider.ExecuteAsync( action, cancellationToken ).ConfigureAwait( false ),
@@ -136,6 +139,24 @@ internal sealed class DesktopActionHandler( EditorLauncher editor ) : ILinuxActi
         return await ManagedLaunch.LaunchApplicationAsync(
             new DesktopEntryCommand { Executable = "gtk-launch", Arguments = [idWithoutSuffix] },
             terminal: false,
+            cancellationToken ).ConfigureAwait( false );
+    }
+
+    // Detached like an application launch, through the same uwsm-app or
+    // systemd-run path; "terminal" uses the terminal of Terminal=true entries.
+    private static async ValueTask<ActionExecutionResult> LaunchArgvAsync(
+        CommandAction action,
+        CancellationToken cancellationToken )
+    {
+        var argv = LaunchArgumentCodec.Decode( LinuxActionArguments.Require( action, "argv" ) );
+        if ( argv.Count == 0 || string.IsNullOrEmpty( argv[0] ) )
+        {
+            return ActionExecutionResult.Failure( "The command has no executable." );
+        }
+
+        return await ManagedLaunch.LaunchApplicationAsync(
+            new DesktopEntryCommand { Executable = argv[0], Arguments = argv.Skip( 1 ).ToArray( ) },
+            terminal: action.Arguments.GetValueOrDefault( "terminal" ) == "true",
             cancellationToken ).ConfigureAwait( false );
     }
 

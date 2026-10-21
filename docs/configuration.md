@@ -629,6 +629,12 @@ or changed while it was stopped and removes rows for deleted files, without a
 full rebuild. A root that was missing at start is watched again after it exists
 and is resumed or reindexed.
 
+With `indexDesktopApplications` on, the same owner watches the XDG applications
+directories and replaces the application rows after any change there, after the
+same debounce. It rescans them once at start as well. Modification times are
+not compared, so packages that keep old file times are found. A directory
+created or replaced after start is watched after a restart.
+
 Scheduled maintenance is enabled by default every 360 minutes. The interval is
 validated from 1 minute through 7 days. Each run removes catalog rows for files
 that no longer exist, checks SQLite/FTS integrity, and optimizes the index while

@@ -42,6 +42,7 @@ Text {
       case Protocol.ActionKinds.BrowseHerdrTabs: return "⌕"
       case Protocol.ActionKinds.BrowseOmarchyMenu: return "›"
       case Protocol.ActionKinds.RunArgv:
+      case Protocol.ActionKinds.LaunchArgv:
       case Protocol.ActionKinds.RunTrustedShell:
       case Protocol.ActionKinds.RunScript:
       case Protocol.ActionKinds.SystemdUnit: return "›"

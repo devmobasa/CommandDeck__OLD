@@ -46,6 +46,16 @@ public sealed partial class SqliteCatalog
         .Select( value => BuildOpenWithAction( value, path ) )
         .ToArray( );
 
+    // Called after a commit that changes applications. The reader holds this lock
+    // while it reads and caches, so a list read before the commit cannot be
+    // cached after the invalidation.
+    private async ValueTask InvalidateFileHandlersAsync( )
+    {
+        await _fileHandlerCacheLock.WaitAsync( CancellationToken.None ).ConfigureAwait( false );
+        _fileHandlerCache = null;
+        _fileHandlerCacheLock.Release( );
+    }
+
     private async ValueTask<IReadOnlyList<HandlerRecord>> ReadFileHandlersAsync(
         CancellationToken cancellationToken )
     {

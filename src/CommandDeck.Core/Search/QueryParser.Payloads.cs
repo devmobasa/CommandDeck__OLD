@@ -41,7 +41,7 @@ public static partial class QueryParser
         }
         else
         {
-            terms = TokenizeSyntax( text ).Select( Unquote ).ToArray( );
+            terms = SplitArguments( text );
             if ( terms.Length < 2 || IsSearchSyntax( terms[1], aliases, registry ) ||
                 (includes.Count == 0 && terms[1].StartsWith( '-', StringComparison.Ordinal ) &&
                  !terms[1].StartsWith( "--", StringComparison.Ordinal )) )
@@ -65,6 +65,12 @@ public static partial class QueryParser
         payload = new LiteralPayload( text, terms, expression, ai );
         return true;
     }
+
+    // The argv rules of application invocations and `>` commands, not a shell:
+    // whitespace separates words, and a word wholly in double quotes is one
+    // argument without them. Quotes inside a word stay literal; an unterminated
+    // quote throws InvalidOperationException.
+    public static string[] SplitArguments( string text ) => TokenizeSyntax( text ).Select( Unquote ).ToArray( );
 
     private static QueryExpression WithLiteralQuery( QueryExpression expression, string original ) => new( )
     {

@@ -71,6 +71,10 @@ public interface ICatalogProjectionStore
     ValueTask ApplyPathChangesAsync(
         IReadOnlyList<IndexedPathChange> changes,
         CancellationToken cancellationToken );
+    // Replaces every desktop application row with this complete set.
+    ValueTask ReplaceApplicationsAsync(
+        IReadOnlyList<IndexedItem> items,
+        CancellationToken cancellationToken );
     ValueTask<IReadOnlyList<string>> GetPathsRequiringExtractorVersionAsync(
         string extractorVersion,
         int limit,

@@ -18,8 +18,11 @@ QtObject {
       "filter catalog derives entries and prefers file: for guidance")
     host.expect(host.part_catalogSpec.chipEntries(host.slice2Filters, true).length === 4
         && host.part_catalogSpec.chipEntries(host.slice2Filters, true)[0].token === "="
-        && host.part_catalogSpec.paletteEntries(host.slice2Filters, true).length === 5,
-      "the grid excludes assistant tokens while the palette lists every filter")
+        && host.part_catalogSpec.paletteEntries(host.slice2Filters, true).length === 6
+        && host.part_catalogSpec.paletteEntries(host.slice2Filters, true)[1].token === ">"
+        && host.part_catalogSpec.exampleFor(">") === "> htop",
+      "the grid excludes assistant tokens while the palette lists every filter and Run")
+    host.expect(host.part_helpSheet.shortcutListed(">"), "the help sheet explains the > Run prefix")
 
     // A2 - teaching empty-state chips.
     host.expect(host.part_emptyStateSpec.renderedChipCount === 4
@@ -56,12 +59,13 @@ QtObject {
       "the no-results ai: route is activatable")
 
     // A3 - the ? filter palette navigation and insertion.
-    host.expect(host.part_filterPaletteSpec.renderedCount === 5
-        && host.part_filterPaletteSpec.entryTokenAt(0) === "=",
-      "the filter palette lists every prefix (calculator first)")
+    host.expect(host.part_filterPaletteSpec.renderedCount === 6
+        && host.part_filterPaletteSpec.entryTokenAt(0) === "="
+        && host.part_filterPaletteSpec.entryTokenAt(1) === ">",
+      "the filter palette lists every prefix (calculator, then Run)")
     host.part_filterPaletteSpec.selectedIndex = 0
-    host.part_filterPaletteSpec.moveSelection(1)
-    host.expect(host.part_filterPaletteSpec.selectedIndex === 1
+    host.part_filterPaletteSpec.moveSelection(2)
+    host.expect(host.part_filterPaletteSpec.selectedIndex === 2
         && host.part_filterPaletteSpec.selectedToken() === "app:",
       "the filter palette moves the highlight with the arrows")
     host.part_filterPaletteSpec.insertedToken = ""
@@ -72,7 +76,7 @@ QtObject {
     host.expect(host.part_filterPaletteSpec.selectedIndex === 0,
       "the filter palette clamps navigation at the first entry")
     host.part_filterPaletteSpec.moveSelection(50)
-    host.expect(host.part_filterPaletteSpec.selectedIndex === 4
+    host.expect(host.part_filterPaletteSpec.selectedIndex === 5
         && host.part_filterPaletteSpec.selectedToken() === "ai:",
       "the filter palette clamps navigation at the last entry and includes ai:")
 

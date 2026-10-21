@@ -34,6 +34,7 @@ public static partial class Program
         await RunAsync( "image previews preserve EXIF orientation and PNG WebP transparency", ImagePreviewsPreserveOrientationAndAlphaAsync );
         await RunAsync( "image previews confine decoder filesystem writes and network access", ImagePreviewsConfineDecoderAsync );
         await RunAsync( "socket connection waits for a delayed daemon startup", SocketConnectionWaitsForDelayedDaemonAsync );
+        await RunAsync( "run command row travels the protocol and launches only its own argv", RunCommandRowTravelsTheProtocolAsync );
         await RunAsync(
             "daemon and bridge restart soak converges without stale state",
             DaemonAndBridgeRestartSoakAsync );
