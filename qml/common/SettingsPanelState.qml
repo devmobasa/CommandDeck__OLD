@@ -124,6 +124,8 @@ FocusScope {
   // Hidden items arrive separately from the snapshot, in bounded pages.
   property var hiddenItems: null
   property string hiddenItemsError: ""
+  property var quicklinksController: null
+  readonly property var part_quicklinksCard: parts.searchScroll.quicklinksCard
   property var fallbackQuicklinks: []
   property var sourceDescriptors: []
   property var filterDescriptors: []
@@ -271,7 +273,7 @@ FocusScope {
     { id: Ui.SettingsPage.Customization, title: "Customization", subtitle: "Size, colors, favorites", icon: "☆" }
   ]
   readonly property var pageCards: ({
-    search: [settingsState.owner.part_fileSearchCard, settingsState.owner.part_sourcesCard, settingsState.owner.part_heyCard, settingsState.owner.part_behaviorCard],
+    search: [settingsState.owner.part_fileSearchCard, settingsState.owner.part_sourcesCard, settingsState.owner.part_heyCard, settingsState.owner.part_behaviorCard, settingsState.part_quicklinksCard],
     assistant: [settingsState.owner.part_assistantCard, settingsState.owner.part_modelCard, settingsState.owner.part_trustCard, settingsState.owner.part_limitsCard, settingsState.owner.part_grantsCard, settingsState.owner.part_diagnosticsCard],
     editors: [settingsState.owner.part_editorsCard],
     filters: [settingsState.owner.part_filterAliasesCard, settingsState.owner.part_savedSearchesCard],

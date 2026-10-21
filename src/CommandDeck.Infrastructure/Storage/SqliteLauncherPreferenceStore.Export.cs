@@ -10,6 +10,7 @@ internal sealed partial class SqliteLauncherPreferenceStore
         var searches = await GetSavedSearchesAsync( cancellationToken ).ConfigureAwait( false );
         return new( )
         {
+            Quicklinks = await ExportQuicklinksAsync( cancellationToken ).ConfigureAwait( false ),
             Preferences = await GetPreferencesAsync( cancellationToken ).ConfigureAwait( false ),
             Customizations = await ReadCustomizationsAsync( cancellationToken ).ConfigureAwait( false ),
             HiddenItems = (await ListHiddenAsync( null, HiddenItemLimits.MaximumHiddenItems, 0, cancellationToken )
@@ -33,6 +34,8 @@ internal sealed partial class SqliteLauncherPreferenceStore
             connection,
             transaction,
             """
+            DELETE FROM user_quicklinks;
+            DELETE FROM disabled_configured_quicklinks;
             DELETE FROM aliases;
             DELETE FROM filter_aliases;
             DELETE FROM saved_searches;
@@ -44,6 +47,7 @@ internal sealed partial class SqliteLauncherPreferenceStore
             DELETE FROM hidden_items;
             """,
             cancellationToken ).ConfigureAwait( false );
+        await _publishQuicklinks( connection, transaction, cancellationToken ).ConfigureAwait( false );
         await transaction.CommitAsync( cancellationToken ).ConfigureAwait( false );
         InvalidateHiddenItems( );
         return LauncherPreferences.CreateDefault( );

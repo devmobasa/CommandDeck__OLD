@@ -52,10 +52,9 @@ public sealed partial class CommandDeckRuntime
             return null;
         }
 
-        var preferences = await _preferences.GetPreferencesAsync( cancellationToken )
-            .ConfigureAwait( false );
-        var quicklink = _options.Quicklinks.FirstOrDefault( value =>
-            string.Equals( value.Id, preferences.WebFallbackQuicklinkId, StringComparison.Ordinal ) );
+        var quicklinks = await GetQuicklinksAsync( cancellationToken ).ConfigureAwait( false );
+        var quicklink = quicklinks.Quicklinks.FirstOrDefault( entry => entry.Enabled &&
+            string.Equals( entry.Quicklink.Id, quicklinks.WebFallbackQuicklinkId, StringComparison.Ordinal ) )?.Quicklink;
         if ( quicklink is null )
         {
             return null;

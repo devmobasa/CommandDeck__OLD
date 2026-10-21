@@ -61,6 +61,8 @@ internal sealed partial class SqliteLauncherPreferenceStore
             cancellationToken ).ConfigureAwait( false );
         if ( value is not null )
         {
+            await SqliteCatalog.EnsureAliasAvailableAsync( connection, transaction, value, "bookmark", stableId,
+                _configuredQuicklinks( ), cancellationToken ).ConfigureAwait( false );
             await using var conflict = connection.CreateCommand( );
             conflict.Transaction = transaction;
             conflict.CommandText = "SELECT stable_id FROM aliases WHERE alias = $alias COLLATE NOCASE;";
@@ -265,9 +267,14 @@ internal sealed partial class SqliteLauncherPreferenceStore
                                    WHERE a2.stable_id = i.stable_id
                                    ORDER BY a2.created_unix_ms, a2.alias COLLATE NOCASE)
                                   ordered_alias), '')
-            FROM aliases a
+            FROM (
+                SELECT stable_id FROM aliases WHERE alias = $alias COLLATE NOCASE
+                UNION
+                SELECT stable_id FROM catalog_items
+                WHERE kind = 'quicklink' AND json_extract(payload_json, '$.alias') = $alias COLLATE NOCASE
+            ) a
             JOIN customizable_items i ON i.stable_id = a.stable_id
-            WHERE a.alias = $alias COLLATE NOCASE
+            WHERE 1 = 1
               {SqliteCatalog.HomeSearchClause( "i" )};
             """;
         SqliteCatalog.AddHomeSearchParameters( command );

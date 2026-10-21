@@ -354,6 +354,7 @@ public sealed class CustomizationResult
 
 public sealed class CustomizationExport
 {
+    public QuicklinkState Quicklinks { get; init; } = new( );
     public int OmittedClipboardSearches { get; init; }
     public int Version { get; init; } = 3;
     public required LauncherPreferences Preferences { get; init; }
@@ -367,7 +368,11 @@ public sealed class CustomizationExport
 
 public static partial class AliasValidator
 {
-    [GeneratedRegex( "^[A-Za-z0-9][A-Za-z0-9._-]{0,31}$", RegexOptions.CultureInvariant )]
+    public const string Pattern = "^[A-Za-z0-9][A-Za-z0-9._-]{0,31}$";
+    public const string InvalidMessage = "Aliases must be 1-32 ASCII letters, digits, dots, underscores, or hyphens.";
+    public const string ReservedMessage = "Alias '{0}' is reserved by launcher syntax.";
+
+    [GeneratedRegex( Pattern, RegexOptions.CultureInvariant )]
     private static partial Regex ValidAliasRegex( );
 
     public static string NormalizeAndValidate( string alias )
@@ -376,12 +381,12 @@ public static partial class AliasValidator
         if ( !ValidAliasRegex( ).IsMatch( value ) )
         {
             throw new InvalidOperationException(
-                "Aliases must be 1-32 ASCII letters, digits, dots, underscores, or hyphens." );
+                InvalidMessage );
         }
 
         if ( SearchFilterRegistry.IsReserved( value ) )
         {
-            throw new InvalidOperationException( $"Alias '{value}' is reserved by launcher syntax." );
+            throw new InvalidOperationException( ReservedMessage.Replace( "{0}", value, StringComparison.Ordinal ) );
         }
 
         return value;

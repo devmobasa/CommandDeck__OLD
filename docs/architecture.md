@@ -97,6 +97,20 @@ See [search](search-and-ranking.md), [security](security.md),
 [AI](ai.md), and [extension contracts](extensions/README.md)
 before changing these boundaries.
 
+Quicklink preferences have a separate migration (23; 22 is left available for
+indexed-folder preferences). Quicklink edits update user records, exclusions,
+search rows, and any fallback reset in one SQLite transaction. Only quicklink
+rows are republished. Full-index publication reads the current preferences in
+its publication transaction, so an older scan cannot restore removed links.
+The Settings quicklink controller serializes writes and queues actions during
+refresh; repeated refreshes share one pending reload.
+Dispatch waits for protocol readiness, including the reconnect probe. Quicklink
+alias lookup uses a partial expression index, so unrelated catalog rows do not
+add search work. Frontend alias rules and validation messages are generated from
+the backend validators by `scripts/generate-reference-docs.sh`; backend and QML
+tests share URL, host, alias, and error-message cases in
+`tests/fixtures/QuicklinkUrls.js`.
+
 Catalog schema versions 20 and 21 link item rows to FTS rowids and persist title
 and metadata search inclusion. Applied migrations keep their existing version
 numbers. Initialization rejects a newer ledger before changing journal mode or

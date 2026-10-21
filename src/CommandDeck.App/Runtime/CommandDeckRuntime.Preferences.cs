@@ -28,8 +28,9 @@ public sealed partial class CommandDeckRuntime
         CancellationToken cancellationToken )
     {
         if ( preferences.WebFallbackQuicklinkId is not null &&
-            !_options.Quicklinks.Any( value =>
-                string.Equals( value.Id, preferences.WebFallbackQuicklinkId, StringComparison.Ordinal ) ) )
+            !(await GetQuicklinksAsync( cancellationToken ).ConfigureAwait( false )).Quicklinks.Any( entry =>
+                entry.Enabled &&
+                string.Equals( entry.Quicklink.Id, preferences.WebFallbackQuicklinkId, StringComparison.Ordinal ) ) )
         {
             throw new InvalidOperationException( "The selected fallback quicklink is not configured." );
         }

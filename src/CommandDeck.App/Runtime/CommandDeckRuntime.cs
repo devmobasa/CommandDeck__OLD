@@ -115,14 +115,17 @@ public sealed partial class CommandDeckRuntime : IAsyncDisposable, IAgentLaunche
         var preferences = await _preferences.GetPreferencesAsync( cancellationToken )
             .ConfigureAwait( false );
         var registry = Contributions;
-        for ( var attempt = 0; preferences.RegistryRevision != registry.Revision; attempt++ )
+        var quicklinks = await GetQuicklinksAsync( cancellationToken ).ConfigureAwait( false );
+        for ( var attempt = 0; preferences.RegistryRevision != registry.Revision ||
+            preferences.WebFallbackQuicklinkId != quicklinks.WebFallbackQuicklinkId; attempt++ )
         {
             if ( attempt == 3 )
             {
-                throw new InvalidOperationException( "The source registry changed. Refresh the launcher." );
+                throw new InvalidOperationException( "The source registry or quicklinks changed. Refresh the launcher." );
             }
             preferences = await _preferences.GetPreferencesAsync( cancellationToken ).ConfigureAwait( false );
             registry = Contributions;
+            quicklinks = await GetQuicklinksAsync( cancellationToken ).ConfigureAwait( false );
         }
         var filterAliases = await _preferences.GetFilterAliasesAsync(
             cancellationToken ).ConfigureAwait( false );
@@ -135,11 +138,12 @@ public sealed partial class CommandDeckRuntime : IAsyncDisposable, IAgentLaunche
             Filters = [.. registry.WithAliases( filterAliases )],
             FilterAliases = [.. filterAliases],
             SavedSearches = [.. savedSearches],
-            FallbackQuicklinks = _options.Quicklinks.Select( static value => new QuicklinkChoice
-            {
-                Id = value.Id,
-                Title = value.Title
-            } ).ToList( )
+            FallbackQuicklinks = quicklinks.Quicklinks
+                .Where( entry => entry.Enabled ).Select( entry => entry.Quicklink ).Select( static value => new QuicklinkChoice
+                {
+                    Id = value.Id,
+                    Title = value.Title
+                } ).ToList( )
         };
     }
 

@@ -26,6 +26,7 @@ public static partial class Program
             OptionEnd,
             BuildOptionSection( ) );
         GeneratedConfigSchemaMatchesOptionsModel( );
+        GeneratedQuicklinkRulesMatchValidators( );
     }
 
     private static void WriteReferenceDocumentation( string root )
@@ -41,6 +42,7 @@ public static partial class Program
             OptionEnd,
             BuildOptionSection( ) );
         WriteConfigSchemaArtifact( root );
+        File.WriteAllText( Path.Combine( root, "qml/common/QuicklinkRules.js" ), BuildQuicklinkRules( ) );
     }
 
     private static string BuildCapabilitySection( )

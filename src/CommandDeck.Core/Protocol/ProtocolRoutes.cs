@@ -91,6 +91,8 @@ public static class ProtocolRoutes
             ProtocolOperations.CustomizationsExport, ProtocolOperations.CustomizationsReset,
             ProtocolOperations.HiddenSet, ProtocolOperations.HiddenRestore, ProtocolOperations.HiddenList,
             ProtocolOperations.QueryHistoryGet, ProtocolOperations.QueryHistoryDelete, ProtocolOperations.QueryHistoryReset,
+            ProtocolOperations.QuicklinksGet, ProtocolOperations.QuicklinksSave, ProtocolOperations.QuicklinksRemove,
+            ProtocolOperations.QuicklinksDisable, ProtocolOperations.QuicklinksEnable,
             ProtocolOperations.SavedSearchGet, ProtocolOperations.SavedSearchSave, ProtocolOperations.SavedSearchDelete );
 
         Add( routes, ProtocolFamily.Clipboard,

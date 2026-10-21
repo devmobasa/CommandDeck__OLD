@@ -4,6 +4,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 ScrollView {
+  readonly property alias quicklinksCard: quicklinksCard
   required property var host
   readonly property alias part_fileSearchCard: fileSearchCard
   readonly property alias part_homeFolderOnlyCheck: homeFolderOnlyCheck
@@ -231,5 +232,10 @@ ScrollView {
         }
       }
     }
+    SettingsQuicklinksCard {
+      id: quicklinksCard
+      host: searchScroll.host
+    }
+
   }
 }

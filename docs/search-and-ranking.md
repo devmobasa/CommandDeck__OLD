@@ -162,8 +162,11 @@ or a four-part IPv4 address. Text with spaces, user info, non-ASCII characters,
 or another scheme is never a URL. Type `http://` for a server without TLS.
 Turning off Web Search or using another filter removes the row. Nothing is
 fetched. Accepted use is recorded under one fixed ID, never the address; query
-history keeps the typed text only when it is on. Quicklinks stay JSONC
-configuration, so a typed URL cannot be saved as one.
+history keeps the typed text only when it is on. Manage quicklinks in
+**Settings > Search > Quicklinks**: add a link or a web search with a `{query}`
+template, edit or remove user quicklinks, and enable or disable configured ones.
+Changes apply immediately to search aliases and web fallback choices. You can
+also define quicklinks in JSONC; see [quicklink configuration and CLI commands](configuration.md#quicklinks).
 
 ## Final score and frequency
 

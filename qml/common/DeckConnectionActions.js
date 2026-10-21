@@ -18,6 +18,7 @@ function handleProtocolReconnected(root) {
   root.reconciliationPreferencesComplete = false
   root.reconciliationSearchComplete = false
   root.requestBootstrap()
+  if (root.settingsOpen && root.part_quicklinksController) root.part_quicklinksController.load()
   root.requestPreferencesSnapshot(root.settingsOpen)
   if (root.settingsOpen) {
     root.requestAiProviders()
@@ -30,6 +31,7 @@ function handleProtocolReconnected(root) {
 }
 
 function handleProtocolDisconnected(root) {
+  if (root.part_quicklinksController) root.part_quicklinksController.disconnect()
   root.part_extensionController.disconnected()
   root.part_extensionManagementController.disconnected()
   root.fileSelection = []

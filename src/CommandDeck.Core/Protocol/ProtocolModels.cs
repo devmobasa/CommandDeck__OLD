@@ -60,6 +60,11 @@ public static partial class ProtocolOperations
     public const string QueryHistoryGet = "history.get";
     public const string QueryHistoryDelete = "history.delete";
     public const string QueryHistoryReset = "history.reset";
+    public const string QuicklinksGet = "quicklinks.get";
+    public const string QuicklinksSave = "quicklinks.save";
+    public const string QuicklinksRemove = "quicklinks.remove";
+    public const string QuicklinksDisable = "quicklinks.disable";
+    public const string QuicklinksEnable = "quicklinks.enable";
     public const string SavedSearchGet = "saved-search.get";
     public const string SavedSearchSave = "saved-search.save";
     public const string SavedSearchDelete = "saved-search.delete";
@@ -130,6 +135,7 @@ public static class ProtocolMessageTypes
     public const string QueryHistoryResult = "query-history-result";
     public const string FilterAliasResult = "filter-alias-result";
     public const string SuggestionsResult = "suggestions-result";
+    public const string QuicklinksResult = "quicklinks-result";
     public const string SavedSearchResult = "saved-search-result";
     public const string AgentBackendsResult = "agent-backends-result";
     public const string AgentStatusResult = "agent-status-result";
@@ -187,6 +193,7 @@ public sealed class ProtocolMessage
     public QueryHistorySnapshot? QueryHistory { get; init; }
     public FilterAliasResult? FilterAliases { get; init; }
     public SearchSuggestionSnapshot? Suggestions { get; init; }
+    public QuicklinksResult? Quicklinks { get; init; }
     public SavedSearchResult? SavedSearches { get; init; }
     public AgentBackendInventory? AgentBackends { get; init; }
     public AgentStatus? AgentStatus { get; init; }

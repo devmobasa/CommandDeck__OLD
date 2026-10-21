@@ -281,7 +281,7 @@ public static partial class Program
                     """;
                 await using var reader = await check.ExecuteReaderAsync( );
                 True( await reader.ReadAsync( ) );
-                Equal( 21L, reader.GetInt64( 0 ) );
+                Equal( 23L, reader.GetInt64( 0 ) );
                 Equal( 3L, reader.GetInt64( 1 ) );
                 Equal( 3L, reader.GetInt64( 2 ) );
             }

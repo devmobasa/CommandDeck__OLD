@@ -62,7 +62,12 @@ public sealed partial class SqliteCatalog :
         AiPreferences = new SqliteAiPreferenceStore( InitializeAsync, OpenAsync, _timeProvider );
         AgentPreferences = new SqliteAgentPreferenceStore( InitializeAsync, OpenAsync, _timeProvider );
         _launcherPreferences = new( InitializeAsync, OpenAsync, _timeProvider,
-            ( ) => ContributionSnapshot, AiPreferences );
+            ( ) => ContributionSnapshot, AiPreferences, ( ) => _configuredQuicklinks ?? [],
+            async ( connection, transaction, token ) =>
+            {
+                var snapshot = await ReadQuicklinksAsync( connection, transaction, null, token ).ConfigureAwait( false );
+                await PublishQuicklinksAsync( connection, transaction, snapshot.Quicklinks, token ).ConfigureAwait( false );
+            } );
         UsageHistory = new SqliteUsageHistoryStore(
             InitializeAsync, OpenAsync, _launcherPreferences.GetFilterAliasesAsync,
             ( ) => ContributionSnapshot, _timeProvider, _rankingOptions, _history, _privacyOptions );

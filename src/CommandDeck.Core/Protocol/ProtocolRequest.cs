@@ -59,6 +59,8 @@ public sealed class ProtocolRequest
     public LauncherPreferences? Preferences { get; init; }
     public List<string> StableIds { get; init; } = [];
     public long HistoryId { get; init; }
+    public QuicklinkOptions? Quicklink { get; init; }
+    public string? QuicklinkId { get; init; }
     public SavedSearch? SavedSearch { get; init; }
     public string? SavedSearchId { get; init; }
     public string? BackendId { get; init; }

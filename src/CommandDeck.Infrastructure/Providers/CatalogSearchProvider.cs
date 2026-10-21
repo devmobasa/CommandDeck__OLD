@@ -28,11 +28,10 @@ public sealed class CatalogSearchProvider : ICommandProvider
             return [];
         }
 
-        SearchResult? alias = null;
-        if ( _preferences is not null && query.Terms.Count > 0 )
+        var alias = await FindEligibleAliasAsync( query, request, cancellationToken ).ConfigureAwait( false );
+        if ( alias?.Kind == ResultKinds.Quicklink )
         {
-            alias = await _preferences.FindAliasAsync( query.Terms[0], cancellationToken )
-                .ConfigureAwait( false );
+            return [alias];
         }
 
         var isApplicationInvocation = ApplicationInvocation.TryParse(
@@ -73,6 +72,39 @@ public sealed class CatalogSearchProvider : ICommandProvider
             .Where( static result => result.Kind == ResultKinds.Application )
             .Select( result => WithLaunchArguments( result, invocation.Arguments ) )
             .ToArray( );
+    }
+
+    private async ValueTask<SearchResult?> FindEligibleAliasAsync( ParsedQuery query, SearchRequest request,
+        CancellationToken cancellationToken )
+    {
+        if ( _preferences is null || query.Terms.Count == 0 )
+        {
+            return null;
+        }
+
+        var alias = await _preferences.FindAliasAsync( query.Terms[0], cancellationToken ).ConfigureAwait( false );
+        if ( alias?.Kind == ResultKinds.Quicklink &&
+            !await IsAliasEligibleAsync( alias, query, request, cancellationToken ).ConfigureAwait( false ) )
+        {
+            return null;
+        }
+
+        return alias;
+    }
+
+    private async ValueTask<bool> IsAliasEligibleAsync( SearchResult alias, ParsedQuery query, SearchRequest request,
+        CancellationToken cancellationToken )
+    {
+        var enabled = request.EnabledSearchSources;
+        if ( enabled is null )
+        {
+            var preferences = await _preferences!.GetPreferencesAsync( cancellationToken ).ConfigureAwait( false );
+            enabled = preferences.Sources.Where( source => source.EnabledInSearch ).Select( source => source.SourceId ).ToArray( );
+        }
+
+        return enabled.Contains( alias.SourceId, StringComparer.Ordinal ) &&
+            (query.IncludedFilters.Count == 0 || query.IncludedFilters.Any( filter => SearchFilterRegistry.Matches( filter, alias ) )) &&
+            !query.ExcludedFilters.Any( filter => SearchFilterRegistry.Matches( filter, alias ) );
     }
 
     private async ValueTask<IReadOnlyList<SearchResult>> SearchEnabledSourcesAsync(
