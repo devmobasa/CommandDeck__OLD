@@ -105,7 +105,6 @@ PersonalizationMutationQueue 1.0 PersonalizationMutationQueue.qml
 Picker 1.0 Picker.qml
 PickerView 1.0 PickerView.qml
 PointerMoveGate 1.0 PointerMoveGate.qml
-ResultHoverTracker 1.0 ResultHoverTracker.qml
 PreferenceUpdateQueue 1.0 PreferenceUpdateQueue.qml
 ProtocolClient 1.0 ProtocolClient.qml
 ProtocolRequestTracker 1.0 ProtocolRequestTracker.qml

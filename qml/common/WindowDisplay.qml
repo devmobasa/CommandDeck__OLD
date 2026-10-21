@@ -4,21 +4,9 @@ import "DisplaySizing.js" as Sizing
 QtObject {
   id: root
   required property var host
-  property var window: null
-  property real width: window ? window.width : 1920
-  property real height: window ? window.height : 1080
-  // Screen objects do not survive unplug/replug. Read through the window on
-  // every replacement; a compositor monitor found by name can still be stale.
-  readonly property var screen: window ? window.screen : null
-  property real legacyHeight: {
-    if (!screen) return height
-
-    // Qt Wayland reports quarter-turns of landscape modes as portrait. Native
-    // portrait modes need native-mode/transform data that ShellScreen lacks.
-    const rotated = screen.orientation === Qt.PortraitOrientation
-      || screen.orientation === Qt.InvertedPortraitOrientation
-    return (rotated ? screen.width : screen.height) * window.devicePixelRatio
-  }
+  property real width: 1920
+  property real height: 1080
+  property real legacyHeight: height
   // A compositor configure can update both axes; publish one coherent size.
   property size configuredSize: Qt.size(width, height)
   readonly property Timer configure: Timer {
