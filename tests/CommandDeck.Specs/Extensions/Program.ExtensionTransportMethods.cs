@@ -39,6 +39,7 @@ public static partial class Program
         await RunAsync( "extension session preserves the view after a child handler error", ExtensionSessionRecoversHandlerErrorAsync );
         await RunAsync( "extension peer disposal bounds uncooperative reads and starts once", ExtensionPeerDisposalBoundsUncooperativeReadsAsync );
         await RunAsync( "extension peer requires explicit start before calls", ExtensionPeerRequiresExplicitStartAsync );
+        await RunAsync( "extension peer calls after disposal report cancellation", ExtensionPeerCallsAfterDisposalReportCancellationAsync );
         Run( "extension resource profiles retain configured and enforced limits", ExtensionResourceProfilesKeepLimits );
         await RunAsync( "extension OAuth callback rejects hostile headers and parameters", ExtensionOAuthCallbackRejectsHostileInputAsync );
         await RunAsync( "extension SDK rejects command mode misuse before host calls", ExtensionSdkRejectsModeMisuseLocallyAsync );

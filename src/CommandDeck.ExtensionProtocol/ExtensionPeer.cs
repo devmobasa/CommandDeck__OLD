@@ -82,7 +82,11 @@ public sealed class ExtensionPeer : IAsyncDisposable
         TaskCompletionSource<JsonElement> completion = new( TaskCreationOptions.RunContinuationsAsynchronously );
         lock ( _gate )
         {
-            _lifetime.Token.ThrowIfCancellationRequested( );
+            // Disposal stops the peer before releasing it, and callers' linked tokens observe that asynchronously.
+            if ( _lifetime.IsCancellationRequested )
+            {
+                throw new OperationCanceledException( "The extension connection was closed." );
+            }
             if ( _pending.Count == ExtensionLimits.MaximumPendingCalls )
             {
                 throw new ExtensionRpcException( -32000, "The pending request limit was reached." );
@@ -108,7 +112,6 @@ public sealed class ExtensionPeer : IAsyncDisposable
 
     private void EnsureStarted( )
     {
-        ObjectDisposedException.ThrowIf( Volatile.Read( ref _disposed ) != 0, this );
         if ( Volatile.Read( ref _started ) == 0 )
         {
             throw new InvalidOperationException( "Start the peer first." );
