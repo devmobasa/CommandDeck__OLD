@@ -213,6 +213,7 @@ public static partial class Program
                     client,
                     Path.Combine( files, "project-b" ),
                     timeout.Token );
+                await File.WriteAllTextAsync( Path.Combine( files, "excluded.tmp" ), "excluded marker", timeout.Token );
                 await runtime.Catalog.ReplaceExclusionDiagnosticsAsync(
                 [
                     new IndexExclusionDiagnostic
