@@ -22,6 +22,25 @@ PanelWindow {
   readonly property alias part_footerActions: launcherContent.part_footerActions
   readonly property alias part_detailPane: launcherContent.part_detailPane
   readonly property alias part_hud: launcherHud
+  readonly property alias part_appTheme: display.theme
+  readonly property alias part_settingsTheme: display.theme
+  readonly property alias displaySizing: display.sizing
+  readonly property alias launcherSizing: display.launcher
+  readonly property alias maximumFittingPercent: display.maximumFittingPercent
+  readonly property bool narrow: display.sizing.narrow
+  readonly property string displayDescription: display.description
+
+  WindowDisplay {
+    id: display
+    host: launcherWindow.host
+    width: launcherWindow.width
+    height: launcherWindow.height
+    legacyHeight: {
+      const monitor = (launcherWindow.host.compositor.monitors || [])
+        .find(value => value.name === launcherWindow.modelData.name)
+      return monitor ? monitor.height : launcherWindow.height
+    }
+  }
 
   required property var modelData
   screen: modelData
@@ -31,6 +50,10 @@ PanelWindow {
   readonly property bool presenting: launcherWindow.host.opened
     && (launcherWindow.host.openedScreenName.length === 0
       || launcherWindow.host.openedScreenName === launcherWindow.modelData.name)
+  onPresentingChanged: {
+    if (presenting) host.presentingWindow = launcherWindow
+    else if (host.presentingWindow === launcherWindow) host.presentingWindow = null
+  }
   // Null until Settings first opens in this window.
   readonly property CommandDeckWindowSettings settingsPanel: settingsSurface.item as CommandDeckWindowSettings
 
@@ -69,6 +92,7 @@ PanelWindow {
   }
 
   Component.onDestruction: {
+    if (launcherWindow.host.presentingWindow === launcherWindow) launcherWindow.host.presentingWindow = null
     if (launcherWindow.host.activeActionPanel === actionPanel) launcherWindow.host.activeActionPanel = null
     if (launcherWindow.host.testSurfaceWindow === launcherWindow) {
       launcherWindow.host.testSurfaceWindow = null
@@ -121,6 +145,7 @@ PanelWindow {
     left: true
     right: true
   }
+  // Cover bars with the scrim; the panel's safe insets leave room inside it.
   exclusionMode: ExclusionMode.Ignore
   WlrLayershell.layer: WlrLayer.Overlay
   // Hyprland reports openlayer>>commanddeck when the launcher maps, which
@@ -162,7 +187,7 @@ PanelWindow {
   Rectangle {
     objectName: "launcherScrim"
     anchors.fill: parent
-    color: launcherWindow.host.part_appTheme.overlayScrimColor
+    color: launcherWindow.part_appTheme.overlayScrimColor
 
     MouseArea {
       anchors.fill: parent
@@ -170,7 +195,7 @@ PanelWindow {
     }
   }
 
-  Rectangle {
+  SizingViewport {
     id: palettePanel
 
     ClipboardOpenShortcut {
@@ -185,37 +210,30 @@ PanelWindow {
         && launcherWindow.host.part_invocationController.requestId === 0
       onRequested: launcherWindow.host.part_clipboardController.open("")
     }
-    // Settings uses a compact theme, with room for a rail and page of cards.
-    // Keep the height bounded by screen margins. Settings is centered;
-    // the ordinary launcher keeps its upper-screen position.
-    readonly property int topInset: Math.max(54, Math.round(launcherWindow.height * 0.12))
-    readonly property int bottomInset: Math.max(40, Math.round(launcherWindow.height * 0.05))
-    width: Math.min(
-      launcherWindow.host.settingsOpen ? Math.round(launcherWindow.host.part_settingsTheme.paletteWidth * 1.3) : launcherWindow.host.part_appTheme.paletteWidth,
-      launcherWindow.width - 80)
-    height: Math.min(
-      launcherWindow.host.settingsOpen ? Math.round(launcherWindow.host.part_settingsTheme.paletteHeight * 1.35) : launcherWindow.host.part_appTheme.paletteHeight,
-      launcherWindow.height - topInset - bottomInset)
-    Behavior on width { NumberAnimation { duration: launcherWindow.host.part_appTheme.durationNormal } }
-    Behavior on height { NumberAnimation { duration: launcherWindow.host.part_appTheme.durationNormal } }
+    readonly property int topInset: display.sizing.topInset
+    readonly property int bottomInset: display.sizing.bottomInset
+    width: display.sizing.panelWidth
+    height: display.sizing.panelHeight
+    requestedWidth: display.sizing.contentWidth
+    requestedHeight: display.sizing.contentHeight
     anchors.horizontalCenter: parent.horizontalCenter
     anchors.top: parent.top
     anchors.topMargin: launcherWindow.host.settingsOpen
       ? Math.round((launcherWindow.height - height) / 2)
       : topInset
-    radius: launcherWindow.host.settingsOpen ? launcherWindow.host.part_settingsTheme.radius : launcherWindow.host.part_appTheme.radius
-    color: launcherWindow.host.part_appTheme.panelBackground
+    radius: launcherWindow.host.settingsOpen ? launcherWindow.part_settingsTheme.radius : launcherWindow.part_appTheme.radius
+    color: launcherWindow.part_appTheme.panelBackground
     border.width: 1
-    border.color: launcherWindow.host.part_appTheme.border
+    border.color: launcherWindow.part_appTheme.border
     opacity: launcherWindow.host.opened ? 1 : 0
     transform: Translate {
       y: launcherWindow.host.opened ? 0 : -6
       Behavior on y {
-        NumberAnimation { duration: launcherWindow.host.part_appTheme.durationNormal }
+        NumberAnimation { duration: launcherWindow.part_appTheme.durationNormal }
       }
     }
     Behavior on opacity {
-      NumberAnimation { duration: launcherWindow.host.part_appTheme.durationNormal }
+      NumberAnimation { duration: launcherWindow.part_appTheme.durationNormal }
     }
 
     MouseArea {
@@ -227,7 +245,7 @@ PanelWindow {
       id: extensionView
       anchors.fill: parent
       z: 10
-      theme: launcherWindow.host.part_appTheme
+      theme: launcherWindow.part_appTheme
       opened: (launcherWindow.visible || launcherWindow.host.part_extensionController.externalActionPending) && launcherWindow.host.part_extensionController.opened
       snapshot: launcherWindow.host.part_extensionController.snapshot
       busy: launcherWindow.host.part_extensionController.busy || launcherWindow.host.part_extensionController.failed
@@ -262,7 +280,7 @@ PanelWindow {
       onItemChanged: launcherWindow.publishTestParts()
       sourceComponent: ClipboardHistorySurface {
         visible: clipboardSurface.presented && launcherWindow.host.part_clipboardController.opened
-        theme: launcherWindow.host.part_appTheme
+        theme: launcherWindow.part_appTheme
         controller: launcherWindow.host.part_clipboardController
         returnFocus: launcherWindow.part_searchBar.inputControl
       }
@@ -270,14 +288,14 @@ PanelWindow {
 
     ActionPanel {
       id: actionPanel
-      theme: launcherWindow.host.part_appTheme
+      theme: launcherWindow.part_appTheme
       shortcuts: launcherWindow.host.shortcutActions(actionPanel.result)
-      width: Math.min(Math.round(360 * launcherWindow.host.part_appTheme.scale), palettePanel.width * 0.45)
+      width: Math.min(Math.round(360 * launcherWindow.part_appTheme.scale), palettePanel.width * 0.45)
       // Size to the action list's natural height, capped to fit inside the
       // palette (the panel clips and scrolls beyond that), so a result with
       // many actions never spills over the detail pane at any display scale.
       height: Math.min(
-        palettePanel.height - Math.round(28 * launcherWindow.host.part_appTheme.scale),
+        palettePanel.height - Math.round(28 * launcherWindow.part_appTheme.scale),
         actionPanel.implicitHeight)
       anchors.right: parent.right
       anchors.top: parent.top
@@ -285,7 +303,7 @@ PanelWindow {
       visible: launcherWindow.host.actionPanelOpen
       opacity: visible ? 1 : 0
       Behavior on opacity {
-        NumberAnimation { duration: launcherWindow.host.part_appTheme.durationFast }
+        NumberAnimation { duration: launcherWindow.part_appTheme.durationFast }
       }
       z: 10
 
@@ -328,10 +346,10 @@ PanelWindow {
       focusReturnAllowed: launcherWindow.visible && !launcherWindow.host.anyBlockingSurface
       opacity: opened ? 1 : 0
       Behavior on opacity {
-        NumberAnimation { duration: launcherWindow.host.part_appTheme.durationNormal }
+        NumberAnimation { duration: launcherWindow.part_appTheme.durationNormal }
       }
       z: 14
-      theme: launcherWindow.host.part_appTheme
+      theme: launcherWindow.part_appTheme
       filterDescriptors: launcherWindow.host.filterDescriptors
       clipboardShortcut: clipboardOpenBinding.availableChord
       onDismissed: launcherWindow.host.closeHelp()
@@ -347,10 +365,10 @@ PanelWindow {
       focusReturnAllowed: launcherWindow.visible && !launcherWindow.host.anyBlockingSurface
       opacity: opened ? 1 : 0
       Behavior on opacity {
-        NumberAnimation { duration: launcherWindow.host.part_appTheme.durationNormal }
+        NumberAnimation { duration: launcherWindow.part_appTheme.durationNormal }
       }
       z: 19
-      theme: launcherWindow.host.part_appTheme
+      theme: launcherWindow.part_appTheme
       filterDescriptors: launcherWindow.host.filterDescriptors
       onTokenInserted: token => {
         launcherWindow.host.closeFilterPalette(false)
@@ -366,7 +384,7 @@ PanelWindow {
       wanted: launcherWindow.presenting && launcherWindow.host.indexInspectorOpen
       onItemChanged: launcherWindow.publishTestParts()
       sourceComponent: IndexInspector {
-        theme: launcherWindow.host.part_appTheme
+        theme: launcherWindow.part_appTheme
         opened: inspectorSurface.presented && launcherWindow.host.indexInspectorOpen
         inspection: launcherWindow.host.runtimeStatus ? launcherWindow.host.runtimeStatus.inspection : null
         healthDetails: launcherWindow.part_runtimeStatusSurface.details
@@ -397,7 +415,7 @@ PanelWindow {
       wanted: launcherWindow.presenting && launcherWindow.host.extensionManagementOpen
       onItemChanged: launcherWindow.publishTestParts()
       sourceComponent: ExtensionManagementView {
-        theme: launcherWindow.host.part_settingsTheme
+        theme: launcherWindow.part_settingsTheme
         controller: launcherWindow.host.part_extensionManagementController
         opened: managementSurface.presented && launcherWindow.host.opened && launcherWindow.host.extensionManagementOpen
         returnFocus: launcherWindow.settingsPanel ? launcherWindow.settingsPanel.extensionsControl : null
@@ -411,7 +429,7 @@ PanelWindow {
       id: queryHistorySurface
       anchors.fill: parent
       z: 18
-      theme: launcherWindow.host.part_appTheme
+      theme: launcherWindow.part_appTheme
       opened: launcherWindow.host.queryHistoryOpen
       loading: launcherWindow.host.queryHistoryLoading
       snapshot: launcherWindow.host.queryHistorySnapshot
@@ -440,7 +458,7 @@ PanelWindow {
       objectName: "firstRunCoach"
       anchors.fill: parent
       z: 40
-      theme: launcherWindow.host.part_appTheme
+      theme: launcherWindow.part_appTheme
       opened: launcherWindow.host.opened
       seen: launcherWindow.host.coachSeen
       suppressed: !launcherWindow.host.queryIsEmpty || launcherWindow.host.anyBlockingSurface
@@ -456,6 +474,7 @@ PanelWindow {
     id: launcherHud
     host: launcherWindow.host
     screen: launcherWindow.modelData
+    theme: launcherWindow.part_appTheme
     onLauncherScreen: launcherWindow.host.openedScreenName.length === 0
       || launcherWindow.host.openedScreenName === launcherWindow.modelData.name
   }

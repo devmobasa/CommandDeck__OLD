@@ -7,7 +7,8 @@ import QtQuick.Layouts
 ScrollView {
   required property var host
   readonly property alias part_displayCard: displayCard
-  readonly property alias part_displaySizeChoice: displaySizeChoice
+  readonly property alias part_displaySizeSlider: displaySizeSlider
+  readonly property alias part_displaySizeReset: displaySizeReset
   readonly property alias part_layoutCard: layoutCard
   readonly property alias part_rememberSearchesCheck: rememberSearchesCheck
   readonly property alias part_learnFromUseCheck: learnFromUseCheck
@@ -36,33 +37,62 @@ ScrollView {
     SettingsCard {
       id: displayCard
       searchQuery: customizationScroll.host.part_settingsSearch.text
-      searchTerms: "customization display size auto small default large extra screen scale"
+      searchTerms: "customization display size scale zoom percent larger smaller screen match recommended previous"
       theme: customizationScroll.host.theme
       title: "Display size"
-      description: "Scale the whole launcher. Auto follows your screen; the others size it up or down. Applies immediately."
+      description: "Scale text and controls together. Recommended follows your workspace and Omarchy font settings. Applies immediately."
 
       SettingsRow {
+        objectName: "displaySizeRow"
         theme: customizationScroll.host.theme
-        label: "Display size"
-        help: "Fix sizing yourself if the launcher looks too small or too large."
+        label: "Size"
+        help: customizationScroll.host.displaySizeDescription
         divider: false
 
-        SettingsChoice {
-          id: displaySizeChoice
+        DisplaySizeSlider {
+          id: displaySizeSlider
           theme: customizationScroll.host.theme
           Layout.fillWidth: true
-          options: customizationScroll.host.displaySizeOptions
+          from: Ui.DisplaySizePercent.Minimum
+          to: Ui.DisplaySizePercent.Maximum
+          stepSize: Ui.DisplaySizePercent.Step
+          maximumFittingPercent: customizationScroll.host.maximumFittingPercent
           Accessible.name: "Launcher display size"
-          Accessible.description: "Auto follows the screen; other presets apply a multiplier on top"
-          Component.onCompleted: currentIndex = customizationScroll.host.displaySizeIndex(customizationScroll.host.displaySizePreset)
+          Component.onCompleted: value = customizationScroll.host.displaySizePercent
           Connections {
             target: customizationScroll.host
-            function onDisplaySizePresetChanged() {
-              displaySizeChoice.currentIndex = customizationScroll.host.displaySizeIndex(customizationScroll.host.displaySizePreset)
+            function onDisplaySizePercentChanged() {
+              if (!displaySizeSlider.pressed && !displaySizeSlider.dragging)
+                displaySizeSlider.value = customizationScroll.host.displaySizePercent
             }
           }
-          onActivated: index => customizationScroll.host.displaySizeSelected(
-            customizationScroll.host.displaySizeOptions[index].id)
+          onMoved: customizationScroll.host.displaySizePercentSelected(Math.round(value))
+        }
+
+        DeckButton {
+          id: displaySizeReset
+          theme: customizationScroll.host.theme
+          text: "Recommended"
+          compact: true
+          enabled: customizationScroll.host.displaySizePercent !== Ui.DisplaySizePercent.Default
+            || customizationScroll.host.displaySizeLegacy
+          // Mouse activation returns to search; keyboard activation returns to the slider.
+          focusPolicy: Qt.TabFocus
+          down: pressed || resetPointer.pressed
+
+          function resetSize(fromPointer) {
+            customizationScroll.host.displaySizeRecommendedRequested()
+            if (fromPointer) customizationScroll.host.part_settingsSearch.forceActiveFocus()
+            else displaySizeSlider.sliderControl.forceActiveFocus()
+          }
+
+          onClicked: resetSize(false)
+          MouseArea {
+            id: resetPointer
+            anchors.fill: parent
+            acceptedButtons: Qt.LeftButton
+            onClicked: displaySizeReset.resetSize(true)
+          }
         }
       }
     }

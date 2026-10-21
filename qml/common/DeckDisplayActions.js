@@ -1,6 +1,18 @@
 .pragma library
 .import "UiConstants.js" as Ui
 .import "Protocol.js" as Protocol
+.import "DisplaySizing.js" as Sizing
+
+function reconcileScreens(root) {
+  if (!root.opened || root.openedScreenName.length === 0
+      || root.compositor.screens.some(screen => screen.name === root.openedScreenName)) return
+
+  // Retain the draft and navigation state for a reopen; no invisible layer may
+  // keep exclusive keyboard focus after its output disappears.
+  root.suspendedForScreen = true
+  root.opened = false
+  if (root.shell && typeof root.shell.hide === "function") root.shell.hide(root.integrationIds.Plugin)
+}
 
 function applyPanelTransparency(root, enabled, percent) {
   root.part_transparencyStore.set(enabled, percent)
@@ -22,44 +34,27 @@ function togglePreviewPane(root) {
   root.statusText = root.previewPaneVisible ? "Preview pane shown" : "Preview pane hidden"
 }
 
-function applyDisplaySizePreset(root, preset) {
-  root.part_displayScaleStore.setPreset(preset)
+function applyDisplaySizePercent(root, percent) {
+  root.part_displayScaleStore.setPercent(percent)
 }
 
-// Zoom steps through the fixed presets; Auto sits where Default does, and a
-// zero step returns to Auto. Each end holds.
-function nextDisplaySize(preset, direction) {
-  if (direction === 0) return Ui.DisplaySize.Auto
-  const steps = [Ui.DisplaySize.Small, Ui.DisplaySize.Default, Ui.DisplaySize.Large, Ui.DisplaySize.ExtraLarge]
-  const current = Math.max(0, steps.indexOf(preset === Ui.DisplaySize.Auto ? Ui.DisplaySize.Default : preset))
-  return steps[Math.max(0, Math.min(steps.length - 1, current + (direction > 0 ? 1 : -1)))]
+// Zoom holds at each end; zero resets the percentage within the current profile.
+function nextDisplaySizePercent(percent, direction) {
+  if (direction === 0) return Ui.DisplaySizePercent.Default
+  const next = percent + (direction > 0 ? Ui.DisplaySizePercent.ZoomStep : -Ui.DisplaySizePercent.ZoomStep)
+  return Math.max(Ui.DisplaySizePercent.Minimum, Math.min(Ui.DisplaySizePercent.Maximum, next))
 }
 
-function displaySizeLabel(preset) {
-  switch (preset) {
-    case Ui.DisplaySize.Small: return "Small"
-    case Ui.DisplaySize.Default: return "Default"
-    case Ui.DisplaySize.Large: return "Large"
-    case Ui.DisplaySize.ExtraLarge: return "Extra large"
-    default: return "Auto"
-  }
+function displaySizeLabel(percent, legacy) {
+  return String(percent) + "%" + (percent === Ui.DisplaySizePercent.Default && !legacy ? " (Recommended)" : "")
 }
 
 function stepDisplaySize(root, direction) {
-  const next = nextDisplaySize(root.displaySizePreset, direction)
-  root.applyDisplaySizePreset(next)
-  root.statusText = "Display size: " + displaySizeLabel(next)
-}
-
-function displaySizeMultiplierFor(root, preset) {
-  switch (preset) {
-    case Ui.DisplaySize.Small: return 0.9
-    case Ui.DisplaySize.Large: return 1.15
-    case Ui.DisplaySize.ExtraLarge: return 1.3
-    case Ui.DisplaySize.Default: return 1.0
-    case Ui.DisplaySize.Auto:
-    default: return 1.0
-  }
+  const next = nextDisplaySizePercent(root.displaySizePercent, direction)
+  root.applyDisplaySizePercent(next)
+  const window = root.presentingWindow
+  root.statusText = "Display size: " + displaySizeLabel(next, root.part_displayScaleStore.legacy)
+    + (window ? Sizing.fitDescription(window.launcherSizing, window.maximumFittingPercent) : "")
 }
 
 function invokeShortcut(root, id) {

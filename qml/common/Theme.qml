@@ -110,23 +110,18 @@ QtObject {
   // metrics have always multiplied by this; fonts have not.
   readonly property real fontScale: root.tokens ? root.tokens.scale : 1
 
-  // Display scale grows BOTH layout metrics AND font sizes so the overlay is
-  // not rendered too small on a high-resolution monitor. CommandDeck.qml
-  // computes it from the active screen and binds it here; it stays 1 on a 1080p
-  // display and in the built-in fallback path the QML tests exercise.
+  // The presenting window supplies a logical-workspace scale and one fit factor.
   property real displayScale: 1
-  // Surface density scales fonts and layout equally, independently of the
-  // gentler font growth used for high-resolution displays.
   property real densityScale: 1
+  // The compatibility profile can preserve its original text/layout ratio.
+  // Recommended uses the same multiplier for text and layout.
+  property real textScale: root.displayScale * root.densityScale
 
   // The scale every layout metric multiplies by. Folding the display scale into
   // the shell font scale grows the whole overlay on a 4K panel.
   readonly property real scale: root.fontScale * root.displayScale * root.densityScale
 
-  // Fonts grow more gently than the layout: a 4K overlay should be roomier, but
-  // scaling glyphs by the full display factor makes them oversized. Half the
-  // extra growth keeps text proportionate (displayScale 1.5 -> ~1.25x fonts).
-  readonly property real fontDisplayScale: (1 + (root.displayScale - 1) * 0.5) * root.densityScale
+  readonly property real fontDisplayScale: root.textScale
   readonly property int radius: Math.round(
     (root.tokens ? root.tokens.radius : 14) * root.displayScale * root.densityScale)
   readonly property int radiusSmall: Math.max(0, Math.round(root.radius * 0.55))
@@ -159,9 +154,8 @@ QtObject {
   readonly property string fontFamily: root.tokens
     ? root.tokens.fontFamily
     : "monospace"
-  // Fonts scale with the gentler fontDisplayScale (not the shell font scale) so
-  // a 4K panel enlarges text alongside the boxes without oversizing it.
-  // At displayScale 1 and densityScale 1 these retain their base sizes.
+  // Omarchy font tokens already include the shell font scale; apply zoom and
+  // fitting exactly once, retaining integer logical font sizes.
   readonly property int fontCaption: Math.round(
     (root.tokens ? root.tokens.fontCaption : 10) * root.fontDisplayScale)
   readonly property int fontSmall: Math.round(

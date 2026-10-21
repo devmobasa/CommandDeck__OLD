@@ -219,9 +219,9 @@ QtObject {
           const panel = host.part_integratedDeck.testSurfaceWindow.part_palette
           const bounds = panel.parent
           const settingsStyle = host.part_integratedDeck.testSettingsPanel.theme
-          host.expect(settingsStyle.densityScale === 0.75
+          host.expect(settingsStyle.densityScale === 1
               && Math.abs(settingsStyle.displayScale - host.part_integratedDeck.effectiveDisplayScale) < 0.001,
-            "settings uses compact density while retaining the chosen display preset")
+            "settings keeps full typography with its window's coherent fit factor")
           host.expect(Math.abs(panel.y - (bounds.height - panel.height) / 2) <= 1
               && Math.abs(panel.x - (bounds.width - panel.width) / 2) <= 1,
             "settings is centered horizontally and vertically on its screen")

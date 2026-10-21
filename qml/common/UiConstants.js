@@ -14,7 +14,7 @@ var ProviderSettingsState = Object.freeze({
   Failed: "failed", Unsupported: "unsupported", ConnectionLost: "connection-lost"
 });
 var ButtonVariant = Object.freeze({ Primary: "primary", Secondary: "secondary", Danger: "danger" });
-var DisplaySize = Object.freeze({ Auto: "auto", Small: "small", Default: "default", Large: "large", ExtraLarge: "xlarge" });
+var DisplaySizePercent = Object.freeze({ Minimum: 75, Maximum: 150, Step: 5, ZoomStep: 10, Default: 100 });
 var SettingsPage = Object.freeze({
   Search: "search", Assistant: "assistant", Editors: "editors", Filters: "filters",
   Ai: "ai", Shortcuts: "shortcuts", Customization: "customization"

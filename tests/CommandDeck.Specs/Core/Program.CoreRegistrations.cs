@@ -4,6 +4,10 @@ public static partial class Program
 {
     private static async Task RunCoreRegistrationsAsync( )
     {
+        await RunAsync( "display sizing CLI chooses its profile before creating a fresh catalog",
+            DisplaySizingCliMigratesBeforeCatalogCreationAsync );
+        await RunAsync( "display sizing migration distinguishes fresh installs from existing default users",
+            DisplaySizingMigrationPreservesExistingUsersAsync );
         await RunAsync( "workspace provider preserves identity and orders recent use occupied workspaces and numeric IDs", WorkspacePreviewProviderIdentityAsync );
         await RunAsync( "Hyprland workspace and window actions use Lua dispatch acknowledgements", HyprlandActionDispatchAsync );
         Run( "window placement geometry matches the golden table", WindowPlacementGeometryMatchesGoldenTable );

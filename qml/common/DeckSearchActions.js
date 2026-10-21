@@ -199,9 +199,17 @@ function open(root, payloadJson) {
   // A failed bridge is retried now instead of at the end of its backoff wait.
   root.part_protocol.reconnectNow()
 
-  root.openedScreenName = root.compositor.focusedMonitor && root.compositor.focusedMonitor.name
-    ? root.compositor.focusedMonitor.name
-    : ""
+  const focused = root.compositor.focusedMonitor
+  const screens = root.compositor.screens
+  root.openedScreenName = focused && screens.some(screen => screen.name === focused.name)
+    ? focused.name : screens.length > 0 ? screens[0].name : ""
+  if (root.suspendedForScreen && !payload.query && !payload.filterId) {
+    root.suspendedForScreen = false
+    root.opened = true
+    root.requestSearch()
+    return
+  }
+  root.suspendedForScreen = false
   root.openWorkspaceMruIds = root.workspaceMruIds.slice()
   root.part_navigation.clearHerdrBrowse()
   root.part_navigation.clearOmarchyBrowse()

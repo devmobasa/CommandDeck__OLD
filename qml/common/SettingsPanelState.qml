@@ -93,7 +93,8 @@ FocusScope {
   readonly property var part_shortcutRepeater: parts.shortcutsScroll.part_shortcutRepeater
   readonly property var part_settingsSearch: parts.settingsSearch
   readonly property var part_displayCard: parts.customizationScroll.part_displayCard
-  readonly property var part_displaySizeChoice: parts.customizationScroll.part_displaySizeChoice
+  readonly property var part_displaySizeSlider: parts.customizationScroll.part_displaySizeSlider
+  readonly property var part_displaySizeReset: parts.customizationScroll.part_displaySizeReset
   readonly property var part_layoutCard: parts.customizationScroll.part_layoutCard
   readonly property var part_compactLayoutCheck: parts.customizationScroll.part_compactLayoutCheck
   readonly property var part_rememberSearchesCheck: parts.customizationScroll.part_rememberSearchesCheck
@@ -222,22 +223,12 @@ FocusScope {
   property var iconResolver: function(iconName) { return "" }
   property bool loading: false
   property bool snapshotMutationBusy: false
-  // D13 - the active display-size preset (QML-only, persisted outside the
+  // The active display-size percentage (QML-only, persisted outside the
   // daemon snapshot). The launcher owns persistence; this panel only chooses.
-  property string displaySizePreset: Ui.DisplaySize.Auto
-  readonly property var displaySizeOptions: [
-    { id: Ui.DisplaySize.Auto, title: "Auto", description: "Match the screen (recommended)." },
-    { id: Ui.DisplaySize.Small, title: "Small", description: "90% of the automatic size." },
-    { id: Ui.DisplaySize.Default, title: "Default", description: "The standard size." },
-    { id: Ui.DisplaySize.Large, title: "Large", description: "115% for easier reading." },
-    { id: Ui.DisplaySize.ExtraLarge, title: "Extra large", description: "130% for high-resolution displays." }
-  ]
-  function displaySizeIndex(preset) {
-    for (let index = 0; index < settingsState.owner.displaySizeOptions.length; index++) {
-      if (settingsState.owner.displaySizeOptions[index].id === preset) return index
-    }
-    return 0
-  }
+  property int displaySizePercent: Ui.DisplaySizePercent.Default
+  property bool displaySizeLegacy: false
+  property string displaySizeDescription: ""
+  property int maximumFittingPercent: Ui.DisplaySizePercent.Maximum
   // Compact layout (QML-only, persisted outside the daemon snapshot).
   property bool compactLayout: false
   property bool previewPaneVisible: true
@@ -314,7 +305,8 @@ FocusScope {
     : ""
   signal dismissed()
   signal preferencesChanged(var preferences)
-  signal displaySizeSelected(string preset)
+  signal displaySizePercentSelected(int percent)
+  signal displaySizeRecommendedRequested()
   signal panelTransparencyChanged(bool enabled, int percent)
   signal compactLayoutSelected(bool enabled)
   signal previewPaneSelected(bool visible)

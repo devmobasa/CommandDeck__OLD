@@ -32,6 +32,31 @@ overwrite unless you pass `--force`. Launcher personalization (bookmarks,
 aliases, source visibility, reduced motion, display-size, transparency, layout,
 closing behavior, and color presets) lives outside JSONC: SQLite for daemon-owned preferences, and small
 QML state files under `$XDG_STATE_HOME/commanddeck/` for overlay-only choices.
+Display size is stored as an integer percentage in `display-size` (75–150% in
+5% steps). **Recommended** selects 100% with sizing based on the presenting
+window's logical workspace and Omarchy fonts. Zoom applies equally to text and
+controls. Before scaling down for height, the top margin shrinks only as needed,
+from its usual 12% (at least 54 logical pixels) toward 4% (at least 24); the
+bottom margin stays unchanged. One fit factor then scales text and controls
+together. Settings always describes the launcher, including while Settings is
+open: it shows the requested percentage, “limited to fit” with the largest 5%
+step that fits this screen, and any narrow or scrolling layout. The slider dims
+the track above that maximum while keeping the full 75–150% range and saved
+value. Zoom-key status also names the maximum when limited. The backdrop covers
+the full screen; safe margins keep the launcher toward the top, while Settings
+stays centred.
+
+The separate `display-sizing` file versions this model. Before first opening a
+catalog, the CLI records `logical-v1` for a fresh installation, or `legacy-v1`
+when a catalog or earlier state already exists. The UI upgrades the latter to
+`legacy-v1:PERCENT`, preserving its original text/layout ratio and initial zoom.
+This includes existing default users who never saved a percentage. Legacy preset
+words retain their sizes. Choose **Recommended** in Settings to opt into
+the new model; it persists `logical-v1`. **Ctrl+0** resets the percentage to 100%
+within the current profile and keeps previous sizing for existing users.
+Unknown profiles conservatively keep previous sizing until Recommended is selected.
+Read-only state still applies for the
+current session. No monitor resolution, hardware DPI, or DPR influences Recommended.
 There is no `config migrate` command yet; option renames will need one.
 
 Changes require daemon restart. Index-root/content changes also require

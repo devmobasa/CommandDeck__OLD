@@ -8,6 +8,16 @@ CommandDeck.SettingsPanel {
   required property var host
 
   id: settingsPanel
+  property int displaySizePercentChosen: -1
+  onDisplaySizeRecommendedRequested: {
+    displaySizeLegacy = false
+    displaySizePercentChosen = 100
+    displaySizePercent = 100
+  }
+  onDisplaySizePercentSelected: percent => {
+    displaySizePercentChosen = percent
+    displaySizePercent = percent
+  }
   anchors.fill: parent
   visible: false
   theme: host.part_theme

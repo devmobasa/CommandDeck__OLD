@@ -25,7 +25,7 @@ return await new GalleryCapture( ).RunAsync( args );
 [SupportedOSPlatform( "linux" )]
 sealed partial class GalleryCapture
 {
-    private const string Usage = "Usage: dotnet scripts/capture-gallery.cs [scene...] [--output DIR]";
+    private const string Usage = "Usage: dotnet scripts/capture-gallery.cs [scene...] [--output DIR] [--width PX --height PX --dpr N --percent N --font-scale N]";
     private const string RequestPreview =
         """{"model":"demo-model","stream":true,"messages":[{"role":"system","content":"Answer briefly."},{"role":"user","content":"Explain why the Moon has phases."}]}""";
 
@@ -46,12 +46,14 @@ sealed partial class GalleryCapture
         new( "assistant", "assistant.qml", 3, ["ai-answer.png", "ai-conversation.png", "ai-history.png", "ai-science.png"] ),
         new( "themes", "themes.qml", 3, ["themes.png"] ),
         new( "demo", "demo.qml", 2, ["demo.gif", "demo.mp4"] ),
-        new( "social", "social.qml", 2, ["social-preview.png"] )
+        new( "social", "social.qml", 2, ["social-preview.png"] ),
+        new( "sizing", "sizing.qml", 1, ["launcher.png", "settings.png", "help.png", "actions.png", "confirmation.png", "extension.png"] )
     ];
 
     private string _repository = "";
     private string _gallery = "";
     private string _output = "";
+    private readonly Dictionary<string, double> _sizing = new( StringComparer.Ordinal );
 
     public async Task<int> RunAsync( string[] arguments )
     {
@@ -71,6 +73,17 @@ sealed partial class GalleryCapture
             if ( arguments[index] == "--output" && index + 1 < arguments.Length )
             {
                 _output = Path.GetFullPath( arguments[++index] );
+                continue;
+            }
+
+            if ( arguments[index] is "--width" or "--height" or "--dpr" or "--percent" or "--font-scale" )
+            {
+                var key = arguments[index];
+                if ( ++index >= arguments.Length || !TrySetSizing( key, arguments[index] ) )
+                {
+                    Console.Error.WriteLine( Usage );
+                    return 2;
+                }
                 continue;
             }
 
@@ -95,12 +108,35 @@ sealed partial class GalleryCapture
         }
 
         Directory.CreateDirectory( _output );
-        foreach ( var scene in selected.Count > 0 ? selected : [.. Scenes] )
+        foreach ( var scene in selected.Count > 0 ? selected : [.. Scenes.Where( value => value.Name != "sizing" )] )
         {
             await CaptureAsync( scene );
         }
 
         return 0;
+    }
+
+    private bool TrySetSizing( string key, string text )
+    {
+        if ( !double.TryParse( text, NumberStyles.Float, CultureInfo.InvariantCulture, out var value ) ||
+            !double.IsFinite( value ) || value <= 0 )
+        {
+            return false;
+        }
+
+        var valid = key switch
+        {
+            "--width" or "--height" => value <= 7680 && value == Math.Round( value ),
+            "--dpr" => value <= 3,
+            "--font-scale" => value <= 2,
+            "--percent" => value >= 75 && value <= 150 && value % 5 == 0,
+            _ => false
+        };
+        if ( valid )
+        {
+            _sizing[key[2..]] = value;
+        }
+        return valid;
     }
 
     private async Task CaptureAsync( Scene scene )
@@ -154,7 +190,8 @@ sealed partial class GalleryCapture
             start.ArgumentList.Add( "-p" );
             start.ArgumentList.Add( fixture );
             Isolate( start, fixture );
-            start.Environment["QT_SCALE_FACTOR"] = scene.Scale.ToString( CultureInfo.InvariantCulture );
+            start.Environment["QT_SCALE_FACTOR"] = _sizing.GetValueOrDefault( "dpr", scene.Scale ).ToString( CultureInfo.InvariantCulture );
+            start.Environment["COMMANDDECK_GALLERY_SIZING"] = JsonSerializer.Serialize( _sizing );
             start.Environment["COMMANDDECK_SCREENSHOT_OUTPUT"] = output;
             start.Environment["COMMANDDECK_DEMO_IMAGE"] = new Uri( Path.Combine( fixture, "demo-image.png" ) ).AbsoluteUri;
             start.Environment["COMMANDDECK_PREVIEW_JSON"] = RequestPreview;
@@ -363,10 +400,10 @@ sealed partial class GalleryCapture
             throw new InvalidOperationException( $"{start.FileName} did not start." );
         }
 
+        var stdout = process.StandardOutput.ReadToEndAsync( );
+        var stderr = process.StandardError.ReadToEndAsync( );
         try
         {
-            var stdout = process.StandardOutput.ReadToEndAsync( );
-            var stderr = process.StandardError.ReadToEndAsync( );
             using CancellationTokenSource deadline = new( timeout );
             await process.WaitForExitAsync( deadline.Token );
             var output = Quiet( await stdout + await stderr );
@@ -377,6 +414,14 @@ sealed partial class GalleryCapture
             }
 
             Console.Write( output );
+        }
+        catch ( OperationCanceledException error )
+        {
+            if ( !process.HasExited )
+                process.Kill( entireProcessTree: true );
+            await process.WaitForExitAsync( );
+            Console.Error.WriteLine( Quiet( await stdout + await stderr ) );
+            throw new TimeoutException( $"{start.FileName} did not finish within {timeout}.", error );
         }
         finally
         {

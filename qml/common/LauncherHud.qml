@@ -16,7 +16,7 @@ PanelWindow {
   property bool onLauncherScreen: true
   readonly property string text: hud.host.hudText
   readonly property bool shown: hud.onLauncherScreen && hud.text.length > 0
-  readonly property var theme: hud.host.part_appTheme
+  property var theme: hud.host.part_appTheme
 
   visible: hud.shown
   color: "transparent"

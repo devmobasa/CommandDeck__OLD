@@ -133,14 +133,23 @@ QtObject {
         === "/home/example/.local/state/commanddeck/display-size",
       "the display-size store targets a file under $XDG_STATE_HOME/commanddeck")
     host.part_displayStoreSpec.load()
-    host.expect(host.part_displayStoreSpec.preset === "auto",
-      "a missing display-size file defaults to Auto")
-    host.part_displayStoreSpec.setPreset("large")
-    host.expect(host.part_displayStoreSpec.preset === "large",
-      "the display-size store records the chosen preset")
-    host.part_displayStoreSpec.setPreset("nonsense")
-    host.expect(host.part_displayStoreSpec.preset === "auto",
-      "the display-size store normalizes an unknown preset back to Auto")
+    host.expect(host.part_displayStoreSpec.percent === 100,
+      "loading with display-size I/O disabled defaults to 100 percent")
+    host.part_displayStoreSpec.setPercent(115)
+    host.expect(host.part_displayStoreSpec.percent === 115,
+      "the display-size store records the chosen percentage")
+    const sizes = [
+      ["large", 115], ["xlarge", 130], ["small", 90], ["auto", 100], ["default", 100],
+      ["117", 115], ["400", 150], ["10", 75], ["nonsense", 100], [" 120 \n", 120],
+      [" LARGE \n", 115], ["127", 125], ["128", 130], ["75", 75], ["150", 150],
+      ["+115", 115], ["-10", 75], ["00115", 115], ["", 100], [null, 100], [undefined, 100],
+      ["115.5", 100], ["115percent", 100], ["1e2", 100], ["0x64", 100],
+      ["Infinity", 100], ["NaN", 100], ["constructor", 100], ["__proto__", 100]
+    ]
+    for (const [value, expected] of sizes) {
+      host.expect(host.part_displayStoreSpec.normalize(value) === expected,
+        "display-size file value " + JSON.stringify(value) + " normalizes to " + expected)
+    }
 
     host.expect(host.part_transparencyStoreSpec.filePath
         === "/home/example/.local/state/commanddeck/panel-transparency",

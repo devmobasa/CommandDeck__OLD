@@ -7,6 +7,22 @@ public static partial class Program
 
     public static async Task<int> Main( string[] args )
     {
+        var originalStateHome = Environment.GetEnvironmentVariable( "XDG_STATE_HOME" );
+        var stateHome = Directory.CreateTempSubdirectory( "commanddeck-spec-state-" );
+        Environment.SetEnvironmentVariable( "XDG_STATE_HOME", stateHome.FullName );
+        try
+        {
+            return await RunInIsolatedStateAsync( args );
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable( "XDG_STATE_HOME", originalStateHome );
+            stateHome.Delete( recursive: true );
+        }
+    }
+
+    private static async Task<int> RunInIsolatedStateAsync( string[] args )
+    {
         // Runtimes under test never use the developer's own hey; HEY specs inject
         // theirs, so a plain query gets the same rows on every machine.
         Environment.SetEnvironmentVariable( HeyExecutable.OverrideVariable, HeyExecutable.OverrideOff );

@@ -68,8 +68,8 @@ Rectangle {
       title: "General",
       items: [
         { keys: ["Ctrl+,"], text: "Settings" },
-        { keys: ["Ctrl+=", "Ctrl+-"], text: "Larger or smaller display size" },
-        { keys: ["Ctrl+0"], text: "Automatic display size" },
+        { keys: ["Ctrl+=", "Ctrl+-"], text: "Larger or smaller display size (10% steps)" },
+        { keys: ["Ctrl+0"], text: "Reset display size to 100%" },
         { keys: ["Ctrl+I"], text: "Show or hide the preview pane" },
         { keys: clipboardShortcut ? [root.chordLabel(clipboardShortcut)] : [], text: clipboardShortcut ? "Clipboard History" : "Clipboard History shortcut disabled" },
         { keys: ["F1", "Ctrl+/"], text: "This sheet" },
@@ -181,6 +181,7 @@ Rectangle {
 
         Text {
           Layout.fillWidth: true
+          objectName: "helpHeading"
           text: "Keyboard & filters"
           color: root.theme.text
           font.family: root.theme.fontFamily
@@ -190,6 +191,7 @@ Rectangle {
 
         KeyCap {
           theme: root.theme
+          objectName: "helpDismissHint"
           label: "Esc"
         }
       }
@@ -202,6 +204,7 @@ Rectangle {
 
       ScrollView {
         id: helpScroll
+        objectName: "helpViewport"
 
         Layout.fillWidth: true
         Layout.fillHeight: true
@@ -245,6 +248,7 @@ Rectangle {
 
                   delegate: RowLayout {
                     id: shortcutRow
+                    objectName: "helpShortcutRow"
 
                     required property var modelData
 

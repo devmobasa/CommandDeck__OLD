@@ -20,7 +20,7 @@ CommandDeckState {
   property url themeTokenSource
   owner: root
   readonly property alias part_appTheme: appTheme
-  readonly property alias part_settingsTheme: settingsTheme
+  readonly property alias part_settingsTheme: appTheme
   readonly property alias part_extensionManagementController: extensionManagementController
   readonly property alias part_requestTracker: requestTracker
   readonly property alias part_invocationController: invocationController
@@ -86,19 +86,16 @@ CommandDeckState {
   property bool coachSeen: false
   readonly property string coachStateDir: root.resolveStateDir()
 
-  // D13 display-size preset: mirrors the durable QML-only store. "auto" leaves
-  // sizing to the screen-derived displayScaleFactor; the other presets apply a
-  // multiplier on top of it so a user can fix the launcher size themselves.
-  property string displaySizePreset: Ui.DisplaySize.Auto
-  readonly property real displaySizeMultiplier:
-    root.displaySizeMultiplierFor(root.displaySizePreset)
+  // Mirrors the QML-only store; 100% keeps the current sizing profile's baseline.
+  property int displaySizePercent: Ui.DisplaySizePercent.Default
+  readonly property real displaySizeMultiplier: root.displaySizePercent / 100
+  property var presentingWindow: null
+  property bool suspendedForScreen: false
   // The scale actually handed to the theme, exposed for tests and diagnostics.
-  readonly property real effectiveDisplayScale: appTheme.displayScale
-
-  function displaySizeMultiplierFor(preset) { return DeckDisplayActions.displaySizeMultiplierFor(root, preset) }
+  readonly property real effectiveDisplayScale: root.presentingWindow ? root.presentingWindow.part_appTheme.displayScale : 1
 
   // Applied immediately (the binding below recomputes) and persisted QML-only.
-  function applyDisplaySizePreset(preset) { return DeckDisplayActions.applyDisplaySizePreset(root, preset) }
+  function applyDisplaySizePercent(percent) { return DeckDisplayActions.applyDisplaySizePercent(root, percent) }
   function stepDisplaySize(direction) { return DeckDisplayActions.stepDisplaySize(root, direction) }
   function applyCompactLayout(enabled) { return DeckDisplayActions.applyCompactLayout(root, enabled) }
   function applyPreviewPane(visible) { return DeckDisplayActions.applyPreviewPane(root, visible) }
@@ -190,6 +187,7 @@ CommandDeckState {
 
   Connections {
     target: root.compositor
+    function onScreensChanged() { DeckDisplayActions.reconcileScreens(root) }
     function onFocusedWorkspaceChanged() {
       const workspace = root.compositor.focusedWorkspace
       root.workspaceMruIds = WorkspaceResultOrder.noteRecent(
@@ -460,31 +458,9 @@ CommandDeckState {
 
   function completeReconciliationIfReady() { return DeckConnectionActions.completeReconciliationIfReady(root) }
 
-  // A 4K panel should render the whole overlay about 50% larger than a 1080p
-  // one, on top of whatever the compositor already does. The signal is the
-  // monitor's PHYSICAL height, so a 3840x2160 panel counts as 4K whether it is
-  // driven at scale 1 or fractionally scaled (the owner runs 4K at 1.667 and
-  // still wants the launcher bigger). The launcher's own monitor is preferred;
-  // the attached Screen is the fallback and 1080 the last resort. 1080 -> 1.0
-  // and 2160 -> 1.5, clamped so ultrawide and 8K panels stay sane.
-  readonly property real displayScaleFactor: {
-    var panelHeight = 0
-    const monitor = root.desktopIntegration.focusedMonitor
-    if (monitor && monitor.height > 0) {
-      panelHeight = monitor.height
-    } else if (Screen.height > 0) {
-      panelHeight = Screen.height
-    }
-    if (panelHeight <= 0) return 1
-    const raw = 1 + (panelHeight - 1080) / 1080 * 0.5
-    return Math.max(1, Math.min(2, raw))
-  }
-
+  // Shared colours and Omarchy tokens. Each presenting window owns its metrics.
   Theme {
     id: appTheme
-    // D13 - the screen-derived factor composed with the user's display-size
-    // preset multiplier (Auto -> 1, so Auto is exactly displayScaleFactor).
-    displayScale: root.displayScaleFactor * root.displaySizeMultiplier
     reduceMotion: root.launcherPreferences
       ? root.launcherPreferences.reduceMotion === true
       : false
@@ -493,17 +469,6 @@ CommandDeckState {
     tokenSource: root.themeTokenSource
     overrideHostColors: displayPreferences.colorThemeStore.overridesHost
     deckColors: displayPreferences.colorThemeStore.colors
-  }
-
-  Theme {
-    id: settingsTheme
-    loadShellTokens: false
-    tokens: appTheme.tokens
-    displayScale: appTheme.displayScale
-    densityScale: 0.75
-    reduceMotion: appTheme.reduceMotion
-    overrideHostColors: appTheme.overrideHostColors
-    deckColors: appTheme.deckColors
   }
 
   Component.onCompleted: {

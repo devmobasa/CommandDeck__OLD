@@ -4,6 +4,7 @@ QtObject {
   property string integrationId: "generic"
   property DesktopCapabilities capabilities: DesktopCapabilities { }
   property var screens: []
+  property var monitors: []
   property var focusedMonitor: null
   property var focusedWorkspace: null
   property var activeWorkspace: null

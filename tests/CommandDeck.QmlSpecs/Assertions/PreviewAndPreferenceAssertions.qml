@@ -358,13 +358,13 @@ QtObject {
       "the fallback theme defaults to a 1x display scale and base metrics")
     host.part_motionTheme.displayScale = 1.5
     host.expect(Math.abs(host.part_motionTheme.scale - 1.5) < 0.001
-        && Math.abs(host.part_motionTheme.fontDisplayScale - 1.25) < 0.001
-        && host.part_motionTheme.fontBody === 15
+        && Math.abs(host.part_motionTheme.fontDisplayScale - 1.5) < 0.001
+        && host.part_motionTheme.fontBody === 18
         && host.part_motionTheme.rowHeight === 69
         && host.part_motionTheme.paletteWidth === 1350,
-      "the display scale grows layout fully and fonts gently (1.5x boxes, 1.25x fonts)")
+      "the display scale grows layout and fonts equally")
     host.part_motionTheme.densityScale = 0.75
-    host.expect(host.part_motionTheme.fontBody === 11
+    host.expect(host.part_motionTheme.fontBody === 14
         && host.part_motionTheme.rowHeight === 52
         && host.part_motionTheme.paletteWidth === 1013
         && host.part_motionTheme.inputHeight === 52,

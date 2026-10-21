@@ -8,6 +8,7 @@ DesktopIntegration {
   property var shell: null
   integrationId: "hyprland"
   screens: Quickshell.screens
+  monitors: Hyprland.monitors.values
   focusedMonitor: Hyprland.focusedMonitor
   focusedWorkspace: Hyprland.focusedWorkspace
   activeWorkspace: Hyprland.focusedWorkspace

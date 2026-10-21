@@ -24,12 +24,13 @@ Scope {
   readonly property var palette: stage.parseJson(Quickshell.env("COMMANDDECK_GALLERY_THEME"), null)
   readonly property var icons: stage.parseJson(Quickshell.env("COMMANDDECK_GALLERY_ICONS"), ({}))
   readonly property string outputDirectory: Quickshell.env("COMMANDDECK_SCREENSHOT_OUTPUT")
+  readonly property var sizingOptions: stage.parseJson(Quickshell.env("COMMANDDECK_GALLERY_SIZING"), ({}))
 
   readonly property alias deck: deck
   readonly property alias content: content
   readonly property alias panel: panel
   readonly property alias view: view
-  readonly property alias theme: deck.part_appTheme
+  readonly property alias theme: display.theme
   // Children of the stage render above the whole window; panelOverlays render
   // inside the launcher panel, above its content.
   default property alias overlays: overlayLayer.data
@@ -77,8 +78,8 @@ Scope {
 
   function applyFrame(frame) {
     const size = frame && frame.width ? frame : { width: 980, height: 680 }
-    view.width = size.width
-    view.height = size.height
+    view.width = stage.sizingOptions.width || size.width
+    view.height = stage.sizingOptions.height || size.height
   }
 
   function setResults(query, results, status) {
@@ -143,6 +144,17 @@ Scope {
       part_searchSession.available = false
       part_clipboardController.available = false
       if (stage.palette) part_appTheme.tokens = stage.omarchyTokens(stage.palette)
+      const fontScale = stage.sizingOptions["font-scale"] || 1
+      if (fontScale !== 1) {
+        const tokens = stage.omarchyTokens(stage.palette || {
+          background: "#151a21", foreground: "#f1f1f1", accent: "#8ab4f8", red: "#ff8d8d"
+        })
+        tokens.scale = fontScale
+        for (const key of ["fontCaption", "fontSmall", "fontBody", "fontSubtitle", "fontTitle", "fontHeading",
+            "panelPadding", "rowPaddingX", "gap"]) tokens[key] = Math.round(tokens[key] * fontScale)
+        part_appTheme.tokens = tokens
+      }
+      applyDisplaySizePercent(stage.sizingOptions.percent || 100)
     }
   }
 
@@ -150,9 +162,20 @@ Scope {
   QtObject {
     id: surface
     readonly property var host: deck
+    readonly property var part_appTheme: display.theme
+    readonly property var part_settingsTheme: display.theme
+    readonly property string displayDescription: display.description
+    readonly property bool narrow: display.sizing.narrow
     readonly property var part_palette: panel
     readonly property bool visible: true
     function openActionPanel() { }
+  }
+
+  Deck.WindowDisplay {
+    id: display
+    host: deck
+    width: view.width
+    height: view.height
   }
 
   Window {
@@ -168,13 +191,15 @@ Scope {
       color: view.color
     }
 
-    Rectangle {
+    Deck.SizingViewport {
       id: panel
       anchors.centerIn: parent
-      width: deck.part_appTheme.paletteWidth
-      height: deck.part_appTheme.paletteHeight
-      color: deck.part_appTheme.panelBackground
-      radius: deck.part_appTheme.radius
+      width: display.sizing.panelWidth
+      height: display.sizing.panelHeight
+      requestedWidth: display.sizing.contentWidth
+      requestedHeight: display.sizing.contentHeight
+      color: display.theme.panelBackground
+      radius: display.theme.radius
       border.width: 1
       border.color: deck.part_appTheme.border
 

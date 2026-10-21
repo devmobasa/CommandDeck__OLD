@@ -10,10 +10,18 @@ QtObject {
 
   required property var host
 
+  readonly property Connections availability: Connections {
+    target: preferences.host
+    function onDaemonAvailableChanged() {
+      if (preferences.host.daemonAvailable && preferences.displayScaleStore.active)
+        preferences.displayScaleStore.load()
+    }
+  }
+
   readonly property DisplayScaleStore displayScaleStore: DisplayScaleStore {
     active: !preferences.host.testMode
     stateDir: preferences.host.coachStateDir
-    onChanged: preferences.host.displaySizePreset = preferences.displayScaleStore.preset
+    onChanged: preferences.host.displaySizePercent = preferences.displayScaleStore.percent
   }
 
   readonly property TransparencyStore transparencyStore: TransparencyStore {

@@ -21,7 +21,7 @@ Item {
     id: aliasDialog
     anchors.fill: parent
     z: 16
-    theme: dialogs.surface.host.part_appTheme
+    theme: dialogs.surface.part_appTheme
     opened: dialogs.surface.host.aliasDialogOpen
     result: dialogs.surface.host.aliasTarget
     errorText: dialogs.surface.host.aliasDialogError
@@ -38,7 +38,7 @@ Item {
     id: aiPreflightSurface
     anchors.fill: parent
     z: 26
-    theme: dialogs.surface.host.part_appTheme
+    theme: dialogs.surface.part_appTheme
     opened: dialogs.surface.host.part_aiController.state === Ui.AiState.Preflight
     preflight: dialogs.surface.host.part_aiController.preflight
     onAccepted: {
@@ -57,7 +57,7 @@ Item {
     id: aiStreamingSurface
     anchors.fill: parent
     z: 26
-    theme: dialogs.surface.host.part_appTheme
+    theme: dialogs.surface.part_appTheme
     controller: dialogs.surface.host.part_aiController
     saveDirectory: dialogs.surface.host.aiSaveDirectory
     opened: (dialogs.surface.host.answerMode !== "direct" || dialogs.surface.host.aiSurfaceExpanded)
@@ -92,7 +92,7 @@ Item {
     wanted: dialogs.surface.presenting && dialogs.surface.host.agentOpen
     sourceComponent: AgentSurface {
       id: agentView
-      theme: dialogs.surface.host.part_appTheme
+      theme: dialogs.surface.part_appTheme
       controller: dialogs.surface.host.part_agentController
       saveDirectory: dialogs.surface.host.aiSaveDirectory
       opened: agentSurface.presented && dialogs.surface.host.agentOpen
@@ -146,7 +146,7 @@ Item {
     parent: dialogs.container
     anchors.fill: parent
     z: 20
-    theme: dialogs.surface.host.part_appTheme
+    theme: dialogs.surface.part_appTheme
     readonly property var content: DeckConfirmationActions.confirmationContent(dialogs.surface.host)
     opened: dialogs.surface.host.confirmationOpen
     prompt: deckConfirmation.content.prompt
@@ -160,7 +160,7 @@ Item {
     parent: dialogs.container
     anchors.fill: parent
     z: 25
-    theme: dialogs.surface.host.part_appTheme
+    theme: dialogs.surface.part_appTheme
     opened: dialogs.surface.host.part_invocationController.actionInputOpen
     action: dialogs.surface.host.part_invocationController.actionInputAction
     onSubmitted: values => {
@@ -179,7 +179,7 @@ Item {
     id: detailDialog
     anchors.fill: parent
     z: 24
-    theme: dialogs.surface.host.part_appTheme
+    theme: dialogs.surface.part_appTheme
     opened: dialogs.surface.host.detailDialogRequested
     title: dialogs.surface.host.dialogTitle
     text: dialogs.surface.host.detailContent

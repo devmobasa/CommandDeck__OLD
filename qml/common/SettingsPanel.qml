@@ -97,6 +97,15 @@ SettingsPanelState {
 
   focus: visible
   readonly property bool settingsTabFence: true
+  Connections {
+    target: root.Window.window
+    function onActiveFocusItemChanged() {
+      Qt.callLater(function() {
+        const window = root.Window.window
+        if (window) SettingsNavigationActions.revealControl(root, window.activeFocusItem)
+      })
+    }
+  }
   Accessible.role: Accessible.Dialog
   Accessible.name: "CommandDeck settings"
   readonly property alias closeControl: closeButton
@@ -190,7 +199,8 @@ SettingsPanelState {
   readonly property alias savedSearchShortcutControl: root.part_savedSearchShortcut
   readonly property alias savedSearchSaveControl: root.part_savedSearchSave
   readonly property alias preferredEditorControl: root.part_preferredEditorChoice
-  readonly property alias displaySizeControl: root.part_displaySizeChoice
+  readonly property alias displaySizeControl: root.part_displaySizeSlider
+  readonly property alias displaySizeResetControl: root.part_displaySizeReset
   readonly property alias panelTransparencyControl: root.part_panelTransparencyCheck
   readonly property alias compactLayoutControl: root.part_compactLayoutCheck
   readonly property alias rememberSearchesControl: root.part_rememberSearchesCheck
@@ -473,6 +483,7 @@ SettingsPanelState {
       visible: root.filteredPages.length > 0
       Layout.fillWidth: true
       Layout.fillHeight: true
+      Layout.minimumHeight: 0
       spacing: Math.round(18 * root.theme.scale)
 
       SettingsNav {
@@ -513,6 +524,7 @@ SettingsPanelState {
         host: root
         Layout.fillWidth: true
         Layout.minimumWidth: 0
+        Layout.minimumHeight: 0
         Layout.fillHeight: true
       }
     }
