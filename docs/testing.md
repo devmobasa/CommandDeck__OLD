@@ -260,6 +260,24 @@ components together and reports assertion and named event-test counts separately
 The production-host journey waits for request, row, and focus readiness with
 bounded deadlines. Its delayed-search and delayed-result fixtures exercise
 asynchronous replacement without changing production timings.
+Kept-search journeys enumerate success and failure before Escape, after Escape,
+after reopening, after a second close, after a second reopen, and after editing.
+Real Enter, Escape, and editing keys check final restoration and focus. Query
+and filter edits, including edits back to the same text, create new search
+identities; reopening preserves the retained identity. Detached replies leave
+visibility, focus, output, and requests alone. `tst_search_retention.qml` also
+checks overlapping actions, one-time completion, revision reuse, and pruning
+when a revision is edited away, replaced, dropped, or expires. Its slow-action
+regression takes 121 seconds: success must invalidate both a current search and
+one kept shortly before the former two-minute deadline. Associations live as
+long as their revision remains current or restorable; only the kept search has
+an expiry, driven by a QML elapsed-time timer.
+
+`OmarchyCloseJourneyAssertions.qml` instantiates the production `qml/omarchy`
+plugin. Real keys accept an action from `alpha`, edit to `beta`, and press Escape.
+The fake shell receives the deferred `hide` and calls the plugin's `close()`
+again before reopening. Reopening keeps `beta`; editing to `gamma` and closing
+again verifies that a new session updates retention and restores search focus.
 
 Saved-search shortcut journeys use one monitor and wait for the Qt window to
 be active as well as the expected editor to have focus, including after reopen.
@@ -368,10 +386,18 @@ request socket. This is the dispatcher that the hotkey binding calls. The script
 then measures the time until the event socket reports `openlayer>>commanddeck`.
 It toggles again and measures the time until `closelayer>>commanddeck`. It
 prints each sample, then the nearest-rank p50 and p95, the minimum, and the
-maximum. The script never types keys, so the result does not include the time
-for a key press to reach Hyprland's binding. `--path shell` starts
+maximum, with one 250 ms settle after each open/close cycle. Cleanup always
+sends `omarchy-shell shell hide local.commanddeck`, including after a layer
+event timeout or cancellation with Ctrl+C or SIGTERM, so a late open cannot
+leave the launcher visible. Hide runs in a separate session, away from the
+terminal's process group, with a two-second timeout and one retry. Cancellation
+waits for cleanup before exiting.
+The script never types keys, so the result does not include the time for a key press to
+reach Hyprland's binding. `--path shell` starts
 `omarchy-shell shell toggle` for each toggle. This is the process-per-press path
 of the earlier binding, for comparison.
+The timeout covers the toggle command and its matching layer event. Cancellation
+or timeout terminates and awaits a pending shell toggle before protected hide.
 
 The script refuses to run without `--live` or without a Hyprland session. It
 also refuses while `commanddeck:toggle` is not registered or CommandDeck is
@@ -382,8 +408,15 @@ the result, because latency depends on the machine.
 `--self-test` needs no session. Run it from the repository root. It checks event
 matching, layer and shortcut parsing, options, session refusal, and percentiles
 on recorded lines. It also checks that `CommandDeckWindow.qml` declares the
-`commanddeck` layer namespace that the script measures. The picker and the HUD
-use `commanddeck-picker` and `commanddeck-hud`.
+`commanddeck` layer namespace that the script measures. Isolated child processes
+use private Hyprland sockets and a fake shell to check cleanup when a pending
+open times out or receives SIGINT or SIGTERM. They also signal the entire
+measurement process group during a deliberately delayed hide and verify retry
+after failure or timeout; they do not use the desktop.
+Hung `--path shell` toggles also receive an open event before SIGINT, SIGTERM,
+or the toggle deadline. These checks require the toggle process to exit before
+the protected hide starts, and require the measurement to finish cleanup.
+The picker and the HUD use `commanddeck-picker` and `commanddeck-hud`.
 
 ## C# formatting
 

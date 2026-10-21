@@ -109,6 +109,7 @@ ProtocolClient 1.0 ProtocolClient.qml
 ProtocolRequestTracker 1.0 ProtocolRequestTracker.qml
 QueryHistoryController 1.0 QueryHistoryController.qml
 SearchSessionController 1.0 SearchSessionController.qml
+SearchRetentionController 1.0 SearchRetentionController.qml
 QueryHistorySurface 1.0 QueryHistorySurface.qml
 QueryRecallController 1.0 QueryRecallController.qml
 ResultIcon 1.0 ResultIcon.qml

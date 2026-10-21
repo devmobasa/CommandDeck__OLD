@@ -65,7 +65,22 @@ QtObject {
           host.expect(deck.currentResult.title === "beta.txt",
             "a hover update without movement keeps the keyboard selection")
 
-          events.keyClick(Qt.Key_X)
+          const list = deck.testSurfaceWindow.part_resultList
+          events.mouseMove(list, 30, target.y + target.height + list.spacing + target.height / 2)
+          host.expect(deck.currentResult.title === "beta.txt",
+            "moving into empty results space keeps the keyboard selection")
+          deck.requestSearch()
+          deliver(latestSearch(""), ["alpha.txt", "beta.txt", "gamma.txt", "delta.txt", "epsilon.txt"])
+        }
+      },
+      {
+        ready: () => row(4) !== null && row(4).height > 0,
+        message: "new rows arrive under the pointer resting in empty results space",
+        action: () => {
+          host.expect(deck.currentResult.title === "beta.txt",
+            "a row appearing under a resting pointer keeps the keyboard selection")
+          host.expect(deck.testSearchInput.activeFocus, "row delivery keeps search focused")
+          host.part_hostEvents.keyClick(Qt.Key_X)
           host.expect(deck.testSearchInput.text === "x" && deck.queryText === "x",
             "typing right after hovering edits the query")
         }

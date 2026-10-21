@@ -143,6 +143,7 @@ function invokeAction(root, result, action, confirmed, inputValues, fromUndo) {
     || action.kind === Protocol.ActionKinds.HerdrOpenProject
   const requestId = ++root.requestSequence
   if (!root.part_invocationController.begin(requestId, refreshAfterAction, herdrEditPending, action.kind, action.closeAfterAction)) return
+  root.part_searchRetention.begin(requestId)
   // A change whose row carries its hidden undo is offered for undo once it succeeds.
   const undo = fromUndo !== true && result && result.actions
     ? result.actions.find(value => value.hidden === true && value.id === Protocol.UndoActions.Prefix + action.id)
@@ -169,6 +170,7 @@ function runFileSelection(root, actionId) {
   const requestId = ++root.requestSequence
   const copying = actionId === Protocol.FileSelectionActionIds.CopyPaths ? Protocol.ActionKinds.CopyText : ""
   if (!root.part_invocationController.begin(requestId, false, false, copying)) return
+  root.part_searchRetention.begin(requestId)
   root.part_protocol.send({ version: Protocol.Version, requestId: requestId,
     operation: Protocol.Operations.FilesBatch, actionId: actionId })
 }

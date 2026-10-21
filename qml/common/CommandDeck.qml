@@ -276,7 +276,13 @@ CommandDeckState {
   // to that empty query rather than a stray "?".
   function maybeHandleFilterSentinel() { return DeckHelpActions.maybeHandleFilterSentinel(root) }
 
-  onQueryTextChanged: root.maybeHandleFilterSentinel()
+  onQueryTextChanged: {
+    root.part_searchRetention.edited()
+    root.maybeHandleFilterSentinel()
+  }
+  onActiveFiltersChanged: {
+    root.part_searchRetention.edited()
+  }
 
   function resultStatus(list) { return DeckHelpActions.resultStatus(root, list) }
 

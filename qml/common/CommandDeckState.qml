@@ -100,12 +100,17 @@ Item {
   // The details and file preview pane beside the results (QML-only).
   property bool previewPaneVisible: true
   // Closing and reopening (QML-only): Escape may clear the search first, and a
-  // search the user closed is kept this long. lastSearch holds it meanwhile; an
-  // action that ran and closed the launcher sets forgetSearchOnClose instead.
+  // search the user closed is kept this long. Retention owns search identity
+  // and pending actions independently of the visible launcher session.
   property bool escapeClearsSearch: false
   property int keepSearchSeconds: 0
-  property var lastSearch: null
-  property bool forgetSearchOnClose: false
+  property alias lastSearch: searchRetention.retainedSearch
+  property alias forgetSearchOnClose: searchRetention.consumed
+  readonly property alias part_searchRetention: searchRetention
+  SearchRetentionController {
+    id: searchRetention
+    keepMilliseconds: sessionState.keepSearchSeconds * 1000
+  }
   // A short message left on screen after an action closes the launcher.
   property string hudText: ""
   readonly property alias part_hudTimer: hudTimer

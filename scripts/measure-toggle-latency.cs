@@ -1,6 +1,7 @@
 #!/usr/bin/env dotnet
 #:property PublishAot=false
 #:property RestorePackagesWithLockFile=false
+#:include ./measure-toggle-latency.self-test.cs
 
 // Manual acceptance check for an installed CommandDeck on a live Omarchy
 // session. It toggles the launcher the way the hotkey does, by dispatching the
@@ -8,11 +9,12 @@
 // times how long the launcher's layer surface takes to map, as reported by
 // `openlayer>>commanddeck` on Hyprland's event socket. It then closes the
 // launcher again. It never types keys and refuses to run without a Hyprland
-// session. `--self-test` checks its parsing and statistics on recorded lines.
+// session. `--self-test` checks parsing, statistics and isolated cancellation.
 
 using System.Diagnostics;
 using System.Globalization;
 using System.Net.Sockets;
+using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Text;
 using System.Text.Json;
@@ -36,7 +38,7 @@ static class ToggleLatency
 
         --live         Toggle the launcher on this Hyprland session and time it (required).
         --samples N    Open/close cycles to time, 1-200 (default 20).
-        --timeout-ms   Longest wait for each layer event, 100-10000 (default 2000).
+        --timeout-ms   Longest wait for each toggle and layer event, 100-10000 (default 2000).
         --path         global: Hyprland's global dispatcher, as the hotkey does (default).
                        shell: start `omarchy-shell shell toggle` for each toggle, for comparison.
         """;
@@ -45,7 +47,7 @@ static class ToggleLatency
     {
         if ( args is ["--self-test"] )
         {
-            return SelfTest.Run( );
+            return await SelfTest.RunAsync( );
         }
 
         Options options;
@@ -67,11 +69,20 @@ static class ToggleLatency
             return 2;
         }
 
-        await using var session = await HyprlandSession.ConnectAsync( Environment.GetEnvironmentVariable );
-        return await MeasureAsync( session, options );
+        using RunCancellation cancellation = new( );
+        try
+        {
+            await using var session = await HyprlandSession.ConnectAsync( Environment.GetEnvironmentVariable, cancellation.Token );
+            return await MeasureAsync( session, options, cancellation.Token );
+        }
+        catch ( OperationCanceledException ) when ( cancellation.Token.IsCancellationRequested )
+        {
+            Console.Error.WriteLine( "Measurement cancelled; cleanup finished." );
+            return 130;
+        }
     }
 
-    private static async Task<int> MeasureAsync( HyprlandSession session, Options options )
+    private static async Task<int> MeasureAsync( HyprlandSession session, Options options, CancellationToken cancellationToken )
     {
         if ( !LayerEvents.HasShortcut( await session.RequestAsync( "j/globalshortcuts" ) ) )
         {
@@ -87,15 +98,12 @@ static class ToggleLatency
 
         List<double> opens = [];
         List<double> closes = [];
-        var open = false;
         try
         {
             for ( var sample = 1; sample <= options.Samples; sample++ )
             {
-                var opened = await ToggleAsync( session, options, "openlayer" );
-                open = opened is not null;
-                var closed = open ? await ToggleAsync( session, options, "closelayer" ) : null;
-                open = open && closed is null;
+                var opened = await ToggleAsync( session, options, "openlayer", cancellationToken );
+                var closed = opened is not null ? await ToggleAsync( session, options, "closelayer", cancellationToken ) : null;
                 if ( opened is null || closed is null )
                 {
                     Console.Error.WriteLine( $"Sample {sample}: no {(opened is null ? "openlayer" : "closelayer")}>>{Namespace} event within {options.TimeoutMilliseconds} ms." );
@@ -105,16 +113,13 @@ static class ToggleLatency
                 opens.Add( opened.Value );
                 closes.Add( closed.Value );
                 Console.WriteLine( $"sample {sample,3}: open {opened.Value,7:F1} ms   close {closed.Value,7:F1} ms" );
-                await Task.Delay( options.SettleMilliseconds );
+                await Task.Delay( 250, cancellationToken );
             }
         }
         finally
         {
-            // A late close event may still be on its way; toggle only a launcher that is open.
-            if ( open && LayerEvents.HasLayer( await session.RequestAsync( "j/layers" ), Namespace ) )
-            {
-                await session.ToggleAsync( options.Via );
-            }
+            // Hide is idempotent even if the open event timed out or the close event is late.
+            await HyprlandSession.HideAsync( );
         }
 
         Console.WriteLine( Percentiles.Describe( "open ", opens ) );
@@ -123,32 +128,64 @@ static class ToggleLatency
     }
 
     // Milliseconds from the toggle request to the matching layer event, or null.
-    private static async Task<double?> ToggleAsync( HyprlandSession session, Options options, string kind )
+    private static async Task<double?> ToggleAsync( HyprlandSession session, Options options, string kind, CancellationToken cancellationToken )
     {
+        cancellationToken.ThrowIfCancellationRequested( );
         session.DrainEvents( );
         var started = Stopwatch.GetTimestamp( );
-        await session.ToggleAsync( options.Via );
-        using CancellationTokenSource timeout = new( options.TimeoutMilliseconds );
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource( cancellationToken );
+        timeout.CancelAfter( options.TimeoutMilliseconds );
         try
         {
+            await session.ToggleAsync( options.Via, timeout.Token );
             while ( true )
             {
                 var received = await session.Events.ReadAsync( timeout.Token );
                 if ( LayerEvents.Matches( received.Line, kind, Namespace ) )
                 {
-                    await Task.Delay( options.SettleMilliseconds );
                     return Stopwatch.GetElapsedTime( started, received.Timestamp ).TotalMilliseconds;
                 }
             }
         }
-        catch ( OperationCanceledException )
+        catch ( OperationCanceledException ) when ( !cancellationToken.IsCancellationRequested )
         {
             return null;
         }
     }
 }
 
-sealed record Options( int Samples, int TimeoutMilliseconds, string Via, int SettleMilliseconds )
+sealed class RunCancellation : IDisposable
+{
+    private readonly CancellationTokenSource _stop = new( );
+    private readonly PosixSignalRegistration _terminate;
+
+    public RunCancellation( )
+    {
+        Console.CancelKeyPress += Cancel;
+        _terminate = PosixSignalRegistration.Create( PosixSignal.SIGTERM, context =>
+        {
+            context.Cancel = true;
+            _stop.Cancel( );
+        } );
+    }
+
+    public CancellationToken Token => _stop.Token;
+
+    private void Cancel( object? sender, ConsoleCancelEventArgs args )
+    {
+        args.Cancel = true;
+        _stop.Cancel( );
+    }
+
+    public void Dispose( )
+    {
+        Console.CancelKeyPress -= Cancel;
+        _terminate.Dispose( );
+        _stop.Dispose( );
+    }
+}
+
+sealed record Options( int Samples, int TimeoutMilliseconds, string Via )
 {
     public static Options Parse( IReadOnlyList<string> args )
     {
@@ -180,7 +217,7 @@ sealed record Options( int Samples, int TimeoutMilliseconds, string Via, int Set
             }
         }
 
-        return new( samples, timeout, via, 250 );
+        return new( samples, timeout, via );
     }
 
     private static int Number( IReadOnlyList<string> args, int index, int minimum, int maximum ) =>
@@ -284,11 +321,11 @@ sealed class HyprlandSession : IAsyncDisposable
             : $"Hyprland's sockets are missing in {directory}.";
     }
 
-    public static async Task<HyprlandSession> ConnectAsync( Func<string, string?> environment )
+    public static async Task<HyprlandSession> ConnectAsync( Func<string, string?> environment, CancellationToken cancellationToken )
     {
         var directory = Path.Combine( environment( "XDG_RUNTIME_DIR" )!, "hypr", environment( "HYPRLAND_INSTANCE_SIGNATURE" )! );
         Socket events = new( AddressFamily.Unix, SocketType.Stream, ProtocolType.Unspecified );
-        await events.ConnectAsync( new UnixDomainSocketEndPoint( Path.Combine( directory, ".socket2.sock" ) ) );
+        await events.ConnectAsync( new UnixDomainSocketEndPoint( Path.Combine( directory, ".socket2.sock" ) ), cancellationToken );
         return new( Path.Combine( directory, ".socket.sock" ), events );
     }
 
@@ -309,25 +346,11 @@ sealed class HyprlandSession : IAsyncDisposable
         return Encoding.UTF8.GetString( reply.ToArray( ) );
     }
 
-    public async Task ToggleAsync( string via )
+    public async Task ToggleAsync( string via, CancellationToken cancellationToken )
     {
         if ( via == "shell" )
         {
-            ProcessStartInfo start = new( ToggleLatency.ShellToggle[0] ) { RedirectStandardOutput = true, RedirectStandardError = true };
-            foreach ( var argument in ToggleLatency.ShellToggle[1..] )
-            {
-                start.ArgumentList.Add( argument );
-            }
-
-            using var process = Process.Start( start ) ?? throw new InvalidOperationException( "omarchy-shell did not start." );
-            var output = process.StandardOutput.ReadToEndAsync( );
-            var error = process.StandardError.ReadToEndAsync( );
-            await process.WaitForExitAsync( );
-            if ( process.ExitCode != 0 )
-            {
-                throw new InvalidOperationException( $"omarchy-shell exited with {process.ExitCode}: {await error}{await output}" );
-            }
-
+            await RunShellAsync( ToggleLatency.ShellToggle[1..], cancellationToken: cancellationToken );
             return;
         }
 
@@ -335,6 +358,86 @@ sealed class HyprlandSession : IAsyncDisposable
         if ( reply != "ok" )
         {
             throw new InvalidOperationException( $"Hyprland rejected `{ToggleLatency.DispatchRequest}`: {reply}" );
+        }
+    }
+
+    public static async Task HideAsync( )
+    {
+        for ( var attempt = 0; ; attempt++ )
+        {
+            try
+            {
+                await RunShellAsync( ["shell", "hide", "local.commanddeck"], isolated: true );
+                return;
+            }
+            catch ( Exception exception ) when ( attempt == 0 && exception is
+                InvalidOperationException or TimeoutException or System.ComponentModel.Win32Exception or IOException )
+            {
+                Console.Error.WriteLine( $"Hide failed; retrying once: {exception.Message}" );
+            }
+        }
+    }
+
+    private static async Task RunShellAsync( string[] arguments, bool isolated = false, CancellationToken cancellationToken = default )
+    {
+        ProcessStartInfo start = new( isolated ? "/usr/bin/setsid" : ToggleLatency.ShellToggle[0] )
+        {
+            RedirectStandardOutput = true,
+            RedirectStandardError = true
+        };
+        if ( isolated )
+        {
+            start.ArgumentList.Add( "--wait" );
+            start.ArgumentList.Add( ToggleLatency.ShellToggle[0] );
+        }
+
+        foreach ( var argument in arguments )
+        {
+            start.ArgumentList.Add( argument );
+        }
+
+        using var process = Process.Start( start );
+        if ( process is null )
+        {
+            throw new InvalidOperationException( "omarchy-shell did not start." );
+        }
+
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource( cancellationToken );
+        if ( isolated )
+        {
+            timeout.CancelAfter( TimeSpan.FromSeconds( 2 ) );
+        }
+
+        var output = process.StandardOutput.ReadToEndAsync( timeout.Token );
+        var error = process.StandardError.ReadToEndAsync( timeout.Token );
+        try
+        {
+            await process.WaitForExitAsync( timeout.Token );
+            await Task.WhenAll( output, error );
+        }
+        catch ( OperationCanceledException ) when ( timeout.IsCancellationRequested )
+        {
+            if ( !process.HasExited )
+            {
+                process.Kill( entireProcessTree: true );
+            }
+
+            await process.WaitForExitAsync( CancellationToken.None ).WaitAsync( TimeSpan.FromSeconds( 2 ), CancellationToken.None );
+            try
+            {
+                await Task.WhenAll( output, error );
+            }
+            catch ( OperationCanceledException )
+            {
+            }
+
+            cancellationToken.ThrowIfCancellationRequested( );
+            throw new TimeoutException( "omarchy-shell did not finish within two seconds." );
+        }
+
+        if ( process.ExitCode != 0 )
+        {
+            throw new InvalidOperationException( $"omarchy-shell exited with {process.ExitCode}: {await error}{await output}" );
         }
     }
 
@@ -391,7 +494,7 @@ static class SelfTest
         {"DP-1":{"levels":{"0":[{"namespace":"omarchy-background"}],"3":[{"address":"0x1","namespace":"commanddeck"}]}}}
         """;
 
-    public static int Run( )
+    public static async Task<int> RunAsync( )
     {
         List<string> failures = [];
         void Check( bool condition, string name )
@@ -425,7 +528,7 @@ static class SelfTest
         Check( Throws( ( ) => Percentiles.NearestRank( [], 0.5 ) ), "no samples is an error" );
 
         Check( Throws( ( ) => Options.Parse( [] ) ), "measurement requires --live" );
-        Check( Options.Parse( ["--live", "--samples", "5", "--path", "shell"] ) == new Options( 5, 2000, "shell", 250 ), "options parse" );
+        Check( Options.Parse( ["--live", "--samples", "5", "--path", "shell"] ) == new Options( 5, 2000, "shell" ), "options parse" );
         Check( Throws( ( ) => Options.Parse( ["--live", "--samples", "0"] ) ) && Throws( ( ) => Options.Parse( ["--live", "--path", "keys"] ) ), "invalid options are rejected" );
 
         Check( HyprlandSession.Refusal( static _ => null, static _ => true ) is not null, "no Hyprland session is refused" );
@@ -435,6 +538,16 @@ static class SelfTest
         var window = Path.Combine( "qml", "common", "CommandDeckWindow.qml" );
         Check( File.Exists( window ) && File.ReadAllText( window ).Contains( $"WlrLayershell.namespace: \"{ToggleLatency.Namespace}\"", StringComparison.Ordinal ),
             "the launcher window declares the measured namespace (run from the repository root)" );
+
+        foreach ( var signal in new[] { "SIGINT", "SIGTERM", "timeout", "group-SIGINT", "retry", "retry-timeout" } )
+        {
+            Check( await CleanupProcessTest.RunAsync( signal ), $"{signal} during a pending open awaits launcher cleanup" );
+        }
+
+        foreach ( var signal in new[] { "SIGINT", "SIGTERM", "timeout" } )
+        {
+            Check( await CleanupProcessTest.RunAsync( signal, "shell" ), $"{signal} during a hung shell toggle terminates it before cleanup" );
+        }
 
         Console.WriteLine( failures.Count == 0 ? "Self-test passed." : $"{failures.Count} self-test check(s) failed." );
         return failures.Count == 0 ? 0 : 1;

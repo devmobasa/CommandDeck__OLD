@@ -202,6 +202,12 @@ function handleMessage(root, message) {
     return
   }
 
+  // Retention survives close/reopen; only an active invocation may update UI.
+  if (message.type === Protocol.Messages.ActionResult) {
+    root.part_searchRetention.complete(message.requestId, !!message.actionResult && message.actionResult.succeeded)
+  }
+  if (message.type === Protocol.Messages.Error) root.part_searchRetention.complete(message.requestId, false)
+
   if (message.type === Protocol.Messages.ActionResult
       && root.part_invocationController.busy
       && message.requestId === root.part_invocationController.requestId) {
@@ -226,7 +232,6 @@ function handleMessage(root, message) {
     } else if (transition.refresh) {
       root.requestSearch()
     } else if (transition.dismiss) {
-      root.forgetSearchOnClose = true
       root.dismiss()
       root.showHud(transition.hud)
     }
