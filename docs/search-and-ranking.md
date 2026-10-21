@@ -168,6 +168,58 @@ template, edit or remove user quicklinks, and enable or disable configured ones.
 Changes apply immediately to search aliases and web fallback choices. You can
 also define quicklinks in JSONC; see [quicklink configuration and CLI commands](configuration.md#quicklinks).
 
+### Calculator and date counts
+
+Clear arithmetic such as `100 * 5`, `100*5`, `2^10`, `(3+4)*2`, `10 / 4`,
+`1.5 * 3`, and `-2 + 7` shows a calculator row first. Normal results follow it.
+Press Enter to copy the answer. At least one operator must connect operands.
+Plain numbers, decimals, percentages, and version strings remain searches.
+Bare digit groups joined by `/` or `-` without spaces also remain searches:
+`+1-555-1234`, `555-1234`, `5/5`, `1/2`, `3/4`, `2026/09/11`, and `2026-09-11`.
+This protects phone numbers, ratings, fractions, paths, and dates. Another
+operator or parentheses makes the input eligible: `1/2+1`, `10-4*2`, and
+`(1/2)*8` calculate. Use spaces for division (`10 / 4`) or subtraction
+(`10 - 4`), or use `=` explicitly (`=1/2`, `=10-4`).
+Settings > Search > **Inline calculator** controls
+bare calculations; `search.calculator.inline` supplies its default (`true`).
+
+Unit and currency conversions require `=` and optional qalc for now:
+`=100 usd to eur`, `=5 km to miles`, `=105F in C`, and `=20 eur to usd`.
+Bare calculations use only managed arithmetic and date counting; they never start
+qalc. Currency rows show two decimals and keep the unrounded value in the details
+pane. Explicit `=` input also supports qalc constants, functions and compound units.
+Inline detection reads the original input without changing normal catalog clauses.
+Matching titles and file contents follow the calculator row and remain available
+when inline calculation is off. Saved searches retain their ordinary clauses and
+exclusions. Quoted clauses restored by saved searches remain searches; type an
+unquoted calculation or use `=` to calculate.
+
+Date counts run offline in managed code, with or without `=`:
+
+| Query | Meaning |
+|---|---|
+| `days until 11 sep` / `days until sep 11` | Today to the next 11 September |
+| `days till 11 september 2027` / `days until 2027-09-11` | Today to the given date |
+| `days since 10 may` / `days from 10 may` | The most recent 10 May to today |
+| `days from 10 may to sep 19` | The resolved 10 May to the following 19 September |
+| `days between 10 may and 19 sep` | The same range |
+| `weeks until september 11 2027` | Whole weeks plus remaining days |
+
+English month names and abbreviations are case-insensitive. Dates accept the day
+before or after the month, with an optional year, or ISO `yyyy-MM-dd`. `today`,
+`tomorrow`, and `yesterday` use the local time zone. An explicit year is used as
+written. Without a year, `until`/`till` chooses the next occurrence on or after
+today; `since` and a lone `from` choose the most recent on or before today.
+For `from A to B` and `between A and B`, A uses this year if it has occurred,
+otherwise its most recent occurrence. B is the first occurrence on or after A.
+Past durations keep one leading minus sign for the whole duration. For example,
+`weeks until yesterday` shows `-1 day` and copies `-1`.
+Leap days use the next or previous year that contains 29 February.
+
+The subtitle shows the resolved dates, for example `Today → Sat 11 Sep 2027`.
+Day counts use singular `1 day` and show `0 days (today)` for zero. Enter copies
+the day count as a number, including for a result expressed in weeks.
+
 ## Final score and frequency
 
 The coordinator combines the provider score (weight 0.82), best weighted field

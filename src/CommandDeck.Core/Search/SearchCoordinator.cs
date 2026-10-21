@@ -133,13 +133,16 @@ public sealed partial class SearchCoordinator
         // Trailing rows (such as "Search HEY for …") follow the ranked list and
         // take no Top Match or first-page slot.
         var trailing = collapsed.Where( ResultPlacements.IsTrailing ).Take( ResultPlacements.MaximumTrailing ).ToArray( );
-        var ordinary = collapsed.Where( static result => !ResultPlacements.IsTrailing( result ) ).ToArray( );
+        var inline = CalculatorInput.IsInlineCandidate( parsed )
+            ? collapsed.Where( static result => result.Kind == ResultKinds.Calculator ).Take( 1 ).ToArray( )
+            : [];
+        var ordinary = collapsed.Where( result => !ResultPlacements.IsTrailing( result ) && !inline.Contains( result ) ).ToArray( );
         var results = request.OmarchyMenuId is not null
-            ? AssembleOmarchyMenu( ordinary, limit )
+            ? AssembleOmarchyMenu( ordinary, limit - inline.Length )
             : UseTopMatches( request, parsed )
-            ? AssembleTopMatches( ordinary, parsed, preferences, limit, liveUsage, learnedQueries, now )
-            : AssembleSections( ordinary, parsed, preferences, limit );
-        return new SearchOutcome( OfferRankingReset( [.. results, .. trailing], purpose ), collection.IncompleteProviderCount );
+            ? AssembleTopMatches( ordinary, parsed, preferences, limit - inline.Length, liveUsage, learnedQueries, now )
+            : AssembleSections( ordinary, parsed, preferences, limit - inline.Length );
+        return new SearchOutcome( OfferRankingReset( [.. inline, .. results, .. trailing], purpose ), collection.IncompleteProviderCount );
     }
 
     // Duplicate stable IDs arrive from the application-only and full catalog paths. A
@@ -174,7 +177,8 @@ public sealed partial class SearchCoordinator
         return HerdrSearch.MatchesScope( result, request.HerdrWorkspaceId ) &&
                     OmarchyMenuSearch.MatchesScope( result, request.OmarchyMenuId ) &&
                     !query.ExcludedFilters.Any( filter => FilterMatches( filter, result ) ) &&
-                    ClausesMatch( query.Expression.Clauses, result );
+                    ((CalculatorInput.IsInlineCandidate( query ) && result.Kind == ResultKinds.Calculator) ||
+                        ClausesMatch( query.Expression.Clauses, result ));
     }
 
     private async ValueTask<IReadOnlySet<string>> HiddenStableIdsAsync( CancellationToken cancellationToken ) =>
@@ -185,7 +189,8 @@ public sealed partial class SearchCoordinator
     private IEnumerable<ICommandProvider> SelectProviders(
         ParsedQuery query, LauncherPreferences preferences, SearchRequest request, SearchPurpose purpose ) =>
         ProviderEligibilityPolicy.Select( _providers, query, preferences, request.HerdrWorkspaceId, request.OmarchyMenuId )
-            .Where( provider => purpose == SearchPurpose.Interactive || !PrivateSources.ReadsPrivateContent( provider.Id ) );
+            .Where( provider => purpose == SearchPurpose.Interactive || !PrivateSources.ReadsPrivateContent( provider.Id ) )
+            .Where( provider => provider.Id != ProviderIds.Calculator || !CalculatorInput.IsInlineCandidate( query ) || _history.InlineCalculator );
 
     private bool UseTopMatches( SearchRequest request, ParsedQuery query ) =>
         _history.TopMatches && !IsFolderBrowsing( request, query ) && !HeySearch.IsRequested( query ) &&

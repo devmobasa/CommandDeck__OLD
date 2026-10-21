@@ -114,7 +114,7 @@ internal sealed partial class SqliteLauncherPreferenceStore
                     terminalEditor = System.Text.Json.JsonSerializer.Deserialize(
                         value, CommandDeckJsonContext.Default.EditorAdapter ) ?? terminalEditor;
                 }
-                else if ( key is RememberSearchesKey or LearnFromUseKey or OmarchyMenuStateKey or TopMatchesKey )
+                else if ( key is RememberSearchesKey or LearnFromUseKey or OmarchyMenuStateKey or TopMatchesKey or InlineCalculatorKey )
                 {
                     choices[key] = value;
                 }
@@ -144,7 +144,8 @@ internal sealed partial class SqliteLauncherPreferenceStore
             RememberSearches = ReadChoice( choices.GetValueOrDefault( RememberSearchesKey ) ),
             LearnFromUse = ReadChoice( choices.GetValueOrDefault( LearnFromUseKey ) ),
             OmarchyMenuState = ReadChoice( choices.GetValueOrDefault( OmarchyMenuStateKey ) ),
-            TopMatches = ReadChoice( choices.GetValueOrDefault( TopMatchesKey ) )
+            TopMatches = ReadChoice( choices.GetValueOrDefault( TopMatchesKey ) ),
+            InlineCalculator = ReadChoice( choices.GetValueOrDefault( InlineCalculatorKey ) )
         };
     }
 
@@ -152,6 +153,7 @@ internal sealed partial class SqliteLauncherPreferenceStore
     private const string LearnFromUseKey = "learn_from_use";
     private const string OmarchyMenuStateKey = "omarchy_menu_state";
     private const string TopMatchesKey = "top_matches";
+    private const string InlineCalculatorKey = "inline_calculator";
 
     // A choice made in Settings; a missing, empty or unknown value follows the configuration.
     private static bool? ReadChoice( string? value ) => value switch
@@ -266,7 +268,8 @@ internal sealed partial class SqliteLauncherPreferenceStore
             (RememberSearchesKey, preferences.RememberSearches),
             (LearnFromUseKey, preferences.LearnFromUse),
             (OmarchyMenuStateKey, preferences.OmarchyMenuState),
-            (TopMatchesKey, preferences.TopMatches)
+            (TopMatchesKey, preferences.TopMatches),
+            (InlineCalculatorKey, preferences.InlineCalculator)
         } )
         {
             await UpsertLauncherPreferenceAsync( connection, transaction, key, WriteChoice( value ), now, cancellationToken )

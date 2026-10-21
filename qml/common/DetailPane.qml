@@ -111,6 +111,11 @@ Rectangle {
         id: calculatorView
         Layout.fillWidth: true
         visible: root.isCalculator
+        exactValue: {
+          const field = root.result && root.result.details
+            ? root.result.details.find(value => value.label === "Exact value") : null
+          return field ? field.value : ""
+        }
         theme: root.theme
         expression: root.calcInput
         value: root.calcValue
