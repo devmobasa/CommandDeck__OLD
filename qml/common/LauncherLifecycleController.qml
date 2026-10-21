@@ -34,6 +34,9 @@ QtObject {
     return DeckSearchActions.open(lifecycle.host, payload)
   }
   function close() {
+    // Omarchy's deferred shell.hide can close the same session again.
+    if (!host.opened && !host.suspendedForScreen) return
+
     if (openGeneration > 0 && host.daemonAvailable) {
       host.part_protocol.send({version: Protocol.Version, requestId: ++host.requestSequence,
         operation: Protocol.Operations.LauncherOpenCancel,

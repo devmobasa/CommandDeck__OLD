@@ -142,7 +142,6 @@ function dismiss(root) {
 // ran from are not kept.
 function keptSearch(root) {
   const forget = root.forgetSearchOnClose
-  root.forgetSearchOnClose = false
   const filters = root.activeFilters || []
   if (forget || root.keepSearchSeconds <= 0 || !root.part_searchSession.canKeepSearch || root.browseDirectory.length > 0
       || root.part_navigation.herdrWorkspaceId.length > 0
@@ -151,12 +150,14 @@ function keptSearch(root) {
       || filters.some(value => value.id === Protocol.SourceIds.Clipboard || value.id === Protocol.SourceIds.Hey)) {
     return null
   }
-  return { query: root.queryText, filters: filters.slice(),
-    selectedId: root.currentResult && root.currentResult.id ? root.currentResult.id : "", closedAt: Date.now() }
+
+  return { query: root.queryText, filters: filters.slice(), revision: root.part_searchRetention.currentRevision,
+    selectedId: root.currentResult && root.currentResult.id ? root.currentResult.id : "" }
 }
 
 function close(root) {
   root.lastSearch = keptSearch(root)
+  root.suspendedForScreen = false
   root.extensionManagementOpen = false
   root.part_extensionController.close()
   if (root.fileSelection.length > 0 || root.activeFileSelectionRequestId > 0) root.clearFileSelection()
@@ -182,6 +183,7 @@ function close(root) {
   root.filePreview = null
   root.previewError = ""
   root.part_rows.clear()
+  root.part_searchRetention.closed()
 }
 
 function open(root, payloadJson) {
@@ -215,15 +217,20 @@ function open(root, payloadJson) {
   root.part_navigation.clearOmarchyBrowse()
   root.showHud("")
   const kept = root.lastSearch
-  root.lastSearch = null
   const restore = kept !== null && !payload.query && !payload.filterId
-    && Date.now() - kept.closedAt <= root.keepSearchSeconds * 1000
+    && root.keepSearchSeconds > 0
+  if (!restore) root.lastSearch = null
+  root.part_searchRetention.edited()
   root.queryText = restore ? kept.query : payload.query || ""
   root.currentDirectoryContext = payload.currentDirectory || ""
   root.selectedProjectContext = payload.selectedProject || ""
   root.activeFilters = restore ? kept.filters
     : payload.filterId ? [{ id: payload.filterId, label: payload.filterLabel || "", excluded: false }] : []
-  if (restore) root.part_navigation.restoreSelectionId = kept.selectedId
+  if (restore) {
+    root.part_searchRetention.restored(kept.revision)
+    root.part_navigation.restoreSelectionId = kept.selectedId
+  }
+  root.lastSearch = null
   root.opened = true
   root.clearModalState()
   root.part_invocationController.clear()

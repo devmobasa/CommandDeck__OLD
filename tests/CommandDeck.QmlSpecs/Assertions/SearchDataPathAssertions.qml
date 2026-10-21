@@ -227,13 +227,6 @@ QtObject {
     host.expect(deck.queryText === "", "a search an action ran from is not kept")
     deliver(deck, [])
 
-    searchFor("stale")
-    deck.close()
-    deck.lastSearch.closedAt -= 31000
-    deck.open("{}")
-    host.expect(deck.queryText === "", "a kept search expires after its time")
-    deliver(deck, [])
-
     searchFor("kept")
     deck.close()
     deck.open(JSON.stringify({ query: "explicit" }))

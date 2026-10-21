@@ -58,6 +58,7 @@ trap 'rm -rf -- "$spec_dir"' EXIT
 cp "$repo_dir"/qml/common/*.qml "$repo_dir"/qml/common/*.js "$spec_dir/"
 cp "$repo_dir/tests/CommandDeck.QmlSpecs/shell.qml" "$spec_dir/shell.qml"
 cp "$repo_dir"/tests/CommandDeck.QmlSpecs/Assertions/*.qml "$spec_dir/"
+cp -R "$repo_dir/qml/common" "$repo_dir/qml/omarchy" "$spec_dir/"
 
 component_started=$SECONDS
 output=$(timeout "${component_timeout}s" qs --no-color -p "$spec_dir" 2>&1) || {

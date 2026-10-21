@@ -49,6 +49,8 @@ Item {
 
   SavedSearchShortcutJourneyAssertions { id: savedShortcuts; host: journey.host }
   HoverSelectionJourneyAssertions { id: hoverSelection; host: journey.host }
+  KeptSearchJourneyAssertions { id: keptSearch; host: journey.host }
+  OmarchyCloseJourneyAssertions { id: omarchyClose; host: journey.host }
 
   Timer {
     id: stepTimer
@@ -507,7 +509,8 @@ Item {
         }
       }
     ]
-    steps = steps.concat(savedShortcuts.steps()).concat(hoverSelection.steps())
+    steps = steps.concat(savedShortcuts.steps()).concat(hoverSelection.steps()).concat(keptSearch.steps())
+      .concat(omarchyClose.steps())
     stepIndex = 0
     deadline = Date.now() + 2000
     stepTimer.start()
@@ -549,6 +552,8 @@ Item {
     reservedBar.visible = false
     workArea.visible = false
     savedShortcuts.restore()
+    keptSearch.restore()
+    omarchyClose.restore()
     deck.close()
     deck.part_searchSession.debounce.interval = originalDebounce
     deck.testSurfaceEnabled = false
