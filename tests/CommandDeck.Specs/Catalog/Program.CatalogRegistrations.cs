@@ -57,6 +57,14 @@ public static partial class Program
             CatalogOptimizeVacuumsOnlyWhenItFreesSpaceAsync );
         await RunAsync( "inspection pages beyond the stored work sample",
             InspectionPagesBeyondStoredSampleAsync );
+        await RunAsync( "exclusion listing retains paths at the root length cap after a fresh scan",
+            ( ) => ExclusionListingRetainsCappedPathsAsync( longRoot: true ) );
+        await RunAsync( "exclusion listing retains paths at the relative path length cap after a fresh scan",
+            ( ) => ExclusionListingRetainsCappedPathsAsync( longRoot: false ) );
+        await RunAsync( "exclusion listing filters only the bounded sample and retains root diagnostics",
+            ( ) => ExclusionListingKeepsItsSampleBoundAsync( rootExists: true ) );
+        await RunAsync( "exclusion listing retains missing root diagnostics and bounded sample counts",
+            ( ) => ExclusionListingKeepsItsSampleBoundAsync( rootExists: false ) );
         await RunAsync( "pooled catalog connections apply the configured pragmas on every open",
             PooledCatalogConnectionsApplyTheirPragmasAsync );
         await RunAsync( "a briefly blocked catalog writer waits for the configured busy timeout",

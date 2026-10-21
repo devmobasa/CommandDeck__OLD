@@ -181,21 +181,36 @@ public sealed partial class SqliteCatalog
         command.Parameters.AddWithValue( "$limit", MaximumReturnedExclusionDiagnostics );
         List<IndexExclusionDiagnostic> diagnostics = [];
         long total = 0;
+        var omitted = 0;
         await using var reader = await command.ExecuteReaderAsync( cancellationToken )
             .ConfigureAwait( false );
         while ( await reader.ReadAsync( cancellationToken ).ConfigureAwait( false ) )
         {
             total = reader.GetInt64( 4 );
-            diagnostics.Add( new IndexExclusionDiagnostic
+            var diagnostic = new IndexExclusionDiagnostic
             {
                 Root = reader.GetString( 0 ),
                 RelativePath = reader.GetString( 1 ),
                 Reason = reader.GetString( 2 ),
                 Rule = reader.IsDBNull( 3 ) ? null : reader.GetString( 3 )
-            } );
+            };
+
+            // Root status, redacted paths and possibly truncated paths stay as reported.
+            if ( diagnostic.Reason != IndexExclusionReasons.RootUnavailable &&
+                diagnostic.RelativePath != "[redacted]" &&
+                diagnostic.Root.Length < MaximumDiagnosticTextCharacters &&
+                diagnostic.RelativePath.Length < MaximumDiagnosticTextCharacters &&
+                !Path.Exists( Path.Combine( diagnostic.Root, diagnostic.RelativePath ) ) )
+            {
+                omitted++;
+                continue;
+            }
+
+            diagnostics.Add( diagnostic );
         }
 
-        return (diagnostics, total);
+        // The total is approximate: paths outside the bounded sample remain unchecked.
+        return (diagnostics, total - omitted);
     }
 
     private static string Bound( string value ) => value.Length <= MaximumDiagnosticTextCharacters
