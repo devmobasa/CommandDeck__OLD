@@ -4,6 +4,10 @@ function positive(value, fallback) {
   return Number.isFinite(value) && value > 0 ? value : fallback
 }
 
+function layoutRatio(value) {
+  return Math.max(80, Math.min(140, positive(value, 100))) / 100
+}
+
 function fitDescription(sizing, maximum, location) {
   return (maximum === 0 ? "; no percentage fits " + (location || "here") : "")
     + (sizing.limited && maximum > 0 ? "; limited to fit (max " + maximum + "% " + (location || "here") + ")" : "")
@@ -53,24 +57,35 @@ function calculate(input) {
   // its text and controls. Layouts that already fit keep their standard inset.
   const topFloor = Math.min(top, Math.max(24, Math.round(height * 0.04)))
   top = Math.min(top, Math.max(topFloor, height - bottom - baseHeight * fontScale * requested))
-  const availableHeight = Math.max(1, height - top - bottom)
+  let availableHeight = Math.max(1, height - top - bottom)
 
   let fit = Math.min(1, availableWidth / (baseWidth * fontScale * requested),
     availableHeight / (baseHeight * fontScale * requested))
 
-  const scroll = body * requestedText * fit < minimumText - 0.001
-  if (scroll) fit = minimumText / (body * requestedText)
+  if (body * requestedText * fit < minimumText - 0.001) fit = minimumText / (body * requestedText)
   const effective = requested * fit
-  const contentWidth = Math.max(1, Math.floor(baseWidth * fontScale * effective))
-  const contentHeight = Math.max(1, Math.floor(baseHeight * fontScale * effective))
+  const referenceWidth = Math.max(1, Math.floor(baseWidth * fontScale * effective))
+  const referenceHeight = Math.max(1, Math.floor(baseHeight * fontScale * effective))
+  const desiredWidth = Math.max(1, Math.floor(baseWidth * fontScale * effective * (input.settings ? 1 : layoutRatio(input.widthPercent))))
+  const desiredHeight = Math.max(1, Math.floor(baseHeight * fontScale * effective * (input.settings ? 1 : layoutRatio(input.heightPercent))))
+
+  // Layout choices add room without changing metrics. Spend the top inset,
+  // then shrink extra panel space before the reference layout needs scaling.
+  top = Math.min(top, Math.max(topFloor, height - bottom - desiredHeight))
+  availableHeight = Math.max(1, height - top - bottom)
+  const contentWidth = Math.min(desiredWidth, Math.max(referenceWidth, Math.floor(availableWidth)))
+  const contentHeight = Math.min(desiredHeight, Math.max(referenceHeight, Math.floor(availableHeight)))
+  const panelWidth = Math.min(contentWidth, Math.floor(availableWidth))
+  const panelHeight = Math.min(contentHeight, Math.floor(availableHeight))
+  const scroll = contentWidth > panelWidth || contentHeight > panelHeight
+  const layoutLimited = desiredWidth > availableWidth || desiredHeight > availableHeight
   return {
     automatic: automatic, requested: requested, effective: effective,
-    textScale: requestedText * fit, fit: fit, limited: fit < 0.9999,
+    textScale: requestedText * fit, fit: fit, limited: fit < 0.9999 || layoutLimited,
     narrow: narrow, scroll: scroll, topInset: top, bottomInset: bottom,
     availableWidth: availableWidth, availableHeight: availableHeight,
     contentWidth: contentWidth, contentHeight: contentHeight,
-    panelWidth: Math.min(contentWidth, Math.floor(availableWidth)),
-    panelHeight: Math.min(contentHeight, Math.floor(availableHeight))
+    panelWidth: panelWidth, panelHeight: panelHeight
   }
 }
 
@@ -93,9 +108,9 @@ function calculateLegacy(input) {
   const availableWidth = Math.max(1, width - 80)
   const availableHeight = Math.max(1, height - top - bottom)
   const desiredWidth = input.settings ? Math.round(Math.round(900 * scale) * 1.3)
-    : Math.round(900 * scale)
+    : Math.round(900 * scale * layoutRatio(input.widthPercent))
   const desiredHeight = input.settings ? Math.round(Math.round(600 * scale) * 1.35)
-    : Math.round(600 * scale)
+    : Math.round(600 * scale * layoutRatio(input.heightPercent))
   const panelWidth = Math.min(desiredWidth, availableWidth)
   const panelHeight = Math.min(desiredHeight, availableHeight)
   return {

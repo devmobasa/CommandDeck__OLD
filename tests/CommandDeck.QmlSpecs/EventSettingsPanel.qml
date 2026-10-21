@@ -8,6 +8,10 @@ CommandDeck.SettingsPanel {
   required property var host
 
   id: settingsPanel
+  onLauncherSizeSelected: (widthPercent, heightPercent) => {
+    launcherWidthPercent = widthPercent
+    launcherHeightPercent = heightPercent
+  }
   property int displaySizePercentChosen: -1
   onDisplaySizeRecommendedRequested: {
     displaySizeLegacy = false

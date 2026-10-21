@@ -237,7 +237,9 @@ public sealed class UiOptions
     public bool AlsoBindSuperSpace { get; init; }
     public string MonitorPolicy { get; init; } = "focused";
     public int DebounceMilliseconds { get; init; } = 45;
+    /// <summary>Not used by the launcher; use Settings > Customization > Layout.</summary>
     public int Width { get; init; } = 760;
+    /// <summary>Not used by the launcher; use Settings > Customization > Layout.</summary>
     public int MaximumVisibleRows { get; init; } = 9;
 }
 

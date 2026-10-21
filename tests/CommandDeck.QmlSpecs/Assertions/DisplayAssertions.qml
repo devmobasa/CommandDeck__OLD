@@ -77,7 +77,7 @@ QtObject {
         && !layout.parse("compact=maybe").compact && layout.parse(" Compact = ON ").compact,
       "the layout file reads as the default layout unless compact is on")
     host.part_integratedDeck.applyCompactLayout(true)
-    host.expect(host.part_integratedDeck.compactLayout && layout.serialize() === "compact=on\npreview=on\n",
+    host.expect(host.part_integratedDeck.compactLayout && layout.serialize() === "compact=on\npreview=on\nwidth=100\nheight=100\n",
       "choosing the compact layout applies it to the launcher at once")
     host.part_integratedDeck.applyCompactLayout(false)
     host.expect(!host.part_integratedDeck.compactLayout, "turning it off restores the default layout")
@@ -89,6 +89,53 @@ QtObject {
     host.expect(layout.parse("").preview && !layout.parse("preview=off").preview
         && layout.parse("preview=maybe").preview,
       "the layout file shows the preview pane unless it is off")
+    for (const entry of [
+      ["", 100], [null, 100], [undefined, 100], ["NaN", 100], ["Infinity", 100],
+      ["102.5", 100], ["1e2", 100], ["100%", 100], ["+123", 125],
+      [" 138 ", 140], ["82", 80], ["-999", 80], ["999", 140]
+    ]) {
+      host.expect(layout.normalize(entry[0]) === entry[1], "layout percentage normalizes " + entry[0])
+    }
+    const parsedSize = layout.parse(" WIDTH = 123\nheight=999\ncompact=on\npreview=off\nunknown=30")
+    host.expect(parsedSize.widthPercent === 125 && parsedSize.heightPercent === 140
+        && parsedSize.compact && !parsedSize.preview,
+      "layout size uses named, case-insensitive lines alongside existing choices")
+    host.expect(layout.parse("width=bad\nheight=").widthPercent === 100
+        && layout.parse("width=bad\nheight=").heightPercent === 100,
+      "invalid and absent layout percentages default to 100")
+    layout.setSize(123, 138)
+    host.expect(host.part_integratedDeck.launcherWidthPercent === 125
+        && host.part_integratedDeck.launcherHeightPercent === 140,
+      "normalized panel choices reach launcher state")
+    layout.setPreview(false)
+    layout.setCompact(true)
+    host.expect(layout.widthPercent === 125 && layout.heightPercent === 140,
+      "changing existing layout toggles preserves panel choices")
+    layout.setSize(100, 100)
+    layout.setPreview(true)
+    layout.setCompact(false)
+
+    for (const axis of ["Width", "Height"]) {
+      const control = host.part_settings["layout" + axis + "Control"]
+      const reset = host.part_settings["layout" + axis + "ResetControl"]
+      host.expect(control.from === 80 && control.to === 140 && control.stepSize === 5 && control.value === 100,
+        "Settings " + axis + " offers 80 to 140 percent, default 100, step 5")
+      host.expect(control.sliderControl.Accessible.name === "Launcher " + axis.toLowerCase()
+          && control.sliderControl.Accessible.description.indexOf("Text and control size stay unchanged") >= 0,
+        "Settings " + axis + " explains independent panel sizing")
+      host.expect(!reset.enabled, axis + " reset is disabled at 100")
+      host.part_settings["launcher" + axis + "Percent"] = 120
+      host.expect(control.value === 120 && reset.enabled, axis + " reflects the live choice")
+      control.value = 125
+      control.moved()
+      host.expect(host.part_settings.launcherSizeChosen[axis === "Width" ? 0 : 1] === 125,
+        axis + " emits its selected percentage")
+      reset.click()
+      host.expect(host.part_settings.launcherSizeChosen[axis === "Width" ? 0 : 1] === 100,
+        axis + " reset emits the default")
+      host.part_settings["launcher" + axis + "Percent"] = 100
+    }
+
     const behavior = host.part_integratedDeck.part_behaviorStore
     const parsed = behavior.parse("escape=clear\nkeep=120\n")
     host.expect(parsed.escapeClears && parsed.keepSeconds === 120

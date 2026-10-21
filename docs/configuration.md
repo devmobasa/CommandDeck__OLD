@@ -46,6 +46,16 @@ value. Zoom-key status also names the maximum when limited. The backdrop covers
 the full screen; safe margins keep the launcher toward the top, while Settings
 stays centred.
 
+**Settings > Customization > Layout** offers independent **Width** and **Height**
+percentages (80–140%, step 5, default 100). These change the launcher's 900 × 600
+reference panel without enlarging text or controls: more height shows more rows,
+and more width gives the preview room. Extra panel space shrinks to fit before
+text or controls scale down. Settings keeps its own size. The choices persist
+as `width=PERCENT` and `height=PERCENT` in `launcher-layout`, alongside compact
+layout and preview visibility. Each slider has a Reset button for 100%.
+`ui.width` and `ui.maximumVisibleRows` are not used by the launcher; use
+Settings > Customization > Layout. They remain accepted for existing configs.
+
 The separate `display-sizing` file versions this model. Before first opening a
 catalog, the CLI records `logical-v1` for a fresh installation, or `legacy-v1`
 when a catalog or earlier state already exists. The UI upgrades the latter to

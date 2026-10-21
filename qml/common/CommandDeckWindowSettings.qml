@@ -81,6 +81,10 @@ SettingsPanel {
   maximumFittingPercent: settingsPanel.host.maximumFittingPercent
   onDisplaySizePercentSelected: percent => settingsPanel.host.host.applyDisplaySizePercent(percent)
   onDisplaySizeRecommendedRequested: settingsPanel.host.host.part_displayScaleStore.useRecommended()
+  launcherWidthPercent: settingsPanel.host.host.launcherWidthPercent
+  launcherHeightPercent: settingsPanel.host.host.launcherHeightPercent
+  onLauncherSizeSelected: (widthPercent, heightPercent) =>
+    settingsPanel.host.host.part_layoutStore.setSize(widthPercent, heightPercent)
   compactLayout: settingsPanel.host.host.compactLayout
   onCompactLayoutSelected: enabled => settingsPanel.host.host.applyCompactLayout(enabled)
   previewPaneVisible: settingsPanel.host.host.previewPaneVisible

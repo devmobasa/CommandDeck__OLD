@@ -204,11 +204,12 @@ disposable Arch install proof, which need the helper installed with `sudo`.
 ### QML
 
 Display sizing has a production-function matrix in `tst_display_sizing.qml`:
-every 5% zoom step, font scales 0.8–2, laptops/desktops, equivalent logical
-workspaces, ultrawide, portrait, 720p, and constrained fallbacks. It checks the
-maximum fitting 5% step, font-size monotonicity, and top-inset adaptation before
-scaling down, preserving fitting standard and narrow layouts unchanged. The
-legacy profile has independent parity cases for every old preset across that
+every 5% zoom step and Width/Height choice from 80–140%, font scales 0.8–2,
+laptops/desktops, equivalent logical workspaces, ultrawide, portrait, 720p, and
+constrained fallbacks. It checks the maximum fitting 5% step, independent
+text/control metrics, panel-size and font-size monotonicity, and top-inset
+adaptation before scaling down, preserving fitting standard and narrow layouts
+unchanged. The legacy profile has independent parity cases for every old preset across that
 matrix, including constrained layouts. It keeps the a1b1ec8 text/control metrics,
 fixed insets, panel clamps and Settings rounding; only Recommended adapts its
 top inset and fits its metrics. At 2304×1296 with a 2160-pixel mode and a 14-pixel
@@ -222,9 +223,9 @@ keeps footer Help focused while resizing into and within scrolling mode.
 Window/theme tests cover full-strength text zoom, requested values surviving
 geometry changes, and launcher descriptions/maximums while Settings is open.
 Real-event tests cover dragging during live resizing, reset focus, the dimmed
-track above the maximum, accessible limit text, and keyboard/mouse selection
-through the full range. The production-host journey measures the existing work
-area before adding its 48-pixel exclusive zone, so desktops with existing bars
+track above the maximum, profile-aware accessible text, Width/Height reset focus,
+and keyboard/mouse selection through the full range. The production-host journey
+measures the existing work area before adding its 48-pixel exclusive zone, so desktops with existing bars
 and desktops without reservations both check the extra reservation. It also
 verifies that another monitor gaining focus cannot resize the presenting window.
 
@@ -233,15 +234,18 @@ and raster-density combinations with:
 
 ```bash
 dotnet scripts/check-display-sizing.cs
-dotnet scripts/capture-gallery.cs sizing --width 2304 --height 1296 --dpr 1.666667 --percent 150 --font-scale 1.25 --output build/sizing-review
+dotnet scripts/capture-gallery.cs sizing --width 2304 --height 1296 --dpr 1.666667 --percent 150 --font-scale 1.25 --panel-width 140 --panel-height 120 --output build/sizing-review
 ```
 
-The matrix writes 20 configurations and 120 PNGs under
+The matrix writes 36 configurations and 252 PNGs under
 `build/display-sizing-matrix/`, with containment checks on launcher, Settings,
-help, actions, confirmation and extension surfaces. Help and Actions checks use
-their own visible controls and include ancestor clipping viewports. It compares
-rendered layout and text measurements across DPRs and checks PNG pixel dimensions to confirm Qt
-applied each raster density. A DPR changes raster density, not logical geometry.
+the filtered Layout card, help, actions, confirmation and extension surfaces.
+Help and Actions checks use their own visible controls and include ancestor
+clipping viewports. It compares rendered layout and text measurements across DPRs and checks PNG pixel dimensions
+to confirm Qt applied each raster density. Larger panels must show more rows or
+a wider preview with unchanged text and row size. Gallery Settings also checks the fitting-limit
+marker and accessible description, including the 105% maximum at 1280×720.
+A DPR changes raster density, not logical geometry.
 The production-host journey also checks full-screen backdrop coverage with a
 real top-bar exclusive zone and Ctrl+0 preserving the legacy sizing profile.
 These isolated renders and compositor checks do not establish real desktop fractional

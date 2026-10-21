@@ -94,6 +94,8 @@ Item {
   property bool panelTransparencyEnabled: false
   // Compact layout (QML-only): one-line rows, number badges only while Ctrl
   // is held, and a lighter footer.
+  property int launcherWidthPercent: 100
+  property int launcherHeightPercent: 100
   property bool compactLayout: false
   // The details and file preview pane beside the results (QML-only).
   property bool previewPaneVisible: true

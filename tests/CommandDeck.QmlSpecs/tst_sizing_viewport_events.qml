@@ -13,6 +13,8 @@ Item {
       property bool legacy: false
       property int legacyPercent: 100
     }
+    property int launcherWidthPercent: 100
+    property int launcherHeightPercent: 100
     property int displaySizePercent: 100
     property bool settingsOpen: false
     property bool extensionManagementOpen: false

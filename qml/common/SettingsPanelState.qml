@@ -229,7 +229,13 @@ FocusScope {
   property bool displaySizeLegacy: false
   property string displaySizeDescription: ""
   property int maximumFittingPercent: Ui.DisplaySizePercent.Maximum
-  // Compact layout (QML-only, persisted outside the daemon snapshot).
+  // Launcher layout (QML-only, persisted outside the daemon snapshot).
+  readonly property var layoutWidthControl: parts.customizationScroll.part_layoutWidth.sliderControl
+  readonly property var layoutHeightControl: parts.customizationScroll.part_layoutHeight.sliderControl
+  readonly property var layoutWidthResetControl: parts.customizationScroll.part_layoutWidth.resetControl
+  readonly property var layoutHeightResetControl: parts.customizationScroll.part_layoutHeight.resetControl
+  property int launcherWidthPercent: 100
+  property int launcherHeightPercent: 100
   property bool compactLayout: false
   property bool previewPaneVisible: true
   // Closing and reopening (QML-only, persisted outside the daemon snapshot).
@@ -308,6 +314,7 @@ FocusScope {
   signal displaySizePercentSelected(int percent)
   signal displaySizeRecommendedRequested()
   signal panelTransparencyChanged(bool enabled, int percent)
+  signal launcherSizeSelected(int widthPercent, int heightPercent)
   signal compactLayoutSelected(bool enabled)
   signal previewPaneSelected(bool visible)
   signal launcherBehaviorSelected(bool escapeClears, int keepSeconds)

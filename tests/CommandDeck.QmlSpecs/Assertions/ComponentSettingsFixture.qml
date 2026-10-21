@@ -64,6 +64,8 @@ CommandDeck.SettingsPanel {
     customizations: []
   })
   property int displaySizePercentChosen: -1
+  property var launcherSizeChosen: null
+  onLauncherSizeSelected: (widthPercent, heightPercent) => launcherSizeChosen = [widthPercent, heightPercent]
   property var compactLayoutChosen: null
   property var previewPaneChosen: null
   property var behaviorChosen: null

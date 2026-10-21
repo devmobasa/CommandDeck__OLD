@@ -25,7 +25,7 @@ return await new GalleryCapture( ).RunAsync( args );
 [SupportedOSPlatform( "linux" )]
 sealed partial class GalleryCapture
 {
-    private const string Usage = "Usage: dotnet scripts/capture-gallery.cs [scene...] [--output DIR] [--width PX --height PX --dpr N --percent N --font-scale N]";
+    private const string Usage = "Usage: dotnet scripts/capture-gallery.cs [scene...] [--output DIR] [--width PX --height PX --dpr N --percent N --font-scale N --panel-width N --panel-height N]";
     private const string RequestPreview =
         """{"model":"demo-model","stream":true,"messages":[{"role":"system","content":"Answer briefly."},{"role":"user","content":"Explain why the Moon has phases."}]}""";
 
@@ -47,7 +47,7 @@ sealed partial class GalleryCapture
         new( "themes", "themes.qml", 3, ["themes.png"] ),
         new( "demo", "demo.qml", 2, ["demo.gif", "demo.mp4"] ),
         new( "social", "social.qml", 2, ["social-preview.png"] ),
-        new( "sizing", "sizing.qml", 1, ["launcher.png", "settings.png", "help.png", "actions.png", "confirmation.png", "extension.png"] )
+        new( "sizing", "sizing.qml", 1, ["launcher.png", "settings.png", "layout.png", "help.png", "actions.png", "confirmation.png", "extension.png"] )
     ];
 
     private string _repository = "";
@@ -76,7 +76,7 @@ sealed partial class GalleryCapture
                 continue;
             }
 
-            if ( arguments[index] is "--width" or "--height" or "--dpr" or "--percent" or "--font-scale" )
+            if ( arguments[index] is "--width" or "--height" or "--dpr" or "--percent" or "--font-scale" or "--panel-width" or "--panel-height" )
             {
                 var key = arguments[index];
                 if ( ++index >= arguments.Length || !TrySetSizing( key, arguments[index] ) )
@@ -129,6 +129,7 @@ sealed partial class GalleryCapture
             "--width" or "--height" => value <= 7680 && value == Math.Round( value ),
             "--dpr" => value <= 3,
             "--font-scale" => value <= 2,
+            "--panel-width" or "--panel-height" => value >= 80 && value <= 140 && value % 5 == 0,
             "--percent" => value >= 75 && value <= 150 && value % 5 == 0,
             _ => false
         };
