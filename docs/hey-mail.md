@@ -133,10 +133,10 @@ local one. Rows keep HEY's order: they skip field scoring and Top Matches.
 
 Omarchy's launchers (`omarchy-launch-webapp`, `omarchy-launch-or-focus-tui`, the
 presented terminal) run as new user services (`uwsm-app -t service`), never
-inside the daemon. The daemon is sandboxed with a read-only root and a private
-`/tmp`, and those launchers start their program in a `uwsm-app` scope that keeps
-the caller's mounts: a browser started there cannot reach the running browser's
-`/tmp` socket and reports that it could not open its profile.
+inside the daemon. The daemon is sandboxed with a read-only root,
+`NoNewPrivileges`, and `UMask=0077`, and those launchers start their program in a
+`uwsm-app` scope that keeps the caller's mounts and restrictions: a browser
+started there would inherit that sandbox instead of the session's.
 
 Box rows and Search Again use the `apply-query` action, which the launcher
 handles itself: it replaces the query and its filter chip, searches, and

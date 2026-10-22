@@ -26,17 +26,30 @@ public static partial class Program
 
     private static async Task AgentCliReportsStatusAndRefusesUnconfirmedAuthorityAsync( )
     {
+        if ( !OperatingSystem.IsLinux( ) )
+        {
+            throw new SpecSkippedException( "This fixture requires Linux." );
+        }
+
         var root = CreateCliSpecRoot( );
         try
         {
-            var config = await CreateAgentCliConfigAsync( root );
+            // A fake binary keeps the spec independent of any Codex on PATH. The
+            // CLI never starts Codex, so status must still resolve and report it.
+            var version = CodexAppServerContract.ReviewedVersion;
+            var codex = Path.Combine( root, "codex" );
+            await File.WriteAllTextAsync( codex, $"#!/bin/sh\necho 'codex-cli {version}'\n" );
+            File.SetUnixFileMode( codex, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute );
+            var config = await CreateAgentCliConfigAsync( root, codex );
             var status = await RunCommandDeckProcessAsync( "agent", "status", "--config", config );
             Equal( 0, status.ExitCode );
             True( status.StandardOutput.Contains( "Codex", StringComparison.Ordinal ) );
+            True( status.StandardOutput.Contains( $"Binary:         {codex} {version}\n", StringComparison.Ordinal ) );
             var statusJson = await RunCommandDeckProcessAsync( "agent", "status", "--json", "--config", config );
             Equal( 0, statusJson.ExitCode );
             var parsed = JsonSerializer.Deserialize( statusJson.StandardOutput, CommandDeckJsonContext.Default.AgentStatus );
             True( parsed is { Enabled: false } && parsed.Trust.Level == AgentTrustLevels.Default && !parsed.Helper.Installed );
+            True( parsed is { BinaryReviewed: true } && parsed.BinaryPath == codex && parsed.BinaryVersion == version );
 
             var probe = await RunCommandDeckProcessAsync( "agent", "probe", "tools", "--config", config );
             Equal( 0, probe.ExitCode );
@@ -68,27 +81,13 @@ public static partial class Program
         }
     }
 
-    // `agent status` runs in a fresh process that never starts Codex, so the
-    // Binary row must resolve the binary itself rather than say "not resolved".
-    private static async Task AgentCliStatusResolvesTheCodexBinaryAsync( )
+    // `agent status` resolves Codex in its own process, so a missing binary
+    // names the fix instead of a bare "not resolved".
+    private static async Task AgentCliStatusNamesTheFixWhenCodexIsMissingAsync( )
     {
-        if ( !OperatingSystem.IsLinux( ) )
-        {
-            throw new SpecSkippedException( "This fixture requires Linux." );
-        }
-
         var root = CreateCliSpecRoot( );
         try
         {
-            var codex = Path.Combine( root, "codex" );
-            await File.WriteAllTextAsync( codex, "#!/bin/sh\necho 'codex-cli 0.163.0'\n" );
-            File.SetUnixFileMode( codex, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute );
-            var configured = await RunCommandDeckProcessAsync(
-                "agent", "status", "--config", await CreateAgentCliConfigAsync( root, codex ) );
-            Equal( 0, configured.ExitCode );
-            True( configured.StandardOutput.Contains(
-                $"Binary:         {codex} 0.163.0 (unreviewed App Server version)", StringComparison.Ordinal ) );
-
             var emptyPath = Directory.CreateDirectory( Path.Combine( root, "empty-path" ) ).FullName;
             var missing = await RunCommandDeckWithEnvironmentAsync(
                 new Dictionary<string, string?> { ["PATH"] = emptyPath },

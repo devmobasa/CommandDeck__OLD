@@ -928,7 +928,10 @@ file under `stateDirectory`.
   canonical target once; the target must be a regular file owned by the current
   user or root and not group- or world-writable.
 - `bubblewrapPath` and `systemdRunPath` must be absolute. Bubblewrap isolates
-  levels 0 to 5; `systemd-run` starts the level-6 transient unit.
+  levels 0 to 5; `systemd-run` starts the level-6 transient unit. At level 6,
+  Codex keeps its App Server socket and a `.lock` file in
+  `/tmp/codex-daemon-<uid>/`; it removes them on a clean exit, and they can
+  remain after a crash.
 - `runtimeDirectory` receives one private, disposable Codex home per App Server
   generation under `codex/<generation>`. It is wiped on stop.
 - `stateDirectory` receives `codex/auth.json`, the CommandDeck-owned login.

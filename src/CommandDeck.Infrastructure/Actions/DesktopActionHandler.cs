@@ -181,8 +181,9 @@ internal sealed class DesktopActionHandler( EditorLauncher editor ) : ILinuxActi
             cancellationToken ).ConfigureAwait( false );
     }
 
-    // An Omarchy menu command runs in the user session: its pickers return the
-    // choice through files in /tmp, which the daemon's private /tmp would hide.
+    // An Omarchy menu command runs in the user session, as from Omarchy's own menu:
+    // in the daemon, NoNewPrivileges would block sudo and pkexec, the root is
+    // read-only, files would get UMask=0077, and a daemon restart would kill it.
     private static async ValueTask<ActionExecutionResult> RunTrustedShellAsync(
         CommandAction action,
         CancellationToken cancellationToken )

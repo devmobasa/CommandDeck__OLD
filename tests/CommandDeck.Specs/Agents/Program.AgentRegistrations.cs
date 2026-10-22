@@ -26,6 +26,9 @@ public static partial class Program
             "unrestricted launch names the fix when the Codex socket link is unreachable",
             UnrestrictedLaunchNamesTheFixForAnUnreachableSocketLinkAsync );
         Run(
+            "daemon unit shares the user's /tmp where Codex places its socket",
+            DaemonUnitSharesTheUserTemporaryDirectory );
+        Run(
             "unknown prefixes and assistant prompts are not search errors",
             UnknownPrefixesAndPromptsAreNotSearchErrors );
         Run(

@@ -43,11 +43,11 @@ internal sealed partial class HeyActionHandler(
             _ => LinuxActionArguments.UnknownKind( action )
         };
 
-    // The daemon runs sandboxed (a read-only root and a private /tmp), and Omarchy's
-    // launchers start their program with `uwsm-app` in scope mode, which keeps the
-    // caller's mounts. Run from here, a browser would miss the running browser's
-    // /tmp socket and refuse its locked profile. So each launcher runs as a new user
-    // service, outside the sandbox, the way applications are launched.
+    // The daemon runs sandboxed (a read-only root, NoNewPrivileges, UMask=0077), and
+    // Omarchy's launchers start their program with `uwsm-app` in scope mode, which
+    // keeps the caller's mounts and restrictions. Run from here, a browser would
+    // inherit that sandbox. So each launcher runs as a new user service, outside
+    // the sandbox, the way applications are launched.
     private static ValueTask<ActionExecutionResult> LaunchOutsideSandboxAsync(
         string launcher,
         IReadOnlyList<string> arguments,

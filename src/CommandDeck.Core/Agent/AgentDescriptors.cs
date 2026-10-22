@@ -94,9 +94,10 @@ public sealed class AgentStatus
     public required AgentPreferences Preferences { get; init; }
     public bool SandboxAvailable { get; init; }
     public bool TransientUnitAvailable { get; init; }
-    public string? BinaryPath { get; init; }
-    public string? BinaryVersion { get; init; }
-    public bool? BinaryReviewed { get; init; }
+    // Settable so the CLI, which never starts Codex, can report the binary it resolves.
+    public string? BinaryPath { get; set; }
+    public string? BinaryVersion { get; set; }
+    public bool? BinaryReviewed { get; set; }
     public AgentHelperStatus Helper { get; init; } = new( );
     public AgentConversationSummary? Conversation { get; init; }
     public int PendingRequestCount { get; init; }

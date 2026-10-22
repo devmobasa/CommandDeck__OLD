@@ -66,10 +66,12 @@ row or mark it checked.
 
 An Omarchy row's action runs as a login shell in the user session, not in the
 daemon's sandbox: `systemd-run --user --wait` starts it as a transient service,
-so Omarchy's pickers share the session's `/tmp`, as from Omarchy's own menu. The
-daemon waits up to five minutes for its exit status and error output, which are
-the action's result, and the service manager stops a command still running a
-few seconds after that. Apps that Omarchy's launchers start through `uwsm-app`
+as from Omarchy's own menu. In the daemon, `NoNewPrivileges` would block `sudo`
+and `pkexec`, the root file system is read-only, files would be created with
+`UMask=0077`, and a daemon restart would kill the command. The daemon waits up
+to five minutes for its exit status and error output, which are the action's
+result, and the service manager stops a command still running a few seconds
+after that. Apps that Omarchy's launchers start through `uwsm-app`
 run in their own units and keep running.
 
 Process signals (`kill:`) are limited to processes whose real, effective, and

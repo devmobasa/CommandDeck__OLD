@@ -2,6 +2,22 @@ namespace CommandDeck.Specs;
 
 public static partial class Program
 {
+    // Codex 0.157 and later places its App Server socket under /tmp, so the
+    // daemon unit must share the user's /tmp and may write its own files there.
+    private static void DaemonUnitSharesTheUserTemporaryDirectory( )
+    {
+        var settings = File.ReadAllLines( Path.Combine( FindRepositoryRoot( ), "packaging/systemd/commanddeck.service" ) )
+            .Select( static line => line.Trim( ) )
+            .Where( static line => line.Length > 0 && !line.StartsWith( '#' ) )
+            .ToList( );
+
+        True( !settings.Any( static line => line.StartsWith( "PrivateTmp=", StringComparison.Ordinal ) ),
+            "the daemon unit must not hide /tmp" );
+        True( settings.Any( static line => line.StartsWith( "ReadWritePaths=", StringComparison.Ordinal ) &&
+            line["ReadWritePaths=".Length..].Split( ' ', StringSplitOptions.RemoveEmptyEntries ).Contains( "/tmp" ) ),
+            "the daemon unit must keep /tmp writable under ProtectSystem=strict" );
+    }
+
     // Codex 0.157 and later links the requested socket path to a socket under
     // /tmp. A daemon unit with PrivateTmp sees only a dangling link there.
     private static async Task UnrestrictedLaunchNamesTheFixForAnUnreachableSocketLinkAsync( )
