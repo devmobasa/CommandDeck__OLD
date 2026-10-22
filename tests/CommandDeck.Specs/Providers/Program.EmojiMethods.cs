@@ -24,6 +24,10 @@ public static partial class Program
         True( named[0].Actions[0].Arguments["text"].Length > 0,
             "the copy action carries the glyph" );
 
+        // The icon is the glyph itself so the launcher can draw it large.
+        True( named.All( result => result.Icon == result.Actions[0].Arguments["text"] ),
+            "the icon is the emoji glyph" );
+
         // Keyword match: 'lit' finds the fire emoji even though the name is 'fire'.
         var byKeyword = QueryParser.Parse( "emoji: lit" );
         var keyworded = await provider.SearchAsync(

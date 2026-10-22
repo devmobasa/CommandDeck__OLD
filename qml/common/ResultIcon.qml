@@ -21,6 +21,9 @@ Rectangle {
   readonly property string iconName: root.result && root.result.icon
     ? String(root.result.icon)
     : ""
+  // Emoji results carry the character itself as their icon name.
+  readonly property bool isEmoji: root.kind === Protocol.ResultKinds.Emoji
+  readonly property alias glyphLabel: label
   readonly property int glyphSize: Math.round(root.size * 0.66)
   // Bound to the name and kind rather than the result, so a refreshed result
   // with the same icon does not repeat the icon-theme lookup.
@@ -137,11 +140,14 @@ Rectangle {
   }
 
   Text {
+    id: label
+
     anchors.centerIn: parent
     visible: !image.visible
-    text: root.glyph(root.kind)
+    text: root.isEmoji ? root.iconName : root.glyph(root.kind)
+    textFormat: Text.PlainText
     color: root.theme.text
-    font.family: root.theme.fontFamily
-    font.pixelSize: root.theme.fontSubtitle
+    font.family: root.isEmoji ? "Noto Color Emoji" : root.theme.fontFamily
+    font.pixelSize: root.isEmoji ? root.glyphSize : root.theme.fontSubtitle
   }
 }
