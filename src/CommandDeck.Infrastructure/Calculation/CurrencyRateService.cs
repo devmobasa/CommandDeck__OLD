@@ -31,26 +31,17 @@ public sealed class CurrencyRateService : IAsyncDisposable
         _fetchEnabled = fetchEnabled;
         _time = timeProvider ?? TimeProvider.System;
         _timeout = requestTimeout ?? TimeSpan.FromSeconds( 5 );
-        _client = new( handler ?? new SocketsHttpHandler
-        {
-            AllowAutoRedirect = false,
-            UseCookies = false,
-            ActivityHeadersPropagator = null,
-            ConnectTimeout = TimeSpan.FromSeconds( 5 )
-        } )
-        { Timeout = Timeout.InfiniteTimeSpan };
+        _client = new( handler ?? CreateHandler( ) ) { Timeout = Timeout.InfiniteTimeSpan };
     }
 
-    public bool IsRefreshing
+    // No redirects, cookies or trace headers: the fetch sends only the documented request.
+    internal static SocketsHttpHandler CreateHandler( ) => new( )
     {
-        get
-        {
-            lock ( _gate )
-            {
-                return !_fetch.IsCompleted;
-            }
-        }
-    }
+        AllowAutoRedirect = false,
+        UseCookies = false,
+        ActivityHeadersPropagator = null,
+        ConnectTimeout = TimeSpan.FromSeconds( 5 )
+    };
 
     public CurrencyRateSnapshot? GetRates( )
     {

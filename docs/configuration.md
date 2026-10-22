@@ -350,9 +350,7 @@ object. Detailed guidance remains in the hand-written sections that follow.
 ```
 
 `databasePath` supports `~`, `$HOME`, and selected XDG variables. Keep the
-database on a local filesystem. Do not place it on a network mount. The file
-name `exchange-rates` is reserved for the calculator's rate cache, which is kept
-in the same directory, so configuration with that database name is rejected.
+database on a local filesystem. Do not place it on a network mount.
 
 ## `search`
 
@@ -383,7 +381,7 @@ in the same directory, so configuration with that database name is rejected.
   `https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml`, with only
   `User-Agent: CommandDeck`, no cookies and no query content. Refreshes run at most
   once per 6 hours after success and once per 30 minutes after a failure. Rates
-  are cached as `exchange-rates` beside the catalog database in the state directory.
+  are cached beside the catalog database as `<databasePath>.exchange-rates`.
   Set `search.calculator.exchangeRates=false` to prevent network access; an existing
   cache still works. Missing rates produce no row; the next search can use the fetch.
   There is no Settings control for this option.

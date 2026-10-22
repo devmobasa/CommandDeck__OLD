@@ -16,7 +16,6 @@ public static class ConfigurationValidator
         ValidateIndexing( options.Indexing );
         ValidateRanking( options.Search?.Ranking );
         ValidateCalculator( options.Search?.Calculator );
-        ValidateStorage( options.Storage );
         ValidateAi( options.Ai );
         ValidateAgent( options.Agent );
         if ( options.Quicklinks is null )
@@ -240,18 +239,6 @@ public static class ConfigurationValidator
         if ( calculator is null )
         {
             throw new InvalidOperationException( "search.calculator is required." );
-        }
-    }
-
-    // A database with the cache's file name would be overwritten by the next rate refresh.
-    private static void ValidateStorage( StorageOptions? storage )
-    {
-        if ( storage?.DatabasePath is { } path &&
-            string.Equals( System.IO.Path.GetFileName( path ), CalculatorOptions.ExchangeRateCacheFileName, StringComparison.Ordinal ) )
-        {
-            throw new InvalidOperationException(
-                $"storage.databasePath must not be named {CalculatorOptions.ExchangeRateCacheFileName}; " +
-                "search.calculator keeps its exchange-rate cache under that name beside the database." );
         }
     }
 

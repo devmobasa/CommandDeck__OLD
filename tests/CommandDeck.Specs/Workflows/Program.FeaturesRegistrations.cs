@@ -17,7 +17,6 @@ public static partial class Program
         await RunAsync( "learned queries follow query history retention", LearnedQueriesFollowHistoryRetentionAsync );
         await RunAsync( "settings history choices override the configuration at run time", HistoryChoicesOverrideTheConfigurationAsync );
         await RunAsync( "calculator runtime uses state cache with network fetching disabled", CalculatorRuntimeUsesStateCacheAsync );
-        await RunAsync( "calculator rate cache name cannot name the catalog database", CalculatorRateCacheNameCannotNameTheDatabaseAsync );
         await RunAsync( "settings inline calculator choice overrides configuration without hiding ordinary results", InlineCalculatorChoiceOverridesConfigurationAsync );
         await RunAsync( "settings Top Matches choice overrides the configuration at run time", TopMatchesChoiceOverridesTheConfigurationAsync );
         await RunAsync( "a history choice read before a newer one never restores it", HistoryChoicesReadBeforeAChangeNeverRestoreItAsync );

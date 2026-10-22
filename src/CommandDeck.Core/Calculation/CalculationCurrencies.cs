@@ -31,6 +31,8 @@ internal static class CalculationCurrencies
     internal static readonly CurrencyRateSnapshot PlaceholderRates = new(
         DateOnly.MinValue, Supported.ToFrozenDictionary( code => code, _ => 1m, StringComparer.OrdinalIgnoreCase ) );
 
+    internal static bool IsCurrency( string spelling ) => Aliases.ContainsKey( spelling ) || Supported.Contains( spelling );
+
     internal static string? Resolve( string spelling )
     {
         if ( Unsupported.Contains( spelling ) )

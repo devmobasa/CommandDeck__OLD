@@ -22,7 +22,8 @@ public static partial class Program
         ("-2^2", "-4"), ("2^-1", "0.5"), ("2^3^2", "512"), ("2**3**2", "512"), ("3²", "9"), ("2³", "8"),
         ("(-8)^3", "-512"), ("4^0.5", "2"), ("1^4096", "1"), ("1^-4096", "1"),
         ("2(3+4)", "14"), ("(1+2)(3+4)", "21"), ("2pi", "6.28318530717959"),
-        ("1/2pi", "0.159154943091895"), ("2 + 3 * 4", "14"), ("2 × 3 ÷ 2 · 4", "12"),
+        ("1/2pi", "1.5707963267949"), ("1/2", "0.5"), ("1/2/3", "0.166666666666667"), ("1/2 + 1/4", "0.75"),
+        ("-1/2", "-0.5"), ("2^1/2", "1.4142135623731"), ("6/2(1+2)", "9"), ("10/4", "2.5"), ("2 + 3 * 4", "14"), ("2 × 3 ÷ 2 · 4", "12"),
         ("10 % 3", "1"), ("10%3", "1"), ("-7 mod 3", "-1"), ("7 MOD -3", "1"),
         ("pi", "3.14159265358979"), ("π", "3.14159265358979"), ("tau", "6.28318530717959"),
         ("τ", "6.28318530717959"), ("e", "2.71828182845905"), ("phi", "1.61803398874989"), ("φ", "1.61803398874989"),
@@ -41,7 +42,7 @@ public static partial class Program
         "1 kph * m^-64 / m", "(1 m^-64*kph^32)^2",
         "asin(1.00000000000000000001)", "asin(-1.00000000000000000001)",
         "acos(1.00000000000000000001)", "acos(-1.00000000000000000001)",
-        "5 ft 3 in", "1 h 30 min", "2 lb 4 oz", "100 km in", "in", "in to cm", "k",
+        "5 ft 3 in", "1 h 30 min", "2 lb 4 oz", "100 km in", "in", "in to cm", "k", "5 1/2", "2 1/2 cups", "1/2 3",
         "1e-999", "1e-300 * 1e-300", "1e-310", "1e-300 / 1e10", "2^-1024", "(1e-200)^2", "(1e-200)^2.1",
         "1 mpg + 1 L/100km", "min(1 mpg, 1 L/100km)", "1 mpg mod 1 L/100km",
         "1 m to 1 m", "1 m to m*2/2", "1 m to sqrt(m²)", "1 m to pi m", "1 m to m%",
@@ -85,28 +86,22 @@ public static partial class Program
         }
     }
 
-    private static void CalculatorFeatureFlags( )
+    private static void CalculatorConversionFlag( )
     {
-        (string Expression, CalculationFeatures Features)[] cases =
-        [
-            ("100 * 5", CalculationFeatures.Operator), ("5 km to mi", CalculationFeatures.Conversion),
-            ("sqrt(2)", CalculationFeatures.Function), ("15% of 80", CalculationFeatures.Operator),
-            ("1 km² to m^2", CalculationFeatures.Operator | CalculationFeatures.Conversion),
-            ("1 km² to m²", CalculationFeatures.Conversion),
-            ("2 + sqrt(4) to hex", CalculationFeatures.Operator | CalculationFeatures.Conversion | CalculationFeatures.Function)
-        ];
-
-        foreach ( var (expression, features) in cases )
+        foreach ( var expression in new[] { "5 km to mi", "1 km² to m^2", "1 km² to m²", "2 + sqrt(4) to hex", "255 to hex", "100 km in miles" } )
         {
             var result = CalculatorEngine.Evaluate( expression );
 
             Equal( CalculationStatus.Success, result.Status );
-            Equal( features, result.Features );
+            True( result.IsConversion );
         }
 
-        foreach ( var expression in new[] { "2048", "4k", "5 km", "2pi", "-3", "50%", "5!", "0xff", "pi" } )
+        foreach ( var expression in new[] { "100 * 5", "sqrt(2)", "15% of 80", "2048", "4k", "5 km", "2pi", "-3", "50%", "5!", "0xff", "pi", "5 in" } )
         {
-            Equal( CalculationFeatures.None, CalculatorEngine.Evaluate( expression ).Features );
+            var result = CalculatorEngine.Evaluate( expression );
+
+            Equal( CalculationStatus.Success, result.Status );
+            True( !result.IsConversion );
         }
     }
 

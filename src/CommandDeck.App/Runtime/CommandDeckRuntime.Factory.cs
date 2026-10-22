@@ -88,14 +88,8 @@ public sealed partial class CommandDeckRuntime
                 OmarchyMenuState omarchyState = new( enabled: ( ) => catalog.History.OmarchyMenuState );
                 resources.OwnDisposable( omarchyState );
 
-                var rateDirectory = Path.GetDirectoryName( Path.GetFullPath( PathExpansion.Expand( options.Storage.DatabasePath ) ) );
-                if ( rateDirectory is null )
-                {
-                    throw new InvalidOperationException( "storage.databasePath must name a database file." );
-                }
-
                 var rates = resources.Own( new CurrencyRateService(
-                    Path.Combine( rateDirectory, CalculatorOptions.ExchangeRateCacheFileName ),
+                    PathExpansion.Expand( options.Storage.DatabasePath ) + ".exchange-rates",
                     options.Search.Calculator.ExchangeRates ) );
 
                 List<ICommandProvider> providers =
@@ -192,6 +186,7 @@ public sealed partial class CommandDeckRuntime
                 runtime._extensionConnections = extensionConnections;
                 runtime._extensionDevelopment = extensionDevelopment;
                 runtime._herdr = herdr;
+                runtime._exchangeRates = rates;
                 runtime._extensionSessions = new ExtensionSessionService( extensions, extensionLauncher, actions,
                     extensionDevelopment, extensionConnections );
                 resources.Own( runtime._extensionSessions );

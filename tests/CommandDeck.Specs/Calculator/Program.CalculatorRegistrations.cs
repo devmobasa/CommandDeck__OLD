@@ -15,7 +15,7 @@ public static partial class Program
         }
 
         Run( "calculator bounds nesting tokens and input without throwing", CalculatorInputBounds );
-        Run( "calculator records explicit syntax features", CalculatorFeatureFlags );
+        Run( "calculator reports whether the input is a conversion", CalculatorConversionFlag );
         Run( "calculator stays invariant and thread safe", CalculatorInvariantAndConcurrent );
         Run( "calculator compound unit text round trips", CalculatorUnitTextRoundTrips );
 
@@ -27,7 +27,7 @@ public static partial class Program
         Run( "calculator currency rounds midpoint amounts away from zero", CalculatorCurrencyRounding );
         Run( "calculator currency distinguishes unavailable unsupported and incompatible", CalculatorCurrencyFailures );
         Run( "calculator currency title text round trips", CalculatorCurrencyTextRoundTrips );
-        Run( "calculator unavailable rates preserve syntax features", CalculatorUnavailableRateFeatures );
+        Run( "calculator unavailable rates still report conversions", CalculatorUnavailableRateConversions );
         await RunAsync( "calculator rates refresh lazily with single flight and six hour cache", CalculatorRatesRefreshAsync );
         await RunAsync( "calculator rates preserve old data and back off after failure", CalculatorRatesFailureAsync );
         await RunAsync( "calculator rates validate bounded XML and transport failures", CalculatorRatesInvalidAsync );

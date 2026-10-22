@@ -9,12 +9,12 @@ public static class CalculatorEngine
         // Placeholder rates validate compatibility only; their values never become search results.
         var result = Evaluate( expression, static ( ) => CalculationCurrencies.PlaceholderRates );
 
-        return result.Status == CalculationStatus.Success && result.Features.HasFlag( CalculationFeatures.Conversion );
+        return result.Status == CalculationStatus.Success && result.IsConversion;
     }
 
     public static CalculationResult Evaluate( string expression, Func<CurrencyRateSnapshot?>? rates = null )
     {
-        var features = CalculationFeatures.None;
+        var conversion = false;
 
         try
         {
@@ -54,44 +54,25 @@ public static class CalculatorEngine
 
                 try
                 {
-                    var targetParser = new CalculationParser( remainder, context, target: true );
-                    features |= CalculationFeatures.Conversion;
-
-                    try
-                    {
-                        target = targetParser.Parse( );
-                    }
-                    finally
-                    {
-                        features |= targetParser.Features;
-                    }
-
+                    // Set before parsing so a target that needs missing rates still counts.
+                    conversion = true;
+                    target = new CalculationParser( remainder, context, target: true ).Parse( );
                     split = candidate;
                     break;
                 }
                 catch ( Exception exception ) when ( exception is FormatException or ArithmeticException )
                 {
-                    features &= ~CalculationFeatures.Conversion;
+                    conversion = false;
                 }
             }
 
             if ( split >= 0 )
             {
-                features |= CalculationFeatures.Conversion;
+                conversion = true;
                 tokens = tokens[..split];
             }
 
-            var parser = new CalculationParser( tokens, context );
-            CalculationQuantity quantity;
-
-            try
-            {
-                quantity = parser.Parse( );
-            }
-            finally
-            {
-                features |= parser.Features;
-            }
+            var quantity = new CalculationParser( tokens, context ).Parse( );
 
             if ( target is not null )
             {
@@ -116,16 +97,16 @@ public static class CalculatorEngine
                 PreciseText = CalculationFormatter.CurrencyCode( quantity ) is { } code
                     ? CalculationFormatter.Number( quantity.Value, preserveInteger: false ) + " " + code : null,
                 RatesDate = context.Snapshot?.Date,
-                Features = features
+                IsConversion = conversion
             };
         }
         catch ( CalculationRatesUnavailableException )
         {
-            return new( ) { Status = CalculationStatus.RatesUnavailable, Features = features };
+            return new( ) { Status = CalculationStatus.RatesUnavailable, IsConversion = conversion };
         }
         catch ( Exception )
         {
-            return new( ) { Status = CalculationStatus.Invalid, Features = features };
+            return new( ) { Status = CalculationStatus.Invalid, IsConversion = conversion };
         }
     }
 
@@ -157,16 +138,14 @@ public static class CalculatorEngine
 
 public enum CalculationStatus { Success, Invalid, RatesUnavailable }
 
-[Flags]
-public enum CalculationFeatures { None = 0, Operator = 1, Conversion = 2, Function = 4 }
-
 public sealed record CalculationResult
 {
     public required CalculationStatus Status { get; init; }
     public string? Text { get; init; }
     public string? PreciseText { get; init; }
     public DateOnly? RatesDate { get; init; }
-    public CalculationFeatures Features { get; init; }
+    // True when a to/in/as target was parsed; inline detection promotes only conversions.
+    public bool IsConversion { get; init; }
 }
 
 public sealed record CurrencyRateSnapshot( DateOnly Date, IReadOnlyDictionary<string, decimal> PerEuro );

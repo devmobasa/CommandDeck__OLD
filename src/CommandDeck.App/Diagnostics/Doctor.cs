@@ -36,7 +36,8 @@ public static class Doctor
 
         if ( runtime.Options.Search.Calculator.UseQalc is not null )
         {
-            checks.Add( Check.Value( "Calculator configuration", true,
+            // Not required: the warning never changes Doctor's exit code.
+            checks.Add( Check.Value( "Calculator configuration", false,
                 "search.calculator.useQalc is deprecated and ignored; remove it", required: false ) );
         }
 

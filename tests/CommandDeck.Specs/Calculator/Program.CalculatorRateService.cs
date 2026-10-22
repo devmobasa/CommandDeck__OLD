@@ -54,14 +54,14 @@ public static partial class Program
         await using CurrencyRateService service = new( CalculatorCachePath( ), true, clock, handler );
 
         Equal( 0, handler.Calls );
-        True( !service.IsRefreshing );
+        True( service.WhenIdleAsync( ).IsCompleted );
         Equal( CalculationStatus.Success, CalculatorEngine.Evaluate( "1 km to m", service.GetRates ).Status );
         Equal( 0, handler.Calls );
         Equal<CurrencyRateSnapshot?>( null, service.GetRates( ) );
 
         await started.Task.WaitAsync( TimeSpan.FromSeconds( 5 ) );
 
-        True( service.IsRefreshing );
+        True( !service.WhenIdleAsync( ).IsCompleted );
 
         Parallel.For( 0, 100, _ => Equal<CurrencyRateSnapshot?>( null, service.GetRates( ) ) );
 
@@ -70,7 +70,7 @@ public static partial class Program
         release.SetResult( );
         await service.WhenIdleAsync( );
 
-        True( !service.IsRefreshing );
+        True( service.WhenIdleAsync( ).IsCompleted );
 
         var rates = service.GetRates( );
 
@@ -153,7 +153,7 @@ public static partial class Program
             CalculatorRatesXml.Replace( "GBP", "USD", StringComparison.Ordinal ), CalculatorRatesXml.Replace( "rate='1.1234'", "", StringComparison.Ordinal ),
             CalculatorRatesXml.Replace( "currency='USD'", "", StringComparison.Ordinal ),
             CalculatorRatesXml.Replace( "<Cube><Cube", "<Cube time='2026-10-21'><Cube", StringComparison.Ordinal ),
-            new string( 'x', 65537 )
+            CalculatorPaddedRatesXml( 65537 )
         ];
 
         foreach ( var xml in invalid )
@@ -189,7 +189,27 @@ public static partial class Program
 
         Equal<CurrencyRateSnapshot?>( null, streaming.GetRates( ) );
         Equal( 65537, oversized.BytesRead );
+
+        // The same valid document under the cap parses, so size alone rejected the larger one.
+        using CalculatorRateHandler underCapHandler = new( _ => Task.FromResult( CalculatorXmlResponse( CalculatorPaddedRatesXml( 65000 ) ) ) );
+        await using CurrencyRateService underCap = new( CalculatorCachePath( ), true, handler: underCapHandler );
+
+        underCap.GetRates( );
+        await underCap.WhenIdleAsync( );
+
+        Equal( 1.1234m, underCap.GetRates( )!.PerEuro["USD"] );
+
+        using var defaults = CurrencyRateService.CreateHandler( );
+
+        True( !defaults.AllowAutoRedirect );
+        True( !defaults.UseCookies );
+        True( defaults.ActivityHeadersPropagator is null );
+        Equal( TimeSpan.FromSeconds( 5 ), defaults.ConnectTimeout );
     }
+
+    // Valid rate XML padded with a comment to exactly `length` ASCII bytes.
+    private static string CalculatorPaddedRatesXml( int length ) => CalculatorRatesXml.Insert(
+        "<Envelope>".Length, "<!--" + new string( 'x', length - CalculatorRatesXml.Length - 7 ) + "-->" );
 
     private static async Task CalculatorRatesCacheAsync( )
     {
@@ -248,6 +268,7 @@ public static partial class Program
             clock.Now += TimeSpan.FromDays( 1 );
 
             disabled.GetRates( );
+            await disabled.WhenIdleAsync( );
 
             Equal( 0, disabledHandler.Calls );
         }
@@ -262,6 +283,9 @@ public static partial class Program
         await using CurrencyRateService missing = new( path + "-missing", false, clock, disabledHandler );
 
         Equal<CurrencyRateSnapshot?>( null, missing.GetRates( ) );
+        await missing.WhenIdleAsync( );
+
+        Equal( 0, disabledHandler.Calls );
     }
 
     private static async Task CalculatorRatesCancellationAsync( )
@@ -283,7 +307,7 @@ public static partial class Program
             await timeout.WhenIdleAsync( ).WaitAsync( TimeSpan.FromSeconds( 5 ) );
 
             Equal<CurrencyRateSnapshot?>( null, timeout.GetRates( ) );
-            True( !timeout.IsRefreshing );
+            True( timeout.WhenIdleAsync( ).IsCompleted );
             Equal( 1, timeoutHandler.Calls );
         }
 
@@ -308,7 +332,7 @@ public static partial class Program
         await started.Task.WaitAsync( TimeSpan.FromSeconds( 5 ) );
         await service.DisposeAsync( ).AsTask( ).WaitAsync( TimeSpan.FromSeconds( 5 ) );
 
-        True( !service.IsRefreshing );
+        True( service.WhenIdleAsync( ).IsCompleted );
         Equal<CurrencyRateSnapshot?>( null, service.GetRates( ) );
 
         await service.DisposeAsync( );
@@ -352,7 +376,7 @@ public static partial class Program
 
         True( !firstCompleted );
         True( !secondCompleted );
-        True( !service.IsRefreshing );
+        True( service.WhenIdleAsync( ).IsCompleted );
         Equal<CurrencyRateSnapshot?>( null, service.GetRates( ) );
         Equal( 1, handler.Calls );
     }

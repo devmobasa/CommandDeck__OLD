@@ -17,8 +17,8 @@ public static partial class Program
         [
             ("100 USD to EUR", "€89.02", "89.0154886950329 EUR"),
             ("100 eur in usd", "$112.34", "112.34 USD"), ("$100 to €", "€89.02", "89.0154886950329 EUR"),
-            ("100 € to £", "£83.83", "83.825 GBP"), ("100 JPY to EUR", "€0.56", null),
-            ("1000 SEK to NOK", "NOK 947.24", null), ("10 GBP + 5 EUR", "£14.19", "14.19125 GBP"),
+            ("100 € to £", "£83.83", "83.825 GBP"), ("100 JPY to EUR", "€0.56", "0.5638249887235 EUR"),
+            ("1000 SEK to NOK", "NOK 947.24", "947.240369452579 NOK"), ("10 GBP + 5 EUR", "£14.19", "14.19125 GBP"),
             ("-5 eur", "-€5.00", "-5 EUR"), ("€ 5", "€5.00", "5 EUR"), ("5€", "€5.00", "5 EUR"),
             ("-5 NOK", "-NOK 5.00", "-5 NOK"),
             ("-$5", "-$5.00", "-5 USD"), ("USD + 5 USD", "$6.00", "6 USD"),
@@ -42,7 +42,8 @@ public static partial class Program
             ("1 yen + 2 ¥", "¥3.00", "3 JPY"), ("1 rupee + 2 rupees", "₹3.00", "3 INR"),
             ("1 ₹", "₹1.00", "1 INR"), ("10 USD / 5 USD", "2", null),
             ("5.005 eur", "€5.01", "5.005 EUR"), ("-5.005 eur", "-€5.01", "-5.005 EUR"),
-            ("-0.001 eur", "€0.00", "-0.001 EUR")
+            ("-0.001 eur", "€0.00", "-0.001 EUR"), ("50 usd / 10 usd/h", "5 h", null),
+            ("1 USD/h * 8 h", "$8.00", "8 USD")
         ];
 
     private static void CalculatorCurrencyEvaluation( string expression, string text, string? precise )
@@ -56,15 +57,7 @@ public static partial class Program
         Equal( text, result.Text );
         Equal<DateOnly?>( rates.Date, result.RatesDate );
         Equal( 1, calls );
-
-        if ( precise is not null || expression.Contains( '/' ) )
-        {
-            Equal( precise, result.PreciseText );
-        }
-        else
-        {
-            True( result.PreciseText is not null );
-        }
+        Equal( precise, result.PreciseText );
     }
 
     private static void CalculatorCurrencyRounding( )
@@ -124,25 +117,22 @@ public static partial class Program
         }
     }
 
-    private static void CalculatorUnavailableRateFeatures( )
+    private static void CalculatorUnavailableRateConversions( )
     {
-        (string Expression, CalculationFeatures Features)[] cases =
+        (string Expression, bool Conversion)[] cases =
         [
-            ("2 * USD", CalculationFeatures.Operator), ("sqrt(4) USD", CalculationFeatures.Function),
-            ("100 USD to EUR", CalculationFeatures.Conversion),
-            ("sqrt(4) * USD to m", CalculationFeatures.Operator | CalculationFeatures.Function | CalculationFeatures.Conversion),
-            ("100 to m/USD", CalculationFeatures.Operator | CalculationFeatures.Conversion),
-            ("5 USD", CalculationFeatures.None)
+            ("2 * USD", false), ("sqrt(4) USD", false), ("100 USD to EUR", true),
+            ("sqrt(4) * USD to m", true), ("100 to m/USD", true), ("5 USD", false)
         ];
 
-        foreach ( var (expression, features) in cases )
+        foreach ( var (expression, conversion) in cases )
         {
             foreach ( var rates in new Func<CurrencyRateSnapshot?>?[] { null, ( ) => null } )
             {
                 var result = CalculatorEngine.Evaluate( expression, rates );
 
                 Equal( CalculationStatus.RatesUnavailable, result.Status );
-                Equal( features, result.Features );
+                Equal( conversion, result.IsConversion );
                 Equal<string?>( null, result.Text );
                 Equal<string?>( null, result.PreciseText );
                 Equal<DateOnly?>( null, result.RatesDate );

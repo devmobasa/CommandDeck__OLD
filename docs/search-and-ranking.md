@@ -238,8 +238,10 @@ until the next search. `=` always accepts the full expression grammar, including
 constants and functions, even when inline calculation is off.
 
 The grammar supports `+ - * / ^ ** mod`, parentheses, implicit multiplication
-(`2pi`, `2(3+4)`, `1/2pi` = 1/(2π)), factorials, and `to`, `in`, `as`, `->`, or `→`
-conversions. Units include SI and binary prefixes, compound units (`km/h`, `m²`),
+(`2pi`, `2(3+4)`), factorials, and `to`, `in`, `as`, `->`, or `→` conversions.
+Implicit multiplication binds tighter than `*` and `/`, but two integers written as
+a fraction without spaces are one number: `3/4 cup` is three quarters of a cup and
+`1/2pi` is π/2. Units include SI and binary prefixes, compound units (`km/h`, `m²`),
 temperature (`105F in C`), data (`1 GiB to MB`), currency (`100 USD to EUR`), and
 durations (`2 h + 30 min`, `3 days in hours`). Months are a twelfth of a Julian
 365.25-day year. Volume includes `floz`, `fl oz`, `fluid ounce`, and `fluid ounces`.
@@ -252,6 +254,10 @@ Number bases use `0xff`, `0b1010`, `0o17` and targets `hex`, `bin`, `oct`, `dec`
 `g` means gram directly after a number literal, `)`, or a unit identifier, and in
 conversion targets (`5 g to oz`, `1 lb to g`). After a constant or operator, or on
 its own, it means standard gravity (`pi g`, `2 * g`, `g`).
+
+Two units written as `a/b` without spaces are one compound unit, so
+`100 km / 50 km/h` is `2 h` and `1 GB / 10 MB/s` is `100 s`. Units of the same
+dimension that do not cancel stay as written: `2 km/kph` shows `2 km/kph`, not `2 h`.
 
 `in` means the inch unit only directly after a number literal (`5 in`, `2 in²`,
 `12 in to cm`) or inside a conversion target (`5 ft in in`, `1 m² to in²`).

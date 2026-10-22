@@ -87,9 +87,6 @@ public sealed class SearchOptions
 
 public sealed class CalculatorOptions
 {
-    // The exchange-rate cache lives beside the catalog database under this name.
-    public const string ExchangeRateCacheFileName = "exchange-rates";
-
     public bool Inline { get; init; } = true;
     public bool ExchangeRates { get; init; } = true;
 

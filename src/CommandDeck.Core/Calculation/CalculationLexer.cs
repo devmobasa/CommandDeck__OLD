@@ -1,6 +1,7 @@
 namespace CommandDeck;
 
-internal readonly record struct CalculationToken( string Text, bool Number = false )
+// UnitGroup and Fraction mark the opening parenthesis the lexer adds around `km/h` and `1/2`.
+internal readonly record struct CalculationToken( string Text, bool Number = false, bool UnitGroup = false, bool Fraction = false )
 {
     internal string Lower => Text.ToLowerInvariant( );
 }
@@ -34,20 +35,36 @@ internal static class CalculationLexer
             else if ( char.IsAsciiDigit( character ) || character == '.' )
             {
                 i = NumberEnd( expression, start );
-                tokens.Add( new( expression[start..i].Replace( '−', '-' ), true ) );
-            }
-            else if ( char.IsLetter( character ) || character is 'µ' or '°' )
-            {
-                while ( i < expression.Length && char.IsLetterOrDigit( expression[i] ) && expression[i] is not '²' and not '³' )
+
+                var fraction = FractionEnd( expression, start, i );
+                if ( fraction > i )
                 {
-                    i++;
+                    // An integer fraction written without spaces is one number: 1/2 cup, 3/4 h, 1/2pi = π/2.
+                    tokens.AddRange( [new( "(", Fraction: true ), new( expression[start..i], true ), new( "/" ),
+                        new( expression[(i + 1)..fraction], true ), new( ")" )] );
+                    i = fraction;
                 }
+                else
+                {
+                    tokens.Add( new( expression[start..i].Replace( '−', '-' ), true ) );
+                }
+            }
+            else if ( IsWordStart( character ) )
+            {
+                i = WordEnd( expression, start );
 
                 var word = expression[start..i];
+                var compound = CompoundEnd( expression, i, word );
                 if ( tokens.Count > 0 &&
                     (tokens[^1].Lower, word.ToLowerInvariant( )) is ("fl", "oz" ) or ("fluid", "ounce" or "ounces" ) )
                 {
                     tokens[^1] = new( "floz" );
+                }
+                else if ( compound > i )
+                {
+                    // Two units written as a/b without spaces are one unit: 100 km / 50 km/h = 2 h.
+                    tokens.AddRange( [new( "(", UnitGroup: true ), new( word ), new( "/" ), .. Tokenize( expression[(i + 1)..compound] ), new( ")" )] );
+                    i = compound;
                 }
                 else
                 {
@@ -67,6 +84,73 @@ internal static class CalculationLexer
 
         return tokens.ToArray( );
     }
+
+    private static bool IsWordStart( char character ) => char.IsLetter( character ) || character is 'µ' or '°';
+
+    private static int WordEnd( string expression, int start )
+    {
+        var i = start + 1;
+
+        while ( i < expression.Length && char.IsLetterOrDigit( expression[i] ) && expression[i] is not '²' and not '³' )
+        {
+            i++;
+        }
+
+        return i;
+    }
+
+    // The end of `/denominator` when both sides are plain integers, otherwise -1.
+    private static int FractionEnd( string expression, int start, int end )
+    {
+        if ( end + 1 >= expression.Length || expression[end] != '/' || !char.IsAsciiDigit( expression[end + 1] ) ||
+            expression.AsSpan( start, end - start ).ContainsAnyExceptInRange( '0', '9' ) )
+        {
+            return -1;
+        }
+
+        var denominator = NumberEnd( expression, end + 1 );
+
+        return expression.AsSpan( end + 1, denominator - end - 1 ).ContainsAnyExceptInRange( '0', '9' ) ? -1 : denominator;
+    }
+
+    // The end of `/unit` (with an attached power) after a unit, otherwise -1.
+    private static int CompoundEnd( string expression, int slash, string numerator )
+    {
+        if ( slash + 1 >= expression.Length || expression[slash] != '/' || !IsWordStart( expression[slash + 1] ) )
+        {
+            return -1;
+        }
+
+        var end = WordEnd( expression, slash + 1 );
+        if ( !IsUnit( numerator ) || !IsUnit( expression[(slash + 1)..end] ) )
+        {
+            return -1;
+        }
+
+        if ( end < expression.Length && expression[end] is '²' or '³' )
+        {
+            return end + 1;
+        }
+
+        if ( end + 1 >= expression.Length || expression[end] != '^' )
+        {
+            return end;
+        }
+
+        var digits = expression[end + 1] is '-' or '−' or '+' ? end + 2 : end + 1;
+        var power = digits;
+
+        while ( power < expression.Length && char.IsAsciiDigit( expression[power] ) )
+        {
+            power++;
+        }
+
+        return power > digits ? power : end;
+    }
+
+    private static bool IsUnit( string word ) =>
+        CalculationUnits.Find( word ) is not null || CalculationCurrencies.IsCurrency( word ) ||
+        word.Length > 1 && word[^1] is '2' or '3' && CalculationUnits.Find( word[..^1] ) is not null;
 
     private static int NumberEnd( string expression, int start )
     {

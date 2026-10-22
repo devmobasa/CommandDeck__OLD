@@ -5,8 +5,8 @@ internal sealed class CalculationParser( CalculationToken[] tokens, CalculationC
     private int _position;
     private int _depth;
     private int _exponentDepth;
+    private int _unitGroups;
     private bool _unitIdentifier;
-    internal CalculationFeatures Features { get; private set; }
     private string Current => _position < tokens.Length ? tokens[_position].Lower : "";
     private bool End => _position == tokens.Length;
 
@@ -34,7 +34,6 @@ internal sealed class CalculationParser( CalculationToken[] tokens, CalculationC
         {
             var subtract = Current == "-";
             _position++;
-            Features |= CalculationFeatures.Operator;
 
             left = left.Add( Product( ), subtract );
         }
@@ -50,7 +49,6 @@ internal sealed class CalculationParser( CalculationToken[] tokens, CalculationC
         {
             var operation = Current;
             _position++;
-            Features |= CalculationFeatures.Operator;
 
             var right = Unary( );
             if ( operation is "mod" or "%" )
@@ -101,7 +99,8 @@ internal sealed class CalculationParser( CalculationToken[] tokens, CalculationC
 
         while ( StartsOperand( _position ) )
         {
-            if ( tokens[_position].Number && CalculationCurrencies.Resolve( tokens[_position - 1].Text ) is null )
+            // A number or fraction juxtaposed after anything but a currency (`5 ft 3 in`, `2 1/2`) is ambiguous.
+            if ( (tokens[_position].Number || tokens[_position].Fraction) && CalculationCurrencies.Resolve( tokens[_position - 1].Text ) is null )
             {
                 throw new FormatException( );
             }
@@ -119,7 +118,6 @@ internal sealed class CalculationParser( CalculationToken[] tokens, CalculationC
         if ( Current == "^" )
         {
             _position++;
-            Features |= CalculationFeatures.Operator;
             Enter( );
 
             var negative = Current == "-";
@@ -205,15 +203,7 @@ internal sealed class CalculationParser( CalculationToken[] tokens, CalculationC
 
         if ( token.Text == "(" )
         {
-            Enter( );
-
-            var inner = Add( );
-
-            Expect( ")" );
-            _depth--;
-            _unitIdentifier = false;
-
-            return inner with { BarePercent = false };
+            return Group( token.UnitGroup );
         }
 
         if ( CalculationFunctions.IsFunction( token.Lower ) &&
@@ -223,7 +213,7 @@ internal sealed class CalculationParser( CalculationToken[] tokens, CalculationC
         }
 
         var afterNumber = _position >= 2 && tokens[_position - 2].Number;
-        if ( token.Lower == "in" && !afterNumber && !target )
+        if ( token.Lower == "in" && !afterNumber && !target && _unitGroups == 0 )
         {
             throw new FormatException( );
         }
@@ -235,6 +225,21 @@ internal sealed class CalculationParser( CalculationToken[] tokens, CalculationC
         return value;
     }
 
+    private CalculationQuantity Group( bool unitGroup )
+    {
+        Enter( );
+        _unitGroups += unitGroup ? 1 : 0;
+
+        var inner = Add( );
+
+        Expect( ")" );
+        _unitGroups -= unitGroup ? 1 : 0;
+        _depth--;
+        _unitIdentifier = false;
+
+        return inner with { BarePercent = false };
+    }
+
     private CalculationQuantity Function( string name )
     {
         if ( target )
@@ -242,7 +247,6 @@ internal sealed class CalculationParser( CalculationToken[] tokens, CalculationC
             throw new FormatException( );
         }
 
-        Features |= CalculationFeatures.Function;
         Enter( );
 
         List<CalculationQuantity> arguments = [];
@@ -273,8 +277,8 @@ internal sealed class CalculationParser( CalculationToken[] tokens, CalculationC
 
     private CalculationQuantity Identifier( string spelling, bool gram )
     {
-        // Bare g is gravity; after a number, closing parenthesis or unit it is gram.
-        if ( spelling == "g" && !target && !gram )
+        // Bare g is gravity; after a number, closing parenthesis or unit, or in a unit group, it is gram.
+        if ( spelling == "g" && !target && !gram && _unitGroups == 0 )
         {
             return CalculationFunctions.Constant( "g" )!;
         }
