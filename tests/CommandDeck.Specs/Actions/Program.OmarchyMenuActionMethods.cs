@@ -2,8 +2,8 @@ namespace CommandDeck.Specs;
 
 public static partial class Program
 {
-    // Omarchy's pickers return the choice through files in /tmp, which the
-    // daemon's private /tmp hides, so a menu action never runs in the daemon:
+    // A menu action needs the session's privileges, writable root, and umask,
+    // and must outlive a daemon restart, so it never runs in the daemon:
     // systemd-run starts it in the user session and waits for it, and its exit
     // status and output stay the action's result. uwsm-app cannot wait, so it
     // is never asked. The fake launchers record their argv and never start the

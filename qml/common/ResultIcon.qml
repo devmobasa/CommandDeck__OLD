@@ -91,7 +91,8 @@ Rectangle {
       case Protocol.ResultKinds.Workspace: return "◫"
       case Protocol.ResultKinds.Tab: return "⧉"
       case Protocol.ResultKinds.Calculator: return "="
-      case Protocol.ResultKinds.AiCommand: return "✦"
+      case Protocol.ResultKinds.AiCommand:
+      case Protocol.ResultKinds.Assistant: return "✦"
       case Protocol.ResultKinds.Omarchy: return "O"
       case Protocol.ResultKinds.Process: return "◉"
       default: return "•"

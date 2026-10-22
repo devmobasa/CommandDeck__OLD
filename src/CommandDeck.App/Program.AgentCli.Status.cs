@@ -15,6 +15,14 @@ public static partial class Program
     {
         var status = await runtime.GetAgentStatusAsync( cancellationToken )
             .ConfigureAwait( false );
+        // This process never starts Codex, so it resolves the binary the way Doctor
+        // does: from this CLI's PATH, which can differ from the daemon's
+        // user-manager PATH.
+        (var binary, var failure) = await LocateCodexAsync( runtime.Options.Agent, cancellationToken )
+            .ConfigureAwait( false );
+        status.BinaryPath = binary?.CanonicalPath;
+        status.BinaryVersion = binary?.Version;
+        status.BinaryReviewed = binary?.Reviewed;
         if ( arguments.HasFlag( CliOptionNames.Json ) )
         {
             Console.WriteLine( JsonSerializer.Serialize(
@@ -35,9 +43,9 @@ public static partial class Program
         WriteAgentRow( "Sandbox", FormatAgentTool( status.SandboxAvailable, options.BubblewrapPath ) );
         WriteAgentRow(
             "systemd-run", FormatAgentTool( status.TransientUnitAvailable, options.SystemdRunPath ) );
-        WriteAgentRow(
-            "Binary",
-            $"{status.BinaryPath ?? "not resolved"} {status.BinaryVersion ?? string.Empty}{(status.BinaryReviewed == false ? " (unreviewed App Server version)" : string.Empty)}" );
+        WriteAgentRow( "Binary", binary is null
+            ? $"not resolved ({failure})"
+            : $"{binary.CanonicalPath} {binary.Version}{(binary.Reviewed ? string.Empty : " (unreviewed App Server version)")}" );
         WriteAgentRow( "Helper", FormatAgentHelper( status.Helper ) );
         WriteAgentRow( "Conversation", FormatAgentConversation( status.Conversation ) );
         WriteAgentRow( "Pending", $"{status.PendingRequestCount}" );

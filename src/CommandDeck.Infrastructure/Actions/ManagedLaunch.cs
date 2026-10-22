@@ -101,8 +101,9 @@ internal static class ManagedLaunch
                 : $"```\n{result.StandardError.Trim( )}\n```" );
     }
 
-    // Runs outside the daemon's sandbox, whose private /tmp the session cannot
-    // see: the user's service manager starts a transient service, and --wait
+    // Runs outside the daemon's sandbox (a read-only root, NoNewPrivileges,
+    // UMask=0077) and outside its cgroup, so a daemon restart does not kill it:
+    // the user's service manager starts a transient service, and --wait
     // and --pipe return its exit status and output. With ExitType=cgroup the
     // wait lasts until every process the command started in its own unit has
     // exited. Stopping the local client would leave the unit running, so

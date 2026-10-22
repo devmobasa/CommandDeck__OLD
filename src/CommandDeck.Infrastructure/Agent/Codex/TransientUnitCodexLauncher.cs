@@ -88,9 +88,15 @@ public sealed class TransientUnitCodexLauncher( string systemdRunPath, string sy
     private static async ValueTask WaitForSocketAsync( string socketPath, CancellationToken cancellationToken )
     {
         var deadline = DateTime.UtcNow.AddSeconds( AgentLimits.StartupDeadlineSeconds );
+        var danglingLink = false;
         while ( DateTime.UtcNow < deadline )
         {
-            if ( File.Exists( socketPath ) && OperatingSystem.IsLinux( ) )
+            // Codex 0.157 and later links this path to its socket under /tmp. A
+            // link without a socket is not ready yet; a daemon with a private
+            // /tmp never sees the socket.
+            var exists = File.Exists( socketPath );
+            danglingLink = exists && File.ResolveLinkTarget( socketPath, returnFinalTarget: true ) is { Exists: false };
+            if ( exists && !danglingLink && OperatingSystem.IsLinux( ) )
             {
                 var mode = File.GetUnixFileMode( socketPath );
                 if ( (mode & (UnixFileMode.GroupRead | UnixFileMode.GroupWrite | UnixFileMode.OtherRead |
@@ -104,9 +110,14 @@ public sealed class TransientUnitCodexLauncher( string systemdRunPath, string sy
             }
             await Task.Delay( 100, cancellationToken ).ConfigureAwait( false );
         }
-        throw new AiOperationException(
-            AiErrorCategories.Timeout,
-            safeSummary: "The unrestricted agent did not open its socket in time." );
+        throw danglingLink
+            ? new AiOperationException(
+                AiErrorCategories.Unavailable,
+                safeSummary: "The daemon cannot reach the Codex socket because its service unit hides the " +
+                    "shared temporary directory. Reinstall CommandDeck to update the unit." )
+            : new AiOperationException(
+                AiErrorCategories.Timeout,
+                safeSummary: "The unrestricted agent did not open its socket in time." );
     }
 
     private static async ValueTask<Socket> ConnectVerifiedAsync( string socketPath, CancellationToken cancellationToken )

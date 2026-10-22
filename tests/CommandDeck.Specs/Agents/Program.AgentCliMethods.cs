@@ -4,7 +4,7 @@ namespace CommandDeck.Specs;
 
 public static partial class Program
 {
-    private static async Task<string> CreateAgentCliConfigAsync( string root )
+    private static async Task<string> CreateAgentCliConfigAsync( string root, string? codexBinaryPath = null )
     {
         var config = Path.Combine( root, "config.json" );
         CommandDeckOptions options = new( )
@@ -15,6 +15,7 @@ public static partial class Program
             Ai = new AiOptions { Enabled = false, Providers = [] },
             Agent = new AgentOptions
             {
+                CodexBinaryPath = codexBinaryPath,
                 RuntimeDirectory = Path.Combine( root, "runtime" ),
                 StateDirectory = Path.Combine( root, "state" )
             }
@@ -25,17 +26,30 @@ public static partial class Program
 
     private static async Task AgentCliReportsStatusAndRefusesUnconfirmedAuthorityAsync( )
     {
+        if ( !OperatingSystem.IsLinux( ) )
+        {
+            throw new SpecSkippedException( "This fixture requires Linux." );
+        }
+
         var root = CreateCliSpecRoot( );
         try
         {
-            var config = await CreateAgentCliConfigAsync( root );
+            // A fake binary keeps the spec independent of any Codex on PATH. The
+            // CLI never starts Codex, so status must still resolve and report it.
+            var version = CodexAppServerContract.ReviewedVersion;
+            var codex = Path.Combine( root, "codex" );
+            await File.WriteAllTextAsync( codex, $"#!/bin/sh\necho 'codex-cli {version}'\n" );
+            File.SetUnixFileMode( codex, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute );
+            var config = await CreateAgentCliConfigAsync( root, codex );
             var status = await RunCommandDeckProcessAsync( "agent", "status", "--config", config );
             Equal( 0, status.ExitCode );
             True( status.StandardOutput.Contains( "Codex", StringComparison.Ordinal ) );
+            True( status.StandardOutput.Contains( $"Binary:         {codex} {version}\n", StringComparison.Ordinal ) );
             var statusJson = await RunCommandDeckProcessAsync( "agent", "status", "--json", "--config", config );
             Equal( 0, statusJson.ExitCode );
             var parsed = JsonSerializer.Deserialize( statusJson.StandardOutput, CommandDeckJsonContext.Default.AgentStatus );
             True( parsed is { Enabled: false } && parsed.Trust.Level == AgentTrustLevels.Default && !parsed.Helper.Installed );
+            True( parsed is { BinaryReviewed: true } && parsed.BinaryPath == codex && parsed.BinaryVersion == version );
 
             var probe = await RunCommandDeckProcessAsync( "agent", "probe", "tools", "--config", config );
             Equal( 0, probe.ExitCode );
@@ -60,6 +74,28 @@ public static partial class Program
             True( doctor.StandardOutput.Contains( "Package helper", StringComparison.Ordinal ) );
             True( doctor.StandardOutput.Contains( "Herdr default session", StringComparison.Ordinal ) );
             True( doctor.StandardOutput.Contains( "PATH-selected herdr client", StringComparison.Ordinal ) );
+        }
+        finally
+        {
+            Directory.Delete( root, recursive: true );
+        }
+    }
+
+    // `agent status` resolves Codex in its own process, so a missing binary
+    // names the fix instead of a bare "not resolved".
+    private static async Task AgentCliStatusNamesTheFixWhenCodexIsMissingAsync( )
+    {
+        var root = CreateCliSpecRoot( );
+        try
+        {
+            var emptyPath = Directory.CreateDirectory( Path.Combine( root, "empty-path" ) ).FullName;
+            var missing = await RunCommandDeckWithEnvironmentAsync(
+                new Dictionary<string, string?> { ["PATH"] = emptyPath },
+                "agent", "status", "--config", await CreateAgentCliConfigAsync( root ) );
+            Equal( 0, missing.ExitCode );
+            True( missing.StandardOutput.Contains(
+                "Binary:         not resolved (Codex was not found on PATH. Install it or set agent.codexBinaryPath.)",
+                StringComparison.Ordinal ) );
         }
         finally
         {

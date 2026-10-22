@@ -22,6 +22,12 @@ public static partial class Program
         await RunAsync(
             "Codex discovery skips launcher shims and reports direct-path options",
             CodexDiscoverySkipsLauncherShimsAsync );
+        await RunAsync(
+            "unrestricted launch names the fix when the Codex socket link is unreachable",
+            UnrestrictedLaunchNamesTheFixForAnUnreachableSocketLinkAsync );
+        Run(
+            "daemon unit shares the user's /tmp where Codex places its socket",
+            DaemonUnitSharesTheUserTemporaryDirectory );
         Run(
             "unknown prefixes and assistant prompts are not search errors",
             UnknownPrefixesAndPromptsAreNotSearchErrors );
