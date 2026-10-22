@@ -64,6 +64,14 @@ five seconds, 256 MiB and bounded output, and cancelled on shutdown. The query i
 never part of the batch. Answers are cached for twenty seconds; they only dim a
 row or mark it checked.
 
+An Omarchy row's action runs as a login shell in the user session, not in the
+daemon's sandbox: `systemd-run --user --wait` starts it as a transient service,
+so Omarchy's pickers share the session's `/tmp`, as from Omarchy's own menu. The
+daemon waits up to five minutes for its exit status and error output, which are
+the action's result, and the service manager stops a command still running a
+few seconds after that. Apps that Omarchy's launchers start through `uwsm-app`
+run in their own units and keep running.
+
 Process signals (`kill:`) are limited to processes whose real, effective, and
 saved user IDs are the user's own, and never reach CommandDeck itself. Each
 signal needs a confirmation that names the PID and process. The daemon pins the

@@ -181,16 +181,15 @@ internal sealed class DesktopActionHandler( EditorLauncher editor ) : ILinuxActi
             cancellationToken ).ConfigureAwait( false );
     }
 
+    // An Omarchy menu command runs in the user session: its pickers return the
+    // choice through files in /tmp, which the daemon's private /tmp would hide.
     private static async ValueTask<ActionExecutionResult> RunTrustedShellAsync(
         CommandAction action,
         CancellationToken cancellationToken )
     {
         var command = LinuxActionArguments.Require( action, "command" );
-        var result = await ProcessRunner.RunAsync(
-            "/bin/sh",
-            ["-lc", command],
-            null,
-            null,
+        var result = await ManagedLaunch.RunInSessionAsync(
+            new DesktopEntryCommand { Executable = "/bin/sh", Arguments = ["-lc", command] },
             TimeSpan.FromMinutes( 5 ),
             cancellationToken ).ConfigureAwait( false );
 

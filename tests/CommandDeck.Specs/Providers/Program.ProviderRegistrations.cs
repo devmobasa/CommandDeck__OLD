@@ -135,6 +135,7 @@ public static partial class Program
         await RunAsync( "omarchy menu browse marks live state without the typed text", OmarchyMenuBrowseMarksLiveStateAsync );
         Run( "omarchy menu scope is validated at the protocol boundary", OmarchyMenuScopeIsValidated );
         await RunAsync( "omarchy menu browse action is launcher owned", OmarchyMenuBrowseActionIsLauncherOwnedAsync );
+        await RunAsync( "omarchy menu actions run in the user session", OmarchyMenuActionsRunInTheUserSessionAsync );
         await RunAsync( "omarchy menu source reparses only changed files", OmarchyMenuSourceReparsesChangedFilesAsync );
         await RunAsync(
             "systemd provider discovers services and timers without reading logs",
