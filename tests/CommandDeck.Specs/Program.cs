@@ -17,6 +17,9 @@ public static partial class Program
         // Runtimes under test never use the developer's own hey; HEY specs inject
         // theirs, so a plain query gets the same rows on every machine.
         Environment.SetEnvironmentVariable( HeyExecutable.OverrideVariable, HeyExecutable.OverrideOff );
+        // Nor the developer's Hyprland session: without its signature hyprctl
+        // reaches no compositor, so open windows never become rows or targets.
+        Environment.SetEnvironmentVariable( "HYPRLAND_INSTANCE_SIGNATURE", null );
 
         if ( args is ["--native-index-aot", var nativeExecutable] )
         {
@@ -39,6 +42,11 @@ public static partial class Program
         {
             return await clipboardFixture;
         }
+
+        // Specs find desktop entries only in their own fixtures, never this
+        // machine's applications. Fixture children above keep the given ones.
+        Environment.SetEnvironmentVariable( "XDG_DATA_HOME", Path.Combine( Path.GetTempPath( ), "data" ) );
+        Environment.SetEnvironmentVariable( "XDG_DATA_DIRS", Path.Combine( Path.GetTempPath( ), "data-dirs" ) );
 
         if ( !ConfigureSpecSelection( args ) )
         {
