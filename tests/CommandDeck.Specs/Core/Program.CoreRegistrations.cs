@@ -19,6 +19,7 @@ public static partial class Program
         await RunAsync( "spec selection lists filters and reports failures without running unrelated fixtures", SpecSelectionReportsAsync );
         await RunAsync( "spec storage cleans signals and binds short sockets from a long disk root", SpecTemporaryStorageLifetimeAsync );
         await RunAsync( "spec storage recovers crashed runs while preserving live unmarked and linked directories", SpecTemporaryStorageRecoversCrashAsync );
+        await RunAsync( "spec runtimes never see the live desktop's windows workspaces or applications", SpecRuntimesSeeNoLiveDesktopAsync );
         Run( "result cache bounds bursts refreshes and deterministic expiry", ResultCacheBoundsAndExpiry );
         Run( "detached undo cache bounds expiry and stable-ID isolation", DetachedUndoCacheBoundsAndExpiry );
         await RunAsync( "invocation snapshot rejects a replaced action target", InvocationSnapshotRejectsReplacedActionAsync );

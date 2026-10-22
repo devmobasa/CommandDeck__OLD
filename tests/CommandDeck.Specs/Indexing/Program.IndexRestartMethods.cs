@@ -188,6 +188,12 @@ public static partial class Program
             await catalog.InitializeAsync( CancellationToken.None );
             await using var indexer = new IndexCoordinator( catalog, catalog, options );
             await indexer.StartAsync( CancellationToken.None );
+            // A fresh catalog reconciles once with a full scan that watches every
+            // existing root. Finish it first, so only the reindexes below can
+            // watch the roots created next.
+            True( await WaitUntilAsync( async ( ) =>
+                (await indexer.GetIncrementalStatusAsync( CancellationToken.None )) is { ReconciliationRequired: false, Reconciling: false },
+                TimeSpan.FromSeconds( 5 ) ) );
             var scopedRoot = (await indexer.GetIncrementalStatusAsync( CancellationToken.None ))
                 .Roots.Single( value => string.Equals( value.Path, scoped, StringComparison.Ordinal ) );
 

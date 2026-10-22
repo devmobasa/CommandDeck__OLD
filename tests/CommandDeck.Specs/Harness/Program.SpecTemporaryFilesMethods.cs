@@ -218,4 +218,15 @@ public static partial class Program
             Directory.Delete( parent, recursive: true );
         }
     }
+
+    private static async Task SpecRuntimesSeeNoLiveDesktopAsync( )
+    {
+        // An empty query lists every window and workspace hyprctl can reach.
+        var rows = await new HyprlandProvider( ).SearchAsync(
+            QueryParser.Parse( "" ), new SearchRequest { Limit = 100 }, default );
+
+        Equal( 0, rows.Count );
+        True( DesktopEntryScanner.GetApplicationDirectories( )
+            .All( directory => directory.StartsWith( Path.GetTempPath( ), StringComparison.Ordinal ) ) );
+    }
 }
