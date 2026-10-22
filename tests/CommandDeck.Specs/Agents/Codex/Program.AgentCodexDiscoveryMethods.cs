@@ -68,6 +68,17 @@ public static partial class Program
             {
                 True( exception.SafeSummary?.Contains( "agent.codexBinaryPath", StringComparison.Ordinal ) == true );
             }
+
+            Environment.SetEnvironmentVariable( "PATH", root );
+            try
+            {
+                await CodexBinaryLocator.LocateAsync( new AgentOptions( ), default );
+                True( false, "A PATH without Codex must be rejected." );
+            }
+            catch ( AiOperationException exception )
+            {
+                Equal( "Codex was not found on PATH. Install it or set agent.codexBinaryPath.", exception.SafeSummary );
+            }
         }
         finally
         {

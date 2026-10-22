@@ -24,7 +24,7 @@ public static class CodexBinaryLocator
                 AiErrorCategories.Unavailable,
                 safeSummary: skippedLauncher
                     ? "Codex on PATH is a launcher shim. Set agent.codexBinaryPath to a direct Codex executable."
-                    : "The Codex CLI is not installed or not on PATH." );
+                    : "Codex was not found on PATH. Install it or set agent.codexBinaryPath." );
         }
         var canonical = ResolveCanonical( candidate );
         if ( IsLauncher( canonical ) )

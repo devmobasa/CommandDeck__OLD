@@ -12,9 +12,10 @@ RestartSec=2
 TimeoutStopSec=10
 UMask=0077
 NoNewPrivileges=true
-PrivateTmp=true
 ProtectSystem=strict
-ReadWritePaths=-%h/.config/commanddeck -%h/.local/state/commanddeck
+# No PrivateTmp: Codex 0.157 and later links the unrestricted assistant's App
+# Server socket into /tmp, which the daemon must see to connect.
+ReadWritePaths=-%h/.config/commanddeck -%h/.local/state/commanddeck /tmp
 
 [Install]
 WantedBy=graphical-session.target

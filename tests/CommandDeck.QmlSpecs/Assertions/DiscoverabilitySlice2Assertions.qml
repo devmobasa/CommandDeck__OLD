@@ -275,6 +275,9 @@ QtObject {
         && host.part_resultIcon.glyphLabel.font.family === "Noto Color Emoji"
         && host.part_resultIcon.glyphLabel.font.pixelSize === host.part_resultIcon.glyphSize,
       "an emoji result draws its own character large in the colour emoji font, not the fallback dot")
+    host.part_resultIcon.result = ({ kind: "assistant", icon: "commanddeck-missing-icon", title: "Ask AI: biggest auto brand" })
+    host.expect(host.part_resultIcon.glyphLabel.visible && host.part_resultIcon.glyphLabel.text === "✦",
+      "an Ask AI row whose theme icon is missing shows the assistant sparkle, not the fallback dot")
     host.part_resultIcon.result = windowIconResult
     host.part_kindCueRow.result = ({ title: "Right", subtitle: "Style › Menu Bar › Position", kind: "omarchy" })
     host.expect(!host.part_kindCueRow.compact && host.part_kindCueRow.implicitHeight >= host.part_theme.rowHeight,

@@ -4,7 +4,7 @@ namespace CommandDeck.Specs;
 
 public static partial class Program
 {
-    private static async Task<string> CreateAgentCliConfigAsync( string root )
+    private static async Task<string> CreateAgentCliConfigAsync( string root, string? codexBinaryPath = null )
     {
         var config = Path.Combine( root, "config.json" );
         CommandDeckOptions options = new( )
@@ -15,6 +15,7 @@ public static partial class Program
             Ai = new AiOptions { Enabled = false, Providers = [] },
             Agent = new AgentOptions
             {
+                CodexBinaryPath = codexBinaryPath,
                 RuntimeDirectory = Path.Combine( root, "runtime" ),
                 StateDirectory = Path.Combine( root, "state" )
             }
@@ -60,6 +61,42 @@ public static partial class Program
             True( doctor.StandardOutput.Contains( "Package helper", StringComparison.Ordinal ) );
             True( doctor.StandardOutput.Contains( "Herdr default session", StringComparison.Ordinal ) );
             True( doctor.StandardOutput.Contains( "PATH-selected herdr client", StringComparison.Ordinal ) );
+        }
+        finally
+        {
+            Directory.Delete( root, recursive: true );
+        }
+    }
+
+    // `agent status` runs in a fresh process that never starts Codex, so the
+    // Binary row must resolve the binary itself rather than say "not resolved".
+    private static async Task AgentCliStatusResolvesTheCodexBinaryAsync( )
+    {
+        if ( !OperatingSystem.IsLinux( ) )
+        {
+            throw new SpecSkippedException( "This fixture requires Linux." );
+        }
+
+        var root = CreateCliSpecRoot( );
+        try
+        {
+            var codex = Path.Combine( root, "codex" );
+            await File.WriteAllTextAsync( codex, "#!/bin/sh\necho 'codex-cli 0.163.0'\n" );
+            File.SetUnixFileMode( codex, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute );
+            var configured = await RunCommandDeckProcessAsync(
+                "agent", "status", "--config", await CreateAgentCliConfigAsync( root, codex ) );
+            Equal( 0, configured.ExitCode );
+            True( configured.StandardOutput.Contains(
+                $"Binary:         {codex} 0.163.0 (unreviewed App Server version)", StringComparison.Ordinal ) );
+
+            var emptyPath = Directory.CreateDirectory( Path.Combine( root, "empty-path" ) ).FullName;
+            var missing = await RunCommandDeckWithEnvironmentAsync(
+                new Dictionary<string, string?> { ["PATH"] = emptyPath },
+                "agent", "status", "--config", await CreateAgentCliConfigAsync( root ) );
+            Equal( 0, missing.ExitCode );
+            True( missing.StandardOutput.Contains(
+                "Binary:         not resolved (Codex was not found on PATH. Install it or set agent.codexBinaryPath.)",
+                StringComparison.Ordinal ) );
         }
         finally
         {

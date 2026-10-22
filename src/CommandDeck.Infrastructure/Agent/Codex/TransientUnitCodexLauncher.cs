@@ -92,6 +92,16 @@ public sealed class TransientUnitCodexLauncher( string systemdRunPath, string sy
         {
             if ( File.Exists( socketPath ) && OperatingSystem.IsLinux( ) )
             {
+                // Codex 0.157 and later links this path to its socket under /tmp.
+                // A daemon with a private /tmp sees the link but not the socket.
+                if ( File.ResolveLinkTarget( socketPath, returnFinalTarget: true ) is { Exists: false } )
+                {
+                    throw new AiOperationException(
+                        AiErrorCategories.Unavailable,
+                        safeSummary: "The daemon cannot reach the Codex socket because its service unit hides the " +
+                            "shared temporary directory. Reinstall CommandDeck to update the unit." );
+                }
+
                 var mode = File.GetUnixFileMode( socketPath );
                 if ( (mode & (UnixFileMode.GroupRead | UnixFileMode.GroupWrite | UnixFileMode.OtherRead |
                     UnixFileMode.OtherWrite)) != 0 )

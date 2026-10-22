@@ -35,9 +35,11 @@ public static partial class Program
         WriteAgentRow( "Sandbox", FormatAgentTool( status.SandboxAvailable, options.BubblewrapPath ) );
         WriteAgentRow(
             "systemd-run", FormatAgentTool( status.TransientUnitAvailable, options.SystemdRunPath ) );
-        WriteAgentRow(
-            "Binary",
-            $"{status.BinaryPath ?? "not resolved"} {status.BinaryVersion ?? string.Empty}{(status.BinaryReviewed == false ? " (unreviewed App Server version)" : string.Empty)}" );
+        // This process never starts Codex, so resolve the binary the way Doctor does.
+        (var binary, var failure) = await LocateCodexAsync( options, cancellationToken ).ConfigureAwait( false );
+        WriteAgentRow( "Binary", binary is null
+            ? $"not resolved ({failure})"
+            : $"{binary.CanonicalPath} {binary.Version}{(binary.Reviewed ? string.Empty : " (unreviewed App Server version)")}" );
         WriteAgentRow( "Helper", FormatAgentHelper( status.Helper ) );
         WriteAgentRow( "Conversation", FormatAgentConversation( status.Conversation ) );
         WriteAgentRow( "Pending", $"{status.PendingRequestCount}" );

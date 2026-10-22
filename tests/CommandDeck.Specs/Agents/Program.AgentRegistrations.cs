@@ -22,6 +22,9 @@ public static partial class Program
         await RunAsync(
             "Codex discovery skips launcher shims and reports direct-path options",
             CodexDiscoverySkipsLauncherShimsAsync );
+        await RunAsync(
+            "unrestricted launch names the fix when the Codex socket link is unreachable",
+            UnrestrictedLaunchNamesTheFixForAnUnreachableSocketLinkAsync );
         Run(
             "unknown prefixes and assistant prompts are not search errors",
             UnknownPrefixesAndPromptsAreNotSearchErrors );
