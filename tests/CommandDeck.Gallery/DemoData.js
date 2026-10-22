@@ -360,7 +360,7 @@ function conversion(icon) {
 
 function emoji(icon) {
   return [{
-    id: "emoji:rocket", kind: K.Emoji, sourceId: "emoji", icon: icon("face-smile"),
+    id: "emoji:rocket", kind: K.Emoji, sourceId: "emoji", icon: "🚀",
     section: section("emoji", "Emoji", 17), title: "🚀  rocket", subtitle: "launch space ship",
     details: [{ label: "Keywords", value: "launch space ship" }],
     actions: [{ id: "copy", title: "Copy Emoji", kind: A.CopyText, arguments: { text: "🚀" } }]

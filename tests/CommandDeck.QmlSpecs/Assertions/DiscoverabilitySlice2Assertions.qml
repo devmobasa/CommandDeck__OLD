@@ -269,6 +269,13 @@ QtObject {
     host.expect(host.part_resultIcon.candidates("\udb80\udde6", "omarchy").join(",")
         === "\udb80\udde6,omarchy,applications-system,system-run",
       "an Omarchy row whose menu icon is a font glyph falls back to the Omarchy logo first")
+    const windowIconResult = host.part_resultIcon.result
+    host.part_resultIcon.result = ({ kind: "emoji", icon: "\uD83D\uDE80", title: "\uD83D\uDE80  rocket" })
+    host.expect(host.part_resultIcon.glyphLabel.visible && host.part_resultIcon.glyphLabel.text === "\uD83D\uDE80"
+        && host.part_resultIcon.glyphLabel.font.family === "Noto Color Emoji"
+        && host.part_resultIcon.glyphLabel.font.pixelSize === host.part_resultIcon.glyphSize,
+      "an emoji result draws its own character large in the colour emoji font, not the fallback dot")
+    host.part_resultIcon.result = windowIconResult
     host.part_kindCueRow.result = ({ title: "Right", subtitle: "Style › Menu Bar › Position", kind: "omarchy" })
     host.expect(!host.part_kindCueRow.compact && host.part_kindCueRow.implicitHeight >= host.part_theme.rowHeight,
       "Omarchy commands retain the second line for their menu path")

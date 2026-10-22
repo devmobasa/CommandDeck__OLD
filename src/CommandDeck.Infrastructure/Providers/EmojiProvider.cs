@@ -237,7 +237,7 @@ public sealed class EmojiProvider : ICommandProvider
         Kind = ResultKinds.Emoji,
         Title = emoji.Glyph + "  " + emoji.Name,
         Subtitle = emoji.Keywords,
-        Icon = "face-smile",
+        Icon = emoji.Glyph,
         ProviderId = ProviderIds.Emoji,
         SourceId = SourceIds.Emoji,
         Score = 1,
