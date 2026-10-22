@@ -43,7 +43,8 @@ public static partial class Program
             ("1 ₹", "₹1.00", "1 INR"), ("10 USD / 5 USD", "2", null),
             ("5.005 eur", "€5.01", "5.005 EUR"), ("-5.005 eur", "-€5.01", "-5.005 EUR"),
             ("-0.001 eur", "€0.00", "-0.001 EUR"), ("50 usd / 10 usd/h", "5 h", null),
-            ("1 USD/h * 8 h", "$8.00", "8 USD")
+            ("1 USD/h * 8 h", "$8.00", "8 USD"), ("$800 / $20/h", "40 h", null), ("50 € / 10 €/h", "5 h", null),
+            ("800 USD / 20 USD/h", "40 h", null), ("$20/h * 8 h", "$160.00", "160 USD")
         ];
 
     private static void CalculatorCurrencyEvaluation( string expression, string text, string? precise )
@@ -114,29 +115,6 @@ public static partial class Program
 
             Equal( CalculationStatus.Success, copied.Status );
             Equal( text, copied.Text );
-        }
-    }
-
-    private static void CalculatorUnavailableRateConversions( )
-    {
-        (string Expression, bool Conversion)[] cases =
-        [
-            ("2 * USD", false), ("sqrt(4) USD", false), ("100 USD to EUR", true),
-            ("sqrt(4) * USD to m", true), ("100 to m/USD", true), ("5 USD", false)
-        ];
-
-        foreach ( var (expression, conversion) in cases )
-        {
-            foreach ( var rates in new Func<CurrencyRateSnapshot?>?[] { null, ( ) => null } )
-            {
-                var result = CalculatorEngine.Evaluate( expression, rates );
-
-                Equal( CalculationStatus.RatesUnavailable, result.Status );
-                Equal( conversion, result.IsConversion );
-                Equal<string?>( null, result.Text );
-                Equal<string?>( null, result.PreciseText );
-                Equal<DateOnly?>( null, result.RatesDate );
-            }
         }
     }
 

@@ -19,6 +19,8 @@ public static partial class Program
         ("1 kWh/day to W", "41.6666666666667 W"), ("2 km/kph", "2 km/kph"),
         ("1/2 h", "0.5 h"), ("3/4 cup", "0.75 cup"), ("1/2 cup to ml", "118.29411825 mL"),
         ("3/4 cup to tbsp", "12 tbsp"), ("1/4 tsp to ml", "1.2322303984375 mL"), ("1/2 g", "0.5 g"),
+        ("3/8 in to mm", "9.525 mm"), ("1/2 in to mm", "12.7 mm"), ("3/4 in", "0.75 in"), ("3/4 inch to mm", "19.05 mm"),
+        ("4186 J/(kg*K)", "4186 J/(kg·K)"), ("1 W/(m*K) to W/(m*K)", "1 W/(m·K)"),
         ("2 h + 30 min", "2.5 h"), ("90 min to h", "1.5 h"), ("1.5 h to min", "90 min"),
         ("3 days in hours", "72 h"), ("1 year to days", "365.25 d"), ("12 months to year", "1 yr"),
         ("10 mins to hours", "0.166666666666667 h"), ("90 secs to min", "1.5 min"),

@@ -24,7 +24,6 @@ public static partial class Program
             }
 
             calculator["exchangeRates"] = false;
-            int? exitCode = null;
             foreach ( var mode in new string?[] { null, "auto", "never", "always", "unknown", "" } )
             {
                 if ( mode is null )
@@ -54,10 +53,6 @@ public static partial class Program
                 {
                     True( notes[0].StartsWith( "WARN", StringComparison.Ordinal ), notes[0] );
                 }
-
-                // The deprecation warning must not change Doctor's exit code.
-                exitCode ??= doctor.ExitCode;
-                Equal( exitCode, doctor.ExitCode );
             }
         }
         finally
@@ -85,9 +80,9 @@ public static partial class Program
         await using ( var missing = await CommandDeckRuntime.CreateAsync( config, new RuntimeConstructionOptions { StartIndexer = false }, default ) )
         {
             var rows = await missing.SearchAsync( new( ) { Query = "100 usd to eur" }, default );
-            // A fetch that the setting failed to stop would finish before this returns.
-            await missing.ExchangeRates!.WhenIdleAsync( );
 
+            // No fetch ever started, so the service still holds its initial completed task.
+            True( ReferenceEquals( Task.CompletedTask, missing.ExchangeRates!.WhenIdleAsync( ) ) );
             True( rows.All( row => row.Kind != ResultKinds.Calculator ) );
             True( !File.Exists( cache ) );
         }

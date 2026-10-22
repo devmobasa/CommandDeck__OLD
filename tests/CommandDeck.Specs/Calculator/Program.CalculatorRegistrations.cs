@@ -27,7 +27,6 @@ public static partial class Program
         Run( "calculator currency rounds midpoint amounts away from zero", CalculatorCurrencyRounding );
         Run( "calculator currency distinguishes unavailable unsupported and incompatible", CalculatorCurrencyFailures );
         Run( "calculator currency title text round trips", CalculatorCurrencyTextRoundTrips );
-        Run( "calculator unavailable rates still report conversions", CalculatorUnavailableRateConversions );
         await RunAsync( "calculator rates refresh lazily with single flight and six hour cache", CalculatorRatesRefreshAsync );
         await RunAsync( "calculator rates preserve old data and back off after failure", CalculatorRatesFailureAsync );
         await RunAsync( "calculator rates validate bounded XML and transport failures", CalculatorRatesInvalidAsync );

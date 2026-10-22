@@ -105,6 +105,12 @@ internal sealed class CalculationParser( CalculationToken[] tokens, CalculationC
                 throw new FormatException( );
             }
 
+            // An operand right after a compound unit (`J/kg K`) would multiply, not join the denominator.
+            if ( tokens[_position - 1] is { Text: ")", UnitGroup: true } )
+            {
+                throw new FormatException( );
+            }
+
             left = left.Multiply( Power( juxtaposed: true ), false, implicitProduct: true );
         }
 
@@ -212,7 +218,7 @@ internal sealed class CalculationParser( CalculationToken[] tokens, CalculationC
             return Function( token.Lower );
         }
 
-        var afterNumber = _position >= 2 && tokens[_position - 2].Number;
+        var afterNumber = _position >= 2 && (tokens[_position - 2].Number || tokens[_position - 2] is { Text: ")", Fraction: true });
         if ( token.Lower == "in" && !afterNumber && !target && _unitGroups == 0 )
         {
             throw new FormatException( );

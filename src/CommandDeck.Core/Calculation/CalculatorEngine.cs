@@ -14,8 +14,6 @@ public static class CalculatorEngine
 
     public static CalculationResult Evaluate( string expression, Func<CurrencyRateSnapshot?>? rates = null )
     {
-        var conversion = false;
-
         try
         {
             if ( string.IsNullOrWhiteSpace( expression ) || expression.Length > MaximumExpressionLength )
@@ -54,21 +52,18 @@ public static class CalculatorEngine
 
                 try
                 {
-                    // Set before parsing so a target that needs missing rates still counts.
-                    conversion = true;
                     target = new CalculationParser( remainder, context, target: true ).Parse( );
                     split = candidate;
                     break;
                 }
                 catch ( Exception exception ) when ( exception is FormatException or ArithmeticException )
                 {
-                    conversion = false;
+                    // Not a complete target; the next keyword to the left may be.
                 }
             }
 
             if ( split >= 0 )
             {
-                conversion = true;
                 tokens = tokens[..split];
             }
 
@@ -97,16 +92,16 @@ public static class CalculatorEngine
                 PreciseText = CalculationFormatter.CurrencyCode( quantity ) is { } code
                     ? CalculationFormatter.Number( quantity.Value, preserveInteger: false ) + " " + code : null,
                 RatesDate = context.Snapshot?.Date,
-                IsConversion = conversion
+                IsConversion = split >= 0
             };
         }
         catch ( CalculationRatesUnavailableException )
         {
-            return new( ) { Status = CalculationStatus.RatesUnavailable, IsConversion = conversion };
+            return new( ) { Status = CalculationStatus.RatesUnavailable };
         }
         catch ( Exception )
         {
-            return new( ) { Status = CalculationStatus.Invalid, IsConversion = conversion };
+            return new( ) { Status = CalculationStatus.Invalid };
         }
     }
 
@@ -144,7 +139,7 @@ public sealed record CalculationResult
     public string? Text { get; init; }
     public string? PreciseText { get; init; }
     public DateOnly? RatesDate { get; init; }
-    // True when a to/in/as target was parsed; inline detection promotes only conversions.
+    // True for a successful to/in/as conversion; inline detection promotes only conversions.
     public bool IsConversion { get; init; }
 }
 

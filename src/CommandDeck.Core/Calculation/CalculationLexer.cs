@@ -1,6 +1,6 @@
 namespace CommandDeck;
 
-// UnitGroup and Fraction mark the opening parenthesis the lexer adds around `km/h` and `1/2`.
+// UnitGroup and Fraction mark the parentheses the lexer adds around `km/h` and `1/2`.
 internal readonly record struct CalculationToken( string Text, bool Number = false, bool UnitGroup = false, bool Fraction = false )
 {
     internal string Lower => Text.ToLowerInvariant( );
@@ -36,13 +36,23 @@ internal static class CalculationLexer
             {
                 i = NumberEnd( expression, start );
 
-                var fraction = FractionEnd( expression, start, i );
+                var fraction = FractionEnd( expression, start, i, tokens is [.., { Text: "^" }] or [.., { Text: "^" }, { Text: "+" or "-" }] );
+                var rate = tokens is [.., var previous] && CalculationCurrencies.IsCurrency( previous.Text ) ? DenominatorEnd( expression, i ) : -1;
                 if ( fraction > i )
                 {
-                    // An integer fraction written without spaces is one number: 1/2 cup, 3/4 h, 1/2pi = π/2.
+                    // An integer fraction before an operand is one number: 1/2 cup, 3/4 h, 1/2pi = π/2.
                     tokens.AddRange( [new( "(", Fraction: true ), new( expression[start..i], true ), new( "/" ),
-                        new( expression[(i + 1)..fraction], true ), new( ")" )] );
+                        new( expression[(i + 1)..fraction], true ), new( ")", Fraction: true )] );
                     i = fraction;
+                }
+                else if ( rate > i )
+                {
+                    // $20/h is twenty dollars per hour, so $800 / $20/h divides by the whole rate.
+                    var currency = tokens[^1];
+
+                    tokens.RemoveAt( tokens.Count - 1 );
+                    AddUnitGroup( tokens, [currency, new( expression[start..i].Replace( '−', '-' ), true )], expression, i, rate );
+                    i = rate;
                 }
                 else
                 {
@@ -63,7 +73,7 @@ internal static class CalculationLexer
                 else if ( compound > i )
                 {
                     // Two units written as a/b without spaces are one unit: 100 km / 50 km/h = 2 h.
-                    tokens.AddRange( [new( "(", UnitGroup: true ), new( word ), new( "/" ), .. Tokenize( expression[(i + 1)..compound] ), new( ")" )] );
+                    AddUnitGroup( tokens, [new( word )], expression, i, compound );
                     i = compound;
                 }
                 else
@@ -73,7 +83,18 @@ internal static class CalculationLexer
             }
             else
             {
-                tokens.Add( new( Operator( expression, start, ref i ) ) );
+                var symbol = Operator( expression, start, ref i );
+                var compound = CalculationCurrencies.IsCurrency( symbol ) ? DenominatorEnd( expression, i ) : -1;
+                if ( compound > i )
+                {
+                    // A currency symbol joins a compound unit like its code does: 10 €/h.
+                    AddUnitGroup( tokens, [new( symbol )], expression, i, compound );
+                    i = compound;
+                }
+                else
+                {
+                    tokens.Add( new( symbol ) );
+                }
             }
 
             if ( tokens.Count > 256 )
@@ -99,22 +120,37 @@ internal static class CalculationLexer
         return i;
     }
 
-    // The end of `/denominator` when both sides are plain integers, otherwise -1.
-    private static int FractionEnd( string expression, int start, int end )
+    private static void AddUnitGroup( List<CalculationToken> tokens, CalculationToken[] numerator, string expression, int slash, int end ) =>
+        tokens.AddRange( [new( "(", UnitGroup: true ), .. numerator, new( "/" ), .. Tokenize( expression[(slash + 1)..end] ), new( ")", UnitGroup: true )] );
+
+    // The end of `/denominator` when both sides are plain integers and an operand follows, otherwise -1.
+    // Without an operand (10/2^2, 3/2!, 100/5%) or after ^ (27^1/3) normal precedence applies.
+    private static int FractionEnd( string expression, int start, int end, bool afterPower )
     {
-        if ( end + 1 >= expression.Length || expression[end] != '/' || !char.IsAsciiDigit( expression[end + 1] ) ||
+        if ( afterPower || end + 1 >= expression.Length || expression[end] != '/' || !char.IsAsciiDigit( expression[end + 1] ) ||
             expression.AsSpan( start, end - start ).ContainsAnyExceptInRange( '0', '9' ) )
         {
             return -1;
         }
 
         var denominator = NumberEnd( expression, end + 1 );
+        var next = denominator;
 
-        return expression.AsSpan( end + 1, denominator - end - 1 ).ContainsAnyExceptInRange( '0', '9' ) ? -1 : denominator;
+        while ( next < expression.Length && char.IsWhiteSpace( expression[next] ) )
+        {
+            next++;
+        }
+
+        return !expression.AsSpan( end + 1, denominator - end - 1 ).ContainsAnyExceptInRange( '0', '9' ) &&
+            next < expression.Length && (IsWordStart( expression[next] ) || expression[next] == '(' ||
+            CalculationCurrencies.IsCurrency( expression[next].ToString( ) )) ? denominator : -1;
     }
 
-    // The end of `/unit` (with an attached power) after a unit, otherwise -1.
-    private static int CompoundEnd( string expression, int slash, string numerator )
+    private static int CompoundEnd( string expression, int slash, string numerator ) =>
+        IsUnit( numerator ) ? DenominatorEnd( expression, slash ) : -1;
+
+    // The end of `/unit` with an attached power when it names a unit, otherwise -1.
+    private static int DenominatorEnd( string expression, int slash )
     {
         if ( slash + 1 >= expression.Length || expression[slash] != '/' || !IsWordStart( expression[slash + 1] ) )
         {
@@ -122,7 +158,7 @@ internal static class CalculationLexer
         }
 
         var end = WordEnd( expression, slash + 1 );
-        if ( !IsUnit( numerator ) || !IsUnit( expression[(slash + 1)..end] ) )
+        if ( !IsUnit( expression[(slash + 1)..end] ) )
         {
             return -1;
         }
