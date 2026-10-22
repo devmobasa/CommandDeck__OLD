@@ -75,8 +75,8 @@ public static partial class Program
             .Where( path => File.ReadAllText( path ).Contains( "HttpClient", StringComparison.Ordinal ) )
             .ToArray( );
         True( networkOwners.Length > 0 );
-        string[] extensionNetworkOwners = ["src/CommandDeck.Infrastructure/Extensions/ExtensionHttpTransport.cs", "src/CommandDeck.Extensions/CommandBrokers.cs"];
-        True( networkOwners.All( path => extensionNetworkOwners.Contains( Path.GetRelativePath( root, path ), StringComparer.Ordinal ) || path.Contains(
+        string[] allowedNetworkOwners = ["src/CommandDeck.Infrastructure/Extensions/ExtensionHttpTransport.cs", "src/CommandDeck.Extensions/CommandBrokers.cs", "src/CommandDeck.Infrastructure/Calculation/CurrencyRateService.cs"];
+        True( networkOwners.All( path => allowedNetworkOwners.Contains( Path.GetRelativePath( root, path ), StringComparer.Ordinal ) || path.Contains(
             $"{Path.DirectorySeparatorChar}Ai{Path.DirectorySeparatorChar}",
             StringComparison.Ordinal ) ) );
 

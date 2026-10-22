@@ -88,13 +88,16 @@ public sealed partial class CommandDeckRuntime
                 OmarchyMenuState omarchyState = new( enabled: ( ) => catalog.History.OmarchyMenuState );
                 resources.OwnDisposable( omarchyState );
 
+                var rates = resources.Own( new CurrencyRateService(
+                    PathExpansion.Expand( options.Storage.DatabasePath ) + ".exchange-rates",
+                    options.Search.Calculator.ExchangeRates ) );
+
                 List<ICommandProvider> providers =
                 [
                     new CalculatorProvider(
-                runner: null,
-                available: null,
                 options: options.Search.Calculator,
-                inlineEnabled: () => catalog.History.InlineCalculator),
+                inlineEnabled: () => catalog.History.InlineCalculator,
+                rates: rates.GetRates),
             new ApplicationSearchProvider(catalog),
             new CatalogSearchProvider(catalog, catalog.LauncherPreferences, omarchyState),
             new ExtensionCommandProvider(extensions, catalog.LauncherPreferences),
@@ -183,6 +186,7 @@ public sealed partial class CommandDeckRuntime
                 runtime._extensionConnections = extensionConnections;
                 runtime._extensionDevelopment = extensionDevelopment;
                 runtime._herdr = herdr;
+                runtime._exchangeRates = rates;
                 runtime._extensionSessions = new ExtensionSessionService( extensions, extensionLauncher, actions,
                     extensionDevelopment, extensionConnections );
                 resources.Own( runtime._extensionSessions );

@@ -104,7 +104,7 @@ public sealed partial class SearchCoordinator
         var hidden = await HiddenStableIdsAsync( cancellationToken ).ConfigureAwait( false );
         var candidates = collection.Batches.SelectMany( static batch => batch )
             .Where( result => purpose == SearchPurpose.Interactive || !PrivateSources.IsPrivate( result ) )
-            .Where( result => IsAllowedResult( result, parsed, plan.EnabledSources, request ) )
+            .Where( result => IsAllowedResult( result, parsed, plan.EnabledSources, request, plan.IsInlineCalculator ) )
             .Where( result => !hidden.Contains( UsageId( result ) ) ).ToArray( );
         var learnedQueries = UseTopMatches( request, parsed )
             ? await ReadLearnedQueriesAsync( effectiveRequest, purpose, now, cancellationToken ).ConfigureAwait( false )
@@ -133,7 +133,7 @@ public sealed partial class SearchCoordinator
         // Trailing rows (such as "Search HEY for …") follow the ranked list and
         // take no Top Match or first-page slot.
         var trailing = collapsed.Where( ResultPlacements.IsTrailing ).Take( ResultPlacements.MaximumTrailing ).ToArray( );
-        var inline = CalculatorInput.IsInlineCandidate( parsed )
+        var inline = plan.IsInlineCalculator
             ? collapsed.Where( static result => result.Kind == ResultKinds.Calculator ).Take( 1 ).ToArray( )
             : [];
         var ordinary = collapsed.Where( result => !ResultPlacements.IsTrailing( result ) && !inline.Contains( result ) ).ToArray( );
@@ -161,7 +161,7 @@ public sealed partial class SearchCoordinator
             ? WithSection( result, new ResultSection { Id = OmarchyMenuSearch.SectionId, Title = "Omarchy", Order = 0 } )
             : result )];
 
-    private static bool IsAllowedResult( SearchResult result, ParsedQuery query, HashSet<string> enabledSources, SearchRequest request )
+    private static bool IsAllowedResult( SearchResult result, ParsedQuery query, HashSet<string> enabledSources, SearchRequest request, bool isInlineCalculator )
     {
         // These sources have their own switches and are not listed in source preferences.
         if ( result.SourceId is not SourceIds.Calculator and not SourceIds.Status and not SourceIds.Ai &&
@@ -177,7 +177,7 @@ public sealed partial class SearchCoordinator
         return HerdrSearch.MatchesScope( result, request.HerdrWorkspaceId ) &&
                     OmarchyMenuSearch.MatchesScope( result, request.OmarchyMenuId ) &&
                     !query.ExcludedFilters.Any( filter => FilterMatches( filter, result ) ) &&
-                    ((CalculatorInput.IsInlineCandidate( query ) && result.Kind == ResultKinds.Calculator) ||
+                    ((result.Kind == ResultKinds.Calculator && isInlineCalculator) ||
                         ClausesMatch( query.Expression.Clauses, result ));
     }
 
@@ -187,10 +187,10 @@ public sealed partial class SearchCoordinator
             : await _preferences.GetHiddenStableIdsAsync( cancellationToken ).ConfigureAwait( false );
 
     private IEnumerable<ICommandProvider> SelectProviders(
-        ParsedQuery query, LauncherPreferences preferences, SearchRequest request, SearchPurpose purpose ) =>
+        ParsedQuery query, LauncherPreferences preferences, SearchRequest request, SearchPurpose purpose, bool isInlineCalculator ) =>
         ProviderEligibilityPolicy.Select( _providers, query, preferences, request.HerdrWorkspaceId, request.OmarchyMenuId )
             .Where( provider => purpose == SearchPurpose.Interactive || !PrivateSources.ReadsPrivateContent( provider.Id ) )
-            .Where( provider => provider.Id != ProviderIds.Calculator || !CalculatorInput.IsInlineCandidate( query ) || _history.InlineCalculator );
+            .Where( provider => provider.Id != ProviderIds.Calculator || _history.InlineCalculator || !isInlineCalculator );
 
     private bool UseTopMatches( SearchRequest request, ParsedQuery query ) =>
         _history.TopMatches && !IsFolderBrowsing( request, query ) && !HeySearch.IsRequested( query ) &&

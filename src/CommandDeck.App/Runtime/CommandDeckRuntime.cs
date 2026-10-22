@@ -12,6 +12,7 @@ public sealed partial class CommandDeckRuntime : IAsyncDisposable, IAgentLaunche
     private readonly InvocationWorkflow _invocations;
     private readonly FilePreviewWorkflow _filePreviews;
     private HerdrClient _herdr = new( );
+    private CurrencyRateService? _exchangeRates;
     private readonly FileSelectionService _fileSelection;
     private readonly AiProviderSettingsService _aiSettings;
     private readonly AiPreflightService _aiPreflights;
@@ -95,6 +96,7 @@ public sealed partial class CommandDeckRuntime : IAsyncDisposable, IAgentLaunche
     public IIndexCoordinator Indexer => _indexer;
     public ILauncherPreferenceStore Preferences => _preferences;
     public HerdrClient Herdr => _herdr;
+    internal CurrencyRateService? ExchangeRates => _exchangeRates;
     public QueryHistoryWorkflow QueryHistory { get; }
 
     public static ValueTask<CommandDeckRuntime> CreateAsync( string? configPath, CancellationToken cancellationToken,

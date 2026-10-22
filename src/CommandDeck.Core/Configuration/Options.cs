@@ -87,18 +87,11 @@ public sealed class SearchOptions
 
 public sealed class CalculatorOptions
 {
-    public const string UseQalcAuto = "auto";
-    public const string UseQalcNever = "never";
-    public const string UseQalcAlways = "always";
-
     public bool Inline { get; init; } = true;
-    public string UseQalc { get; init; } = UseQalcAuto;
+    public bool ExchangeRates { get; init; } = true;
 
-    public bool AllowsQalc( ) =>
-        !string.Equals( UseQalc, UseQalcNever, StringComparison.OrdinalIgnoreCase );
-
-    public bool RequiresQalc( ) =>
-        string.Equals( UseQalc, UseQalcAlways, StringComparison.OrdinalIgnoreCase );
+    // Deprecated compatibility option; accepted and ignored.
+    public string? UseQalc { get; init; }
 }
 
 public sealed class RankingOptions

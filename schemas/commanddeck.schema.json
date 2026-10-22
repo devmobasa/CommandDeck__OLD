@@ -116,13 +116,16 @@
             "inline": {
               "type": "boolean"
             },
+            "exchangeRates": {
+              "type": "boolean"
+            },
             "useQalc": {
-              "type": "string",
-              "enum": [
-                "auto",
-                "never",
-                "always"
-              ]
+              "type": [
+                "string",
+                "null"
+              ],
+              "deprecated": true,
+              "description": "Deprecated and ignored; remove search.calculator.useQalc."
             }
           }
         },

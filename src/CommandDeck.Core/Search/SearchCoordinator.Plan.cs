@@ -6,6 +6,7 @@ public sealed partial class SearchCoordinator
     // aliases, and hidden IDs are separate store reads, not one atomic database snapshot.
     private sealed record SearchPlan(
         ParsedQuery Parsed,
+        bool IsInlineCalculator,
         LauncherPreferences Preferences,
         SearchRequest EffectiveRequest,
         SearchRequest ProviderRequest,
@@ -66,6 +67,7 @@ public sealed partial class SearchCoordinator
         }
 
         var parsed = QueryParser.Parse( request.Query, request.Expression, aliasMap, registry );
+        var isInlineCalculator = CalculatorInput.IsInlineCandidate( parsed );
         request.ContainsPrivateQuery = PrivateSources.ReferencesPrivateSource( parsed );
         request.IsPrivacyClassified = true;
 
@@ -79,9 +81,9 @@ public sealed partial class SearchCoordinator
             registry, providerLimit );
         var folderRequest = CreateProviderRequest( request, effectiveRequest, enabledSources,
             registry, request.Limit );
-        var selected = SelectProviders( parsed, preferences, request, purpose ).ToArray( );
+        var selected = SelectProviders( parsed, preferences, request, purpose, isInlineCalculator ).ToArray( );
 
-        return new SearchPlan( parsed, preferences, effectiveRequest, providerRequest,
+        return new SearchPlan( parsed, isInlineCalculator, preferences, effectiveRequest, providerRequest,
             folderRequest, selected, enabledSources, limit, preferences.PreferenceRevision,
             registry?.Revision ?? 0 );
     }

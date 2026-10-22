@@ -236,18 +236,9 @@ public static class ConfigurationValidator
 
     private static void ValidateCalculator( CalculatorOptions? calculator )
     {
-        if ( calculator is null || string.IsNullOrWhiteSpace( calculator.UseQalc ) )
+        if ( calculator is null )
         {
-            throw new InvalidOperationException( "search.calculator.useQalc is required." );
-        }
-
-        var mode = calculator.UseQalc.Trim( );
-        if ( !string.Equals( mode, CalculatorOptions.UseQalcAuto, StringComparison.OrdinalIgnoreCase ) &&
-            !string.Equals( mode, CalculatorOptions.UseQalcNever, StringComparison.OrdinalIgnoreCase ) &&
-            !string.Equals( mode, CalculatorOptions.UseQalcAlways, StringComparison.OrdinalIgnoreCase ) )
-        {
-            throw new InvalidOperationException(
-                "search.calculator.useQalc must be auto, never, or always." );
+            throw new InvalidOperationException( "search.calculator is required." );
         }
     }
 

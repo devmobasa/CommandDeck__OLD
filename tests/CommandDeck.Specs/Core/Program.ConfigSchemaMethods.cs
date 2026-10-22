@@ -166,10 +166,8 @@ public static partial class Program
         if ( property.DeclaringType == typeof( CalculatorOptions ) &&
             property.Name == nameof( CalculatorOptions.UseQalc ) )
         {
-            schema["enum"] = new JsonArray(
-                CalculatorOptions.UseQalcAuto,
-                CalculatorOptions.UseQalcNever,
-                CalculatorOptions.UseQalcAlways );
+            schema["deprecated"] = true;
+            schema["description"] = "Deprecated and ignored; remove search.calculator.useQalc.";
         }
 
         return schema;

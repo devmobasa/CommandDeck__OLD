@@ -14,7 +14,6 @@ public static class OptionalToolCatalog
 {
     public static IReadOnlyList<OptionalTool> All { get; } =
     [
-        new("qalc", "libqalculate", "Units, currency, and scientific calculator expressions"),
         new("pdftotext", "poppler", "PDF text extraction for the file index"),
         new("pandoc", "pandoc", "Office-document text extraction for the file index"),
         new("wl-copy", "wl-clipboard", "Copy result text to the clipboard"),

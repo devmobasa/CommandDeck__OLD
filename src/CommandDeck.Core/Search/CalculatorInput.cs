@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 namespace CommandDeck;
 
 // Bare search only opts into a bounded calculation grammar. Explicit '=' input
-// keeps qalc's wider grammar for constants, functions and compound units.
+// uses the full engine grammar for constants, functions and compound units.
 public static partial class CalculatorInput
 {
     public static bool IsInlineCandidate( ParsedQuery query ) =>
@@ -19,8 +19,18 @@ public static partial class CalculatorInput
             return false;
         }
 
-        return DateCounting.IsCandidate( text ) || IsArithmetic( text );
+        return DateCounting.IsCandidate( text ) || IsArithmetic( text ) || IsConversion( text );
     }
+
+    private static bool IsConversion( string text )
+    {
+        var leading = text.AsSpan( ).TrimStart( );
+        return !leading.IsEmpty && (char.IsAsciiDigit( leading[0] ) || ".+-−$€£¥₹₩₪".Contains( leading[0] )) &&
+            ConversionTokenRegex( ).IsMatch( text ) && CalculatorEngine.IsConversion( text );
+    }
+
+    [GeneratedRegex( @"\b(?:to|in|as)\b|->|→", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant )]
+    private static partial Regex ConversionTokenRegex( );
 
     private static bool IsArithmetic( string text )
     {

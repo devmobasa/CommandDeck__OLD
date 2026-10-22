@@ -116,6 +116,11 @@ Rectangle {
             ? root.result.details.find(value => value.label === "Exact value") : null
           return field ? field.value : ""
         }
+        exchangeRates: {
+          const field = root.result && root.result.details
+            ? root.result.details.find(value => value.label === "Exchange rates") : null
+          return field ? field.value : ""
+        }
         theme: root.theme
         expression: root.calcInput
         value: root.calcValue

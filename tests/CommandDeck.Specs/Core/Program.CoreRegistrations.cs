@@ -116,8 +116,7 @@ public static partial class Program
 
         Run( "calculator precedence", ( ) =>
         {
-            True( Calculator.TryEvaluate( "2 + 3 * 4", out var value, out _ ) );
-            Equal( 14d, value );
+            Equal( "14", CalculatorEngine.Evaluate( "2 + 3 * 4" ).Text );
         } );
 
         Run( "fuzzy prefix outranks subsequence", ( ) =>

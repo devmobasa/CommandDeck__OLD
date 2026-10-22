@@ -34,13 +34,11 @@ public static class Doctor
             Check.Command("wl-copy", required: false)
         ];
 
-        if ( runtime.Options.Search.Calculator.RequiresQalc( ) )
+        if ( runtime.Options.Search.Calculator.UseQalc is not null )
         {
-            checks.Add( Check.Command( "qalc", required: true ) );
-        }
-        else if ( runtime.Options.Search.Calculator.AllowsQalc( ) )
-        {
-            checks.Add( Check.Command( "qalc", required: false ) );
+            // Not required: the warning never changes Doctor's exit code.
+            checks.Add( Check.Value( "Calculator configuration", false,
+                "search.calculator.useQalc is deprecated and ignored; remove it", required: false ) );
         }
 
         if ( runtime.Options.Indexing.EnablePdfExtraction )

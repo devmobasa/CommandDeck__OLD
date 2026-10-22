@@ -12,17 +12,21 @@ public static partial class Program
             var files = Directory.CreateDirectory( Path.Combine( root, configured.ToString( ) ) ).FullName;
             var calculationPath = Path.Combine( files, "100 * 5.md" );
             var dateTitlePath = Path.Combine( files, "days until 11 sep.md" );
+            var conversionPath = Path.Combine( files, "5 km in miles.md" );
+            var ordinaryPath = Path.Combine( files, "10 years in prison.md" );
             var dateBodyPath = Path.Combine( files, "Notes.md" );
             await File.WriteAllTextAsync( calculationPath, "Arithmetic notes" );
             await File.WriteAllTextAsync( dateTitlePath, "Date notes" );
-            await File.WriteAllTextAsync( dateBodyPath, "11 sep: days until launch\n100 * 5" );
+            await File.WriteAllTextAsync( conversionPath, "Conversion notes" );
+            await File.WriteAllTextAsync( ordinaryPath, "Sentence notes" );
+            await File.WriteAllTextAsync( dateBodyPath, "11 sep: days until launch\n100 * 5\n5 km in miles\n10 years in prison" );
             var calculationId = StableId.Create( ResultKinds.File, calculationPath );
             string[] dateIds = [StableId.Create( ResultKinds.File, dateTitlePath ), StableId.Create( ResultKinds.File, dateBodyPath )];
 
             CommandDeckOptions options = new( )
             {
                 Storage = new StorageOptions { DatabasePath = Path.Combine( root, $"{configured}.db" ) },
-                Search = new SearchOptions { Calculator = new CalculatorOptions { Inline = configured, UseQalc = "never" } },
+                Search = new SearchOptions { Calculator = new CalculatorOptions { Inline = configured, ExchangeRates = false } },
                 Indexing = new IndexingOptions
                 {
                     Roots = [new IndexRootOptions { Path = files, IncludeContentInSearch = true }],
@@ -62,6 +66,25 @@ public static partial class Program
                             "Date title and body matches must come through FTS." );
                     }
                     Equal( enabled, dates[0].Kind == ResultKinds.Calculator );
+                    foreach ( var (query, path, isConversion) in new[]
+                    {
+                        ("5 km in miles", conversionPath, true), ("10 years in prison", ordinaryPath, false)
+                    } )
+                    {
+                        var matches = await runtime.SearchAsync( new SearchRequest { Query = query }, default );
+                        Equal( enabled && isConversion, matches[0].Kind == ResultKinds.Calculator );
+                        Equal( enabled && isConversion ? 3 : 2, matches.Count );
+                        foreach ( var id in new[] { StableId.Create( ResultKinds.File, path ), dateIds[1] } )
+                        {
+                            var match = matches.Single( row => row.Id == id );
+                            True( match.Ranking.Contributions.Any( static value => value.Label == "Catalog lexical match" ),
+                                "Conversion and ordinary title/body matches must come through FTS." );
+                        }
+                        if ( enabled && isConversion )
+                        {
+                            Equal( "3.10685596118667 mi", matches[0].Title );
+                        }
+                    }
                     if ( enabled )
                     {
                         Equal( "500", rows[0].Title );

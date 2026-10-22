@@ -31,14 +31,9 @@ public static partial class Program
         Equal( 2, QueryParser.Parse( "2 + 2" ).Expression.Clauses.Count );
     }
 
-    private static async Task InlineCalculatorNeverStartsQalcAsync( )
+    private static async Task InlineCalculatorArithmeticAsync( )
     {
-        List<string> calls = [];
-        CalculatorProvider provider = new( ( _, arguments, _, _ ) =>
-        {
-            calls.Add( arguments[^1] );
-            return ValueTask.FromResult( new ProcessResult { ExitCode = 0, StandardOutput = "$100", StandardError = "" } );
-        }, ( ) => true );
+        CalculatorProvider provider = new( rates: ( ) => throw new InvalidOperationException( "Arithmetic must stay offline." ) );
         foreach ( var (input, expected) in InlineArithmeticCases )
         {
             foreach ( var prefix in new[] { "", "=" } )
@@ -50,91 +45,17 @@ public static partial class Program
             }
         }
         foreach ( var query in OrdinaryCalculatorSearches.Where( static query => !query.StartsWith( '=' ) )
-                     .Concat( ["1 / 0", "2 + (3", "10 * -", "10 * - )", "days until invalid", "100 usd to eur", "5 km in miles",
-                         "105F in C", "20 eur in usd", "5 lbs to kg", "60 sec to min", "100 usd to m",
+                     .Concat( ["1 / 0", "2 + (3", "10 * -", "10 * - )", "days until invalid",
                          "file: days until 11 sep", "days until 11 sep -files:", "title:days until tomorrow"] ) )
         {
             Equal( 0, (await provider.SearchAsync( QueryParser.Parse( query ), new SearchRequest { Query = query }, default )).Count );
-        }
-        Equal( 0, calls.Count );
-    }
-
-    private static async Task CurrencyConversionsRetainQalcPrecisionAsync( )
-    {
-        foreach ( var (input, precise, rounded, title) in new[]
-        {
-            ("100 USD to EUR", "€89.01548869503293573082", "€89", "€89.02"),
-            ("100000000 USD to EUR", "€89015488.69503293573081716219", "€89015489", "€89015488.70"),
-            ("-100000000 USD to EUR", "−€89015488.69503293573081716219", "−€89015489", "−€89015488.70"),
-            ("$100000000 to EUR", "€89015488.69503293573081716219", "€89015489", "€89015488.70"),
-            ("USD -100000000 to EUR", "EUR -89015488.69503293573081716219", "EUR -89015489", "EUR -89015488.70"),
-            ("USD 100000000 to EUR", "EUR 89015488.69503293573081716219", "EUR 89015489", "EUR 89015488.70"),
-            ("USD +100000000 to EUR", "EUR +89015488.69503293573081716219", "EUR +89015489", "EUR +89015488.70"),
-            ("USD -100000000 to EUR", "EUR −89015488.69503293573081716219", "EUR −89015489", "EUR −89015488.70")
-        } )
-        {
-            ExternalProcessRunner runner = ( _, arguments, _, _ ) =>
-            {
-                // qalc's currency defaults round large amounts to whole units.
-                var sufficient = arguments.Contains( "precision 30" ) &&
-                    arguments.Contains( "max_decimals 20" ) && arguments.Contains( "min_decimals 0" );
-                var output = sufficient ? precise : rounded;
-                if ( !arguments.Contains( "decimal comma off" ) )
-                {
-                    output = output.Replace( '.', ',' );
-                }
-                if ( !arguments.Contains( "digit grouping 0" ) )
-                {
-                    output = output.Replace( "89015488", "89 015 488", StringComparison.Ordinal );
-                }
-
-                return ValueTask.FromResult( new ProcessResult
-                {
-                    ExitCode = 0,
-                    StandardOutput = output + "\n",
-                    StandardError = ""
-                } );
-            };
-            CalculatorProvider provider = new( runner, ( ) => true );
-            var rows = await provider.SearchAsync( QueryParser.Parse( "=" + input ), new SearchRequest( ), default );
-            var row = rows.Single( );
-            Equal( title, row.Title );
-            Equal( title, row.Actions[0].Arguments["text"] );
-            Equal( precise, row.Details.Single( static field => field.Label == "Exact value" ).Value );
-        }
-    }
-
-    private static async Task CurrencyConversionsPreserveNondecimalOutputAsync( )
-    {
-        foreach ( var (input, output) in new[]
-        {
-            ("100000000 USD to EUR", "€ × 8.901548869503293573081716219e7"),
-            ("100 USD to EUR to hex", "€ × 0x59.03F729AE820CA426AA3E"),
-            ("100 USD / 3", "USD × (100 / 3)"),
-            ("100 USD to EUR + 1 GBP", "€89.01548869503293573082 + £1")
-        } )
-        {
-            CalculatorProvider provider = new( ( _, _, _, _ ) => ValueTask.FromResult( new ProcessResult
-            {
-                ExitCode = 0,
-                StandardOutput = output + "\n",
-                StandardError = ""
-            } ), ( ) => true );
-
-            var rows = await provider.SearchAsync( QueryParser.Parse( "=" + input ), new SearchRequest( ), default );
-            var row = rows.Single( );
-
-            Equal( output, row.Title );
-            Equal( output, row.Actions[0].Arguments["text"] );
-            Equal( output, row.Details.Single( static field => field.Label == "Exact value" ).Value );
         }
     }
 
     private static async Task DateCalculatorUsesLocalClockAndResolvesYearsAsync( )
     {
         DateCalculatorClock clock = new( new DateTimeOffset( 2026, 10, 21, 12, 0, 0, TimeSpan.Zero ), TimeZoneInfo.Utc );
-        CalculatorProvider provider = new( ( _, _, _, _ ) => throw new InvalidOperationException( "Date counts must stay offline." ),
-            ( ) => true, clock: clock );
+        CalculatorProvider provider = new( clock: clock, rates: ( ) => throw new InvalidOperationException( "Date counts must stay offline." ) );
         foreach ( var (phrase, title, subtitle, copied) in new[]
         {
             ("days until 11 sep", "325 days", "Today → Sat 11 Sep 2027", "325"),
