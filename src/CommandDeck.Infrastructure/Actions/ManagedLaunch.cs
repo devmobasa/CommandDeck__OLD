@@ -3,9 +3,12 @@ using System.Globalization;
 namespace CommandDeck;
 
 // Process launches shared by the action handlers: a detached application under
-// uwsm-app or systemd-run, and a bounded run whose exit code is the result.
+// uwsm-app or systemd-run, a bounded run whose exit code is the result, and the
+// same bounded run in the user session.
 internal static class ManagedLaunch
 {
+    private static readonly TimeSpan SessionStopMargin = TimeSpan.FromSeconds( 5 );
+
     public static async ValueTask<ActionExecutionResult> LaunchApplicationAsync(
         DesktopEntryCommand command,
         bool terminal,
@@ -57,8 +60,9 @@ internal static class ManagedLaunch
             TimeSpan.FromSeconds( 15 ) ).ConfigureAwait( false );
     }
 
-    // Both routes start a transient unit, whose service manager expands $NAME
-    // and ${NAME} in the arguments; "$$" is its literal dollar sign. systemd-run
+    // Every route here starts a transient unit, whose service manager expands
+    // $NAME and ${NAME} in the arguments; "$$" is its literal dollar sign.
+    // It expands no % specifiers there, so % stays as it is. systemd-run
     // resolves the executable itself, so the executable stays as it is.
     private static IEnumerable<string> LiteralWords( DesktopEntryCommand command ) =>
         command.Arguments.Select( static word => word.Replace( "$", "$$", StringComparison.Ordinal ) )
@@ -95,5 +99,35 @@ internal static class ManagedLaunch
             string.IsNullOrWhiteSpace( result.StandardError )
                 ? null
                 : $"```\n{result.StandardError.Trim( )}\n```" );
+    }
+
+    // Runs outside the daemon's sandbox, whose private /tmp the session cannot
+    // see: the user's service manager starts a transient service, and --wait
+    // and --pipe return its exit status and output. With ExitType=cgroup the
+    // wait lasts until every process the command started in its own unit has
+    // exited. Stopping the local client would leave the unit running, so
+    // RuntimeMaxSec stops it just after the wait's bound, which reports the
+    // timeout first; a cancelled wait leaves it to the same bound. Omarchy's
+    // launchers hand apps to uwsm-app through setsid, into units of their own
+    // that neither keep this unit running nor stop with it.
+    public static ValueTask<ProcessResult> RunInSessionAsync(
+        DesktopEntryCommand command,
+        TimeSpan timeout,
+        CancellationToken cancellationToken )
+    {
+        if ( !ProcessRunner.ExistsOnPath( "systemd-run" ) )
+        {
+            throw new InvalidOperationException( "systemd-run is unavailable to run the command in the user session." );
+        }
+
+        var runtimeLimit = ( long ) Math.Ceiling( (timeout + SessionStopMargin).TotalSeconds );
+        return ProcessRunner.RunAsync(
+            "systemd-run",
+            ["--user", "--quiet", "--collect", "--wait", "--pipe", "--property=ExitType=cgroup",
+                $"--property=RuntimeMaxSec={runtimeLimit.ToString( CultureInfo.InvariantCulture )}", "--", .. LiteralWords( command )],
+            null,
+            null,
+            timeout,
+            cancellationToken );
     }
 }
